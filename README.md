@@ -2,6 +2,12 @@
 
 A full-screen, high-density flocking simulation. The simulation is the interface; controls and telemetry live in swipe-revealed panels.
 
+## Live deployment
+
+https://boids-gemquotas-projects.vercel.app
+
+The repository is connected to Vercel and automatically deploys pushes to `main`.
+
 ## Run locally
 
 Open `index.html` in a modern browser. No build step, package installation, or external runtime dependency is required.
@@ -20,7 +26,3 @@ Open `index.html` in a modern browser. No build step, package installation, or e
 - Separation, alignment, cohesion, environmental flow, pointer repulsion, and configurable boundary wrapping.
 - Up to 24,000 agents, with single-species, mixed, schooling, and turbulent modes.
 - Canvas trails and optional velocity vectors.
-
-## Deployment
-
-The GitHub Actions workflow in `.github/workflows/pages.yml` publishes the repository root to GitHub Pages whenever changes land on `main`. Enable **Settings → Pages → Build and deployment → GitHub Actions** once, then merge the deployment PR.
