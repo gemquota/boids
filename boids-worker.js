@@ -25,7 +25,7 @@ function steer(i,tx,ty){
  let l2=tx*tx+ty*ty;if(l2<1e-8)return [0,0];let inv=cfg.speed/Math.sqrt(l2);let ax=tx*inv-vx[i],ay=ty*inv-vy[i],m2=ax*ax+ay*ay,lim=cfg.force;
  if(m2>lim*lim){let k=lim/Math.sqrt(m2);ax*=k;ay*=k}return [ax,ay];
 }
-let obstacles=[],pred=[];
+let obstacles=[],pred=[],pathData,pathCounts;
 function seedEnvironment(){
  obstacles=[];for(let i=0;i<cfg.obstacles;i++)obstacles.push({x:rand(W*.12,W*.88),y:rand(H*.12,H*.88),r:rand(18,55),phase:rand(0,TAU)});
  pred=[];for(let i=0;i<cfg.predators;i++)pred.push({x:rand(0,W),y:rand(0,H),vx:rand(-1,1),vy:rand(-1,1),phase:rand(0,TAU)});
@@ -86,9 +86,9 @@ function draw(){
  ctx.save();ctx.globalAlpha=.16;ctx.strokeStyle='#527d91';ctx.lineWidth=1;
  for(let i=0;i<obstacles.length;i++){let o=obstacles[i];ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(o.x,o.y,o.r+7,0,TAU);ctx.stroke()}ctx.restore();
  // Batch all agents by species to avoid per-agent canvas state changes.
- let paths=[[],[],[],[]];
- for(let i=0;i<N;i++){let k=kind[i],a=paths[k],xx=x[i],yy=y[i],dx=vx[i],dy=vy[i],inv=1/(Math.sqrt(dx*dx+dy*dy)||1),len=k===3?7:5.2;a.push(xx,yy,xx-dx*inv*len,yy-dy*inv*len)}
- for(let k=0;k<4;k++){let a=paths[k];if(!a.length)continue;ctx.beginPath();for(let j=0;j<a.length;j+=4){ctx.moveTo(a[j],a[j+1]);ctx.lineTo(a[j+2],a[j+3])}ctx.strokeStyle=colors[k];ctx.globalAlpha=k===3?.9:.72;ctx.lineWidth=k===3?1.8:1.15;ctx.stroke()}
+ pathCounts.fill(0);
+ for(let i=0;i<N;i++){let k=kind[i],o=(pathCounts[k]++)*4,xx=x[i],yy=y[i],dx=vx[i],dy=vy[i],inv=1/(Math.sqrt(dx*dx+dy*dy)||1),len=k===3?7:5.2;pathData[o]=xx;pathData[o+1]=yy;pathData[o+2]=xx-dx*inv*len;pathData[o+3]=yy-dy*inv*len}
+ for(let k=0;k<4;k++){let count=pathCounts[k];if(!count)continue;ctx.beginPath();for(let j=0;j<count*4;j+=4){ctx.moveTo(pathData[j],pathData[j+1]);ctx.lineTo(pathData[j+2],pathData[j+3])}ctx.strokeStyle=colors[k];ctx.globalAlpha=k===3?.9:.72;ctx.lineWidth=k===3?1.8:1.15;ctx.stroke()}
  ctx.globalAlpha=1;
  // Predator silhouettes.
  for(let i=0;i<pred.length;i++){let p=pred[i],a=Math.atan2(p.vy,p.vx);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a);ctx.fillStyle='#ff758e';ctx.shadowColor='#ff526f';ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(-8,-6);ctx.lineTo(-4,0);ctx.lineTo(-8,6);ctx.closePath();ctx.fill();ctx.restore()}
@@ -96,4 +96,4 @@ function draw(){
 }
 function frame(now){if(!running)return;let dt=Math.min((now-last)/1000,.033);last=now;update(dt);draw();frameCount++;if(now-raf>750){fps=Math.round(frameCount*1000/(now-raf));frameCount=0;raf=now;postMessage({type:'stats',fps,speed:meanSpeed,neighbours:meanNeighbours,count:N})}requestAnimationFrame(frame)}
 function init(c){canvas=c;ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});seedEnvironment();resize(W,H,1);allocate(3600);last=performance.now();raf=last;requestAnimationFrame(frame)}
-onmessage=e=>{let m=e.data;if(m.type==='init'){init(m.canvas);return}if(m.type==='resize'){resize(m.width,m.height,m.dpr);seedEnvironment();return}if(m.type==='config'){Object.assign(cfg,m.values);if(m.values.count)allocate(m.values.count);if(m.values.obstacles!==undefined||m.values.predators!==undefined)seedEnvironment();return}if(m.type==='pointer'){pointer.x=m.x;pointer.y=m.y;pointer.active=m.active;pointer.mode=m.mode||'repel';pointer.until=performance.now()+800;return}if(m.type==='action'){if(m.action==='pause')running=!running;if(m.action==='reset'){allocate(N);seedEnvironment()}if(m.action==='scatter'){for(let i=0;i<N;i++){let a=rand(0,TAU);vx[i]=Math.cos(a)*rand(1,cfg.speed);vy[i]=Math.sin(a)*rand(1,cfg.speed);x[i]=rand(0,W);y[i]=rand(0,H)}}if(m.action==='pulse'){pointer={x:W/2,y:H/2,active:true,mode:'repel',until:performance.now()+1200}}if(m.action==='clear'){ctx.fillStyle='#050a12';ctx.fillRect(0,0,W,H)}}};
+onmessage=e=>{let m=e.data;if(m.type==='init'){init(m.canvas);return}if(m.type==='resize'){resize(m.width,m.height,m.dpr);seedEnvironment();return}if(m.type==='config'){Object.assign(cfg,m.values);if(m.values.count)allocate(m.values.count);if(m.values.obstacles!==undefined||m.values.predators!==undefined)seedEnvironment();return}if(m.type==='pointer'){pointer.x=m.x;pointer.y=m.y;pointer.active=m.active;pointer.mode=m.mode||'repel';pointer.until=performance.now()+800;return}if(m.type==='action'){if(m.action==='pause'){running=!running;if(running){last=performance.now();raf=last;requestAnimationFrame(frame)}}if(m.action==='reset'){allocate(N);seedEnvironment()}if(m.action==='scatter'){for(let i=0;i<N;i++){let a=rand(0,TAU);vx[i]=Math.cos(a)*rand(1,cfg.speed);vy[i]=Math.sin(a)*rand(1,cfg.speed);x[i]=rand(0,W);y[i]=rand(0,H)}}if(m.action==='pulse'){pointer={x:W/2,y:H/2,active:true,mode:'repel',until:performance.now()+1200}}if(m.action==='clear'){ctx.fillStyle='#050a12';ctx.fillRect(0,0,W,H)}}};
