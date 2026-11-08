@@ -21,8 +21,8 @@ function resizeGrid(){
  let s=Math.max(20,cfg.perception);let c=Math.max(1,Math.ceil(W/s)),r=Math.max(1,Math.ceil(H/s));
  if(c!==cols||r!==rows||s!==cellSize){cols=c;rows=r;cellSize=s;cellHead=new Int32Array(cols*rows)}
 }
-function steer(i,tx,ty){
- let l2=tx*tx+ty*ty;if(l2<1e-8){steerX=0;steerY=0;return}let inv=cfg.speed/Math.sqrt(l2);let ax=tx*inv-vx[i],ay=ty*inv-vy[i],m2=ax*ax+ay*ay,lim=cfg.force;
+function steer(i,tx,ty,maxSpeed=cfg.speed,maxForce=cfg.force){
+ let l2=tx*tx+ty*ty;if(l2<1e-8){steerX=0;steerY=0;return}let inv=maxSpeed/Math.sqrt(l2);let ax=tx*inv-vx[i],ay=ty*inv-vy[i],m2=ax*ax+ay*ay,lim=maxForce;
  if(m2>lim*lim){let k=lim/Math.sqrt(m2);ax*=k;ay*=k}steerX=ax;steerY=ay;
 }
 let obstacles=[],pred=[],pathData,pathCounts,steerX=0,steerY=0;
@@ -34,7 +34,7 @@ function update(dt,now){
  resizeGrid();rebuildGrid();let sepR=cellSize*.43,sep2=sepR*sepR,per2=cellSize*cellSize,neigh=0,speedSum=0,t=now*.00012;
  let px=pointer.x,py=pointer.y,pActive=pointer.active&&performance.now()<pointer.until;
  for(let i=0;i<N;i++){
-  let ix=x[i],iy=y[i],sumX=0,sumY=0,alignX=0,alignY=0,sepX=0,sepY=0,count=0;
+  let ix=x[i],iy=y[i],guild=kind[i],sumX=0,sumY=0,alignX=0,alignY=0,sepX=0,sepY=0,count=0;
   let gx=(ix/cellSize)|0,gy=(iy/cellSize)|0;
   for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
    let cx=gx+ox,cy=gy+oy;
@@ -52,9 +52,10 @@ function update(dt,now){
   }
   let ax=0,ay=0;
   if(count){
-   steer(i,sepX,sepY);ax+=steerX*cfg.separation;ay+=steerY*cfg.separation;
-   steer(i,alignX/count,alignY/count);ax+=steerX*cfg.alignment;ay+=steerY*cfg.alignment;
-   steer(i,sumX/count,sumY/count);ax+=steerX*cfg.cohesion;ay+=steerY*cfg.cohesion;
+   let agentSpeed=cfg.speed*(guild===3?1.28:guild===2?.82:guild===1?.94:1),agentForce=cfg.force*(guild===3?1.18:1);
+   steer(i,sepX,sepY,agentSpeed,agentForce);ax+=steerX*cfg.separation*(guild===0?1.35:guild===3?.78:1);ay+=steerY*cfg.separation*(guild===0?1.35:guild===3?.78:1);
+   steer(i,alignX/count,alignY/count,agentSpeed,agentForce);ax+=steerX*cfg.alignment*(guild===1?1.3:guild===2?.72:1);ay+=steerY*cfg.alignment*(guild===1?1.3:guild===2?.72:1);
+   steer(i,sumX/count,sumY/count,agentSpeed,agentForce);ax+=steerX*cfg.cohesion*(guild===2?1.25:guild===3?.78:1);ay+=steerY*cfg.cohesion*(guild===2?1.25:guild===3?.78:1);
   }
   // Smooth, multi-scale environmental current.
   ax+=Math.sin(iy*.0024+t+kind[i])*.34*cfg.flow+Math.cos(iy*.006-t*.7)*.12*cfg.flow;
@@ -68,7 +69,7 @@ function update(dt,now){
   }
   let f2=ax*ax+ay*ay,lim=cfg.force*2.4;if(f2>lim*lim){let k=lim/Math.sqrt(f2);ax*=k;ay*=k}
   vx[i]+=ax*dt*60;vy[i]+=ay*dt*60;
-  let s2=vx[i]*vx[i]+vy[i]*vy[i],max=cfg.speed;
+  let s2=vx[i]*vx[i]+vy[i]*vy[i],max=cfg.speed*(guild===3?1.28:guild===2?.82:guild===1?.94:1);
   if(s2>max*max){let k=max/Math.sqrt(s2);vx[i]*=k;vy[i]*=k}else if(s2<.16){vx[i]*=1.04;vy[i]*=1.04}
   x[i]+=vx[i]*dt*60;y[i]+=vy[i]*dt*60;
   if(cfg.wrap){if(x[i]<0)x[i]+=W;else if(x[i]>=W)x[i]-=W;if(y[i]<0)y[i]+=H;else if(y[i]>=H)y[i]-=H}
@@ -76,7 +77,7 @@ function update(dt,now){
   speedSum+=Math.sqrt(vx[i]*vx[i]+vy[i]*vy[i]);neigh+=count;
  }
  // Predator motion is deliberately slower than prey.
- for(let k=0;k<pred.length;k++){let p=pred[k],a=Math.sin(performance.now()*.0004+p.phase)*.035;p.vx+=Math.cos(p.phase+a)*.025;p.vy+=Math.sin(p.phase+a)*.025;let l=Math.hypot(p.vx,p.vy)||1;p.vx=p.vx/l*1.15;p.vy=p.vy/l*1.15;p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1}
+ for(let k=0;k<pred.length;k++){let p=pred[k],best=-1,bestD=1e12;for(let j=0;j<N;j++){if(kind[j]>1)continue;let dx=x[j]-p.x,dy=y[j]-p.y,d2=dx*dx+dy*dy;if(cfg.wrap){if(dx>W*.5)dx-=W;else if(dx< -W*.5)dx+=W;if(dy>H*.5)dy-=H;else if(dy< -H*.5)dy+=H;d2=dx*dx+dy*dy}if(d2<bestD){bestD=d2;best=j}}let a=Math.sin(now*.0004+p.phase)*.035;if(best>=0&&bestD<220000){let dx=x[best]-p.x,dy=y[best]-p.y;if(cfg.wrap){if(dx>W*.5)dx-=W;else if(dx< -W*.5)dx+=W;if(dy>H*.5)dy-=H;else if(dy< -H*.5)dy+=H}let d=Math.hypot(dx,dy)||1;p.vx+=dx/d*.11;p.vy+=dy/d*.11}else{p.vx+=Math.cos(p.phase+a)*.025;p.vy+=Math.sin(p.phase+a)*.025}let l=Math.hypot(p.vx,p.vy)||1;p.vx=p.vx/l*1.45;p.vy=p.vy/l*1.45;p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1}
  meanSpeed=speedSum/N;meanNeighbours=neigh/N;
 }
 function draw(){
