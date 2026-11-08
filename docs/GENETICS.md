@@ -17,7 +17,7 @@ The eight sensory channels are:
 | 1 | Neighbour alignment |
 | 2 | Separation pressure |
 | 3 | Predator threat |
-| 4 | Food/current-field signal |
+| 4 | Food proximity |
 | 5 | Eligible mate proximity |
 | 6 | Energy reserve |
 | 7 | Age relative to lifespan |
