@@ -67,7 +67,7 @@ function resize(){worker.postMessage({type:'resize',width:innerWidth,height:inne
 function config(values){worker.postMessage({type:'config',values})}
 const specs={count:v=>v.toLocaleString(),speed:v=>v.toFixed(1),perception:v=>v,separation:v=>v.toFixed(2),alignment:v=>v.toFixed(2),cohesion:v=>v.toFixed(2),force:v=>v.toFixed(3),predators:v=>v,obstacles:v=>v,flow:v=>v.toFixed(2),trail:v=>v.toFixed(2)};
 const keys=['count','speed','perception','separation','alignment','cohesion','force','predators','obstacles','flow','trail'];
-for(const id of keys){const el=$(id),out=$(id+'Val');el.addEventListener('input',()=>{let v=+el.value;out.textContent=specs[id](v);if(id==='count'){requestedCount=v;currentCount=v;$('mCount').textContent=v.toLocaleString();slowFrames=fastFrames=0}config({[id]:v})})}
+for(const id of keys){const el=$(id),out=$(id+'Val');if(id==='count'){el.addEventListener('input',()=>{let v=+el.value;requestedCount=v;out.textContent=specs[id](v)});el.addEventListener('change',()=>{let v=+el.value;requestedCount=v;currentCount=v;$('mCount').textContent=v.toLocaleString();slowFrames=fastFrames=0;config({count:v})})}else{el.addEventListener('input',()=>{let v=+el.value;out.textContent=specs[id](v);config({[id]:v})})}}
 $('mode').addEventListener('change',e=>config({mode:e.target.value}));
 $('wrap').addEventListener('change',e=>config({wrap:e.target.checked}));
 $('vectors').addEventListener('change',e=>config({vectors:e.target.checked}));
