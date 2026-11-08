@@ -71,7 +71,7 @@ These are intentionally simplified ecological mechanics. Parameters are qualitat
 
 ## Controls
 
-The top configuration drawer groups controls into Motion, Neural brain, Genetics, Reproduction, Selection, and Environment. Every range slider has editable MIN and MAX endpoint labels: press and hold an endpoint for about 550 ms to edit that limit. The original bounds and customized bounds are saved in browser local storage and restored automatically on later visits. Use **Reset slider limits** to restore the original range for every slider. **Defaults** also restores the original slider bounds. Committed slider values are saved locally as well.
+The top configuration drawer groups controls into Motion, Neural brain, Genetics, Reproduction, Selection, and Environment. Every range slider has editable MIN and MAX endpoint labels: press and hold an endpoint for about 550 ms to edit that limit. The original bounds and customized bounds are saved in browser local storage and restored automatically on later visits. Use **Reset slider limits** to restore the original range for every slider. **Defaults** also restores the original slider bounds. Committed slider values are saved and restored automatically as well; the explicit Save/Load controls remain available.
 
 | Area | Controls |
 |---|---|
