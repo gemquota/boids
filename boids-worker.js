@@ -1,100 +1,50 @@
 'use strict';
-let canvas,ctx,W=1,H=1,dpr=1,N=0;
-let x,y,vx,vy,kind,cellHead,link,cols=1,rows=1,cellSize=42;
-let running=true,raf=0,last=0,frameCount=0,fps=60,meanSpeed=0,meanNeighbours=0,quality=1;
+let canvas,ctx,W=1,H=1,dpr=1,cap=12000,N=0,frameNo=0;
+let x,y,vx,vy,age,energy,preg,sex,fitness,genome,brainOut,cellHead,link,cols=1,rows=1,cellSize=42;
+let running=true,last=0,frames=0,fps=60,meanSpeed=0,meanNeighbours=0,births=0,deaths=0,generation=0,simTime=0;
 let pointer={x:-1e6,y:-1e6,active:false,mode:'repel',until:0};
-let cfg={speed:2.5,force:.09,perception:42,separation:1.8,alignment:1.15,cohesion:1.05,trail:.14,flow:.45,wrap:true,mode:'ecosystem',vectors:false,predators:5,obstacles:7,food:1.0};
-const TAU=Math.PI*2, colors=['#70f5d2','#78aaff','#ffc17a','#d89cff'];
-const rand=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function resize(w,h,ratio){W=w;H=h;dpr=Math.min(ratio||1,1.5);canvas.width=Math.max(1,Math.floor(W*dpr));canvas.height=Math.max(1,Math.floor(H*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#050a12';ctx.fillRect(0,0,W,H);rebuildGrid();}
-function allocate(n,mode=cfg.mode){
- N=Math.max(300,Math.min(24000,n|0));x=new Float32Array(N);y=new Float32Array(N);vx=new Float32Array(N);vy=new Float32Array(N);kind=new Uint8Array(N);link=new Int32Array(N);pathData=new Float32Array(N*4);pathCounts=new Uint32Array(4);
- for(let i=0;i<N;i++){let a=rand(0,TAU),s=rand(.7,cfg.speed);x[i]=rand(0,W);y[i]=rand(0,H);vx[i]=Math.cos(a)*s;vy[i]=Math.sin(a)*s;kind[i]=mode==='single'?0:mode==='school'?1:mode==='chaos'?i%4:Math.floor(Math.random()*4)}
- cellSize=cfg.perception;cols=Math.max(1,Math.ceil(W/cellSize));rows=Math.max(1,Math.ceil(H/cellSize));cellHead=new Int32Array(cols*rows);rebuildGrid();postMessage({type:'population',count:N});
-}
-function rebuildGrid(){
- if(!cellHead)return;
- cellHead.fill(-1);
- for(let i=0;i<N;i++){let cx=clamp((x[i]/cellSize)|0,0,cols-1),cy=clamp((y[i]/cellSize)|0,0,rows-1),c=cy*cols+cx;link[i]=cellHead[c];cellHead[c]=i}
-}
-function resizeGrid(){
- let s=Math.max(20,cfg.perception);let c=Math.max(1,Math.ceil(W/s)),r=Math.max(1,Math.ceil(H/s));
- if(c!==cols||r!==rows||s!==cellSize){cols=c;rows=r;cellSize=s;cellHead=new Int32Array(cols*rows)}
-}
-function steer(i,tx,ty,maxSpeed=cfg.speed,maxForce=cfg.force){
- let l2=tx*tx+ty*ty;if(l2<1e-8){steerX=0;steerY=0;return}let inv=maxSpeed/Math.sqrt(l2);let ax=tx*inv-vx[i],ay=ty*inv-vy[i],m2=ax*ax+ay*ay,lim=maxForce;
- if(m2>lim*lim){let k=lim/Math.sqrt(m2);ax*=k;ay*=k}steerX=ax;steerY=ay;
-}
-let obstacles=[],pred=[],pathData,pathCounts,steerX=0,steerY=0;
-function seedEnvironment(){
- obstacles=[];for(let i=0;i<cfg.obstacles;i++)obstacles.push({x:rand(W*.12,W*.88),y:rand(H*.12,H*.88),r:rand(18,55),phase:rand(0,TAU)});
- pred=[];for(let i=0;i<cfg.predators;i++)pred.push({x:rand(0,W),y:rand(0,H),vx:rand(-1,1),vy:rand(-1,1),phase:rand(0,TAU)});
-}
-function update(dt,now){
- resizeGrid();rebuildGrid();let sepR=cellSize*.43,sep2=sepR*sepR,per2=cellSize*cellSize,neigh=0,speedSum=0,t=now*.00012;
- let px=pointer.x,py=pointer.y,pActive=pointer.active&&performance.now()<pointer.until;
- for(let i=0;i<N;i++){
-  let ix=x[i],iy=y[i],guild=kind[i],sumX=0,sumY=0,alignX=0,alignY=0,sepX=0,sepY=0,count=0;
-  let gx=(ix/cellSize)|0,gy=(iy/cellSize)|0;
-  for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
-   let cx=gx+ox,cy=gy+oy;
-   if(cfg.wrap){cx=(cx+cols)%cols;cy=(cy+rows)%rows}else if(cx<0||cy<0||cx>=cols||cy>=rows)continue;
-   for(let j=cellHead[cy*cols+cx];j!==-1;j=link[j]){
-    if(j===i)continue;
-    let dx=x[j]-ix,dy=y[j]-iy;
-    if(cfg.wrap){if(dx>W*.5)dx-=W;else if(dx< -W*.5)dx+=W;if(dy>H*.5)dy-=H;else if(dy< -H*.5)dy+=H}
-    let d2=dx*dx+dy*dy;if(d2>per2||d2<.0001)continue;
-    let same=kind[i]===kind[j],interact=cfg.mode==='single'||cfg.mode==='school'||cfg.mode==='chaos'||same||(kind[i]===0&&kind[j]===2)||(kind[i]===2&&kind[j]===0);
-    if(!interact)continue;
-    count++;sumX+=dx;sumY+=dy;alignX+=vx[j];alignY+=vy[j];
-    if(d2<sep2){let inv=1/d2;sepX-=dx*inv;sepY-=dy*inv}
-   }
-  }
-  let ax=0,ay=0;
-  if(count){
-   let agentSpeed=cfg.speed*(guild===3?1.28:guild===2?.82:guild===1?.94:1),agentForce=cfg.force*(guild===3?1.18:1);
-   steer(i,sepX,sepY,agentSpeed,agentForce);ax+=steerX*cfg.separation*(guild===0?1.35:guild===3?.78:1);ay+=steerY*cfg.separation*(guild===0?1.35:guild===3?.78:1);
-   steer(i,alignX/count,alignY/count,agentSpeed,agentForce);ax+=steerX*cfg.alignment*(guild===1?1.3:guild===2?.72:1);ay+=steerY*cfg.alignment*(guild===1?1.3:guild===2?.72:1);
-   steer(i,sumX/count,sumY/count,agentSpeed,agentForce);ax+=steerX*cfg.cohesion*(guild===2?1.25:guild===3?.78:1);ay+=steerY*cfg.cohesion*(guild===2?1.25:guild===3?.78:1);
-  }
-  // Smooth, multi-scale environmental current.
-  ax+=Math.sin(iy*.0024+t+kind[i])*.34*cfg.flow+Math.cos(iy*.006-t*.7)*.12*cfg.flow;
-  ay+=Math.cos(ix*.0021-t+kind[i])*.34*cfg.flow+Math.sin(ix*.005+t*.8)*.12*cfg.flow;
-  // Soft repulsors around reef-like obstacles.
-  for(let k=0;k<obstacles.length;k++){let o=obstacles[k],dx=ix-o.x,dy=iy-o.y,d2=dx*dx+dy*dy,rr=o.r+30;if(d2<rr*rr&&d2>1){let d=Math.sqrt(d2),f=(rr-d)/rr*1.5;ax+=dx/d*f;ay+=dy/d*f}}
-  if(pActive){let dx=ix-px,dy=iy-py,d2=dx*dx+dy*dy;if(d2<28000&&d2>4){let d=Math.sqrt(d2),f=(1-d/167)*2.8*(pointer.mode==='attract'?-1:1);ax+=dx/d*f;ay+=dy/d*f}}
-  // Predators create moving pressure fronts; only prey and small shoals flee.
-  if(cfg.mode==='ecosystem'||cfg.mode==='mixed'){
-   for(let k=0;k<pred.length;k++){let p=pred[k],dx=ix-p.x,dy=iy-p.y,d2=dx*dx+dy*dy;if(d2<19000&&d2>1&&(kind[i]===0||kind[i]===1)){let d=Math.sqrt(d2),f=(1-d/138)*2.3;ax+=dx/d*f;ay+=dy/d*f}}
-  }
-  let f2=ax*ax+ay*ay,lim=cfg.force*2.4;if(f2>lim*lim){let k=lim/Math.sqrt(f2);ax*=k;ay*=k}
-  vx[i]+=ax*dt*60;vy[i]+=ay*dt*60;
-  let s2=vx[i]*vx[i]+vy[i]*vy[i],max=cfg.speed*(guild===3?1.28:guild===2?.82:guild===1?.94:1);
-  if(s2>max*max){let k=max/Math.sqrt(s2);vx[i]*=k;vy[i]*=k}else if(s2<.16){vx[i]*=1.04;vy[i]*=1.04}
-  x[i]+=vx[i]*dt*60;y[i]+=vy[i]*dt*60;
-  if(cfg.wrap){if(x[i]<0)x[i]+=W;else if(x[i]>=W)x[i]-=W;if(y[i]<0)y[i]+=H;else if(y[i]>=H)y[i]-=H}
-  else {if(x[i]<8||x[i]>W-8)vx[i]*=-1;if(y[i]<8||y[i]>H-8)vy[i]*=-1;x[i]=clamp(x[i],8,W-8);y[i]=clamp(y[i],8,H-8)}
-  speedSum+=Math.sqrt(vx[i]*vx[i]+vy[i]*vy[i]);neigh+=count;
- }
- // Predator motion is deliberately slower than prey.
- for(let k=0;k<pred.length;k++){let p=pred[k],best=-1,bestD=1e12;for(let j=0;j<N;j++){if(kind[j]>1)continue;let dx=x[j]-p.x,dy=y[j]-p.y,d2=dx*dx+dy*dy;if(cfg.wrap){if(dx>W*.5)dx-=W;else if(dx< -W*.5)dx+=W;if(dy>H*.5)dy-=H;else if(dy< -H*.5)dy+=H;d2=dx*dx+dy*dy}if(d2<bestD){bestD=d2;best=j}}let a=Math.sin(now*.0004+p.phase)*.035;if(best>=0&&bestD<220000){let dx=x[best]-p.x,dy=y[best]-p.y;if(cfg.wrap){if(dx>W*.5)dx-=W;else if(dx< -W*.5)dx+=W;if(dy>H*.5)dy-=H;else if(dy< -H*.5)dy+=H}let d=Math.hypot(dx,dy)||1;p.vx+=dx/d*.11;p.vy+=dy/d*.11}else{p.vx+=Math.cos(p.phase+a)*.025;p.vy+=Math.sin(p.phase+a)*.025}let l=Math.hypot(p.vx,p.vy)||1;p.vx=p.vx/l*1.45;p.vy=p.vy/l*1.45;p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1}
- meanSpeed=speedSum/N;meanNeighbours=neigh/N;
-}
-function draw(){
- ctx.fillStyle='rgba(4,9,17,'+cfg.trail+')';ctx.fillRect(0,0,W,H);
- // Subtle reef geometry and current-field filaments.
- ctx.save();ctx.globalAlpha=.16;ctx.strokeStyle='#527d91';ctx.lineWidth=1;
- for(let i=0;i<obstacles.length;i++){let o=obstacles[i];ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(o.x,o.y,o.r+7,0,TAU);ctx.stroke()}ctx.restore();
- // Batch all agents by species to avoid per-agent canvas state changes.
- pathCounts.fill(0);
- for(let i=0;i<N;i++){let k=kind[i],o=(pathCounts[k]++)*4,xx=x[i],yy=y[i],dx=vx[i],dy=vy[i],inv=1/(Math.sqrt(dx*dx+dy*dy)||1),len=k===3?7:5.2;pathData[o]=xx;pathData[o+1]=yy;pathData[o+2]=xx-dx*inv*len;pathData[o+3]=yy-dy*inv*len}
- for(let k=0;k<4;k++){let count=pathCounts[k];if(!count)continue;ctx.beginPath();for(let j=0;j<count*4;j+=4){ctx.moveTo(pathData[j],pathData[j+1]);ctx.lineTo(pathData[j+2],pathData[j+3])}ctx.strokeStyle=colors[k];ctx.globalAlpha=k===3?.9:.72;ctx.lineWidth=k===3?1.8:1.15;ctx.stroke()}
- ctx.globalAlpha=1;
- // Predator silhouettes.
- for(let i=0;i<pred.length;i++){let p=pred[i],a=Math.atan2(p.vy,p.vx);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a);ctx.fillStyle='#ff758e';ctx.shadowColor='#ff526f';ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(12,0);ctx.lineTo(-8,-6);ctx.lineTo(-4,0);ctx.lineTo(-8,6);ctx.closePath();ctx.fill();ctx.restore()}
- if(cfg.vectors){ctx.beginPath();for(let i=0;i<N;i+=Math.max(1,(N/650)|0)){ctx.moveTo(x[i],y[i]);ctx.lineTo(x[i]+vx[i]*8,y[i]+vy[i]*8)}ctx.strokeStyle='#ffffff42';ctx.lineWidth=.6;ctx.stroke()}
-}
-function scheduleFrame(){setTimeout(()=>frame(performance.now()),16)}
-function frame(now){if(!running)return;try{let dt=Math.min((now-last)/1000,.033);last=now;update(dt,now);draw();frameCount++;if(now-raf>750){fps=Math.round(frameCount*1000/(now-raf));frameCount=0;raf=now;postMessage({type:'stats',fps,speed:meanSpeed,neighbours:meanNeighbours,count:N})}scheduleFrame()}catch(error){postMessage({type:'error',message:error?.message||String(error),stack:error?.stack||''})}}
-function init(c){canvas=c;ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});seedEnvironment();resize(W,H,1);allocate(3600);last=performance.now();raf=last;scheduleFrame()}
-onmessage=e=>{let m=e.data;if(m.type==='init'){init(m.canvas);return}if(m.type==='resize'){resize(m.width,m.height,m.dpr);seedEnvironment();return}if(m.type==='config'){Object.assign(cfg,m.values);if(m.values.count)allocate(m.values.count);if(m.values.obstacles!==undefined||m.values.predators!==undefined)seedEnvironment();return}if(m.type==='pointer'){pointer.x=m.x;pointer.y=m.y;pointer.active=m.active;pointer.mode=m.mode||'repel';pointer.until=performance.now()+800;return}if(m.type==='action'){if(m.action==='pause'){running=!running;if(running){last=performance.now();raf=last;scheduleFrame()}}if(m.action==='reset'){allocate(N);seedEnvironment()}if(m.action==='scatter'){for(let i=0;i<N;i++){let a=rand(0,TAU);vx[i]=Math.cos(a)*rand(1,cfg.speed);vy[i]=Math.sin(a)*rand(1,cfg.speed);x[i]=rand(0,W);y[i]=rand(0,H)}}if(m.action==='pulse'){pointer={x:W/2,y:H/2,active:true,mode:'repel',until:performance.now()+1200}}if(m.action==='clear'){ctx.fillStyle='#050a12';ctx.fillRect(0,0,W,H)}}};
+let cfg={speed:2.5,force:.09,perception:42,separation:1.8,alignment:1.15,cohesion:1.05,trail:.14,flow:.45,wrap:true,vectors:false,predators:5,obstacles:7,count:2000,connections:18,hidden:8,brainRate:3,plasticity:.08,mutation:.025,mutationSize:.25,crossover:.5,learned:.15,drive:.55,ageMin:18,ageMax:160,matePreference:0,fertility:2,gestation:24,energyThreshold:.68,mateRadius:70,predation:.45,starvation:.2,competition:.25,harshness:.25,aging:.25,selection:.5,mode:'ecosystem'};
+const TAU=Math.PI*2,rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let obstacles=[],predators=[],geneBins=new Array(16).fill(0),history=[],topology=new Array(8).fill(0);
+function allocArrays(size){cap=Math.max(size,cap);x=new Float32Array(cap);y=new Float32Array(cap);vx=new Float32Array(cap);vy=new Float32Array(cap);age=new Float32Array(cap);energy=new Float32Array(cap);preg=new Float32Array(cap);sex=new Uint8Array(cap);fitness=new Float32Array(cap);brainOut=new Float32Array(cap*8);link=new Int32Array(cap);genome=new Float32Array(cap*cfg.connections*3)}
+function neuronCount(){return 16+cfg.hidden}
+function geneOffset(i,g){return (i*cfg.connections+g)*3}
+function randomConnection(i,g){let h=8+cfg.hidden,src=Math.random()<.72?Math.floor(Math.random()*8):8+Math.floor(Math.random()*cfg.hidden),dst=Math.random()<.65?8+Math.floor(Math.random()*cfg.hidden):h+Math.floor(Math.random()*8),o=geneOffset(i,g);genome[o]=src;genome[o+1]=dst;genome[o+2]=rand(-1,1)}
+function initBrain(i){for(let g=0;g<cfg.connections;g++)randomConnection(i,g)}
+function cloneGenome(child,a,b){for(let g=0;g<cfg.connections;g++){let pa=geneOffset(a,g),pb=geneOffset(b,g),pc=geneOffset(child,g),pick=Math.random()<cfg.crossover?pa:pb;genome[pc]=genome[pick];genome[pc+1]=genome[pick+1];genome[pc+2]=genome[pick+2];if(Math.random()<cfg.mutation){if(Math.random()<.18){let src=Math.random()<.72?Math.floor(Math.random()*8):8+Math.floor(Math.random()*cfg.hidden),dst=Math.random()<.65?8+Math.floor(Math.random()*cfg.hidden):8+cfg.hidden+Math.floor(Math.random()*8);genome[pc]=src;genome[pc+1]=dst}else genome[pc+2]=clamp(genome[pc+2]+rand(-cfg.mutationSize,cfg.mutationSize),-2,2)}}}
+function phenotypeHue(i){let a=geneOffset(i,0),b=geneOffset(i,Math.min(1,cfg.connections-1)),c=geneOffset(i,Math.min(2,cfg.connections-1));let code=(Math.floor((genome[a+2]+2)/4*16)&15)*16+(Math.floor((genome[b+2]+2)/4*16)&15);code=(code*17+Math.floor((genome[c+2]+2)/4*16))%4096;return (code/4096*360+360)%360}
+function resize(w,h,ratio){W=w;H=h;dpr=Math.min(ratio||1,1.5);canvas.width=Math.max(1,Math.floor(W*dpr));canvas.height=Math.max(1,Math.floor(H*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#040911';ctx.fillRect(0,0,W,H);rebuildGrid()}
+function seedEnvironment(){obstacles=[];for(let i=0;i<cfg.obstacles;i++)obstacles.push({x:rand(W*.12,W*.88),y:rand(H*.12,H*.88),r:rand(18,52)});predators=[];for(let i=0;i<cfg.predators;i++)predators.push({x:rand(0,W),y:rand(0,H),vx:rand(-1,1),vy:rand(-1,1)})}
+function rebuildGrid(){if(!cellHead||!x)return;cellHead.fill(-1);for(let i=0;i<N;i++){let cx=clamp((x[i]/cellSize)|0,0,cols-1),cy=clamp((y[i]/cellSize)|0,0,rows-1),c=cy*cols+cx;link[i]=cellHead[c];cellHead[c]=i}}
+function resizeGrid(){let s=Math.max(20,cfg.perception),c=Math.max(1,Math.ceil(W/s)),r=Math.max(1,Math.ceil(H/s));if(c!==cols||r!==rows||s!==cellSize){cols=c;rows=r;cellSize=s;cellHead=new Int32Array(cols*rows)}}
+function createPopulation(n){N=clamp(n|0,100,cap);if(!x||x.length<cap)allocArrays(cap);for(let i=0;i<N;i++){let a=rand(0,TAU),s=rand(.5,cfg.speed);x[i]=rand(0,W);y[i]=rand(0,H);vx[i]=Math.cos(a)*s;vy[i]=Math.sin(a)*s;age[i]=rand(0,cfg.ageMax*.75);energy[i]=rand(.45,1);preg[i]=0;sex[i]=Math.random()<.5?0:1;fitness[i]=rand(.3,.8);initBrain(i);brainOut.fill(0,i*8,i*8+8)}births=0;deaths=0;generation=0;simTime=0;history=[];cellHead=new Int32Array(Math.max(1,Math.ceil(W/cellSize)*Math.ceil(H/cellSize)));postMessage({type:'population',count:N})}
+function brain(i,sense){let h=cfg.hidden,base=i*8,neur=new Float32Array(16+h);for(let k=0;k<8;k++)neur[k]=sense[k];for(let g=0;g<cfg.connections;g++){let o=geneOffset(i,g),src=genome[o]|0,dst=genome[o+1]|0,w=genome[o+2];if(src<8+h&&dst>=8&&dst<16+h)neur[dst]+=neur[src]*w}for(let k=8;k<16+h;k++)neur[k]=Math.tanh(neur[k]);for(let k=0;k<8;k++)brainOut[base+k]=Math.tanh(neur[8+h+k]);}
+function reproduce(i,j){if(N>=cap)return;let child=N++,a=i,b=j;x[child]=(x[a]+x[b])*.5+rand(-5,5);y[child]=(y[a]+y[b])*.5+rand(-5,5);vx[child]=(vx[a]+vx[b])*.5;vy[child]=(vy[a]+vy[b])*.5;age[child]=0;energy[child]=.8;preg[child]=0;sex[child]=Math.random()<.5?0:1;fitness[child]=(fitness[a]+fitness[b])*.5;cloneGenome(child,a,b);brainOut.fill(0,child*8,child*8+8);energy[a]*=.72;energy[b]*=.72;preg[a]=preg[b]=cfg.gestation;births++;if(births%Math.max(10,N*.04|0)===0)generation++}
+function evaluatePopulation(){geneBins.fill(0);topology.fill(0);let totalAge=0,totalEnergy=0,totalFitness=0,signatures=new Set();for(let i=0;i<N;i++){totalAge+=age[i];totalEnergy+=energy[i];totalFitness+=fitness[i];let hue=phenotypeHue(i),bin=Math.floor(hue/360*16)%16;geneBins[bin]++;signatures.add(bin);for(let g=0;g<cfg.connections;g++){let o=geneOffset(i,g),dst=genome[o+1]|0;if(dst>=8+cfg.hidden)topology[dst-(8+cfg.hidden)]++}}history.push(geneBins.slice());if(history.length>60)history.shift();let hist=geneBins.map((v)=>v/N),diversity=0;for(let v of hist)if(v>0)diversity-=v*Math.log(v);return {age:totalAge/N,energy:totalEnergy/N,fitness:totalFitness/N,diversity,signatures:signatures.size,histogram:geneBins.slice(),history:history.length?history[history.length-1]:geneBins.slice(),topology:topology.slice()}}
+function update(dt,now){resizeGrid();rebuildGrid();let per2=cellSize*cellSize,sepR=cellSize*.43,sep2=sepR*sepR,neigh=0,speedSum=0,t=now*.00012,px=pointer.x,py=pointer.y,pActive=pointer.active&&performance.now()<pointer.until;frameNo++;simTime+=dt;
+for(let i=0;i<N;i++){let ix=x[i],iy=y[i],sumX=0,sumY=0,alX=0,alY=0,sepX=0,sepY=0,count=0,threat=0,mateDx=0,mateDy=0,mateDist=1e9,gx=(ix/cellSize)|0,gy=(iy/cellSize)|0;
+for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){let cx=gx+ox,cy=gy+oy;if(cfg.wrap){cx=(cx+cols)%cols;cy=(cy+rows)%rows}else if(cx<0||cy<0||cx>=cols||cy>=rows)continue;for(let j=cellHead[cy*cols+cx];j!==-1;j=link[j]){if(j===i)continue;let dx=x[j]-ix,dy=y[j]-iy;if(cfg.wrap){if(dx>W/2)dx-=W;if(dx< -W/2)dx+=W;if(dy>H/2)dy-=H;if(dy< -H/2)dy+=H}let d2=dx*dx+dy*dy;if(d2<per2&&d2>.001){count++;sumX+=dx;sumY+=dy;alX+=vx[j];alY+=vy[j];if(d2<sep2){sepX-=dx/d2;sepY-=dy/d2}if(sex[i]!==sex[j]&&age[j]>=cfg.ageMin&&age[j]<=cfg.ageMax&&d2<cfg.mateRadius**2&&d2<mateDist){mateDist=d2;mateDx=dx;mateDy=dy}}}}
+for(let p of predators){let dx=ix-p.x,dy=iy-p.y,d2=dx*dx+dy*dy;if(d2<18000&&d2>1){threat=Math.max(threat,1-Math.sqrt(d2)/134)}}
+let sense=[clamp(count/16,0,1),count?Math.hypot(alX/count,alY/count)/cfg.speed:0,Math.min(1,Math.hypot(sepX,sepY)*8),threat,Math.sin(iy*.002+t),mateDist<1e8?1-Math.sqrt(mateDist)/cfg.mateRadius:0,energy[i],clamp(age[i]/Math.max(1,cfg.ageMax),0,1)];
+if(frameNo%cfg.brainRate===i%cfg.brainRate)brain(i,sense);let bo=i*8,out=brainOut;
+let ax=0,ay=0;if(count){let sp=Math.hypot(sepX,sepY),al=Math.hypot(alX/count,alY/count),co=Math.hypot(sumX/count,sumY/count);if(sp>0){ax+=sepX/sp*cfg.separation;ay+=sepY/sp*cfg.separation}if(al>0){ax+=(alX/count)/al*cfg.alignment;ay+=(alY/count)/al*cfg.alignment}if(co>0){ax+=sumX/count/co*cfg.cohesion;ay+=sumY/count/co*cfg.cohesion}}
+ax+=Math.sin(iy*.0024+t)*.34*cfg.flow+Math.cos(iy*.006-t*.7)*.12*cfg.flow;ay+=Math.cos(ix*.0021-t)*.34*cfg.flow+Math.sin(ix*.005+t*.8)*.12*cfg.flow;
+for(let o of obstacles){let dx=ix-o.x,dy=iy-o.y,d2=dx*dx+dy*dy,rr=o.r+28;if(d2<rr*rr&&d2>1){let d=Math.sqrt(d2),f=(rr-d)/rr*1.5;ax+=dx/d*f;ay+=dy/d*f}}
+if(pActive){let dx=ix-px,dy=iy-py,d2=dx*dx+dy*dy;if(d2<28000&&d2>4){let d=Math.sqrt(d2),f=(1-d/167)*2.8*(pointer.mode==='attract'?-1:1);ax+=dx/d*f;ay+=dy/d*f}}
+if(threat>0){let dx=ix-px,dy=iy-py;if(Math.hypot(dx,dy)<1){dx=Math.cos(i*2.4);dy=Math.sin(i*2.4)}let d=Math.hypot(dx,dy);ax+=dx/d*threat*cfg.predation*2.4;ay+=dy/d*threat*cfg.predation*2.4}
+let brainTurn=out[bo],brainFlee=out[bo+5],brainCohere=out[bo+3],brainMate=out[bo+6];ax+=brainTurn*.5+brainFlee*threat;ay+=brainCohere*.28+brainMate*(mateDx/(Math.sqrt(mateDist)||1))*.3;
+let f2=ax*ax+ay*ay,lim=cfg.force*2.5;if(f2>lim*lim){let k=lim/Math.sqrt(f2);ax*=k;ay*=k}vx[i]+=ax*dt*60;vy[i]+=ay*dt*60;let max=cfg.speed*(1+out[bo+1]*.25),s2=vx[i]**2+vy[i]**2;if(s2>max*max){let k=max/Math.sqrt(s2);vx[i]*=k;vy[i]*=k}x[i]+=vx[i]*dt*60;y[i]+=vy[i]*dt*60;
+if(cfg.wrap){if(x[i]<0)x[i]+=W;else if(x[i]>=W)x[i]-=W;if(y[i]<0)y[i]+=H;else if(y[i]>=H)y[i]-=H}else{x[i]=clamp(x[i],5,W-5);y[i]=clamp(y[i],5,H-5);if(x[i]<6||x[i]>W-6)vx[i]*=-1;if(y[i]<6||y[i]>H-6)vy[i]*=-1}
+let cost=.0007+cfg.starvation*.0006+cfg.harshness*.0004;energy[i]=clamp(energy[i]+.00035*(1-count/Math.max(1,N)*20)-cost,0,1.2);age[i]+=dt*3*(.5+cfg.aging);fitness[i]=clamp(fitness[i]+(energy[i]-.5)*.0002,0,1);
+if(preg[i]>0)preg[i]-=dt*3;if(preg[i]<=0&&age[i]>=cfg.ageMin&&age[i]<=cfg.ageMax&&energy[i]>cfg.energyThreshold&&mateDist<cfg.mateRadius**2&&Math.random()<cfg.drive*.008){let j=-1,best=mateDist;for(let q=0;q<Math.min(18,N);q++){let k=(i+1+Math.floor(Math.random()*(N-1)))%N;if(sex[k]===sex[i])continue;let dx=x[k]-ix,dy=y[k]-iy,d=dx*dx+dy*dy;if(d<best){best=d;j=k}}if(j>=0){let similarity=1-Math.min(1,Math.abs(phenotypeHue(i)-phenotypeHue(j))/180),accept=cfg.matePreference>=0?1-cfg.matePreference*(1-similarity):1+cfg.matePreference*similarity;if(Math.random()<clamp(accept,0,1)){preg[i]=cfg.gestation;energy[i]-=.08}}}
+if(preg[i]<=0&&age[i]>=cfg.ageMin&&age[i]<=cfg.ageMax&&energy[i]>cfg.energyThreshold&&Math.random()<cfg.drive*.002){let j=-1,best=cfg.mateRadius**2;for(let q=0;q<12;q++){let k=(i+1+Math.floor(Math.random()*(N-1)))%N;if(sex[k]===sex[i])continue;let dx=x[k]-ix,dy=y[k]-iy,d=dx*dx+dy*dy;if(d<best){best=d;j=k}}if(j>=0){let sim=1-Math.min(1,Math.abs(phenotypeHue(i)-phenotypeHue(j))/180),accept=cfg.matePreference>=0?1-cfg.matePreference*(1-sim):1+cfg.matePreference*sim;if(Math.random()<clamp(accept,0,1)){reproduce(i,j);preg[i]=cfg.gestation}}}
+speedSum+=Math.hypot(vx[i],vy[i]);neigh+=count}
+for(let p of predators){let best=-1,bd=1e12;for(let j=0;j<N;j+=3){let dx=x[j]-p.x,dy=y[j]-p.y,d=dx*dx+dy*dy;if(d<bd){bd=d;best=j}}if(best>=0){let dx=x[best]-p.x,dy=y[best]-p.y,d=Math.hypot(dx,dy)||1;p.vx+=dx/d*.08;p.vy+=dy/d*.08}let d=Math.hypot(p.vx,p.vy)||1;p.vx=p.vx/d*1.35;p.vy=p.vy/d*1.35;p.x=(p.x+p.vx+W)%W;p.y=(p.y+p.vy+H)%H}
+if(frameNo%120===0&&N>100){let i=Math.floor(Math.random()*N);if(age[i]>cfg.ageMax||energy[i]<=.005||Math.random()<cfg.selection*.0008){let lastIndex=--N;if(i!==lastIndex){x[i]=x[lastIndex];y[i]=y[lastIndex];vx[i]=vx[lastIndex];vy[i]=vy[lastIndex];age[i]=age[lastIndex];energy[i]=energy[lastIndex];preg[i]=preg[lastIndex];sex[i]=sex[lastIndex];fitness[i]=fitness[lastIndex];for(let g=0;g<cfg.connections*3;g++)genome[i*cfg.connections*3+g]=genome[lastIndex*cfg.connections*3+g]}deaths++}}
+meanSpeed=speedSum/Math.max(1,N);meanNeighbours=neigh/Math.max(1,N)}
+function draw(){ctx.fillStyle='rgba(4,9,17,'+cfg.trail+')';ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.13;ctx.strokeStyle='#527d91';for(let o of obstacles){ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,TAU);ctx.stroke()}ctx.restore();for(let i=0;i<N;i++){let hue=phenotypeHue(i);ctx.strokeStyle='hsl('+hue+' 78% 68%)';ctx.globalAlpha=.78;ctx.lineWidth=1.25;ctx.beginPath();ctx.moveTo(x[i],y[i]);let d=Math.hypot(vx[i],vy[i])||1;ctx.lineTo(x[i]-vx[i]/d*5,y[i]-vy[i]/d*5);ctx.stroke()}ctx.globalAlpha=1;for(let p of predators){ctx.fillStyle='#ff758e';ctx.beginPath();ctx.arc(p.x,p.y,4,0,TAU);ctx.fill()}}
+function schedule(){setTimeout(()=>frame(performance.now()),16)}
+function frame(now){if(!running)return;try{let dt=Math.min((now-last)/1000,.033);last=now;update(dt,now);draw();frames++;if(now-statsAt>900){let a=evaluatePopulation();fps=Math.round(frames*1000/(now-statsAt));frames=0;statsAt=now;postMessage({type:'stats',fps,count:N,generation,births,deaths,speed:meanSpeed,neighbours:meanNeighbours,connections:cfg.connections,hidden:cfg.hidden,age:a.age,energy:a.energy,fitness:a.fitness,diversity:a.diversity,signatures:a.signatures,histogram:a.histogram,history:a.history,topology:a.topology})}schedule()}catch(err){postMessage({type:'error',message:err.message,stack:err.stack})}}
+let statsAt=0;
+function init(c){canvas=c;ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});cellSize=cfg.perception;allocArrays(cap);seedEnvironment();resize(W,H,1);createPopulation(cfg.count);last=statsAt=performance.now();schedule()}
+onmessage=e=>{let m=e.data;if(m.type==='init'){init(m.canvas);return}if(m.type==='resize'){resize(m.width,m.height,m.dpr);seedEnvironment();return}if(m.type==='config'){let oldConnections=cfg.connections;Object.assign(cfg,m.values);if(m.values.connections&&m.values.connections!==oldConnections){let old=genome,oldN=N;let replacement=new Float32Array(cap*cfg.connections*3);for(let i=0;i<oldN;i++)for(let g=0;g<Math.min(oldConnections,cfg.connections);g++)for(let k=0;k<3;k++)replacement[(i*cfg.connections+g)*3+k]=old[(i*oldConnections+g)*3+k];genome=replacement;for(let i=0;i<N;i++)for(let g=oldConnections;g<cfg.connections;g++)randomConnection(i,g)}if(m.values.count!==undefined&&x)createPopulation(m.values.count);if(m.values.obstacles!==undefined||m.values.predators!==undefined)seedEnvironment();return}if(m.type==='pointer'){pointer.x=m.x;pointer.y=m.y;pointer.active=m.active;pointer.mode=m.mode||'repel';pointer.until=performance.now()+800;return}if(m.type==='action'){if(m.action==='pause'){running=!running;if(running){last=statsAt=performance.now();schedule()}}if(m.action==='reset')createPopulation(cfg.count);if(m.action==='scatter')for(let i=0;i<N;i++){let a=rand(0,TAU);vx[i]=Math.cos(a)*cfg.speed;vy[i]=Math.sin(a)*cfg.speed;x[i]=rand(0,W);y[i]=rand(0,H)}}};
