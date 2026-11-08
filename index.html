@@ -1,113 +1,94 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#050a12">
-<title>BOIDS // living field</title>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#040911"><title>BOIDS // living field</title>
 <style>
-:root{color-scheme:dark;--ink:#e8f1f4;--muted:#8ca2ad;--line:#ffffff20;--glass:#091521ed;--accent:#74f0d0}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050a12;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;overscroll-behavior:none}
-#world{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
-.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,#02060c55 100%)}
-#hint{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#d3e8e977;opacity:0;transition:opacity 1.5s;pointer-events:none;white-space:nowrap}
-#hint.show{opacity:.65}
-.edge{position:fixed;top:0;bottom:0;width:20px;z-index:3;touch-action:pan-y}.edge.left{left:0}.edge.right{right:0}
-.panel{position:fixed;z-index:5;top:0;bottom:0;width:min(390px,91vw);padding:calc(24px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));background:var(--glass);backdrop-filter:blur(24px) saturate(135%);-webkit-backdrop-filter:blur(24px) saturate(135%);border-color:var(--line);transition:transform .34s cubic-bezier(.2,.8,.2,1);overflow:auto;overscroll-behavior:contain;box-shadow:0 0 80px #0008}
-#left{left:0;border-right:1px solid var(--line);transform:translateX(-105%)}#right{right:0;border-left:1px solid var(--line);transform:translateX(105%)}
-#left.open,#right.open{transform:translateX(0)}
-.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}.eyebrow{font-size:9px;letter-spacing:.24em;color:var(--accent);text-transform:uppercase}.panel h1{font-size:22px;letter-spacing:-.04em;margin:5px 0 0;font-weight:600}.close{border:1px solid var(--line);background:#ffffff08;color:var(--ink);border-radius:50%;width:34px;height:34px;font-size:18px}
-.section{padding:17px 0;border-top:1px solid var(--line)}.section h2{font-size:10px;letter-spacing:.19em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 15px}
-.control{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:13px 0}.control label{font-size:12px;color:#d8e5e8}.value{font-variant-numeric:tabular-nums;color:var(--accent);font-size:11px}.control input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent);height:3px}
-select,button.action{background:#ffffff0a;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font:inherit;font-size:11px}
-button.action{cursor:pointer}button.action:active{background:#ffffff20}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{padding:13px;background:#ffffff08;border:1px solid #ffffff0e;border-radius:10px}.metric strong{display:block;font-size:21px;font-weight:500;letter-spacing:-.05em}.metric span{display:block;margin-top:4px;font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
-.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:10px;color:var(--muted)}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}
-.note{font-size:11px;line-height:1.65;color:var(--muted)}.toggle{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin:14px 0}.toggle input{accent-color:var(--accent);width:16px;height:16px}
-@media(min-width:700px){.panel{width:360px}}
-</style>
-</head>
-<body>
-<canvas id="world" aria-label="Full-screen boids flocking simulation"></canvas><div class="vignette"></div>
-<div id="hint">Swipe from either edge to explore · tap field to disturb</div>
-<div class="edge left" id="leftEdge"></div><div class="edge right" id="rightEdge"></div>
-<aside class="panel" id="left" aria-label="Simulation controls">
- <div class="panel-head"><div><div class="eyebrow">BOIDS / CONTROL FIELD</div><h1>Flock dynamics</h1></div><button class="close" data-close aria-label="Close panel">×</button></div>
- <section class="section"><h2>Population</h2>
-  <div class="control"><label for="count">Agents</label><span class="value" id="countVal">8,000</span><input id="count" type="range" min="500" max="24000" step="500" value="8000"></div>
-  <div class="control"><label for="speed">Maximum speed</label><span class="value" id="speedVal">2.8</span><input id="speed" type="range" min="0.8" max="6" step=".1" value="2.8"></div>
-  <div class="control"><label for="force">Steering force</label><span class="value" id="forceVal">0.075</span><input id="force" type="range" min=".01" max=".2" step=".005" value=".075"></div>
- </section>
- <section class="section"><h2>Neighbour rules</h2>
-  <div class="control"><label for="perception">Perception radius</label><span class="value" id="perceptionVal">54</span><input id="perception" type="range" min="20" max="110" step="2" value="54"></div>
-  <div class="control"><label for="separation">Separation</label><span class="value" id="separationVal">1.65</span><input id="separation" type="range" min="0" max="3.5" step=".05" value="1.65"></div>
-  <div class="control"><label for="alignment">Alignment</label><span class="value" id="alignmentVal">1.0</span><input id="alignment" type="range" min="0" max="3" step=".05" value="1"></div>
-  <div class="control"><label for="cohesion">Cohesion</label><span class="value" id="cohesionVal">0.9</span><input id="cohesion" type="range" min="0" max="3" step=".05" value=".9"></div>
- </section>
- <section class="section"><h2>Field behaviour</h2>
-  <div class="control"><label for="species">Flock composition</label><select id="species"><option value="single">Single species</option><option value="mixed" selected>Three interacting flocks</option><option value="school">Dense schooling</option><option value="chaos">Turbulent swarm</option></select></div>
-  <div class="control"><label for="trail">Motion persistence</label><span class="value" id="trailVal">0.18</span><input id="trail" type="range" min=".04" max=".5" step=".01" value=".18"></div>
-  <div class="control"><label for="flow">Environmental flow</label><span class="value" id="flowVal">0.35</span><input id="flow" type="range" min="0" max="1.5" step=".05" value=".35"></div>
-  <label class="toggle">Wrap at world boundaries <input id="wrap" type="checkbox" checked></label>
-  <label class="toggle">Show velocity vectors <input id="vectors" type="checkbox"></label>
- </section>
- <section class="section"><div class="actions"><button class="action" id="pause">Pause</button><button class="action" id="reset">Reseed field</button><button class="action" id="scatter">Scatter</button><button class="action" id="fullscreen">Fullscreen</button></div></section>
- <p class="note">The field uses a spatial hash to limit neighbour queries. Each agent steers from local separation, alignment and cohesion, with a weak time-varying flow field layered over the flock.</p>
+:root{color-scheme:dark;--ink:#e8f1f4;--muted:#829aa6;--line:#ffffff20;--glass:#081521ed;--accent:#70f5d2}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040911;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif;overscroll-behavior:none}
+#world{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;background:#040911}.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 38%,#02060c70 100%)}
+.edge{position:fixed;top:0;bottom:0;width:22px;z-index:3;touch-action:pan-y}.leftedge{left:0}.rightedge{right:0}
+.panel{position:fixed;z-index:5;top:0;bottom:0;width:min(390px,92vw);padding:calc(22px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));background:var(--glass);backdrop-filter:blur(26px) saturate(140%);-webkit-backdrop-filter:blur(26px) saturate(140%);border-color:var(--line);transition:transform .32s cubic-bezier(.2,.8,.2,1);overflow:auto;overscroll-behavior:contain;box-shadow:0 0 90px #0009}
+#controls{left:0;border-right:1px solid var(--line);transform:translateX(-105%)}#telemetry{right:0;border-left:1px solid var(--line);transform:translateX(105%)}#controls.open,#telemetry.open{transform:translateX(0)}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}.eyebrow{font-size:9px;letter-spacing:.24em;color:var(--accent);text-transform:uppercase}.panel h1{font-size:23px;letter-spacing:-.05em;margin:5px 0 0;font-weight:600}.close{width:35px;height:35px;border-radius:50%;border:1px solid var(--line);background:#ffffff08;color:var(--ink);font-size:20px}
+.section{padding:17px 0;border-top:1px solid var(--line)}.section h2{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 14px}
+.control{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:14px 0}.control label{font-size:12px;color:#dce8ec}.value{font-size:11px;color:var(--accent);font-variant-numeric:tabular-nums}.control input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent);height:3px}
+select,button.action{background:#ffffff0a;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 11px;font:inherit;font-size:11px}select option{background:#081521}button.action{cursor:pointer}button.action:active{background:#ffffff20}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.toggle{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin:14px 0}.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{padding:14px;background:#ffffff08;border:1px solid #ffffff0e;border-radius:10px}.metric strong{display:block;font-size:23px;font-weight:500;letter-spacing:-.05em}.metric span{display:block;margin-top:5px;font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.legend{display:flex;flex-wrap:wrap;gap:13px;font-size:10px;color:var(--muted)}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}.note{font-size:11px;line-height:1.7;color:var(--muted)}
+#hint{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#d3e8e988;opacity:0;transition:opacity 1.4s;pointer-events:none;white-space:nowrap}#hint.show{opacity:.7}
+#error{display:none;position:fixed;inset:0;z-index:10;background:#040911;padding:35px;align-items:center;justify-content:center;text-align:center;line-height:1.7}
+@media(min-width:700px){.panel{width:370px}}
+</style></head><body>
+<canvas id="world" aria-label="Interactive flock ecosystem"></canvas><div class="vignette"></div>
+<div class="edge leftedge" id="leftEdge"></div><div class="edge rightedge" id="rightEdge"></div>
+<div id="hint">Swipe from either edge · touch the field to influence the flock</div>
+<div id="error">This browser does not support OffscreenCanvas workers. Open BOIDS in a current version of Chrome, Firefox or Edge.</div>
+<aside class="panel" id="controls"><div class="head"><div><div class="eyebrow">BOIDS / FIELD ENGINE</div><h1>Ecology controls</h1></div><button class="close" data-close>×</button></div>
+<section class="section"><h2>Population & motion</h2>
+<div class="control"><label for="count">Population</label><span class="value" id="countVal">3,600</span><input id="count" type="range" min="500" max="24000" step="250" value="3600"></div>
+<div class="control"><label for="speed">Cruising speed</label><span class="value" id="speedVal">2.5</span><input id="speed" type="range" min=".6" max="5" step=".1" value="2.5"></div>
+<div class="control"><label for="perception">Perception radius</label><span class="value" id="perceptionVal">42</span><input id="perception" type="range" min="20" max="90" step="2" value="42"></div>
+</section>
+<section class="section"><h2>Emergent rules</h2>
+<div class="control"><label for="separation">Personal space</label><span class="value" id="separationVal">1.8</span><input id="separation" type="range" min="0" max="3.5" step=".05" value="1.8"></div>
+<div class="control"><label for="alignment">School alignment</label><span class="value" id="alignmentVal">1.15</span><input id="alignment" type="range" min="0" max="3" step=".05" value="1.15"></div>
+<div class="control"><label for="cohesion">Group cohesion</label><span class="value" id="cohesionVal">1.05</span><input id="cohesion" type="range" min="0" max="3" step=".05" value="1.05"></div>
+<div class="control"><label for="force">Steering authority</label><span class="value" id="forceVal">0.09</span><input id="force" type="range" min=".02" max=".3" step=".005" value=".09"></div>
+</section>
+<section class="section"><h2>Ecosystem</h2>
+<div class="control"><label for="mode">Simulation model</label><select id="mode"><option value="ecosystem" selected>Predator / prey ecology</option><option value="mixed">Interacting shoals</option><option value="school">Dense schooling</option><option value="single">Single-species flock</option><option value="chaos">Turbulent swarm</option></select></div>
+<div class="control"><label for="predators">Predator count</label><span class="value" id="predatorsVal">5</span><input id="predators" type="range" min="0" max="18" step="1" value="5"></div>
+<div class="control"><label for="obstacles">Reef structures</label><span class="value" id="obstaclesVal">7</span><input id="obstacles" type="range" min="0" max="18" step="1" value="7"></div>
+<div class="control"><label for="flow">Current strength</label><span class="value" id="flowVal">0.45</span><input id="flow" type="range" min="0" max="1.8" step=".05" value=".45"></div>
+<div class="control"><label for="trail">Trail persistence</label><span class="value" id="trailVal">0.14</span><input id="trail" type="range" min=".04" max=".5" step=".01" value=".14"></div>
+<label class="toggle">Wrap world boundaries <input id="wrap" type="checkbox" checked></label>
+<label class="toggle">Show velocity vectors <input id="vectors" type="checkbox"></label>
+</section>
+<section class="section"><div class="actions"><button class="action" id="pause">Pause</button><button class="action" id="reset">Reseed ecosystem</button><button class="action" id="scatter">Disperse flocks</button><button class="action" id="fullscreen">Fullscreen</button></div></section>
+<p class="note">Simulation and rendering run in a dedicated worker, away from the interface thread. Local-neighbour searches use a spatial hash. Predator pressure, reef avoidance and layered currents create larger-scale patterns from local rules.</p>
 </aside>
-<aside class="panel" id="right" aria-label="Live simulation telemetry">
- <div class="panel-head"><div><div class="eyebrow">BOIDS / FIELD TELEMETRY</div><h1>Living system</h1></div><button class="close" data-close aria-label="Close panel">×</button></div>
- <section class="section"><h2>Live telemetry</h2><div class="metric-grid">
-  <div class="metric"><strong id="mCount">8,000</strong><span>Active agents</span></div>
-  <div class="metric"><strong id="mFps">60</strong><span>Frame rate</span></div>
-  <div class="metric"><strong id="mSpeed">2.8</strong><span>Mean speed</span></div>
-  <div class="metric"><strong id="mNeighbours">—</strong><span>Mean neighbours</span></div>
- </div></section>
- <section class="section"><h2>Flock signatures</h2><div class="legend"><span><i class="dot" style="background:#79f2d0"></i>Pelagic</span><span><i class="dot" style="background:#80a9ff"></i>Azure</span><span><i class="dot" style="background:#ffc47d"></i>Amber</span></div><p class="note">Species have independent steering weights and preferred spacing. Mixed mode allows local groups to overlap without collapsing into a single uniform flock.</p></section>
- <section class="section"><h2>Field interaction</h2><p class="note">Tap or drag anywhere in the field to create a moving disturbance. Agents are repelled from the pointer and gradually recover their local trajectories. Swipe from the left edge for controls or the right edge for telemetry.</p><div class="actions"><button class="action" id="pulse">Centre pulse</button><button class="action" id="clear">Clear trails</button></div></section>
- <section class="section"><h2>Runtime</h2><p class="note" id="runtime">Canvas 2D · typed-array agents · uniform spatial grid · adaptive device-pixel ratio.</p></section>
+<aside class="panel" id="telemetry"><div class="head"><div><div class="eyebrow">BOIDS / LIVE OBSERVATION</div><h1>Field telemetry</h1></div><button class="close" data-close>×</button></div>
+<section class="section"><h2>Live system</h2><div class="metrics">
+<div class="metric"><strong id="mCount">3,600</strong><span>Active agents</span></div><div class="metric"><strong id="mFps">—</strong><span>Simulation FPS</span></div><div class="metric"><strong id="mSpeed">—</strong><span>Mean velocity</span></div><div class="metric"><strong id="mNeighbours">—</strong><span>Mean neighbours</span></div>
+</div></section>
+<section class="section"><h2>Ecological guilds</h2><div class="legend"><span><i class="dot" style="background:#70f5d2"></i>Foragers</span><span><i class="dot" style="background:#78aaff"></i>Schoolers</span><span><i class="dot" style="background:#ffc17a"></i>Drifters</span><span><i class="dot" style="background:#d89cff"></i>Scouts</span><span><i class="dot" style="background:#ff758e"></i>Predators</span></div><p class="note">Four agent guilds have distinct visual signatures. Predators create moving pressure fronts that alter the trajectories of nearby prey. Reef structures interrupt currents and create spatial refuges.</p></section>
+<section class="section"><h2>Influence the field</h2><div class="control"><label for="influence">Touch interaction</label><select id="influence"><option value="repel">Repel nearby agents</option><option value="attract">Attract nearby agents</option></select></div><p class="note">Touch and drag anywhere in the world to push or pull nearby agents. The field recovers gradually after each disturbance.</p><div class="actions"><button class="action" id="pulse">Release pressure wave</button><button class="action" id="clear">Clear visual trails</button></div></section>
+<section class="section"><h2>Performance</h2><p class="note" id="runtime">OffscreenCanvas worker · typed-array state · spatial hash · batched rendering.</p></section>
 </aside>
 <script>
 (()=>{'use strict';
-const canvas=document.getElementById('world'),ctx=canvas.getContext('2d',{alpha:false}),$=id=>document.getElementById(id);
-let W=innerWidth,H=innerHeight,DPR=1,N=8000,px,py,vx,vy,species,heads,next,gridCols,gridRows,cellSize=54,grid,paused=false,last=performance.now(),frames=0,fps=60,meanSpeed=0,meanNeighbours=0,tick=0,pointer={x:-1e5,y:-1e5,active:false},panel=null;
-const TAU=Math.PI*2,colors=['#79f2d0','#80a9ff','#ffc47d'];
-const cfg={speed:2.8,force:.075,perception:54,separation:1.65,alignment:1,cohesion:.9,trail:.18,flow:.35,wrap:true,vectors:false,mode:'mixed'};
-const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,1.65);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle='#050a12';ctx.fillRect(0,0,W,H);gridCols=Math.ceil(W/cellSize);gridRows=Math.ceil(H/cellSize);grid=new Int32Array(gridCols*gridRows);if(px)rebuildGrid()}
-function allocate(n){N=n;px=new Float32Array(N);py=new Float32Array(N);vx=new Float32Array(N);vy=new Float32Array(N);species=new Uint8Array(N);heads=new Int32Array(N);next=new Int32Array(N);for(let i=0;i<N;i++){px[i]=rand(0,W);py[i]=rand(0,H);let a=rand(0,TAU),s=rand(1,cfg.speed);vx[i]=Math.cos(a)*s;vy[i]=Math.sin(a)*s;species[i]=cfg.mode==='single'?0:cfg.mode==='school'?1:cfg.mode==='chaos'?i%3:Math.floor(Math.random()*3)}$('countVal').textContent=N.toLocaleString();$('mCount').textContent=N.toLocaleString()}
-function rebuildGrid(){if(!grid)return;grid.fill(-1);for(let i=0;i<N;i++){let x=clamp((px[i]/cellSize)|0,0,gridCols-1),y=clamp((py[i]/cellSize)|0,0,gridRows-1),c=y*gridCols+x;next[i]=grid[c];grid[c]=i}}
-function steer(i,ax,ay){let l=Math.hypot(ax,ay);if(l<1e-6)return [0,0];let desired=Math.min(cfg.speed,l?cfg.speed:0);return [ax/l*desired-vx[i],ay/l*desired-vy[i]]}
-function step(dt){tick+=dt;cellSize=cfg.perception;gridCols=Math.ceil(W/cellSize);gridRows=Math.ceil(H/cellSize);if(!grid||grid.length!==gridCols*gridRows)grid=new Int32Array(gridCols*gridRows);rebuildGrid();let sepW=cfg.separation,aliW=cfg.alignment,cohW=cfg.cohesion,per=cfg.perception,per2=per*per,sepR=per*.48,sep2=sepR*sepR,fx=0,neighTotal=0,speedTotal=0;
-for(let i=0;i<N;i++){let x=px[i],y=py[i],cx=0,cy=0,avx=0,avy=0,sx=0,sy=0,count=0,sc=0;let gx=(x/cellSize)|0,gy=(y/cellSize)|0;
-for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){let qx=gx+ox,qy=gy+oy;if(cfg.wrap){qx=(qx+gridCols)%gridCols;qy=(qy+gridRows)%gridRows}else if(qx<0||qy<0||qx>=gridCols||qy>=gridRows)continue;for(let j=grid[qy*gridCols+qx];j!==-1;j=next[j]){if(j===i)continue;let dx=px[j]-x,dy=py[j]-y;if(cfg.wrap){if(dx>W/2)dx-=W;if(dx< -W/2)dx+=W;if(dy>H/2)dy-=H;if(dy< -H/2)dy+=H}let d2=dx*dx+dy*dy;if(d2>per2||d2<.0001)continue;let cross=cfg.mode==='single'||cfg.mode==='school'||species[i]===species[j]||cfg.mode==='chaos';if(!cross)continue;count++;cx+=dx;cy+=dy;avx+=vx[j];avy+=vy[j];if(d2<sep2){sx-=dx/d2;sy-=dy/d2;sc++}}}
-let ax=0,ay=0;if(count){let [a,b]=steer(i,-sx,-sy);ax+=a*sepW;ay+=b*sepW;[a,b]=steer(i,avx/count,avy/count);ax+=a*aliW;ay+=b*aliW;[a,b]=steer(i,cx/count,cy/count);ax+=a*cohW;ay+=b*cohW}
-let flow=cfg.flow;ax+=Math.sin(y*.003+tick*.00022)*flow;ay+=Math.cos(x*.003-tick*.00019)*flow;
-let dx=x-pointer.x,dy=y-pointer.y,dist2=dx*dx+dy*dy;if(pointer.active&&dist2<18000&&dist2>1){let k=(1-Math.sqrt(dist2)/134)*.9;ax+=dx/Math.sqrt(dist2)*k*3;ay+=dy/Math.sqrt(dist2)*k*3}
-let f=Math.hypot(ax,ay),limit=cfg.force;if(f>limit){ax=ax/f*limit;ay=ay/f*limit}vx[i]+=ax;vy[i]+=ay;
-let sp=Math.hypot(vx[i],vy[i]);if(sp>cfg.speed){vx[i]=vx[i]/sp*cfg.speed;vy[i]=vy[i]/sp*cfg.speed}else if(sp<.45){vx[i]*=1.04;vy[i]*=1.04}
-px[i]+=vx[i]*dt*60;py[i]+=vy[i]*dt*60;if(cfg.wrap){if(px[i]<0)px[i]+=W;if(px[i]>=W)px[i]-=W;if(py[i]<0)py[i]+=H;if(py[i]>=H)py[i]-=H}else{if(px[i]<5||px[i]>W-5)vx[i]*=-1;if(py[i]<5||py[i]>H-5)vy[i]*=-1;px[i]=clamp(px[i],5,W-5);py[i]=clamp(py[i],5,H-5)}
-speedTotal+=Math.hypot(vx[i],vy[i]);neighTotal+=count}
-meanSpeed=speedTotal/N;meanNeighbours=neighTotal/N;
-}
-function render(){ctx.fillStyle='rgba(5,10,18,'+cfg.trail+')';ctx.fillRect(0,0,W,H);let paths=[[],[],[]];for(let i=0;i<N;i++){let a=Math.atan2(vy[i],vx[i]),x=px[i],y=py[i],s=species[i],l=cfg.mode==='chaos'?3.5:4.2;let arr=paths[s];arr.push(x,y,x-Math.cos(a)*l,y-Math.sin(a)*l)}
-for(let s=0;s<3;s++){let a=paths[s];if(!a.length)continue;ctx.beginPath();for(let j=0;j<a.length;j+=4){ctx.moveTo(a[j],a[j+1]);ctx.lineTo(a[j+2],a[j+3])}ctx.strokeStyle=colors[s];ctx.globalAlpha=.78;ctx.lineWidth=1.15;ctx.stroke()}ctx.globalAlpha=1;
-if(cfg.vectors){ctx.beginPath();for(let i=0;i<N;i+=Math.max(1,(N/900)|0)){ctx.moveTo(px[i],py[i]);ctx.lineTo(px[i]+vx[i]*7,py[i]+vy[i]*7)}ctx.strokeStyle='#ffffff38';ctx.lineWidth=.6;ctx.stroke()}
-}
-function loop(now){let dt=Math.min((now-last)/1000,.04);last=now;if(!paused){step(dt);render()}frames++;if(now-fpsStamp>600){fps=Math.round(frames*1000/(now-fpsStamp));frames=0;fpsStamp=now;$('mFps').textContent=fps;$('mSpeed').textContent=meanSpeed.toFixed(2);$('mNeighbours').textContent=meanNeighbours.toFixed(1)}requestAnimationFrame(loop)}let fpsStamp=performance.now();
-function setPanel(which){panel=which;$('left').classList.toggle('open',which==='left');$('right').classList.toggle('open',which==='right')}
-function bindRange(id,key,format){let el=$(id),out=$(id+'Val');el.addEventListener('input',()=>{cfg[key]=+el.value;if(out)out.textContent=format?format(cfg[key]):String(cfg[key])})}
-bindRange('speed','speed',v=>v.toFixed(1));bindRange('force','force',v=>v.toFixed(3));bindRange('perception','perception',v=>v);bindRange('separation','separation',v=>v.toFixed(2));bindRange('alignment','alignment',v=>v.toFixed(2));bindRange('cohesion','cohesion',v=>v.toFixed(2));bindRange('trail','trail',v=>v.toFixed(2));bindRange('flow','flow',v=>v.toFixed(2));
-$('count').addEventListener('change',e=>allocate(+e.target.value));$('species').addEventListener('change',e=>{cfg.mode=e.target.value;allocate(N)});$('wrap').addEventListener('change',e=>cfg.wrap=e.target.checked);$('vectors').addEventListener('change',e=>cfg.vectors=e.target.checked);
-$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause'};$('reset').onclick=()=>{allocate(N);ctx.fillStyle='#050a12';ctx.fillRect(0,0,W,H)};$('scatter').onclick=()=>{for(let i=0;i<N;i++){let a=rand(0,TAU),s=rand(1,cfg.speed);vx[i]=Math.cos(a)*s;vy[i]=Math.sin(a)*s;px[i]=rand(0,W);py[i]=rand(0,H)}};$('fullscreen').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};$('pulse').onclick=()=>{pointer={x:W/2,y:H/2,active:true};setTimeout(()=>pointer.active=false,900)};$('clear').onclick=()=>{ctx.fillStyle='#050a12';ctx.fillRect(0,0,W,H)};
+const $=id=>document.getElementById(id),canvas=$('world');let worker=null,panel=null,paused=false,tracking=false,startX=0,startY=0,mode='repel',lastPointer=0;
+if(!('OffscreenCanvas'in window)||!canvas.transferControlToOffscreen){$('error').style.display='flex';return}
+try{worker=new Worker('./boids-worker.js')}catch(e){$('error').style.display='flex';return}
+const offscreen=canvas.transferControlToOffscreen();worker.postMessage({type:'init',canvas:offscreen},[offscreen]);
+function resize(){worker.postMessage({type:'resize',width:innerWidth,height:innerHeight,dpr:Math.min(devicePixelRatio||1,1.5)})}
+function config(values){worker.postMessage({type:'config',values})}
+const specs={count:v=>v.toLocaleString(),speed:v=>v.toFixed(1),perception:v=>v,separation:v=>v.toFixed(2),alignment:v=>v.toFixed(2),cohesion:v=>v.toFixed(2),force:v=>v.toFixed(3),predators:v=>v,obstacles:v=>v,flow:v=>v.toFixed(2),trail:v=>v.toFixed(2)};
+const keys=['count','speed','perception','separation','alignment','cohesion','force','predators','obstacles','flow','trail'];
+for(const id of keys){const el=$(id),out=$(id+'Val');el.addEventListener('input',()=>{let v=+el.value;out.textContent=specs[id](v);if(id==='count')$('mCount').textContent=v.toLocaleString();config({[id]:v})})}
+$('mode').addEventListener('change',e=>config({mode:e.target.value}));
+$('wrap').addEventListener('change',e=>config({wrap:e.target.checked}));
+$('vectors').addEventListener('change',e=>config({vectors:e.target.checked}));
+$('influence').addEventListener('change',e=>mode=e.target.value);
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause';worker.postMessage({type:'action',action:'pause'})};
+$('reset').onclick=()=>worker.postMessage({type:'action',action:'reset'});
+$('scatter').onclick=()=>worker.postMessage({type:'action',action:'scatter'});
+$('pulse').onclick=()=>worker.postMessage({type:'action',action:'pulse'});
+$('clear').onclick=()=>worker.postMessage({type:'action',action:'clear'});
+$('fullscreen').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};
+worker.onmessage=e=>{let m=e.data;if(m.type==='population'){$('countVal').textContent=m.count.toLocaleString();$('mCount').textContent=m.count.toLocaleString()}if(m.type==='stats'){$('mFps').textContent=m.fps;$('mSpeed').textContent=m.speed.toFixed(2);$('mNeighbours').textContent=m.neighbours.toFixed(1)}};
+function setPanel(which){panel=which;$('controls').classList.toggle('open',which==='left');$('telemetry').classList.toggle('open',which==='right')}
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>setPanel(null));
-let startX=0,startY=0,startT=0,tracking=false;
-function down(e){startX=e.clientX;startY=e.clientY;startT=performance.now();tracking=true;if(e.target.closest('.panel'))return;pointer.x=e.clientX;pointer.y=e.clientY;pointer.active=true}
-function move(e){if(tracking&&!e.target.closest('.panel')){pointer.x=e.clientX;pointer.y=e.clientY}}
-function up(e){if(!tracking)return;tracking=false;let dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.25){if(dx>0&&startX<45)setPanel('left');else if(dx<0&&startX>W-45)setPanel('right');else if(Math.abs(dx)>110)setPanel(dx>0?'left':'right')}else if(Math.hypot(dx,dy)<12&&performance.now()-startT<300){pointer.x=e.clientX;pointer.y=e.clientY;pointer.active=true;setTimeout(()=>pointer.active=false,500)}}
-canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',()=>{tracking=false;pointer.active=false});$('leftEdge').addEventListener('pointerdown',()=>setPanel('left'));$('rightEdge').addEventListener('pointerdown',()=>setPanel('right'));
+$('leftEdge').addEventListener('pointerdown',()=>setPanel('left'));$('rightEdge').addEventListener('pointerdown',()=>setPanel('right'));
+canvas.addEventListener('pointerdown',e=>{tracking=true;startX=e.clientX;startY=e.clientY;canvas.setPointerCapture?.(e.pointerId);worker.postMessage({type:'pointer',x:e.clientX,y:e.clientY,active:true,mode})});
+canvas.addEventListener('pointermove',e=>{if(!tracking)return;let now=performance.now();if(now-lastPointer<16)return;lastPointer=now;worker.postMessage({type:'pointer',x:e.clientX,y:e.clientY,active:true,mode})});
+canvas.addEventListener('pointerup',e=>{tracking=false;worker.postMessage({type:'pointer',x:e.clientX,y:e.clientY,active:false,mode})});
+canvas.addEventListener('pointercancel',()=>{tracking=false;worker.postMessage({type:'pointer',active:false})});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setPanel(null);if(e.key.toLowerCase()==='h')setPanel('left');if(e.key.toLowerCase()==='i')setPanel('right')});
-let hintTimer=setTimeout(()=>$('hint').classList.add('show'),1200);setTimeout(()=>$('hint').classList.remove('show'),6500);
-addEventListener('resize',resize);resize();allocate(N);requestAnimationFrame(loop);
+addEventListener('resize',resize);resize();
+let mobile=matchMedia('(max-width: 700px)').matches;let initial=mobile?1800:4200;$('count').value=initial;$('countVal').textContent=initial.toLocaleString();$('mCount').textContent=initial.toLocaleString();config({count:initial});
+setTimeout(()=>$('hint').classList.add('show'),1300);setTimeout(()=>$('hint').classList.remove('show'),6800);
+addEventListener('pagehide',()=>worker.terminate());
 })();
-</script>
-</body></html>
+</script></body></html>
