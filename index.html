@@ -43,6 +43,7 @@ select,button.action{background:#ffffff0a;color:var(--ink);border:1px solid var(
 <div class="control"><label for="flow">Current strength</label><span class="value" id="flowVal">0.45</span><input id="flow" type="range" min="0" max="1.8" step=".05" value=".45"></div>
 <div class="control"><label for="trail">Trail persistence</label><span class="value" id="trailVal">0.14</span><input id="trail" type="range" min=".04" max=".5" step=".01" value=".14"></div>
 <label class="toggle">Wrap world boundaries <input id="wrap" type="checkbox" checked></label>
+<label class="toggle">Adaptive performance quality <input id="autoQuality" type="checkbox" checked></label>
 <label class="toggle">Show velocity vectors <input id="vectors" type="checkbox"></label>
 </section>
 <section class="section"><div class="actions"><button class="action" id="pause">Pause</button><button class="action" id="reset">Reseed ecosystem</button><button class="action" id="scatter">Disperse flocks</button><button class="action" id="fullscreen">Fullscreen</button></div></section>
@@ -58,7 +59,7 @@ select,button.action{background:#ffffff0a;color:var(--ink);border:1px solid var(
 </aside>
 <script>
 (()=>{'use strict';
-const $=id=>document.getElementById(id),canvas=$('world');let worker=null,panel=null,paused=false,tracking=false,startX=0,startY=0,mode='repel',lastPointer=0;
+const $=id=>document.getElementById(id),canvas=$('world');let worker=null,panel=null,paused=false,tracking=false,startX=0,startY=0,mode='repel',lastPointer=0,requestedCount=0,currentCount=0,slowFrames=0,fastFrames=0;
 if(!('OffscreenCanvas'in window)||!canvas.transferControlToOffscreen){$('error').style.display='flex';return}
 try{worker=new Worker('./boids-worker.js')}catch(e){$('error').style.display='flex';return}
 const offscreen=canvas.transferControlToOffscreen();worker.postMessage({type:'init',canvas:offscreen},[offscreen]);
@@ -66,7 +67,7 @@ function resize(){worker.postMessage({type:'resize',width:innerWidth,height:inne
 function config(values){worker.postMessage({type:'config',values})}
 const specs={count:v=>v.toLocaleString(),speed:v=>v.toFixed(1),perception:v=>v,separation:v=>v.toFixed(2),alignment:v=>v.toFixed(2),cohesion:v=>v.toFixed(2),force:v=>v.toFixed(3),predators:v=>v,obstacles:v=>v,flow:v=>v.toFixed(2),trail:v=>v.toFixed(2)};
 const keys=['count','speed','perception','separation','alignment','cohesion','force','predators','obstacles','flow','trail'];
-for(const id of keys){const el=$(id),out=$(id+'Val');el.addEventListener('input',()=>{let v=+el.value;out.textContent=specs[id](v);if(id==='count')$('mCount').textContent=v.toLocaleString();config({[id]:v})})}
+for(const id of keys){const el=$(id),out=$(id+'Val');el.addEventListener('input',()=>{let v=+el.value;out.textContent=specs[id](v);if(id==='count'){requestedCount=v;currentCount=v;$('mCount').textContent=v.toLocaleString();slowFrames=fastFrames=0}config({[id]:v})})}
 $('mode').addEventListener('change',e=>config({mode:e.target.value}));
 $('wrap').addEventListener('change',e=>config({wrap:e.target.checked}));
 $('vectors').addEventListener('change',e=>config({vectors:e.target.checked}));
@@ -77,7 +78,11 @@ $('scatter').onclick=()=>worker.postMessage({type:'action',action:'scatter'});
 $('pulse').onclick=()=>worker.postMessage({type:'action',action:'pulse'});
 $('clear').onclick=()=>worker.postMessage({type:'action',action:'clear'});
 $('fullscreen').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};
-worker.onmessage=e=>{let m=e.data;if(m.type==='population'){$('countVal').textContent=m.count.toLocaleString();$('mCount').textContent=m.count.toLocaleString()}if(m.type==='stats'){$('mFps').textContent=m.fps;$('mSpeed').textContent=m.speed.toFixed(2);$('mNeighbours').textContent=m.neighbours.toFixed(1)}};
+worker.onmessage=e=>{let m=e.data;if(m.type==='population'){currentCount=m.count;$('countVal').textContent=m.count.toLocaleString();$('mCount').textContent=m.count.toLocaleString();$('count').value=m.count}if(m.type==='stats'){$('mFps').textContent=m.fps;$('mSpeed').textContent=m.speed.toFixed(2);$('mNeighbours').textContent=m.neighbours.toFixed(1);
+ if($('autoQuality').checked){if(m.fps<34){slowFrames++;fastFrames=0}else if(m.fps>54){fastFrames++;slowFrames=0}else{slowFrames=0;fastFrames=0}
+ if(slowFrames>=2&&currentCount>900){currentCount=Math.max(900,Math.floor(currentCount*.82/250)*250);slowFrames=0;config({count:currentCount})}
+ else if(fastFrames>=10&&currentCount<requestedCount){currentCount=Math.min(requestedCount,currentCount+250);fastFrames=0;config({count:currentCount})}
+ }} };
 function setPanel(which){panel=which;$('controls').classList.toggle('open',which==='left');$('telemetry').classList.toggle('open',which==='right')}
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>setPanel(null));
 $('leftEdge').addEventListener('pointerdown',()=>setPanel('left'));$('rightEdge').addEventListener('pointerdown',()=>setPanel('right'));
@@ -87,7 +92,7 @@ canvas.addEventListener('pointerup',e=>{tracking=false;worker.postMessage({type:
 canvas.addEventListener('pointercancel',()=>{tracking=false;worker.postMessage({type:'pointer',active:false})});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setPanel(null);if(e.key.toLowerCase()==='h')setPanel('left');if(e.key.toLowerCase()==='i')setPanel('right')});
 addEventListener('resize',resize);resize();
-let mobile=matchMedia('(max-width: 700px)').matches;let initial=mobile?1800:4200;$('count').value=initial;$('countVal').textContent=initial.toLocaleString();$('mCount').textContent=initial.toLocaleString();config({count:initial});
+let mobile=matchMedia('(max-width: 700px)').matches;let initial=mobile?1800:4200;requestedCount=initial;currentCount=initial;$('count').value=initial;$('countVal').textContent=initial.toLocaleString();$('mCount').textContent=initial.toLocaleString();config({count:initial});
 setTimeout(()=>$('hint').classList.add('show'),1300);setTimeout(()=>$('hint').classList.remove('show'),6800);
 addEventListener('pagehide',()=>worker.terminate());
 })();
