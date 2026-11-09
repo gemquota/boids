@@ -31,7 +31,7 @@ A worker frame follows this broad order:
 5. Move predators using nearby grid cells and apply attacks.
 6. compact dead agents out of the active arrays.
 7. Draw obstacles, food patches, genome-coloured agents and predators.
-8. Periodically calculate population and genetic telemetry and post it to the UI.
+8. Periodically calculate population and genetic telemetry, append a bounded demographic/genetic history sample, and post it to the UI.
 
 The worker uses a timer-based scheduler at approximately 16 ms intervals. Actual frame cadence is device- and workload-dependent.
 
