@@ -7,7 +7,7 @@ Checkpointed release plan. A phase is complete only when runtime behaviour and t
 | v0.2.0 | 1. Gene expression | Complete the ten existing trait loci and genotype-to-phenotype mappings | Every locus has a tested behavioural or physiological effect |
 | v0.3.0 | 2. Regulatory genetics | Regulatory loci, interactions, thresholds, dominance-like effects, polygenic traits and environmental modulation | Different genetic contexts produce different expressed phenotypes |
 | v0.4.0 | 3. Evolving neural architecture | Stable neuron/connection identities; structural addition, deletion, duplication and safe crossover | Topology evolves across generations without invalid networks |
-| v0.5.0 | 4. Genetic persistence | Versioned genome serialization, population snapshots, pedigree, innovation registry and deterministic restore | Reload preserves genomes, identities, lineage and reproducible continuation |
+| v0.5.0 | 4. Genetic persistence hardening | Extend the existing versioned snapshots, local persistence and legacy migrations with explicit export/import, restore guarantees and deterministic continuation | Reload/import preserves genomes, identities, lineage, innovation registry, environment and reproducible continuation |
 | v0.6.0 | 5. Ecological adaptation | Heritable morphology, predation, foraging, social strategies and resource specialisation | Multiple viable strategies emerge within the same boid species |
 | v0.7.0 | 6. Evolutionary analytics | Allele frequencies, genotype diversity, expression profiles, selection differentials, mutation and lineage histories | Observatory explains why populations changed, not just that averages changed |
 
@@ -32,6 +32,8 @@ Checkpointed release plan. A phase is complete only when runtime behaviour and t
 - [ ] Browser smoke test at 10, 200, 500 and 1,000 agents.
 - [ ] Benchmark confirms no material regression at 1,000 agents.
 
+The existing snapshot/restore system is already covered by worker determinism tests; Phase 4 is therefore a hardening and user-facing portability phase, not a ground-up persistence implementation.
+
 Checkpoint tag target: v0.2.0-phase-1-gene-expression
 
 ## Phase 2 — v0.3.0: Regulatory genetics
@@ -47,11 +49,13 @@ Checkpoint tag target: v0.2.0-phase-1-gene-expression
 - Validate endpoint integrity, reachability and execution budgets.
 - Add complexity pressure to prevent unbounded network growth.
 
-## Phase 4 — v0.5.0: Genetic persistence
-- Define a versioned portable genome format.
-- Persist individual IDs, parent IDs, genomes, innovation IDs, pedigree and the RNG state.
-- Define which transient neural states are restored versus reset.
-- Add import/export, schema migration and corruption validation.
+## Phase 4 — v0.5.0: Genetic persistence hardening
+The current runtime already has versioned population snapshots (schema version 8), exportSnapshot/restoreSnapshot, genetic arrays, individual and parent IDs, pedigree, innovation registry, RNG state, and legacy schema-v3 migration coverage. This is existing functionality, not a future promise.
+- Audit and document the complete snapshot contract, including environment state and all genetic arrays.
+- Add user-facing genome and ecosystem export/import with integrity checks.
+- Test deterministic continuation after restoration, not merely equality of the restored arrays.
+- Define which transient neural activations and eligibility traces are restored versus reset.
+- Expand schema migration tests and corruption handling.
 - Distinguish configuration presets from complete ecosystem saves.
 
 ## Phase 5 — v0.6.0: Ecological adaptation
