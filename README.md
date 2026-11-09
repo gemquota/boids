@@ -354,3 +354,6 @@ Keep performance in mind: per-agent work runs every simulation update, so small 
 ## DNA Update roadmap
 
 The checkpointed genetics roadmap is in [docs/GENETICS_ROADMAP.md](docs/GENETICS_ROADMAP.md). v0.2.0 establishes explicit expression for all ten trait loci; subsequent releases cover regulatory genetics, evolving neural topology, persistent genomes, ecological adaptation and evolutionary analytics.
+
+
+The runtime already supports versioned population snapshots and restoration, including genome arrays, individual identities, pedigree, innovation identifiers and RNG state. The future persistence phase hardens and extends this existing foundation rather than introducing it from scratch.
