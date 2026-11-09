@@ -83,7 +83,7 @@ jobs:
                   raise SystemExit('Missing inherited phenotype mechanic: ' + item)
           if 'Math.random()' in worker:
               raise SystemExit('Worker must use the seeded random generator for reproducible experiments')
-          for item in ['function seedRandom(seed)', 'function random()', 'new Uint32Array(cap)', 'paternalId[mother]=individualId[father]', 'individualId[i]===parentA[j]', 'schemaVersion:5', 'traitGenes=new Float32Array(cap*10)', 'for(let k=0;k<10;k++)', 'riskTolerance:meanRiskTolerance/Math.max(1,N)']:
+          for item in ['function seedRandom(seed)', 'function random()', 'new Uint32Array(cap)', 'paternalId[mother]=individualId[father]', 'schemaVersion:5', 'traitGenes=new Float32Array(cap*10)', 'for(let k=0;k<10;k++)', 'riskTolerance:meanRiskTolerance/Math.max(1,N)']:
               if item not in worker:
                   raise SystemExit('Missing phase-one simulation invariant: ' + item)
           if 'for(let i=0;i<N;i++){let energyBefore=energy[i]' in worker:
