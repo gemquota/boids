@@ -349,3 +349,8 @@ For new controls:
 6. Add regression checks for integer constraints, topology changes, and snapshot compatibility where relevant.
 
 Keep performance in mind: per-agent work runs every simulation update, so small inefficiencies multiply quickly as the population grows.
+
+
+## DNA Update roadmap
+
+The checkpointed genetics roadmap is in [docs/GENETICS_ROADMAP.md](docs/GENETICS_ROADMAP.md). v0.2.0 establishes explicit expression for all ten trait loci; subsequent releases cover regulatory genetics, evolving neural topology, persistent genomes, ecological adaptation and evolutionary analytics.
