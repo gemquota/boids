@@ -47,7 +47,7 @@ jobs:
               raise SystemExit('Persistent world/observatory storage missing')
           required_ui = [
               'Math.round((clamped-lo)/step)', 'applySettings({...ecologicalBaseline',
-              'schemaVersion=2', 'snapshotWaiters', 'flushPersistentState',
+              'schemaVersion=2', 'snapshotWaiters', 'flushPersistentState', 'store.put(prior.result,\'previous\')', 'store.get(\'previous\')',
               'Object.assign(helpDescriptions,'
           ]
           missing_ui = [item for item in required_ui if item not in html]
