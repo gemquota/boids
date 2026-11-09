@@ -16,7 +16,7 @@ function makeWorld(seed) {
     Array, Object, Number, String, Boolean, Set, Map, Date, JSON,
   };
   vm.createContext(sandbox);
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, update, exportSnapshot, restoreSnapshot, conceive, deliver, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -65,6 +65,12 @@ assert.equal(api.N, before + 1, 'delivery should append one offspring');
 assert.equal(api.parentA[before], api.individualId[0], 'offspring should retain maternal identity');
 assert.equal(api.parentB[before], api.individualId[1], 'offspring should retain paternal identity');
 assert.notEqual(api.individualId[before], api.individualId[0], 'offspring identity must be unique');
+const firstChildId = api.individualId[before];
+assert.equal(api.kinshipRelatedness(api.individualId[0], firstChildId), .5, 'parent and offspring should have 0.5 relatedness');
+api.conceive(0, 1);
+api.deliver(0);
+const secondChildId = api.individualId[before + 1];
+assert.equal(api.kinshipRelatedness(firstChildId, secondChildId), .5, 'full siblings should have 0.5 relatedness');
 
 // Snapshot restore must preserve both the random stream and pedigree identifiers.
 const restored = makeWorld(999);
@@ -73,7 +79,9 @@ const restoredSnapshot = restored.__boidsTest.exportSnapshot();
 assert.deepEqual(Array.from(restoredSnapshot.arrays.individualId), Array.from(api.individualId.subarray(0, api.N)));
 assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.parentA.subarray(0, api.N)));
 assert.equal(restoredSnapshot.rngState, api.rngState);
-assert.equal(restoredSnapshot.schemaVersion, 4);
+assert.equal(restoredSnapshot.schemaVersion, 5);
+assert.ok(restoredSnapshot.pedigree.length >= api.N, 'snapshot should retain the pedigree graph');
+assert.equal(restored.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'restored pedigree should preserve kinship');
 assert.equal(restoredSnapshot.arrays.traitGenes.length, api.N * 10, 'ten inherited traits must be stored per agent');
 assert.ok(restoredSnapshot.arrays.traitGenes[before * 10 + 6] >= .55, 'offspring acceleration trait must be inherited');
 
@@ -94,5 +102,6 @@ const migratedTraits = migrated.__boidsTest.exportSnapshot().arrays.traitGenes;
 assert.equal(migratedTraits.length, api.N * 10);
 assert.equal(migratedTraits[6], 1, 'legacy acceleration locus should receive neutral migration value');
 assert.equal(migratedTraits[8], .5, 'legacy risk locus should receive neutral migration value');
+assert.equal(migrated.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'legacy restore should reconstruct the live pedigree from parent IDs');
 
 console.log('Worker deterministic replay, unique identities, pedigree inheritance, and schema-v4 restore and schema-v3 phenotype migration passed.');
