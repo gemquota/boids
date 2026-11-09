@@ -117,6 +117,7 @@ Remaining work:
 - Track attack attempts, food claims, food consumed, movement energy spent, and maintenance energy spent.
 - Add an experiment JSON export containing seed, run serial, configuration, telemetry, gene/lineage histories, reproductive success, pedigree, and counters.
 - Add a working Export experiment data control in the Observatory.
+- Add separate physical/behavioural selection-differential history charts to the Observatory.
 - Persist experiment counters, selection accumulators, and reproductive-success records in schema-v8 snapshots.
 
 Remaining work:
