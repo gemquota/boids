@@ -171,6 +171,12 @@ Each agent now inherits ten quantitative trait loci. These are not additional UI
 
 The four newer loci use bounded quantitative inheritance and mutation. Older six-locus snapshots migrate to ten loci by preserving their original six values and initialising acceleration, agility, risk tolerance, and exploration to neutral values. This is a compatibility migration, not an inferred reconstruction of missing historical genes.
 
+### Experimental measurements and export
+
+The Observatory's Export experiment data action requests a structured JSON bundle from the worker. It includes run seed/serial, mode, configuration, telemetry time series, gene/cohort histories, neural-weight history, pedigree, per-individual reproductive-success counts, selection differentials, and interaction/energy counters.
+
+Selection differentials are the mean trait values of parents that have produced offspring minus the current population mean. They are descriptive selection differentials, not regression-based selection gradients. Lifetime reproductive success is counted per parent for each delivered offspring. Current exports contain one run; parameter sweeps, replicate aggregation, confidence intervals, and formal experiment manifests are still future work.
+
 ### Habitat, resources, and energetic costs
 
 Food patches carry three additional state variables: quality, productivity, and seasonal phase. Quality scales energy gained from feeding; productivity scales patch stock capacity and renewal; phase offsets a smooth seasonal regeneration cycle. Old snapshots without these fields are migrated to neutral values.
@@ -181,7 +187,7 @@ Maintenance now includes a simple spatial/temporal thermal-stress multiplier. Mo
 
 ### Neural genome homology
 
-Each connection has a stable innovation ID derived from its directed source and destination nodes. Parent genomes are aligned by innovation during crossover; disjoint genes are considered independently rather than assuming that the same array position represents the same connection. Mate-preference genome distance uses innovation matches and homologous weight differences. The registry is persisted in schema-v7 snapshots, and older saved genomes reconstruct IDs from their stored endpoints.
+Each connection has a stable innovation ID derived from its directed source and destination nodes. Parent genomes are aligned by innovation during crossover; disjoint genes are considered independently rather than assuming that the same array position represents the same connection. Mate-preference genome distance uses innovation matches and homologous weight differences. The registry is persisted in schema-v8 snapshots, and older saved genomes reconstruct IDs from their stored endpoints.
 
 This is an innovation-aligned fixed-size genome, not a complete NEAT implementation: historical split/add-node events, enabled/disabled genes, bias genes, speciation, and fitness-sharing are not implemented yet.
 
@@ -197,4 +203,4 @@ World snapshots now use schema version 5 and persist the pedigree map. Older sna
 
 The active worker does not spawn a separate predator population. Predation is conspecific: members of the single evolving boid population may attack smaller agents based on inherited aggression, relative body size, sensory range, bite strength, and kin protection. Older references to predator counts, autonomous predator hunger, or predator-only movement controls do not describe the current implementation and should not be used to configure experiments.
 
-The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v7 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
+The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v8 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
