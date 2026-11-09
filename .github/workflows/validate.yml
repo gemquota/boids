@@ -93,7 +93,7 @@ jobs:
               if item not in worker:
                   raise SystemExit('Missing experiment measurement/export invariant: ' + item)
           for item in ['id="exportExperiment"', "m.type==='exportData'", 'Experiment data exported:']:
-              if item not in ui:
+              if item not in html:
                   raise SystemExit('Missing functional experiment export UI: ' + item)
           if 'Math.random()' in worker:
               raise SystemExit('Worker must use the seeded random generator for reproducible experiments')
