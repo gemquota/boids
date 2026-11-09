@@ -53,6 +53,7 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Ten inherited quantitative traits: aggression, body mass, speed, bite strength, kin affinity, sensory range, acceleration, agility, risk tolerance, and exploration. The new traits influence acceleration, turning, attack commitment, escape response, food attraction, and exploratory noise.
 - Persistent pedigree records and depth-limited relatedness estimates. Kin affinity now reduces attack probability against relatives, rather than relying on generation numbers as a crude proxy.
 - Innovation-aligned neural connection genes. Crossover and mate-preference distance now match homologous connections by stable endpoint-derived innovation IDs instead of assuming that matching array positions represent the same gene.
+- Seasonal food patches with varying quality/productivity, obstacle-associated shelter cover, spatial thermal stress, and explicit movement energy costs.
 - Body mass now has a nonlinear maintenance cost and a speed trade-off, rather than being only a visual and attack-size multiplier.
 - Schema-v5 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
 

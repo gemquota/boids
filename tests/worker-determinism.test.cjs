@@ -16,7 +16,7 @@ function makeWorld(seed) {
     Array, Object, Number, String, Boolean, Set, Map, Date, JSON,
   };
   vm.createContext(sandbox);
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get food(){return food}, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -48,6 +48,12 @@ for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'paren
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
 assert.equal(new Set(Array.from(sa.arrays.individualId)).size, sa.N, 'individual IDs must be unique');
+assert.ok(a.__boidsTest.food.every(f => f.quality >= .7 && f.quality <= 1.3), 'food patches should have bounded quality');
+assert.ok(a.__boidsTest.food.every(f => f.productivity >= .65 && f.productivity <= 1.35), 'food patches should have bounded productivity');
+a.__boidsTest.obstacles = [{ x: a.__boidsTest.x[0], y: a.__boidsTest.y[0], r: 60 }];
+a.__boidsTest.update(1 / 60, 5000);
+assert.ok(a.__boidsTest.coverByAgent[0] > .5, 'reef obstacles should provide measurable shelter cover');
+assert.ok(a.__boidsTest.currentSeasonalFactor >= .44 && a.__boidsTest.currentSeasonalFactor <= 1, 'seasonal resource factor should remain bounded');
 
 // A parent pair must be stored as persistent individual identities, not generation counters.
 const api = a.__boidsTest;
@@ -81,7 +87,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 6);
+assert.equal(restoredSnapshot.schemaVersion, 7);
 assert.ok(restoredSnapshot.pedigree.length >= api.N, 'snapshot should retain the pedigree graph');
 assert.equal(restored.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'restored pedigree should preserve kinship');
 assert.equal(restoredSnapshot.arrays.traitGenes.length, api.N * 10, 'ten inherited traits must be stored per agent');
@@ -96,6 +102,7 @@ delete legacy.arrays.innovation;
 delete legacy.arrays.paternalInnovation;
 delete legacy.pedigree;
 delete legacy.pedigreeTruncated;
+legacy.food = legacy.food.map(({quality,productivity,phase,...patch}) => patch);
 const legacyTraits = new Float32Array(api.N * 6);
 const legacyPaternalTraits = new Float32Array(api.N * 6);
 for (let i = 0; i < api.N; i++) {
@@ -110,6 +117,8 @@ const migratedTraits = migrated.__boidsTest.exportSnapshot().arrays.traitGenes;
 assert.equal(migratedTraits.length, api.N * 10);
 assert.equal(migratedTraits[6], 1, 'legacy acceleration locus should receive neutral migration value');
 assert.equal(migratedTraits[8], .5, 'legacy risk locus should receive neutral migration value');
+assert.equal(migrated.__boidsTest.food[0].quality, 1, 'legacy food patches should receive neutral quality');
+assert.equal(migrated.__boidsTest.food[0].productivity, 1, 'legacy food patches should receive neutral productivity');
 assert.equal(migrated.__boidsTest.exportSnapshot().arrays.innovation.length, api.N * api.cfg.connections, 'legacy neural genes should receive innovation IDs');
 assert.equal(migrated.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'legacy restore should reconstruct the live pedigree from parent IDs');
 
