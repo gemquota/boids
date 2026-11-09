@@ -76,7 +76,6 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 
 | Control | Range | Initial value | Effect |
 |---|---:|---:|---|
-| Predator count | 0–18 | 5 | Number of active predators. |
 | Reef structures | 0–18 | 7 | Number of circular obstacles. |
 | Renewable food patches | 0–40 | 14 | Number of finite, regenerating food sources. |
 | Food preference | 0–2 | 0.75 | Strength of steering toward stocked food patches. |
@@ -84,8 +83,6 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 | Juvenile age | 0–40 | 8 | Age below which predators receive a vulnerability multiplier. |
 | Juvenile vulnerability | 0–4 | 1.5 | Multiplier on predator attack probability for juveniles. |
 | Food regeneration | 0–1 | 0.12 | Rate at which food-patch stock recovers. |
-| Predator hunting drive | 0–1 | 0.45 | Scales pursuit/attack behaviour. |
-| Predator strike range | 4–32 | 12 | Distance within which an attack can occur. |
 | Current strength | 0–1.8 | 0.45 | Base environmental flow strength. |
 | Trail persistence | 0.04–0.5 | 0.14 | Canvas trail fade amount; lower values retain trails longer. |
 
@@ -140,7 +137,7 @@ The Dynamics tab adds 25 independently adjustable controls, grouped into collaps
 | Genetic variation | Mutation drift, connection rewiring chance, lineage variation |
 | Neural dynamics | Neural output noise, response inertia, learning momentum, sensory noise |
 | Life history | Juvenile growth rate, adult maintenance cost |
-| Predator ecology | Search radius, hunger persistence, turning gain, satiation |
+| Conspecific hunting | Aggression selection, size selection, kin protection, attack cost, attack range, juvenile vulnerability |
 
 These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and predator pursuit. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; food energy yield multiplier changes energy received per bite rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
 
@@ -154,3 +151,9 @@ These controls are wired into steering, sensory inputs, resource cycling, neural
 - **Observatory history** is also cached locally so charts can repopulate between visits.
 
 The simulation state is browser-local. Clearing site data or using another browser/device removes access to that local snapshot.
+
+## Model integrity update
+
+The active worker does not spawn a separate predator population. Predation is conspecific: members of the single evolving boid population may attack smaller agents based on inherited aggression, relative body size, sensory range, bite strength, and kin protection. Older references to predator counts, autonomous predator hunger, or predator-only movement controls do not describe the current implementation and should not be used to configure experiments.
+
+The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v3 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.

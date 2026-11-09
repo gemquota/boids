@@ -41,6 +41,19 @@ All 100 sliders are registered, persisted, and assigned to a tab and collapsible
 
 The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
 
+## Simulation correctness overhaul
+
+The current development branch begins an eight-phase model overhaul. The first foundational slice adds:
+
+- A fixed 1/60-second simulation clock with bounded catch-up.
+- Double-buffered positions and velocities, so neighbour sensing reads a consistent pre-update movement state.
+- Seeded xorshift randomness, with the generator state persisted in world snapshots.
+- Randomised agent evaluation order to remove fixed low-index priority from sequential resource claims.
+- Persistent 32-bit individual IDs and actual parent IDs. Generation depth is retained separately and is no longer used as an identity surrogate for kin checks.
+- Schema-v3 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
+
+This is a **foundational Phase 1 implementation plus the first Phase 2 interaction slice**. Movement reads a shared position/velocity snapshot, while food claims and conspecific attacks are resolved in batches. Energy accounting, richer trade-offs, runtime reproducibility tests, and full pedigree analysis remain in progress. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
+
 ## Getting started
 
 ### Run locally
@@ -170,7 +183,7 @@ This is a simplified two-sex mating and gestation model, not a complete biologic
 
 Food patches contain finite stock and regenerate over time. Feeding removes stock and transfers energy to agents. Food attraction, consumption, energy yield, and regeneration can be adjusted independently.
 
-Predators search for prey and pursue targets. Their search range, hunger, turning gain, cruising speed, strike range, and satiation behaviour influence hunting pressure. Juvenile vulnerability can alter the risk faced by younger agents.
+Predation is conspecific: agents within the same evolving population can hunt smaller agents when inherited aggression, relative body size, sensory range, bite strength, and kin-protection traits make an attack viable. There is no separate predator caste or independently spawned predator species. Juvenile vulnerability modifies the risk faced by younger agents. Attack proposals are resolved after the agent decision pass so one prey target cannot generate multiple kill rewards in the same tick.
 
 Survival and population dynamics also respond to:
 - Metabolic and adult maintenance costs.
