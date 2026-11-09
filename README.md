@@ -15,31 +15,31 @@ No framework, bundler, package installation, or build step is required. The site
 
 - Full-screen, responsive simulation with touch and pointer interaction.
 - Dedicated simulation worker using typed arrays, spatial indexing, and OffscreenCanvas.
-- **100 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
+- **183 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
 - Food patches with finite renewable stock, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body mass, speed, bite strength, sensory range, kin affinity, acceleration, agility, risk tolerance, and exploration.
-- Hunting traits are inherited and mutated alongside neural connection genes; successful predation, energy costs, size trade-offs, and kin protection create selection pressure within one shared population.
+- Hunting traits are inherited and mutated independently from neural connection genes; successful predation, energy costs, size trade-offs, and kin protection create selection pressure within one shared population.
 - Observatory panels can be opened together; charts support pinch zoom, double-tap reset, numeric axes and increments, and optional grid lines.
 - Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
 - Browser-local persistence for settings, presets, world snapshots, and Observatory history.
 
 ## Control taxonomy
 
-All 100 sliders are registered, persisted, and assigned to a tab and collapsible category.
+All 183 numeric sliders are registered, persisted, and assigned to a tab and collapsible category.
 
 | Tab | Categories |
 |---|---|
 | Motion | Population & timing; locomotion; schooling & spacing; environmental flow |
 | Neural brain | Network architecture; learning & plasticity; neural behaviour |
-| Genetics | Mutation & topology; inheritance |
+| Genetics | Neural mutation & topology; inheritance; ten-locus gene expression |
 | Reproduction | Mate choice; reproductive strategy; maturation & lifespan |
 | Selection | Ecological selection; predation phenotype selection; energy economics |
 | Environment | World geometry; food web; habitat & presentation |
 | Dynamics | Spatial interaction; food sensing & foraging; predation & social response; survival mechanics; advanced movement, current, neural, life-history, genetic-variation and phenotype controls |
 
-The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
+The Genetics tab contains ten collapsible locus editors, each with phenotype bounds, curve selection, curve controls, environmental sensitivity, mutation rate, mutation magnitude and inheritance fidelity. The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
 
 ## Simulation correctness overhaul
 
@@ -117,7 +117,7 @@ The configuration drawer is organised into tabs and collapsible accordion groups
 - **Reset slider limits** restores the original range boundaries.
 - **Reset defaults** restores the tuned ecological baseline and original slider limits.
 
-The 100-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each added dynamics parameter, including what the worker currently does with it.
+The 100-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
 
 ### Presets and randomisation
 
@@ -129,6 +129,19 @@ The 100-slider set is intended to expose meaningful interacting parameters witho
 Presets include the slider configuration, behaviour mode, channel masks, and world toggles. Presets are stored in browser local storage and are not shared between devices.
 
 ---
+
+## Genotype and gene expression
+
+Each of the ten inherited quantitative loci is stored as a bounded genotype value. The worker normalizes that allele through a configurable expression function before using it as a physical or behavioural phenotype. The Genetics tab exposes **nine numeric expression/inheritance controls plus one curve selector per locus**:
+
+- Phenotype minimum and maximum.
+- Linear, exponential, logarithmic, sigmoid, threshold, plateau or inverse curve.
+- Curve strength, midpoint and expression bias.
+- Environmental sensitivity.
+- Locus-specific mutation rate and magnitude.
+- Heritability / inheritance fidelity.
+
+The ten loci share the same expression architecture but retain independent settings. Changing expression settings changes how existing genomes manifest; it does not rewrite their inherited alleles. The former global Cruising speed slider is replaced by the Speed locus's phenotype range. Global mutation probability and magnitude now describe neural connection genes only.
 
 ## The simulation model
 
@@ -204,7 +217,7 @@ The model is intentionally qualitative. Parameter values are simulation controls
 
 ---
 
-## The 100-slider configuration
+## The 183-slider configuration
 
 The controls are distributed across the main simulation tabs and the advanced Dynamics tab. Accordion groups keep related parameters together.
 
