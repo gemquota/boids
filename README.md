@@ -1,122 +1,313 @@
 # BOIDS // evolutionary field
 
-A full-screen, browser-based flock and ecosystem simulation with inherited sparse neural brains, mutation, mate choice, gestation, resource pressure, predation, and live population analysis.
+**A full-screen, browser-based evolutionary ecosystem.** Flocks move through a changing environment, forage, avoid predators, compete for resources, choose mates, reproduce, and pass sparse neural-network genomes to the next generation.
 
-The simulation is deliberately split into a small UI shell and a dedicated worker:
-- `index.html` owns the canvas element, vertically revealed configuration and observatory drawers, user interaction, saved settings, and telemetry charts.
-- `boids-worker.js` owns simulation state, spatial indexing, neural evaluation, genetic inheritance, ecology, and Canvas2D rendering through an `OffscreenCanvas`.
+The project combines classic boids-style local steering with an experimental evolutionary simulation: each agent carries its own inherited neural controller, internal state, energy budget, age, reproductive state, and lineage.
 
-No build step or package installation is required. Serve the repository root as static files. The population slider starts at 500, with a default configurable range of 10 to 1,000. World width and height are independently configurable relative to the viewport; the world is mapped back onto the visible canvas while retaining its larger or smaller logical simulation area. The worker is loaded relative to the page as `./boids-worker.js`.
+**Live simulation:** [gemquota.github.io/boids](https://gemquota.github.io/boids/)  
+**Repository:** [github.com/gemquota/boids](https://github.com/gemquota/boids)
 
-## Run locally
+No framework, bundler, package installation, or build step is required. The site is served as static files.
+
+---
+
+## At a glance
+
+- Full-screen, responsive simulation with touch and pointer interaction.
+- Dedicated simulation worker using typed arrays, spatial indexing, and OffscreenCanvas.
+- **100 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
+- Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
+- Randomised ecological configurations and a tuned baseline reset.
+- Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
+- Food patches with finite renewable stock, predators, obstacles, currents, ageing, starvation, and density pressure.
+- Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
+- Browser-local persistence for settings, presets, world snapshots, and Observatory history.
+
+## Getting started
+
+### Run locally
 
 From the repository root:
 
-```sh
+~~~sh
 python3 -m http.server 8000
-```
+~~~
 
-Open `http://localhost:8000` in a modern browser that supports OffscreenCanvas and workers.
+Open [http://localhost:8000](http://localhost:8000) in a modern browser with support for Web Workers and OffscreenCanvas.
 
-The simulation canvas is full-screen. Swipe down from the top edge to open configuration and swipe up from the bottom edge to open the Evolutionary Observatory. Keyboard shortcuts:
-- `H`: configuration drawer
-- `I`: observatory drawer
-- `M`: toggle attract/repel interaction mode
-- `Space`: pause/resume
-- `Escape`: close drawers
+The application is static:
+- **index.html** contains the interface, canvas, drawers, controls, settings and Observatory UI.
+- **boids-worker.js** contains the simulation, ecology, neural evaluation, genetics, snapshot serialization, and worker-side rendering.
+- **docs/** contains supporting configuration and model references.
+- **.github/workflows/validate.yml** runs the repository's automated structural and JavaScript checks.
 
-Tap/drag the world to influence agents. Enable **Inspect brain** to select an agent and view its current connection graph.
+The worker is loaded relative to the page as ./boids-worker.js. Keep the two application files together when hosting the project.
 
-## Simulation model
+### GitHub Pages
 
-### Agents and local movement
+The repository is configured for static hosting. The published version is available at:
 
-Each boid has position, velocity, age, energy, sex, reproductive state, fitness estimate, lineage metadata, a neural hidden-state vector, and a sparse connection genome. Neighbour queries use a uniform spatial hash rebuilt per simulation step. Boids apply separation, alignment, cohesion, obstacle avoidance, environmental flow, food seeking, predator avoidance, and user interaction forces.
+[https://gemquota.github.io/boids/](https://gemquota.github.io/boids/)
 
-World boundaries can wrap or reflect. Behaviour profiles adjust the relative weights of schooling, dispersal, predator avoidance, or turbulent exploration.
+No server-side database or API is required. Each browser profile maintains its own local settings and simulation save data.
 
-### Neural architecture
+---
 
-The controller has eight sensory channels, a configurable hidden layer, and eight behavioral output channels. The sensory channels are:
-1. local neighbour density
-2. neighbour alignment
-3. close-range separation pressure
-4. predator threat
-5. nearest-food proximity
-6. mate proximity
-7. current energy reserve
-8. normalized age
+## Interface and interaction
 
-The output channels control turn, acceleration, alignment, cohesion, separation, fleeing, mate seeking, and reproductive drive. Channel masks can disable inputs or outputs.
+The simulation occupies the full screen. Its controls are deliberately tucked into drawers so the world remains the main event.
 
-Each connection gene stores a directed source neuron, destination neuron, and signed weight. Hidden-to-hidden connections use recurrent state carried between neural evaluations. The connection count and hidden-neuron count are configurable. Changing hidden/connection counts remaps and preserves the overlapping portion of existing genomes and brain state; newly added connections are randomized.
-
-Plasticity uses a reward-modulated eligibility trace on connection weights. Reward is currently a local heuristic derived from recent energy change, feeding, and threat, not an externally validated reinforcement-learning objective. Plasticity is bounded and should be treated as an experimental learning rule.
-
-### Genetics and reproduction
-
-Initial connection genomes are randomized. A successful conception stores the prospective father's connection genome and lineage on the gestating mother. At delivery, each offspring receives per-gene parental crossover, optional parental weight blending, mutation of connection endpoints or weights, randomized sex, and a new lineage depth.
-
-Mutation controls configure per-gene mutation probability and magnitude. Mate preference ranges from preference for similar genomes to preference for dissimilar genomes. Mate candidate sampling is configurable.
-
-Reproductive drive, earliest/latest reproductive ages, maximum lifespan, gestation duration, energy threshold, and offspring count are independently configurable. The simulation uses a simplified two-sex mating/reproduction model. It is not a full biological gamete, developmental, population-genetics, or ecological model.
-
-### Ecology and selection
-
-Food patches have finite stock and gradual regeneration. Agents consume food when inside patch range; food attraction biases movement toward the nearest patch. Energy changes with feeding, metabolic cost, starvation pressure, environmental harshness, and local crowding.
-
-Predators search nearby spatial cells for prey and can cause mortality within strike range. Juvenile vulnerability is configurable. Survival pressure also includes age-related mortality and a fitness-weighted stochastic component.
-
-These are intentionally simplified ecological mechanics. Parameters are qualitative controls, not calibrated physical or biological units.
-
-## Controls
-
-The top configuration drawer groups controls into Motion, Neural brain, Genetics, Reproduction, Selection, and Environment. Every range slider has editable MIN and MAX endpoint labels: press and hold an endpoint for about 550 ms to edit that limit. The original bounds and customized bounds are saved in browser local storage and restored automatically on later visits. Use **Reset slider limits** to restore the original range for every slider. **Defaults** also restores the original slider bounds. Committed slider values are saved and restored automatically as well; the explicit Save/Load controls remain available.
-
-| Area | Controls |
+| Interaction | Action |
 |---|---|
-| Motion | Population (default range 10–1,000), world width and height (viewport multipliers), boid visual size, speed, perception, separation, alignment, cohesion, steering force, behavioural profile, time scale, turbulence |
-| Neural brain | Connection genes, hidden neurons, update interval, reward-modulated plasticity, eligibility decay, reward sensitivity, sensory/output masks |
-| Genetics | Mutation probability, mutation magnitude, crossover mixing, parental weight blending |
-| Reproduction | Drive, minimum/maximum reproductive age, maximum lifespan, mate similarity preference, fertility, gestation, energy threshold, search radius, mate-candidate count |
-| Selection | Predation, starvation, competition, harshness, ageing and selection intensity |
-| Environment | Predators, reef structures, food patches, food regeneration, food attraction, metabolic rate, juvenile vulnerability, currents and trail persistence |
+| Swipe down from the top edge | Open the configuration drawer |
+| Swipe up from the bottom edge | Open the Evolutionary Observatory |
+| Tap or drag in the world | Apply the current pointer influence |
+| H | Toggle configuration |
+| I | Toggle Observatory |
+| M | Toggle attract/repel interaction mode |
+| Space | Pause or resume |
+| Escape | Close open drawers |
 
-The bottom Evolutionary Observatory reports live population, births, conceptions, deaths, predator kills, mutations, gestation count, mean age/energy, mean fitness, mean reward, genetic diversity, gene-frequency history, connection-weight summaries, and neural topology/inspection.
+The configuration drawer is organised into tabs and collapsible accordion groups. Slider tracks use the available width, with enlarged MIN/MAX touch targets for mobile use.
 
-Configuration can be saved and restored in the browser's local storage. Settings are local to the browser profile and are not synchronized across devices.
+### Slider limits and help
 
-## Performance notes
+- Tap a slider's name to open its contextual explanation.
+- Tap elsewhere to dismiss the help overlay.
+- Press and hold a **MIN** or **MAX** endpoint to edit that slider's allowed range.
+- Original limits and user overrides are retained locally.
+- **Reset slider limits** restores the original range boundaries.
+- **Reset defaults** restores the tuned ecological baseline and original slider limits.
 
-- CPU simulation and Canvas2D rendering run in a worker; this is not GPU compute.
-- Neighbour and predator searches use a spatial hash.
-- Per-boid food sensing/feeding is consolidated into one food-patch pass.
-- Agent state and genomes use typed arrays.
-- Neural scratch storage and hue caches are reused.
-- Rendering batches streaks by hue bin rather than changing Canvas2D state per agent.
-- Adaptive quality can lower the active population when measured FPS falls below its threshold and gradually restore it when performance recovers.
+The 100-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each added dynamics parameter, including what the worker currently does with it.
 
-Actual population/FPS limits depend on device, browser, screen resolution, and active configuration. The worker is designed for a practical interactive population, not a claim of hundreds of thousands of agents on all devices.
+### Presets and randomisation
+
+- **Save preset** stores a named configuration.
+- **Apply preset** restores the selected configuration.
+- **Randomise ecology** generates bounded variations around the current settings, with constraints on key population, food, predator, and reproduction values.
+- **Reset defaults** returns to the shipped ecological baseline.
+
+Presets include the slider configuration, behaviour mode, channel masks, and world toggles. Presets are stored in browser local storage and are not shared between devices.
+
+---
+
+## The simulation model
+
+### Agents and flock movement
+
+Each boid maintains position, velocity, age, energy, sex, reproductive state, fitness estimate, lineage metadata, neural hidden state, and a sparse connection genome.
+
+Local neighbour queries use a spatial hash rebuilt during simulation updates. Steering combines:
+
+- Separation from nearby agents.
+- Alignment with local headings.
+- Cohesion toward the local group.
+- Obstacle avoidance.
+- Environmental current and turbulence.
+- Food seeking.
+- Predator avoidance.
+- Pointer-driven attraction or repulsion.
+
+World boundaries can wrap or reflect. Behaviour profiles change the balance between schooling, dispersal, predator evasion, and turbulent exploration.
+
+### Evolving neural controllers
+
+Each agent has a compact neural controller with **eight sensory channels**, a configurable hidden/recurrent layer, and **eight behavioural output channels**.
+
+| Sensory input | Information |
+|---|---|
+| Neighbour density | Local crowding |
+| Neighbour alignment | Average nearby heading |
+| Separation pressure | Close-range personal-space pressure |
+| Predator threat | Nearby danger |
+| Food proximity | Access to nearby food |
+| Mate proximity | Potential reproductive partner |
+| Energy reserve | Current energy state |
+| Age | Normalised life stage |
+
+The outputs influence turning, acceleration, alignment, cohesion, separation, fleeing, mate seeking, and reproductive drive. Input and output channel masks can disable individual channels.
+
+Each connection gene stores a directed source neuron, destination neuron, and signed weight. Hidden-to-hidden connections can use recurrent state carried between neural evaluations. Connection and hidden-neuron counts are configurable; when topology settings change, overlapping genome and brain-state data is retained where possible and new connections are initialised.
+
+Plasticity uses reward-modulated eligibility traces to update connection weights. The reward signal is a local heuristic based on recent energy change, feeding, and threat. It is an experimental learning mechanism, not a validated reinforcement-learning objective.
+
+### Genetics, mate choice, and reproduction
+
+Initial connection genomes are randomised. During reproduction, offspring inherit connection genes through parental crossover and optional weight blending. Mutation can alter connection weights and endpoints, allowing both parameter changes and topology rewiring. Lineage metadata tracks ancestry.
+
+Mate choice combines spatial proximity with genetic preference. Preference can favour similar or dissimilar genomes, while candidate sampling and proximity weighting influence which eligible partner is selected.
+
+The reproductive system includes configurable:
+- Reproductive drive and eligibility ages.
+- Mate search radius and candidate sampling.
+- Energy threshold for conception.
+- Fertility / offspring count.
+- Gestation duration.
+- Maximum lifespan.
+
+This is a simplified two-sex mating and gestation model, not a complete biological developmental or population-genetics simulation.
+
+### Food, predators, and selection
+
+Food patches contain finite stock and regenerate over time. Feeding removes stock and transfers energy to agents. Food attraction, consumption, energy yield, and regeneration can be adjusted independently.
+
+Predators search for prey and pursue targets. Their search range, hunger, turning gain, cruising speed, strike range, and satiation behaviour influence hunting pressure. Juvenile vulnerability can alter the risk faced by younger agents.
+
+Survival and population dynamics also respond to:
+- Metabolic and adult maintenance costs.
+- Starvation pressure.
+- Local crowding and competition.
+- Environmental harshness.
+- Ageing and lifespan.
+- Fitness-weighted selection.
+
+The model is intentionally qualitative. Parameter values are simulation controls, not calibrated biological or physical units.
+
+---
+
+## The 100-slider configuration
+
+The controls are distributed across the main simulation tabs and the advanced Dynamics tab. Accordion groups keep related parameters together.
+
+| Area | What it controls |
+|---|---|
+| **Motion** | Population target, world dimensions, visual scale, speed, perception, separation, alignment, cohesion, steering authority, behaviour profile, time scale, and turbulence. |
+| **Neural brain** | Connection genes, hidden neurons, update interval, learning rate, eligibility decay, reward sensitivity, sensory channels, and output channels. |
+| **Genetics** | Mutation probability and magnitude, crossover, parental weight blending, mutation drift, rewiring, and lineage variation. |
+| **Reproduction** | Reproductive drive, age windows, lifespan, mate preference, fertility, gestation, energy threshold, mate radius, candidate sampling, and mate-drive variation. |
+| **Selection** | Predation, starvation, competition, environmental harshness, ageing, and selection intensity. |
+| **Environment** | Predator population, reefs, food patches, food regeneration, food attraction, metabolic rate, juvenile vulnerability, currents, and trail persistence. |
+| **Dynamics** | Flocking noise, alignment persistence, cohesion bias, separation falloff, density sensitivity, current drift, eddy frequency, food depletion and yield, neural output dynamics, sensory noise, life-history costs, and predator ecology. |
+
+The Dynamics controls are grouped into Movement, Water dynamics, Reproduction, Genetic variation, Neural dynamics, Life history, and Predator ecology.
+
+Some controls intentionally scale a specific part of an existing mechanic rather than introducing an entirely new subsystem. For example:
+- **Neural turn damping** attenuates the evolved turn output; it is not general velocity memory.
+- **Plasticity multiplier** scales the learning update; it does not maintain a separate momentum accumulator.
+- **Juvenile ageing multiplier** changes progression through the juvenile age threshold; it does not change body size.
+- **Food energy yield multiplier** changes the energy received per bite; it is not a separate contest-competition mechanic.
+- **Mate proximity weighting** adjusts the proximity term relative to genetic preference during mate ranking.
+
+See the [configuration reference](docs/CONFIGURATION.md) for the control ranges and initial values.
+
+---
+
+## Evolutionary Observatory
+
+The bottom drawer provides live views into the current population and its evolution. Depending on the active panel, it exposes:
+
+- Population size and population history.
+- Births, conceptions, deaths, predator kills, and gestation.
+- Mean age, energy, fitness, and reward.
+- Genetic diversity and gene-distribution history.
+- Connection-weight summaries and neural topology.
+- Individual brain inspection and connection graph.
+
+The Observatory is intended to make changes in population and inherited variation observable over time, rather than reducing the simulation to a moving wallpaper with a suspiciously large number of sliders.
+
+Historical samples are retained in the browser's local world data and restored alongside the saved ecosystem where available.
+
+---
+
+## Persistence and local data
+
+The simulation stores data locally in the browser. Nothing is synchronised to a remote account or shared automatically between devices.
+
+| Data | Storage | Behaviour |
+|---|---|---|
+| Slider values and UI settings | Local storage | Restored on later visits |
+| Named presets | Local storage | Available in the same browser profile |
+| World snapshot | IndexedDB | Periodically saved and restored |
+| Observatory history | Browser-local storage | Restored with available historical samples |
+
+World snapshots include the simulation configuration and live state needed to resume the ecosystem, including agent positions and velocities, age, energy, pregnancy, genomes, neural state, food, predators, obstacles, counters, and historical samples.
+
+Snapshots are refreshed periodically and flushed when the page becomes hidden or is being unloaded. The save path waits for the worker's snapshot response and the IndexedDB transaction. A previous known-good snapshot is retained as a rollback copy, and invalid or unsupported newer snapshots can fall back to that copy.
+
+**Persistence is best-effort, not a server backup.** A browser or operating-system shutdown can interrupt asynchronous work. Clearing site data, using private browsing, changing browser profiles, or switching devices can remove access to the saved world.
+
+---
+
+## Performance and compatibility
+
+The simulation is designed to keep the main interface responsive while the worker handles the computational work.
+
+Current implementation choices include:
+- Worker-based simulation and Canvas2D rendering through OffscreenCanvas.
+- Spatial hashing for neighbour and predator searches.
+- Typed arrays for agent state and genome data.
+- Reused neural scratch storage and rendering caches.
+- Batched rendering by hue bins.
+- Adaptive quality controls that can reduce the active population when measured frame rate drops and restore it as performance recovers.
+
+This is CPU simulation, not GPU compute. There is no WebGPU implementation at present. Actual population and frame rate depend on the device, browser, screen resolution, world size, and selected parameters. A configuration that runs comfortably on a desktop may be excessive on a phone.
+
+The application requires browser support for Web Workers and OffscreenCanvas. Browsers without the required support may display a compatibility message instead of running the simulation.
+
+---
 
 ## Known limitations
 
-- Simulation state and historical gene-frequency samples are in-memory only and reset on reload.
-- Gene-history plots are rolling population-level histograms, not persistent per-locus allele records.
-- Colour is a hash of the connection genome. It provides a visually distributed phenotype signature, but nearby colours do not imply close genetic relatedness; use genome distance for mate selection.
-- The fitness/reward and selection models are heuristic and not calibrated to a real species.
-- The neural architecture is a compact sparse network, not a general-purpose neural simulator.
-- There is no GPU/WebGPU implementation at present.
-- The application requires OffscreenCanvas support. Older browsers that lack it show a compatibility message rather than running a main-thread fallback.
+- The ecological and selection models are simplified and are not calibrated to a real species or environment.
+- The reward signal for neural plasticity is heuristic.
+- Neural controllers are compact sparse networks, not general-purpose neural simulators.
+- Genome-derived colour is a visual signature, not a reliable measure of genetic distance. Use genome distance and mate-preference metrics for genetic comparisons.
+- Gene-distribution plots are population-level summaries, not a complete persistent record of every allele at every locus.
+- World persistence is browser-local and can be interrupted by browser or operating-system shutdown.
+- Performance is device-dependent; high population counts and complex settings can overwhelm mobile hardware.
+- No GPU/WebGPU simulation path or main-thread fallback is currently provided.
 
-## Development checks
+---
 
-The project is static HTML plus a JavaScript worker. At minimum, validate both the worker and inline page script with a JavaScript parser, then run in a real browser and exercise:
-- initial load, resize, pause/resume, reset and population changes
-- top/bottom drawer gestures and keyboard controls
-- changing connection count and hidden-neuron count while the simulation is running
-- conception, delayed birth, mutation and lineage
-- food depletion/regrowth and predator mortality
-- saved settings round-trip
-- a sustained performance run on mobile and desktop devices
+## Development and validation
 
-Do not treat syntax validation alone as proof of correct runtime behavior.
+The application is plain HTML and JavaScript. There is no compile step.
+
+At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 100-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
+
+A useful manual test pass includes:
+
+1. Load the page and verify the worker starts without errors.
+2. Resize the viewport and check the canvas/world mapping.
+3. Open and close both drawers with touch gestures and keyboard shortcuts.
+4. Pause, resume, change population, and interact with the world.
+5. Change connection and hidden-neuron counts while the simulation is running.
+6. Randomise settings, apply a saved preset, and reset the ecological baseline.
+7. Verify integer sliders remain on valid step values after randomisation and restore.
+8. Observe feeding, food regeneration, predator pursuit, deaths, conception, gestation, birth, and mutation.
+9. Inspect an individual brain and confirm the Observatory updates.
+10. Reload the page and verify the world and historical data restore from the local snapshot.
+11. Run a sustained mobile performance test at several population levels.
+
+Passing syntax and structural checks is not proof of complete runtime correctness. Test the deployed build on the target browsers and devices before treating it as release-ready.
+
+---
+
+## Project layout
+
+~~~text
+boids/
+├── index.html                  # Full-screen UI, controls, drawers, charts
+├── boids-worker.js             # Simulation, ecology, genetics, neural brains
+├── docs/
+│   ├── CONFIGURATION.md        # Slider ranges, defaults, and effects
+│   └── ...                     # Additional project references
+└── .github/
+    └── workflows/
+        └── validate.yml        # Automated validation workflow
+~~~
+
+## Contributing
+
+Changes to simulation mechanics should keep the UI control, worker implementation, help text, and configuration documentation in sync.
+
+For new controls:
+1. Define a clear unit or qualitative range and a useful default.
+2. Wire the setting through the UI and worker configuration path.
+3. Make the control's actual effect match its label and help description.
+4. Check symmetry for vector forces so horizontal and vertical movement behave consistently.
+5. Include the parameter in preset, reset, and persistence paths.
+6. Add regression checks for integer constraints, topology changes, and snapshot compatibility where relevant.
+
+Keep performance in mind: per-agent work runs every simulation update, so small inefficiencies multiply quickly as the population grows.
