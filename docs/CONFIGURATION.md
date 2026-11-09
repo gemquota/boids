@@ -171,8 +171,16 @@ Each agent now inherits ten quantitative trait loci. These are not additional UI
 
 The four newer loci use bounded quantitative inheritance and mutation. Older six-locus snapshots migrate to ten loci by preserving their original six values and initialising acceleration, agility, risk tolerance, and exploration to neutral values. This is a compatibility migration, not an inferred reconstruction of missing historical genes.
 
+### Pedigree and kinship
+
+Every individual has a unique 32-bit ID. Offspring records store the actual maternal and paternal IDs, while generation depth remains a separate field. The worker retains a pedigree map independently of the live population, so an individual's parents can remain known after they die.
+
+Kinship is estimated recursively from the pedigree to a maximum depth of eight generations. The resulting relatedness estimate reduces attack probability according to the attacker's inherited kin-affinity trait and the kin-protection setting. The pedigree store is bounded at 100,000 records to prevent indefinite memory growth; when old records are pruned, a truncation counter is included in telemetry and kinship estimates can understate distant relationships.
+
+World snapshots now use schema version 5 and persist the pedigree map. Older snapshots reconstruct only the pedigree information still recoverable from currently living agents' parent IDs.
+
 ## Model integrity update
 
 The active worker does not spawn a separate predator population. Predation is conspecific: members of the single evolving boid population may attack smaller agents based on inherited aggression, relative body size, sensory range, bite strength, and kin protection. Older references to predator counts, autonomous predator hunger, or predator-only movement controls do not describe the current implementation and should not be used to configure experiments.
 
-The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v4 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
+The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v5 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
