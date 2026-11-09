@@ -55,6 +55,7 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Innovation-aligned neural connection genes. Crossover and mate-preference distance now match homologous connections by stable endpoint-derived innovation IDs instead of assuming that matching array positions represent the same gene.
 - Seasonal food patches with varying quality/productivity, obstacle-associated shelter cover, spatial thermal stress, and explicit movement energy costs.
 - Lifetime reproductive success, per-trait selection differentials, attack/feeding/energy-flow counters, and a working JSON experiment export from the Observatory.
+- Live worker update/draw/backlog timings, inline UI syntax checks, and a CPU benchmark at 100, 250, 500, and 1,000 agents.
 - Body mass now has a nonlinear maintenance cost and a speed trade-off, rather than being only a visual and attack-size multiplier.
 - Schema-v5 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
 
