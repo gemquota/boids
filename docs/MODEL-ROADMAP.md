@@ -26,7 +26,7 @@ This roadmap is the implementation contract for moving the project from a flocki
 - Preserve the fixed-step accumulator when rendering falls behind, so the simulation slows rather than silently skipping simulation time.
 - Assign unique 32-bit individual IDs and store actual maternal and paternal IDs.
 - Upgrade ancestry buffers to 32-bit values and migrate old snapshots without pretending legacy generation counters are real parent identities.
-- Include RNG state and the next identity counter in schema-v4 world snapshots.
+- Include RNG state and the next identity counter in schema-v5 world snapshots.
 - Preserve per-agent render caches during death compaction.
 
 Remaining Phase 1 work:
@@ -59,6 +59,13 @@ Remaining work: add empirical or explicit dimensionless trait scaling, richer co
 
 ### Phase 4. Pedigree and population genetics
 
+**Status: first persistent pedigree and relatedness implementation committed on evolutionary-ecology-phase3-pedigree; population-genetic statistics remain outstanding.**
+
+- Persistent pedigree records now retain each individual's two parent IDs after those parents die, with a bounded 100,000-record history and an explicit truncation counter.
+- A depth-limited recursive kinship coefficient is converted to a relatedness estimate and used to reduce attack probability against relatives according to inherited kin affinity.
+- Schema-v5 snapshots preserve the pedigree graph; older snapshots reconstruct the pedigree records available from currently living agents' parent IDs.
+
+Remaining work:
 - Use persistent parent IDs to build a pedigree.
 - Calculate kinship from shared ancestors or a pedigree relationship matrix, with a documented depth/approximation policy.
 - Distinguish identity-by-descent from simple phenotype or genome similarity.
@@ -115,4 +122,4 @@ A phase is not complete merely because its code exists. Each phase needs:
 
 ## Current limitations
 
-The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but a full kinship coefficient and ancestral graph are not yet implemented. The ten-locus phenotype is in place, but its selection gradients and heritability are not yet measured. Neural genes still use positional loci rather than innovation-tracked homologous genes. The current fitness and learning reward remain heuristic.
+The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but the kinship estimate is depth-limited to eight pedigree generations and becomes a lower bound when the bounded pedigree store has discarded ancestors. The ten-locus phenotype is in place, but its selection gradients and heritability are not yet measured. Neural genes still use positional loci rather than innovation-tracked homologous genes. The current fitness and learning reward remain heuristic.
