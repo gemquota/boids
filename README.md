@@ -6,7 +6,7 @@ The simulation is deliberately split into a small UI shell and a dedicated worke
 - `index.html` owns the canvas element, vertically revealed configuration and observatory drawers, user interaction, saved settings, and telemetry charts.
 - `boids-worker.js` owns simulation state, spatial indexing, neural evaluation, genetic inheritance, ecology, and Canvas2D rendering through an `OffscreenCanvas`.
 
-No build step or package installation is required. Serve the repository root as static files. The worker is loaded relative to the page as `./boids-worker.js`.
+No build step or package installation is required. Serve the repository root as static files. The population slider starts at 500, with a default configurable range of 10 to 1,000. World width and height are independently configurable relative to the viewport; the world is mapped back onto the visible canvas while retaining its larger or smaller logical simulation area. The worker is loaded relative to the page as `./boids-worker.js`.
 
 ## Run locally
 
@@ -71,11 +71,11 @@ These are intentionally simplified ecological mechanics. Parameters are qualitat
 
 ## Controls
 
-The top configuration drawer groups controls into Motion, Neural brain, Genetics, Reproduction, Selection, and Environment.
+The top configuration drawer groups controls into Motion, Neural brain, Genetics, Reproduction, Selection, and Environment. Every range slider has editable MIN and MAX endpoint labels: press and hold an endpoint for about 550 ms to edit that limit. The original bounds and customized bounds are saved in browser local storage and restored automatically on later visits. Use **Reset slider limits** to restore the original range for every slider. **Defaults** also restores the original slider bounds. Committed slider values are saved and restored automatically as well; the explicit Save/Load controls remain available.
 
 | Area | Controls |
 |---|---|
-| Motion | Population, speed, perception, separation, alignment, cohesion, steering force, behavioural profile, time scale, turbulence |
+| Motion | Population (default range 10–1,000), world width and height (viewport multipliers), boid visual size, speed, perception, separation, alignment, cohesion, steering force, behavioural profile, time scale, turbulence |
 | Neural brain | Connection genes, hidden neurons, update interval, reward-modulated plasticity, eligibility decay, reward sensitivity, sensory/output masks |
 | Genetics | Mutation probability, mutation magnitude, crossover mixing, parental weight blending |
 | Reproduction | Drive, minimum/maximum reproductive age, maximum lifespan, mate similarity preference, fertility, gestation, energy threshold, search radius, mate-candidate count |
