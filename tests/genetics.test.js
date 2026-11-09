@@ -9,28 +9,28 @@ test('ten stable loci have ordered indices and valid bounds',()=>{
   for(const gene of genetics.TRAITS) assert.ok(gene.min<gene.max,gene.key);
 });
 test('sensory range scales personal and food detection',()=>{
-  assert.equal(genetics.perceptionRadius(100,.55),55);
-  assert.equal(genetics.perceptionRadius(100,1),100);
-  assert.equal(genetics.perceptionRadius(100,1.65),165);
-  assert.equal(genetics.foodSenseRange(100,1.5,2,60),300);
-  assert.equal(genetics.foodSenseRange(100,.55,2,60),110);
+  assert.ok(Math.abs(genetics.perceptionRadius(100,.55)-55)<1e-12);
+  assert.ok(Math.abs(genetics.perceptionRadius(100,1)-100)<1e-12);
+  assert.ok(Math.abs(genetics.perceptionRadius(100,1.65)-165)<1e-12);
+  assert.ok(Math.abs(genetics.foodSenseRange(100,1.5,2,60)-300)<1e-12);
+  assert.ok(Math.abs(genetics.foodSenseRange(100,.55,2,60)-110)<1e-12);
 });
 test('kin affinity continuously scales pedigree relatedness',()=>{
   assert.equal(genetics.kinProtection(.8,0),0);
-  assert.equal(genetics.kinProtection(.8,.5),.4);
+  assert.ok(Math.abs(genetics.kinProtection(.8,.5)-.4)<1e-12);
   assert.equal(genetics.kinProtection(.8,1),.8);
 });
 test('exploration changes wandering noise and food attraction',()=>{
-  assert.equal(genetics.explorationNoise(.08,.55),.084);
-  assert.equal(genetics.explorationNoise(.08,1),.12);
-  assert.equal(genetics.explorationNoise(.08,1.65),.172);
-  assert.equal(genetics.foodSteering(.22,.55),.2695);
-  assert.equal(genetics.foodSteering(.22,1.65),.1485);
+  assert.ok(Math.abs(genetics.explorationNoise(.08,.55)-.084)<1e-12);
+  assert.ok(Math.abs(genetics.explorationNoise(.08,1)-.12)<1e-12);
+  assert.ok(Math.abs(genetics.explorationNoise(.08,1.65)-.172)<1e-12);
+  assert.ok(Math.abs(genetics.foodSteering(.22,.55)-.2695)<1e-12);
+  assert.ok(Math.abs(genetics.foodSteering(.22,1.65)-.1485)<1e-12);
 });
 test('expression helpers clamp invalid or out-of-range values',()=>{
   assert.equal(genetics.perceptionRadius(100,99),165);
   assert.equal(genetics.kinProtection(2,-5),0);
-  assert.equal(genetics.explorationNoise(.1,NaN),.15);
+  assert.ok(Math.abs(genetics.explorationNoise(.1,NaN)-.15)<1e-12);
 });
 
 const fs=require('node:fs');
