@@ -89,6 +89,15 @@ const expressionMutationFields=[
 const expressionRanges=[];
 const expressionHost=$('geneExpressionControls');
 const expressionCurves=[['linear','Linear'],['exponential','Exponential'],['logarithmic','Logarithmic'],['sigmoid','Sigmoid'],['threshold','Threshold'],['plateau','Plateau'],['inverse','Inverse']];
+function drawExpressionCurve(trait,canvas){
+ const ctx=canvas.getContext('2d');if(!ctx)return;const w=canvas.width,h=canvas.height,left=34,right=w-12,top=12,bottom=h-24;
+ const min=+$('expr_'+trait.key+'_min').value,max=+$('expr_'+trait.key+'_max').value,strength=+$('expr_'+trait.key+'_strength').value,midpoint=+$('expr_'+trait.key+'_midpoint').value,bias=+$('expr_'+trait.key+'_bias').value,curve=$('expr_'+trait.key+'_curve').value;
+ const shape=x=>{x=Math.max(0,Math.min(1,x+bias));if(curve==='exponential')return Math.pow(x,strength);if(curve==='logarithmic')return Math.pow(x,1/strength);if(curve==='inverse')return 1-x;if(curve==='sigmoid'){let f=z=>1/(1+Math.exp(-strength*8*(z-midpoint))),a=f(0),b=f(1);return (f(x)-a)/(b-a)}if(curve==='threshold'){let z=Math.max(0,Math.min(1,(x-midpoint)/Math.max(.001,1-midpoint)));return z*z*(3-2*z)}if(curve==='plateau')return (1-Math.exp(-strength*x))/(1-Math.exp(-strength));return x};
+ ctx.clearRect(0,0,w,h);ctx.strokeStyle='#ffffff20';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
+ for(let q=1;q<4;q++){let y=top+(bottom-top)*q/4;ctx.strokeStyle='#ffffff12';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke()}
+ ctx.strokeStyle='#70f5d2';ctx.lineWidth=2;ctx.beginPath();for(let n=0;n<=100;n++){let x=n/100,y=shape(x),px=left+x*(right-left),py=bottom-y*(bottom-top);if(n===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.stroke();
+ ctx.fillStyle='#829aa6';ctx.font='10px system-ui';ctx.textAlign='left';ctx.fillText(max.toFixed(2),3,top+4);ctx.fillText(min.toFixed(2),3,bottom);ctx.textAlign='left';ctx.fillText('gene 0',left,bottom+16);ctx.textAlign='right';ctx.fillText('gene 1',right,bottom+16);ctx.textAlign='center';ctx.fillText(curve+' expression',w/2,10);
+}
 for(const trait of expressionTraits){
  const details=document.createElement('details');details.className='controlAccordion';details.open=trait.key==='speed';
  const summary=document.createElement('summary');summary.textContent=trait.label+' expression';details.append(summary);
@@ -106,7 +115,7 @@ for(const trait of expressionTraits){
   const label=document.createElement('label');label.htmlFor=id;label.textContent=field.label;
   const output=document.createElement('output');output.className='value';output.id=id+'Val';output.textContent=Number(value).toFixed(String(field.step).split('.')[1]?.length||0);
   const input=document.createElement('input');Object.assign(input,{id,type:'range',min:lo,max:hi,step:field.step,value});
-  wrap.append(label,output,input);grid.append(wrap);expressionRanges.push(id);
+  wrap.append(label,output,input);grid.append(wrap);expressionRanges.push(id);input.addEventListener('input',()=>drawExpressionCurve(trait,preview));
  }
  details.append(grid);expressionHost.append(details);
  curveSelect.addEventListener('change',()=>{config({['expr_'+trait.key+'_curve']:curveSelect.value});try{localStorage.setItem('boids.settings.v2',JSON.stringify(readSettings()))}catch(e){}});
