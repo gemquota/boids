@@ -40,8 +40,8 @@ function run(seed) {
 
 const a = run(123456);
 const b = run(123456);
-const sa = a.exportSnapshot();
-const sb = b.exportSnapshot();
+const sa = a.__boidsTest.exportSnapshot();
+const sb = b.__boidsTest.exportSnapshot();
 
 for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'parentA', 'parentB', 'traitGenes', 'genome']) {
   assert.deepEqual(Array.from(sa.arrays[key]), Array.from(sb.arrays[key]), 'same seed must reproduce ' + key);
