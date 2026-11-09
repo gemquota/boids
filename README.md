@@ -25,6 +25,22 @@ No framework, bundler, package installation, or build step is required. The site
 - Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
 - Browser-local persistence for settings, presets, world snapshots, and Observatory history.
 
+## Control taxonomy
+
+All 100 sliders are registered, persisted, and assigned to a tab and collapsible category.
+
+| Tab | Categories |
+|---|---|
+| Motion | Population & timing; locomotion; schooling & spacing; environmental flow |
+| Neural brain | Network architecture; learning & plasticity; neural behaviour |
+| Genetics | Mutation & topology; inheritance; trait-specific mutation biases |
+| Reproduction | Mate choice; reproductive strategy; maturation & lifespan |
+| Selection | Ecological selection; predation phenotype selection; energy economics |
+| Environment | World geometry; food web; habitat & presentation |
+| Dynamics | Spatial interaction; food sensing & foraging; predation & social response; survival mechanics; advanced movement, current, neural, life-history and phenotype controls |
+
+The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
+
 ## Getting started
 
 ### Run locally
