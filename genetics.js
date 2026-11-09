@@ -7,16 +7,16 @@
   'use strict';
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const TRAITS=Object.freeze([
-    {index:0,key:'aggression',label:'Aggression',geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
-    {index:1,key:'bodySize',label:'Body size',geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
-    {index:2,key:'speed',label:'Speed',geneMin:.55,geneMax:1.65,phenotypeMin:1.375,phenotypeMax:4.125},
-    {index:3,key:'biteStrength',label:'Bite strength',geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
-    {index:4,key:'kinAffinity',label:'Kin affinity',geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
-    {index:5,key:'sensoryRange',label:'Sensory range',geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
-    {index:6,key:'acceleration',label:'Acceleration',geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
-    {index:7,key:'agility',label:'Agility',geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
-    {index:8,key:'riskTolerance',label:'Risk tolerance',geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
-    {index:9,key:'exploration',label:'Exploration',geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65}
+    {index:0,key:'aggression',label:'Aggression',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
+    {index:1,key:'bodySize',label:'Body size',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
+    {index:2,key:'speed',label:'Speed',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:1.375,phenotypeMax:4.125},
+    {index:3,key:'biteStrength',label:'Bite strength',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
+    {index:4,key:'kinAffinity',label:'Kin affinity',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
+    {index:5,key:'sensoryRange',label:'Sensory range',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
+    {index:6,key:'acceleration',label:'Acceleration',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
+    {index:7,key:'agility',label:'Agility',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
+    {index:8,key:'riskTolerance',label:'Risk tolerance',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
+    {index:9,key:'exploration',label:'Exploration',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65}
   ]);
   const DEFAULT_EXPRESSION=Object.freeze(Object.fromEntries(TRAITS.map(t=>[t.key,Object.freeze({
     min:t.phenotypeMin,max:t.phenotypeMax,curve:'linear',strength:2,midpoint:.5,bias:0,environmentSensitivity:0
@@ -55,7 +55,7 @@
     const normalized=normalizeGene(geneValue,t);
     const shaped=shapeExpression(normalized,settings);
     const min=Number.isFinite(+settings.min)?+settings.min:t.phenotypeMin;
-    const max=Number.isFinite(+settings.max)?+settings.max:t.phenotypeMax;
+    const max=Math.max(min+1e-6,Number.isFinite(+settings.max)?+settings.max:t.phenotypeMax);
     const sensitivity=clamp(Number(settings.environmentSensitivity)||0,0,2);
     const env=clamp(Number(environment)||0,0,1);
     const modulated=clamp(shaped+(env-.5)*sensitivity,0,1);
