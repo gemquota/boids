@@ -142,7 +142,7 @@ The Dynamics tab adds 25 independently adjustable controls, grouped into collaps
 | Life history | Juvenile growth rate, adult maintenance cost |
 | Predator ecology | Search radius, hunger persistence, turning gain, satiation |
 
-These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and predator pursuit. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
+These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and predator pursuit. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; food energy yield multiplier changes energy received per bite rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
 
 ## Presets, randomisation and persistent worlds
 
@@ -150,7 +150,7 @@ These controls are wired into steering, sensory inputs, resource cycling, neural
 - **Apply preset** restores a saved configuration.
 - **Randomise ecology** makes bounded variations around the current configuration while constraining population, food, predator and reproduction settings to a plausible starting range.
 - **Reset defaults** restores the tuned ecological baseline and original slider limits.
-- **World persistence** stores a structured snapshot in IndexedDB, including agent positions and velocities, energy, age, pregnancy, genomes, neural state, food, predators, reefs, simulation counters and historical observatory samples. Snapshots are refreshed periodically and when the page becomes hidden. Data remains local to the browser profile and device.
+- **World persistence** stores a structured snapshot in IndexedDB, including agent positions and velocities, energy, age, pregnancy, genomes, neural state, food, predators, reefs, simulation counters and historical observatory samples. Snapshots are refreshed every 20 seconds and flushed when the page becomes hidden or is being unloaded. Each snapshot carries a schema version. The page waits for the worker response and IndexedDB transaction, keeps the previous known-good snapshot as a rollback copy, and falls back to that copy if the latest record is invalid or from a newer schema. Browser shutdown can still interrupt asynchronous work. Data remains local to the browser profile and device.
 - **Observatory history** is also cached locally so charts can repopulate between visits.
 
 The simulation state is browser-local. Clearing site data or using another browser/device removes access to that local snapshot.
