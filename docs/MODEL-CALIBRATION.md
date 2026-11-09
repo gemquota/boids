@@ -52,6 +52,19 @@ The current BOIDS worker is a deterministic, dimensionless artificial-ecology mo
 - Live update/draw/backlog timing metrics in the Observatory.
 - Manual browser/touch verification on the deployed GitHub Pages build.
 
+### Latest automated reference result
+
+GitHub Actions Node VM benchmark, fixed 14 food patches, 10 obstacles, 12 warm-up ticks, and 36 measured updates:
+
+| Requested population | Actual at end | Mean worker update |
+|---:|---:|---:|
+| 100 | 99 | 2.540 ms/tick |
+| 250 | 248 | 6.205 ms/tick |
+| 500 | 498 | 14.465 ms/tick |
+| 1,000 | 992 | 24.483 ms/tick |
+
+A targeted optimization moved pedigree relatedness calculation out of the general neighbour scan and computes it only for the nearest viable prey candidate. On the same CI runner, the 1,000-agent reference workload fell from 89.702 ms/tick to 24.483 ms/tick (about 3.7× faster). This is a worker-only CPU comparison, not a mobile-device frame-rate claim.
+
 ## Performance interpretation
 
 The automated worker benchmark measures simulation update cost in Node's VM with a fixed 14 food patches and 10 obstacles. It excludes browser rendering, GPU/compositor work, touch input, and device-specific worker overhead. CI uses a generous 250 ms/tick ceiling as a regression guard, not as a claim of real-time performance. Compare actual benchmark numbers across commits and test on representative Android devices before making performance claims.
