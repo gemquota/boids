@@ -16,7 +16,7 @@ function makeWorld(seed) {
     Array, Object, Number, String, Boolean, Set, Map, Date, JSON,
   };
   vm.createContext(sandbox);
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -79,7 +79,9 @@ const restoredSnapshot = restored.__boidsTest.exportSnapshot();
 assert.deepEqual(Array.from(restoredSnapshot.arrays.individualId), Array.from(api.individualId.subarray(0, api.N)));
 assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.parentA.subarray(0, api.N)));
 assert.equal(restoredSnapshot.rngState, api.rngState);
-assert.equal(restoredSnapshot.schemaVersion, 5);
+assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
+assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
+assert.equal(restoredSnapshot.schemaVersion, 6);
 assert.ok(restoredSnapshot.pedigree.length >= api.N, 'snapshot should retain the pedigree graph');
 assert.equal(restored.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'restored pedigree should preserve kinship');
 assert.equal(restoredSnapshot.arrays.traitGenes.length, api.N * 10, 'ten inherited traits must be stored per agent');
@@ -88,6 +90,10 @@ assert.ok(restoredSnapshot.arrays.traitGenes[before * 10 + 6] >= .55, 'offspring
 // Schema-v3 snapshots used six packed traits; migration must preserve those and initialise four new loci.
 const legacy = api.exportSnapshot();
 legacy.schemaVersion = 3;
+delete legacy.innovationRegistry;
+delete legacy.nextInnovationId;
+delete legacy.arrays.innovation;
+delete legacy.arrays.paternalInnovation;
 delete legacy.pedigree;
 delete legacy.pedigreeTruncated;
 const legacyTraits = new Float32Array(api.N * 6);
@@ -104,6 +110,7 @@ const migratedTraits = migrated.__boidsTest.exportSnapshot().arrays.traitGenes;
 assert.equal(migratedTraits.length, api.N * 10);
 assert.equal(migratedTraits[6], 1, 'legacy acceleration locus should receive neutral migration value');
 assert.equal(migratedTraits[8], .5, 'legacy risk locus should receive neutral migration value');
+assert.equal(migrated.__boidsTest.exportSnapshot().arrays.innovation.length, api.N * api.cfg.connections, 'legacy neural genes should receive innovation IDs');
 assert.equal(migrated.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'legacy restore should reconstruct the live pedigree from parent IDs');
 
 console.log('Worker deterministic replay, unique identities, pedigree inheritance, and schema-v4 restore and schema-v3 phenotype migration passed.');
