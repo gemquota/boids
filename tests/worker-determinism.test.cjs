@@ -88,6 +88,8 @@ assert.ok(restoredSnapshot.arrays.traitGenes[before * 10 + 6] >= .55, 'offspring
 // Schema-v3 snapshots used six packed traits; migration must preserve those and initialise four new loci.
 const legacy = api.exportSnapshot();
 legacy.schemaVersion = 3;
+delete legacy.pedigree;
+delete legacy.pedigreeTruncated;
 const legacyTraits = new Float32Array(api.N * 6);
 const legacyPaternalTraits = new Float32Array(api.N * 6);
 for (let i = 0; i < api.N; i++) {
