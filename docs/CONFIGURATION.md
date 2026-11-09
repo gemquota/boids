@@ -148,10 +148,6 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Neural acceleration output gain | 0–2 | 0.35 | Scales the evolved acceleration-neuron output. |
 | Neural flee output gain | 0–3 | 1 | Scales the evolved flee-neuron output. |
 | Neural mate-seeking output gain | 0–2 | 0.3 | Scales the evolved mate-seeking output. |
-| Predator base acceleration | 0.01–0.1 | 0.045 | Base pursuit acceleration. |
-| Predator hunger acceleration gain | 0–0.15 | 0.055 | Additional pursuit acceleration from hunger. |
-| Predator strike probability gain | 0–0.3 | 0.08 | Scales attack probability inside strike range. |
-| Predator cruising speed | 0.5–3 | 1.35 | Predator movement speed after pursuit steering. |
 | Crowding mortality coefficient | 0–0.0000005 | 0.00000008 | Density-dependent mortality above the neighbour threshold. |
 | Baseline metabolic cost | 0.00001–0.0001 | 0.00004 | Constant component of each agent's energy expenditure. |
 | Food patch storage capacity | 0.25–3 | 1 | Maximum renewable stock held by each food patch. |
