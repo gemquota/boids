@@ -6,10 +6,10 @@ Values below describe the current slider ranges and initial UI values. Some cont
 
 | Control | Range | Initial value | Effect |
 |---|---:|---:|---|
-| Population | 300–12,000 | 2,000 | Desired active population. Resizing preserves surviving agents; the explicit reset action reseeds. |
+| Population | 10–1,000 | 500 | Desired active population. Resizing preserves surviving agents; the explicit reset action reseeds. |
 | Simulation speed | 0.25–3 | 1 | Scales the simulation timestep and therefore all simulated processes. |
 | Current turbulence | 0–2 | 0.35 | Adds local variation to the environmental flow field. |
-| Cruising speed | 0.5–5 | 2.5 | Base velocity limit. |
+
 | Perception radius | 18–90 | 42 | Flocking-neighbour distance. |
 | Personal space | 0–3.5 | 1.8 | Separation steering weight. |
 | School alignment | 0–3 | 1.15 | Alignment steering weight. |
@@ -41,10 +41,45 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 
 | Control | Range | Initial value | Effect |
 |---|---:|---:|---|
-| Mutation probability per gene | 0–0.5 | 0.025 | Probability that each inherited connection gene mutates. |
-| Mutation magnitude | 0.01–1.5 | 0.25 | Weight perturbation magnitude. Endpoint mutations can rewire a connection. |
+| Neural connection mutation probability | 0–0.5 | 0.025 | Probability that each inherited neural connection gene mutates. Trait loci have independent mutation-rate controls below. |
+| Neural connection mutation magnitude | 0.01–1.5 | 0.25 | Neural connection weight perturbation magnitude. Endpoint mutations can rewire a connection. Trait loci have independent mutation-magnitude controls below. |
 | Genome crossover mixing | 0–1 | 0.5 | Probability of selecting the maternal rather than paternal source gene at a locus. |
 | Parental weight blending | 0–1 | 0.15 | Blends the selected inherited weight toward the parental mean. |
+
+## Ten-locus gene expression
+
+The global Cruising speed control has been removed. Speed is now an expressed phenotype derived from each agent's inherited Speed locus. All ten loci use the same expression architecture, with independent settings per locus.
+
+| Locus | Default phenotype minimum | Default phenotype maximum |
+|---|---:|---:|
+| Aggression | 0 | 1 |
+| Body size | 0.55 | 1.65 |
+| Speed | 1.375 | 4.125 |
+| Bite strength | 0.55 | 1.65 |
+| Kin affinity | 0 | 1 |
+| Sensory range | 0.55 | 1.65 |
+| Acceleration | 0.55 | 1.65 |
+| Agility | 0.55 | 1.65 |
+| Risk tolerance | 0 | 1 |
+| Exploration | 0.55 | 1.65 |
+
+Each locus exposes these controls:
+
+| Control | Initial value | Effect |
+|---|---:|---|
+| Phenotype minimum / maximum | Locus defaults above | Physical or behavioural output bounds. These do not alter the inherited allele bounds. |
+| Expression curve | Linear | Selects Linear, Exponential, Logarithmic, Sigmoid, Threshold, Plateau or Inverse mapping. |
+| Curve strength | 2 | Controls curvature for exponential, logarithmic, sigmoid and plateau profiles. |
+| Curve midpoint | 0.5 | Sets the transition point for sigmoid and threshold profiles. |
+| Expression bias | 0 | Shifts the normalized gene input before curve evaluation. |
+| Environmental sensitivity | 0 | Modulates normalized expression using the worker's environmental signal (global harshness plus local shelter contribution). |
+| Mutation rate | 0.016 | Per-locus probability of mutation at offspring inheritance. |
+| Mutation magnitude | 0.075 | Maximum normalized perturbation when the locus mutates. |
+| Heritability / inheritance fidelity | 0.98 | Controls non-mutational deviation around the mid-parent allele in this simplified quantitative-trait model. It is not an empirically estimated heritability statistic. |
+
+Expression curves map the normalized inherited allele to a normalized output before applying phenotype bounds. Linear is proportional; Exponential delays most effect until high gene values; Logarithmic produces stronger early effects and diminishing returns; Sigmoid and Threshold create a transition around the midpoint; Plateau saturates progressively; Inverse reverses the direction.
+
+Changing these controls never rewrites an existing genome. It changes the mapping from genotype to phenotype. Global neural connection mutation probability and magnitude remain separate from the ten locus-specific mutation settings.
 
 ## Reproduction
 
@@ -88,7 +123,7 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 
 ### Toggles
 
-- **Wrap world boundaries:** boids and predators cross the field edges.
+- **Wrap world boundaries:** boids cross the field edges.
 - **Adaptive performance quality:** automatically adjusts active population toward the selected target based on recent FPS.
 
 ## Advanced dynamics
@@ -108,15 +143,11 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 | Food-seeking steering gain | 0–1 | 0.22 | Direct steering force toward the nearest stocked patch. |
 | Food consumed per contact | 0.00001–0.0002 | 0.00004 | Stock removed by one successful food contact. |
 | Energy yield from food | 1–10 | 4 | Converts consumed food stock into energy. |
-| Threat-avoidance steering gain | 0–6 | 2.4 | Scales basic steering away from predators. |
+| Threat-avoidance steering gain | 0–6 | 2.4 | Scales steering away from nearby aggressive conspecifics. |
 | Neural turning output gain | 0–2 | 0.5 | Scales the evolved turn-neuron output. |
 | Neural acceleration output gain | 0–2 | 0.35 | Scales the evolved acceleration-neuron output. |
 | Neural flee output gain | 0–3 | 1 | Scales the evolved flee-neuron output. |
 | Neural mate-seeking output gain | 0–2 | 0.3 | Scales the evolved mate-seeking output. |
-| Predator base acceleration | 0.01–0.1 | 0.045 | Base pursuit acceleration. |
-| Predator hunger acceleration gain | 0–0.15 | 0.055 | Additional pursuit acceleration from hunger. |
-| Predator strike probability gain | 0–0.3 | 0.08 | Scales attack probability inside strike range. |
-| Predator cruising speed | 0.5–3 | 1.35 | Predator movement speed after pursuit steering. |
 | Crowding mortality coefficient | 0–0.0000005 | 0.00000008 | Density-dependent mortality above the neighbour threshold. |
 | Baseline metabolic cost | 0.00001–0.0001 | 0.00004 | Constant component of each agent's energy expenditure. |
 | Food patch storage capacity | 0.25–3 | 1 | Maximum renewable stock held by each food patch. |
@@ -125,9 +156,9 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 
 The Save settings action stores the current UI configuration in browser-local storage. Load settings restores it in that browser profile. Defaults restores the shipped initial settings. This saves configuration only; it does not serialize the live population, genomes, environment state or history.
 
-## Additional ecology controls (100-slider configuration)
+## Additional ecology controls (183-slider configuration)
 
-The Dynamics tab adds 25 independently adjustable controls, grouped into collapsible accordions:
+The Dynamics tab adds 22 independently adjustable controls, grouped into collapsible accordions:
 
 | Group | Controls |
 |---|---|
@@ -139,7 +170,7 @@ The Dynamics tab adds 25 independently adjustable controls, grouped into collaps
 | Life history | Juvenile growth rate, adult maintenance cost |
 | Conspecific hunting | Aggression selection, size selection, kin protection, attack cost, attack range, juvenile vulnerability |
 
-These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and predator pursuit. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; food energy yield multiplier changes energy received per bite rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
+These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and conspecific threat response. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; food energy yield multiplier changes energy received per bite rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
 
 ## Presets, randomisation and persistent worlds
 
@@ -154,13 +185,13 @@ The simulation state is browser-local. Clearing site data or using another brows
 
 ## Inherited phenotype
 
-Each agent now inherits ten quantitative trait loci. These are not additional UI sliders: they are individual genetic traits sampled at population creation and recombined/mutated during reproduction.
+Each agent inherits ten quantitative trait loci. The allele values are sampled at population creation and recombined/mutated during reproduction; separate per-locus UI controls define how each allele is expressed as a phenotype.
 
 | Locus | Meaning | Current model effect |
 |---|---|---|
 | Aggression | Attack propensity | Conspecific hunting eligibility and attack commitment |
 | Body mass | Relative physical size | Attack size advantage, nonlinear maintenance cost, modest speed trade-off, and visual scale |
-| Speed | Cruising speed phenotype | Individual maximum-speed multiplier |
+| Speed | Velocity-cap potential | Sets the individual velocity cap through its configured expression function and phenotype bounds |
 | Bite strength | Capture capability | Attack success probability and attack ranking |
 | Kin affinity | Relative protection of relatives | Reduces willingness to attack close kin |
 | Sensory range | Detection distance | Scales threat and prey detection distance |
@@ -203,7 +234,7 @@ Every individual has a unique 32-bit ID. Offspring records store the actual mate
 
 Kinship is estimated recursively from the pedigree to a maximum depth of eight generations. The resulting relatedness estimate reduces attack probability according to the attacker's inherited kin-affinity trait and the kin-protection setting. The pedigree store is bounded at 100,000 records to prevent indefinite memory growth; when old records are pruned, a truncation counter is included in telemetry and kinship estimates can understate distant relationships.
 
-World snapshots now use schema version 5 and persist the pedigree map. Older snapshots reconstruct only the pedigree information still recoverable from currently living agents' parent IDs.
+World snapshots use schema version 8 and persist the pedigree map. Older snapshots reconstruct only the pedigree information still recoverable from currently living agents' parent IDs.
 
 ## Model integrity update
 

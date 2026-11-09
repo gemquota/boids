@@ -17,6 +17,7 @@ function makeWorld(seed) {
     Array, Object, Number, String, Boolean, Set, Map, Date, JSON,
   };
   vm.createContext(sandbox);
+  sandbox.importScripts = (...paths) => { for (const path of paths) vm.runInContext(fs.readFileSync(path, 'utf8'), sandbox, { filename: path }); };
   vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get food(){return food}, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get foodClaims(){return foodClaims}, get foodConsumed(){return foodConsumed}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
