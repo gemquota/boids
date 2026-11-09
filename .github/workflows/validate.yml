@@ -23,6 +23,7 @@ jobs:
           PY
           node --check /tmp/boids-app.js
           node --check boids-worker.js
+          node tests/worker-determinism.test.cjs
       - name: Verify 100 registered sliders and worker wiring
         run: |
           python3 - <<'PY'
