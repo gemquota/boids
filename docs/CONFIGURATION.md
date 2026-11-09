@@ -171,6 +171,12 @@ Each agent now inherits ten quantitative trait loci. These are not additional UI
 
 The four newer loci use bounded quantitative inheritance and mutation. Older six-locus snapshots migrate to ten loci by preserving their original six values and initialising acceleration, agility, risk tolerance, and exploration to neutral values. This is a compatibility migration, not an inferred reconstruction of missing historical genes.
 
+### Runtime performance
+
+The Observatory reports worker update milliseconds, draw milliseconds, and accumulated fixed-step backlog milliseconds. Update time is the combined simulation cost for the most recent rendered frame and can include multiple fixed steps. A growing backlog means the simulation is falling behind wall-clock time; the worker preserves accumulated simulation time rather than silently skipping steps.
+
+CI runs a Node VM benchmark at 100, 250, 500, and 1,000 agents. This excludes browser rendering and mobile-device overhead. See docs/MODEL-CALIBRATION.md for assumptions, calibration targets, and release gates.
+
 ### Experimental measurements and export
 
 The Observatory's Export experiment data action requests a structured JSON bundle from the worker. It includes run seed/serial, mode, configuration, telemetry time series, gene/cohort histories, neural-weight history, pedigree, per-individual reproductive-success counts, selection differentials, and interaction/energy counters.
