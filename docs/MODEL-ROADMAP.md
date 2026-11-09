@@ -26,7 +26,7 @@ This roadmap is the implementation contract for moving the project from a flocki
 - Preserve the fixed-step accumulator when rendering falls behind, so the simulation slows rather than silently skipping simulation time.
 - Assign unique 32-bit individual IDs and store actual maternal and paternal IDs.
 - Upgrade ancestry buffers to 32-bit values and migrate old snapshots without pretending legacy generation counters are real parent identities.
-- Include RNG state and the next identity counter in schema-v3 world snapshots.
+- Include RNG state and the next identity counter in schema-v4 world snapshots.
 - Preserve per-agent render caches during death compaction.
 
 Remaining Phase 1 work:
@@ -45,7 +45,11 @@ Remaining work:
 
 ### Phase 3. Heritable phenotype and trade-offs
 
-Expand the inherited phenotype beyond the current six traits. Candidate loci include body mass, maximum speed, acceleration, agility, sensory range, aggression, risk tolerance, bite force, social tolerance, exploration, kin discrimination, cooperation, territoriality, and mate selectivity.
+**Status: first ten-locus phenotype implementation committed on evolutionary-ecology-phase2-phenotype; runtime migration and selection tests still required.**
+
+The inherited phenotype now includes aggression, body mass, speed, bite strength, kin affinity, sensory range, acceleration, agility, risk tolerance, and exploration. The added loci affect movement acceleration, neural turning, attack commitment, threat response, food attraction, and exploratory noise. Body mass now has a nonlinear maintenance cost and a modest maximum-speed trade-off. Schema-v4 snapshots preserve all ten loci and migrate schema-v3 six-locus snapshots with neutral starting values for the four new traits.
+
+Remaining work: add empirical or explicit dimensionless trait scaling, richer covariance and variance tracking, and selection tests showing that costs and benefits vary across environments.
 
 - Use bounded quantitative traits with mutation and recombination.
 - Avoid one-directional scaling where a larger value is always better.
@@ -111,4 +115,4 @@ A phase is not complete merely because its code exists. Each phase needs:
 
 ## Current limitations
 
-The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but a full kinship coefficient and ancestral graph are not yet implemented. Neural genes still use positional loci rather than innovation-tracked homologous genes. The current fitness and learning reward remain heuristic.
+The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but a full kinship coefficient and ancestral graph are not yet implemented. The ten-locus phenotype is in place, but its selection gradients and heritability are not yet measured. Neural genes still use positional loci rather than innovation-tracked homologous genes. The current fitness and learning reward remain heuristic.
