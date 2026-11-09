@@ -16,7 +16,7 @@ function makeWorld(count) {
     Array, Object, Number, String, Boolean, Set, Map, Date, JSON,
   };
   vm.createContext(sandbox);
-  vm.runInContext(source + '\\nglobalThis.__bench = { get N(){return N}, get cfg(){return cfg}, init, update };', sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + '\nglobalThis.__bench = { get N(){return N}, get cfg(){return cfg}, init, update };', sandbox, { filename: 'boids-worker.js' });
   sandbox.__bench.cfg.seed = 20261110;
   sandbox.__bench.cfg.count = count;
   sandbox.__bench.cfg.foodPatches = 14;
