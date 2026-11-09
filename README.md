@@ -57,7 +57,7 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Lifetime reproductive success, per-trait selection differentials with dedicated Observatory charts, attack/feeding/energy-flow counters, and a working JSON experiment export from the Observatory.
 - Live worker update/draw/backlog timings, inline UI syntax checks, and a CPU benchmark at 100, 250, 500, and 1,000 agents.
 - Body mass now has a nonlinear maintenance cost and a speed trade-off, rather than being only a visual and attack-size multiplier.
-- Schema-v5 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
+- Schema-v8 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
 
 This is a **foundational Phase 1 implementation plus the first Phase 2 interaction slice**. Movement reads a shared position/velocity snapshot, while food claims and conspecific attacks are resolved in batches. Energy accounting, richer trade-offs, runtime reproducibility tests, and full pedigree analysis remain in progress. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
 
