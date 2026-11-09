@@ -143,7 +143,7 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Food-seeking steering gain | 0–1 | 0.22 | Direct steering force toward the nearest stocked patch. |
 | Food consumed per contact | 0.00001–0.0002 | 0.00004 | Stock removed by one successful food contact. |
 | Energy yield from food | 1–10 | 4 | Converts consumed food stock into energy. |
-| Threat-avoidance steering gain | 0–6 | 2.4 | Scales basic steering away from predators. |
+| Threat-avoidance steering gain | 0–6 | 2.4 | Scales steering away from nearby aggressive conspecifics. |
 | Neural turning output gain | 0–2 | 0.5 | Scales the evolved turn-neuron output. |
 | Neural acceleration output gain | 0–2 | 0.35 | Scales the evolved acceleration-neuron output. |
 | Neural flee output gain | 0–3 | 1 | Scales the evolved flee-neuron output. |
@@ -170,7 +170,7 @@ The Dynamics tab adds 22 independently adjustable controls, grouped into collaps
 | Life history | Juvenile growth rate, adult maintenance cost |
 | Conspecific hunting | Aggression selection, size selection, kin protection, attack cost, attack range, juvenile vulnerability |
 
-These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and predator pursuit. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; food energy yield multiplier changes energy received per bite rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
+These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and conspecific threat response. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; food energy yield multiplier changes energy received per bite rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
 
 ## Presets, randomisation and persistent worlds
 
