@@ -123,7 +123,7 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 
 ### Toggles
 
-- **Wrap world boundaries:** boids and predators cross the field edges.
+- **Wrap world boundaries:** boids cross the field edges.
 - **Adaptive performance quality:** automatically adjusts active population toward the selected target based on recent FPS.
 
 ## Advanced dynamics
@@ -189,13 +189,13 @@ The simulation state is browser-local. Clearing site data or using another brows
 
 ## Inherited phenotype
 
-Each agent now inherits ten quantitative trait loci. These are not additional UI sliders: they are individual genetic traits sampled at population creation and recombined/mutated during reproduction.
+Each agent inherits ten quantitative trait loci. The allele values are sampled at population creation and recombined/mutated during reproduction; separate per-locus UI controls define how each allele is expressed as a phenotype.
 
 | Locus | Meaning | Current model effect |
 |---|---|---|
 | Aggression | Attack propensity | Conspecific hunting eligibility and attack commitment |
 | Body mass | Relative physical size | Attack size advantage, nonlinear maintenance cost, modest speed trade-off, and visual scale |
-| Speed | Cruising speed phenotype | Individual maximum-speed multiplier |
+| Speed | Velocity-cap potential | Sets the individual velocity cap through its configured expression function and phenotype bounds |
 | Bite strength | Capture capability | Attack success probability and attack ranking |
 | Kin affinity | Relative protection of relatives | Reduces willingness to attack close kin |
 | Sensory range | Detection distance | Scales threat and prey detection distance |
@@ -238,7 +238,7 @@ Every individual has a unique 32-bit ID. Offspring records store the actual mate
 
 Kinship is estimated recursively from the pedigree to a maximum depth of eight generations. The resulting relatedness estimate reduces attack probability according to the attacker's inherited kin-affinity trait and the kin-protection setting. The pedigree store is bounded at 100,000 records to prevent indefinite memory growth; when old records are pruned, a truncation counter is included in telemetry and kinship estimates can understate distant relationships.
 
-World snapshots now use schema version 5 and persist the pedigree map. Older snapshots reconstruct only the pedigree information still recoverable from currently living agents' parent IDs.
+World snapshots use schema version 8 and persist the pedigree map. Older snapshots reconstruct only the pedigree information still recoverable from currently living agents' parent IDs.
 
 ## Model integrity update
 
