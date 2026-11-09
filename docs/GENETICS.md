@@ -116,10 +116,10 @@ The observatory currently reports:
 
 - distinct quantized genome signatures;
 - a 16-bin population histogram of genome-derived colour signatures;
-- a rolling history of those 16 bins (up to 120 samples);
+- a rolling history of those 16 bins (up to 600 samples);
 - aggregate connection-weight mean and variance;
 - per-locus connection-weight means and variances;
 - aggregate output-neuron connection topology;
 - population lineage/generation, conception, birth, death and mutation counts.
 
-Historical samples are in-memory for the current run. They are not saved across page reloads. The historical heatmap is a genome-signature distribution, not a persistent per-locus allele-sequencing archive.
+The observatory also retains up to 600 in-memory telemetry samples per run, including living population, cumulative births, deaths, conceptions, predator kills, mutations, mean diversity, age, energy, fitness, speed and genome-weight statistics. A separate 24-band history tracks the living population in genome-derived hue cohorts over time. These cohorts are visual phenotype groupings, not formal species labels or reproductively isolated taxa. The history is reset when a new randomized population is created and is not saved across page reloads. The historical heatmap is a genome-signature distribution, not a persistent per-locus allele-sequencing archive.
