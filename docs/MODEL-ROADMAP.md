@@ -26,7 +26,7 @@ This roadmap is the implementation contract for moving the project from a flocki
 - Preserve the fixed-step accumulator when rendering falls behind, so the simulation slows rather than silently skipping simulation time.
 - Assign unique 32-bit individual IDs and store actual maternal and paternal IDs.
 - Upgrade ancestry buffers to 32-bit values and migrate old snapshots without pretending legacy generation counters are real parent identities.
-- Include RNG state and the next identity counter in schema-v7 world snapshots.
+- Include RNG state and the next identity counter in schema-v8 world snapshots.
 - Preserve per-agent render caches during death compaction.
 
 Remaining Phase 1 work:
@@ -80,7 +80,7 @@ Remaining work:
 - Neural connections now carry stable innovation IDs derived from their directed endpoint pair.
 - Crossover aligns matching innovations and treats unmatched genes as disjoint candidates instead of assuming array slot g is homologous in both parents.
 - Neural distance for mate preference compares innovation sets and homologous weights rather than positional endpoints.
-- Innovation registries and per-agent maternal/paternal innovation arrays persist in schema-v7 snapshots; older genomes receive reconstructed endpoint-based IDs during restore.
+- Innovation registries and per-agent maternal/paternal innovation arrays persist in schema-v8 snapshots; older genomes receive reconstructed endpoint-based IDs during restore.
 
 Remaining work:
 - Give connection genes stable historical/innovation IDs so crossover can align homologous genes.
@@ -110,7 +110,17 @@ Remaining work:
 
 ### Phase 7. Experimental design and observability
 
-- Add experiment seeds, scenario definitions, parameter sweeps, replicates, and run metadata.
+**Status: first experiment accounting and export implementation committed on evolutionary-ecology-phase6-experiments; parameter sweeps and replicate analysis remain.**
+
+- Track lifetime reproductive success for both parents of each offspring, including parents that have died while their pedigree record remains retained.
+- Accumulate trait values of successful parents and report per-locus selection differentials against the current population mean.
+- Track attack attempts, food claims, food consumed, movement energy spent, and maintenance energy spent.
+- Add an experiment JSON export containing seed, run serial, configuration, telemetry, gene/lineage histories, reproductive success, pedigree, and counters.
+- Add a working Export experiment data control in the Observatory.
+- Persist experiment counters, selection accumulators, and reproductive-success records in schema-v8 snapshots.
+
+Remaining work:
+- Add scenario definitions, parameter sweeps, replicates, and run metadata.
 - Track per-trait selection differentials and selection gradients.
 - Track lifetime reproductive success, age-specific survival, cohort survival, and lineage contribution.
 - Record attack attempts, target choices, capture success, energy profitability, and strategy frequencies.
