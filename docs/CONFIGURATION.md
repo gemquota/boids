@@ -41,10 +41,45 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 
 | Control | Range | Initial value | Effect |
 |---|---:|---:|---|
-| Mutation probability per gene | 0–0.5 | 0.025 | Probability that each inherited connection gene mutates. |
-| Mutation magnitude | 0.01–1.5 | 0.25 | Weight perturbation magnitude. Endpoint mutations can rewire a connection. |
+| Neural connection mutation probability | 0–0.5 | 0.025 | Probability that each inherited neural connection gene mutates. Trait loci have independent mutation-rate controls below. |
+| Neural connection mutation magnitude | 0.01–1.5 | 0.25 | Neural connection weight perturbation magnitude. Endpoint mutations can rewire a connection. Trait loci have independent mutation-magnitude controls below. |
 | Genome crossover mixing | 0–1 | 0.5 | Probability of selecting the maternal rather than paternal source gene at a locus. |
 | Parental weight blending | 0–1 | 0.15 | Blends the selected inherited weight toward the parental mean. |
+
+## Ten-locus gene expression
+
+The global Cruising speed control has been removed. Speed is now an expressed phenotype derived from each agent's inherited Speed locus. All ten loci use the same expression architecture, with independent settings per locus.
+
+| Locus | Default phenotype minimum | Default phenotype maximum |
+|---|---:|---:|
+| Aggression | 0 | 1 |
+| Body size | 0.55 | 1.65 |
+| Speed | 1.375 | 4.125 |
+| Bite strength | 0.55 | 1.65 |
+| Kin affinity | 0 | 1 |
+| Sensory range | 0.55 | 1.65 |
+| Acceleration | 0.55 | 1.65 |
+| Agility | 0.55 | 1.65 |
+| Risk tolerance | 0 | 1 |
+| Exploration | 0.55 | 1.65 |
+
+Each locus exposes these controls:
+
+| Control | Initial value | Effect |
+|---|---:|---|
+| Phenotype minimum / maximum | Locus defaults above | Physical or behavioural output bounds. These do not alter the inherited allele bounds. |
+| Expression curve | Linear | Selects Linear, Exponential, Logarithmic, Sigmoid, Threshold, Plateau or Inverse mapping. |
+| Curve strength | 2 | Controls curvature for exponential, logarithmic, sigmoid and plateau profiles. |
+| Curve midpoint | 0.5 | Sets the transition point for sigmoid and threshold profiles. |
+| Expression bias | 0 | Shifts the normalized gene input before curve evaluation. |
+| Environmental sensitivity | 0 | Modulates normalized expression using the worker's environmental signal (global harshness plus local shelter contribution). |
+| Mutation rate | 0.016 | Per-locus probability of mutation at offspring inheritance. |
+| Mutation magnitude | 0.075 | Maximum normalized perturbation when the locus mutates. |
+| Heritability / inheritance fidelity | 0.98 | Controls non-mutational deviation around the mid-parent allele in this simplified quantitative-trait model. It is not an empirically estimated heritability statistic. |
+
+Expression curves map the normalized inherited allele to a normalized output before applying phenotype bounds. Linear is proportional; Exponential delays most effect until high gene values; Logarithmic produces stronger early effects and diminishing returns; Sigmoid and Threshold create a transition around the midpoint; Plateau saturates progressively; Inverse reverses the direction.
+
+Changing these controls never rewrites an existing genome. It changes the mapping from genotype to phenotype. Global neural connection mutation probability and magnitude remain separate from the ten locus-specific mutation settings.
 
 ## Reproduction
 
@@ -125,9 +160,9 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 
 The Save settings action stores the current UI configuration in browser-local storage. Load settings restores it in that browser profile. Defaults restores the shipped initial settings. This saves configuration only; it does not serialize the live population, genomes, environment state or history.
 
-## Additional ecology controls (100-slider configuration)
+## Additional ecology controls (183-slider configuration)
 
-The Dynamics tab adds 25 independently adjustable controls, grouped into collapsible accordions:
+The Dynamics tab adds 22 independently adjustable controls, grouped into collapsible accordions:
 
 | Group | Controls |
 |---|---|
