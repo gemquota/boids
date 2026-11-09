@@ -117,7 +117,7 @@ The configuration drawer is organised into tabs and collapsible accordion groups
 - **Reset slider limits** restores the original range boundaries.
 - **Reset defaults** restores the tuned ecological baseline and original slider limits.
 
-The 100-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
+The 183-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
 
 ### Presets and randomisation
 
@@ -315,7 +315,7 @@ The application requires browser support for Web Workers and OffscreenCanvas. Br
 
 The application is plain HTML and JavaScript. There is no compile step.
 
-At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 100-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
+At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 183-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
 
 A useful manual test pass includes:
 
