@@ -7,7 +7,7 @@ Values below describe the current slider ranges and initial UI values. Some cont
 | Control | Range | Initial value | Effect |
 |---|---:|---:|---|
 | Population | 300–12,000 | 2,000 | Desired active population. Resizing preserves surviving agents; the explicit reset action reseeds. |
-| Simulation time scale | 0.25–3 | 1 | Scales the simulation timestep. |
+| Simulation speed | 0.25–3 | 1 | Scales the simulation timestep and therefore all simulated processes. |
 | Current turbulence | 0–2 | 0.35 | Adds local variation to the environmental flow field. |
 | Cruising speed | 0.5–5 | 2.5 | Base velocity limit. |
 | Perception radius | 18–90 | 42 | Flocking-neighbour distance. |
