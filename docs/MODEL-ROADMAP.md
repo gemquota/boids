@@ -26,7 +26,7 @@ This roadmap is the implementation contract for moving the project from a flocki
 - Preserve the fixed-step accumulator when rendering falls behind, so the simulation slows rather than silently skipping simulation time.
 - Assign unique 32-bit individual IDs and store actual maternal and paternal IDs.
 - Upgrade ancestry buffers to 32-bit values and migrate old snapshots without pretending legacy generation counters are real parent identities.
-- Include RNG state and the next identity counter in schema-v6 world snapshots.
+- Include RNG state and the next identity counter in schema-v7 world snapshots.
 - Preserve per-agent render caches during death compaction.
 
 Remaining Phase 1 work:
@@ -80,7 +80,7 @@ Remaining work:
 - Neural connections now carry stable innovation IDs derived from their directed endpoint pair.
 - Crossover aligns matching innovations and treats unmatched genes as disjoint candidates instead of assuming array slot g is homologous in both parents.
 - Neural distance for mate preference compares innovation sets and homologous weights rather than positional endpoints.
-- Innovation registries and per-agent maternal/paternal innovation arrays persist in schema-v6 snapshots; older genomes receive reconstructed endpoint-based IDs during restore.
+- Innovation registries and per-agent maternal/paternal innovation arrays persist in schema-v7 snapshots; older genomes receive reconstructed endpoint-based IDs during restore.
 
 Remaining work:
 - Give connection genes stable historical/innovation IDs so crossover can align homologous genes.
@@ -92,6 +92,16 @@ Remaining work:
 
 ### Phase 6. Spatial ecology and changing environments
 
+**Status: first seasonal-resource and refuge-field implementation committed on evolutionary-ecology-phase5-habitat; richer spatial experiments remain.**
+
+- Food patches now have bounded quality and productivity, patch-specific seasonal phases, and seasonal regeneration.
+- Food energy yield depends on patch quality; productivity affects carrying stock and renewal.
+- Reef obstacles also create a local shelter-cover field that reduces threat intensity and hunting success for agents using cover.
+- A simple spatial/temporal temperature anomaly modifies maintenance costs, and movement/acceleration now incur explicit energetic costs.
+- Telemetry exposes food quality, productivity, seasonal resource factor, and sheltered population fraction.
+- Schema-v7 restore supplies neutral quality/productivity/phase values to older food patches.
+
+Remaining work:
 - Add resource renewal, patch depletion, spatial gradients, seasonal cycles, and resource quality.
 - Add shelters, bottlenecks, territories, refugia, and habitat gradients.
 - Add environmental variation such as currents and temperature as fields with explicit spatial and temporal scales.
