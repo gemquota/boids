@@ -41,6 +41,19 @@ All 100 sliders are registered, persisted, and assigned to a tab and collapsible
 
 The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
 
+## Simulation correctness overhaul
+
+The current development branch begins an eight-phase model overhaul. The first foundational slice adds:
+
+- A fixed 1/60-second simulation clock with bounded catch-up.
+- Double-buffered positions and velocities, so neighbour sensing reads a consistent pre-update movement state.
+- Seeded xorshift randomness, with the generator state persisted in world snapshots.
+- Randomised agent evaluation order to remove fixed low-index priority from sequential resource claims.
+- Persistent 32-bit individual IDs and actual parent IDs. Generation depth is retained separately and is no longer used as an identity surrogate for kin checks.
+- Schema-v3 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
+
+This is a **partial Phase 1 foundation**, not a claim that all interactions are simultaneous. Feeding and attack resolution still occur during the agent pass and are explicitly scheduled for the next interaction-resolution phase. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
+
 ## Getting started
 
 ### Run locally
