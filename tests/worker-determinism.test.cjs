@@ -7,6 +7,7 @@ const source = fs.readFileSync('boids-worker.js', 'utf8');
 function makeWorld(seed) {
   const messages = [];
   const sandbox = {
+    __messages: messages,
     postMessage: message => messages.push(message),
     setTimeout: () => 0,
     performance: { now: () => 1000 },
@@ -88,6 +89,10 @@ const experimentData = api.exportExperimentData();
 assert.equal(experimentData.format, 'boids-experiment-v1');
 assert.equal(experimentData.metadata.seed, 123456);
 assert.equal(experimentData.reproductiveSuccess.length, api.reproductiveSuccess.size);
+a.onmessage({ data: { type: 'exportData', requestId: 42 } });
+const exportResponse = a.__messages.at(-1);
+assert.equal(exportResponse.type, 'exportData', 'worker should answer export requests');
+assert.equal(exportResponse.requestId, 42, 'worker should preserve export request IDs');
 
 // Snapshot restore must preserve both the random stream and pedigree identifiers.
 const restored = makeWorld(999);
