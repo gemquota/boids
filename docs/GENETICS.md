@@ -123,3 +123,23 @@ The observatory currently reports:
 - population lineage/generation, conception, birth, death and mutation counts.
 
 The observatory also retains up to 600 in-memory telemetry samples per run, including living population, cumulative births, deaths, conceptions, predator kills, mutations, mean diversity, age, energy, fitness, speed and genome-weight statistics. A separate 24-band history tracks the living population in genome-derived hue cohorts over time. These cohorts are visual phenotype groupings, not formal species labels or reproductively isolated taxa. The history is reset when a new randomized population is created and is not saved across page reloads. The historical heatmap is a genome-signature distribution, not a persistent per-locus allele-sequencing archive.
+
+
+## v0.2.0 gene expression update
+
+The canonical ten-locus schema is defined in genetics.js. The worker uses shared bounded expression helpers.
+
+| Locus | Runtime expression in v0.2.0 |
+|---:|---|
+| 0 Aggression | Hunting eligibility, pursuit drive, attack probability and attack-related metabolic cost |
+| 1 Body size | Rendered scale, size-relative hunting and metabolic demand |
+| 2 Speed | Velocity cap and metabolic trade-off |
+| 3 Bite strength | Attack probability and strike score |
+| 4 Kin affinity | Continuous multiplier on pedigree-relatedness protection; zero means no kin avoidance |
+| 5 Sensory range | Individual flock-perception radius, threat/prey detection radius and food detection range |
+| 6 Acceleration | Steering-force limit and acceleration |
+| 7 Agility | Neural turning authority |
+| 8 Risk tolerance | Hunting probability and threat-response trade-off |
+| 9 Exploration | Wandering-noise amplitude and food-attraction strength |
+
+Kin protection is relatedness × kin affinity × global kin-protection strength. Personal perception radius is global perception × sensory range. Food detection uses the larger of minimum food range and personal perception × food-range scale. The spatial grid cell size covers the maximum supported sensory range. The neural connection genome remains fixed-slot in this release; structural neural evolution and population persistence are later phases.
