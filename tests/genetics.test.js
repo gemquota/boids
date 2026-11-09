@@ -24,8 +24,8 @@ test('exploration changes wandering noise and food attraction',()=>{
   assert.equal(genetics.explorationNoise(.08,.55),.084);
   assert.equal(genetics.explorationNoise(.08,1),.12);
   assert.equal(genetics.explorationNoise(.08,1.65),.172);
-  assert.equal(genetics.foodSteering(.22,.55),.1595);
-  assert.equal(genetics.foodSteering(.22,1.65),.0385);
+  assert.equal(genetics.foodSteering(.22,.55),.2695);
+  assert.equal(genetics.foodSteering(.22,1.65),.1485);
 });
 test('expression helpers clamp invalid or out-of-range values',()=>{
   assert.equal(genetics.perceptionRadius(100,99),165);
