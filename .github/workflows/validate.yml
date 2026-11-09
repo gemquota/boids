@@ -52,7 +52,7 @@ jobs:
           ids = static_ids + extra_ids + expression_ids + mutation_ids
           if len(ids) != 183 or len(set(ids)) != 183:
               raise SystemExit(f'Expected 183 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
-          if 'expr_'+traits[0]+'_curve' not in html or 'expressionCurves' not in html:
+          if "curveSelect.id='expr_'+trait.key+'_curve'" not in html or 'expressionCurves' not in html:
               raise SystemExit('Per-locus curve selectors missing')
           missing = [key for key in extra_ids if f'cfg.{key}' not in worker]
           if missing:
