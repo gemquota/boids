@@ -38,6 +38,7 @@ const worker=fs.readFileSync(require('node:path').join(__dirname,'../boids-worke
 test('worker wires all phase-one expression helpers into live simulation paths',()=>{
   assert.match(worker,/BoidsGenetics\.kinProtection\(kinshipRelatedness/);
   assert.match(worker,/BoidsGenetics\.perceptionRadius\(cfg\.perception,traitGenes\[myTrait\+5\]\)/);
+  assert.match(worker,/sepR=cfg\.perception\*cfg\.separationRadius/);
   assert.match(worker,/d2<foodSenseRange\*foodSenseRange/);
   assert.match(worker,/BoidsGenetics\.explorationNoise\(cfg\.flockNoise,exploration\)/);
   assert.match(worker,/BoidsGenetics\.foodSteering\(cfg\.foodSteering,exploration\)/);
