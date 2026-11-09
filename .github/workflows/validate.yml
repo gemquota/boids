@@ -45,5 +45,30 @@ jobs:
               raise SystemExit('World snapshot/restore handlers missing')
           if 'indexedDB.open' not in html or 'persistObservatory' not in html:
               raise SystemExit('Persistent world/observatory storage missing')
-          print('Validated 100 unique sliders, worker parameter references and persistence handlers.')
+          required_ui = [
+              'Math.round((clamped-lo)/step)', 'applySettings({...ecologicalBaseline',
+              'schemaVersion=2', 'snapshotWaiters', 'flushPersistentState',
+              'Object.assign(helpDescriptions,'
+          ]
+          missing_ui = [item for item in required_ui if item not in html]
+          if missing_ui:
+              raise SystemExit('Missing settings/persistence/help safeguards: ' + ', '.join(missing_ui))
+          required_worker = [
+              'schemaVersion:2', 'requestId:m.requestId',
+              'Math.round(values[key])', 'distanceWeight+geneticWeight',
+              'let pursuitAccel=', 'cfg.threatSteering;ay+=threatY',
+              'cfg.neuralTurnGain+vx[i]/heading*accelSignal'
+          ]
+          missing_worker = [item for item in required_worker if item not in worker]
+          if missing_worker:
+              raise SystemExit('Missing worker correctness safeguards: ' + ', '.join(missing_worker))
+          for key in ['flockNoise','alignmentMemory','cohesionBias','separationExponent',
+                      'neighbourDensityScale','flowDrift','eddyFrequency','foodRegrowth',
+                      'foodDepletion','foodCompetition','mateDriveNoise','mateDistanceBias',
+                      'mutationDrift','rewireChance','lineageDrift','neuralNoise','neuralInertia',
+                      'learningMomentum','sensoryNoise','juvenileGrowth','adultMaintenance',
+                      'predatorSearch','predatorPersistence','predatorTurn','predatorSatiation']:
+              if f'"{key}":[' not in html:
+                  raise SystemExit('Missing detailed help description for ' + key)
+          print('Validated 100 sliders, worker wiring, quantization, vector symmetry, control help and snapshot safeguards.')
           PY
