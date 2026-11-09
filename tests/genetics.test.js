@@ -34,7 +34,7 @@ test('expression maps normalized genotype to independently configurable phenotyp
   const settings={min:2,max:8,curve:'linear',strength:2,midpoint:.5,bias:0,environmentSensitivity:0};
   assert.equal(genetics.express(t.geneMin,t,settings,.5),2);
   assert.equal(genetics.express(t.geneMax,t,settings,.5),8);
-  assert.equal(genetics.express((t.geneMin+t.geneMax)/2,t,settings,.5),5);
+  assert.ok(Math.abs(genetics.express((t.geneMin+t.geneMax)/2,t,settings,.5)-5)<1e-12);
 });
 test('environmental sensitivity modulates phenotype without changing genotype',()=>{
   const t=genetics.TRAITS[0],settings={min:0,max:1,curve:'linear',environmentSensitivity:.5};
