@@ -94,6 +94,36 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 - **Wrap world boundaries:** boids and predators cross the field edges.
 - **Adaptive performance quality:** automatically adjusts active population toward the selected target based on recent FPS.
 
+## Advanced dynamics
+
+| Control | Range | Initial value | Effect |
+|---|---:|---:|---|
+| Obstacle clearance distance | 0–100 | 28 | Extra distance around reefs that triggers avoidance. |
+| Obstacle avoidance strength | 0–4 | 1.5 | Repulsion strength near reef structures. |
+| Pointer influence radius | 40–400 | 167 | Radius of touch/mouse steering influence. |
+| Pointer interaction force | 0–8 | 2.8 | Maximum push/pull steering force from pointer interaction. |
+| Personal-space radius factor | 0.1–1 | 0.43 | Multiplier on perception radius for separation. |
+| Primary current wave strength | 0–1 | 0.34 | Amplitude of the broad current wave. |
+| Secondary current wave strength | 0–0.5 | 0.12 | Amplitude of the finer current wave. |
+| Turbulence force gain | 0–1 | 0.24 | Scales irregular per-agent current perturbation. |
+| Food attraction range scale | 0.5–5 | 2 | Multiplier on perception radius for food attraction. |
+| Minimum food attraction range | 20–200 | 60 | Minimum distance at which food influences steering. |
+| Food-seeking steering gain | 0–1 | 0.22 | Direct steering force toward the nearest stocked patch. |
+| Food consumed per contact | 0.00001–0.0002 | 0.00004 | Stock removed by one successful food contact. |
+| Energy yield from food | 1–10 | 4 | Converts consumed food stock into energy. |
+| Threat-avoidance steering gain | 0–6 | 2.4 | Scales basic steering away from predators. |
+| Neural turning output gain | 0–2 | 0.5 | Scales the evolved turn-neuron output. |
+| Neural acceleration output gain | 0–2 | 0.35 | Scales the evolved acceleration-neuron output. |
+| Neural flee output gain | 0–3 | 1 | Scales the evolved flee-neuron output. |
+| Neural mate-seeking output gain | 0–2 | 0.3 | Scales the evolved mate-seeking output. |
+| Predator base acceleration | 0.01–0.1 | 0.045 | Base pursuit acceleration. |
+| Predator hunger acceleration gain | 0–0.15 | 0.055 | Additional pursuit acceleration from hunger. |
+| Predator strike probability gain | 0–0.3 | 0.08 | Scales attack probability inside strike range. |
+| Predator cruising speed | 0.5–3 | 1.35 | Predator movement speed after pursuit steering. |
+| Crowding mortality coefficient | 0–0.0000005 | 0.00000008 | Density-dependent mortality above the neighbour threshold. |
+| Baseline metabolic cost | 0.00001–0.0001 | 0.00004 | Constant component of each agent's energy expenditure. |
+| Food patch storage capacity | 0.25–3 | 1 | Maximum renewable stock held by each food patch. |
+
 ## Settings persistence
 
 The Save settings action stores the current UI configuration in browser-local storage. Load settings restores it in that browser profile. Defaults restores the shipped initial settings. This saves configuration only; it does not serialize the live population, genomes, environment state or history.
