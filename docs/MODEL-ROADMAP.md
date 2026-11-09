@@ -17,28 +17,28 @@ This roadmap is the implementation contract for moving the project from a flocki
 
 ### Phase 1. Deterministic simulation core
 
-**Status: foundational slice implemented on evolutionary-ecology-phase1; further regression testing required.**
+**Status: foundational implementation committed on evolutionary-ecology-phase1; automated and browser regression testing still required.**
 
 - Replace in-place movement with read/write position and velocity buffers. Agents sense the same pre-update positions and velocities.
 - Shuffle the agent evaluation order with a seeded PRNG so immediate resource claims do not systematically favour low array indices.
 - Use a fixed 1/60-second simulation step with a bounded catch-up loop.
 - Replace ambient Math.random calls with a serialisable xorshift PRNG.
+- Preserve the fixed-step accumulator when rendering falls behind, so the simulation slows rather than silently skipping simulation time.
 - Assign unique 32-bit individual IDs and store actual maternal and paternal IDs.
 - Upgrade ancestry buffers to 32-bit values and migrate old snapshots without pretending legacy generation counters are real parent identities.
 - Include RNG state and the next identity counter in schema-v3 world snapshots.
 - Preserve per-agent render caches during death compaction.
 
 Remaining Phase 1 work:
-- Batch and resolve feeding claims without processing-order advantage.
-- Queue attacks and resolve simultaneous target conflicts before applying deaths.
-- Add tests that compare two runs from the same seed and state.
+- Add runtime tests that compare two runs from the same seed and state.
 - Verify pause/resume, restore, population resizing, and topology changes against the fixed-step clock.
 
 ### Phase 2. Interaction and energy accounting
 
-- Resolve food claims in a separate phase. Competing agents should share or contest finite patch stock under an explicit rule.
-- Resolve attack proposals as a batch. A victim killed in a tick must not continue acting, and multiple hunters must not all receive the same kill reward.
-- Define energy transfer for feeding, predation, maintenance, movement, reproduction, and growth.
+**Status: first interaction-resolution slice implemented.** Food contact claims are collected from the same pre-movement positions and allocated proportionally when a patch is oversubscribed. Attack proposals are queued and resolved after agent decisions; one successful attacker receives the kill reward for a given target. These rules still need focused runtime tests and richer outcome telemetry.
+
+Remaining work:
+- Define and test energy transfer for feeding, predation, maintenance, movement, reproduction, and growth.
 - Make body mass affect maintenance, reserves, acceleration, turning, attack leverage, and reproductive cost.
 - Track food consumed, energy gained, energy spent, attack attempts, capture success, and failed pursuit.
 - Add unit tests for conservation/accounting invariants and edge cases.
@@ -111,4 +111,4 @@ A phase is not complete merely because its code exists. Each phase needs:
 
 ## Current limitations
 
-The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding and attacks are still resolved during the agent pass. Randomised iteration reduces fixed index advantage; it does not replace a proper batched interaction resolver. Parent IDs improve pedigree correctness, but a full kinship coefficient and ancestral graph are not yet implemented. Neural genes still use positional loci rather than innovation-tracked homologous genes. The current fitness and learning reward remain heuristic.
+The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but a full kinship coefficient and ancestral graph are not yet implemented. Neural genes still use positional loci rather than innovation-tracked homologous genes. The current fitness and learning reward remain heuristic.
