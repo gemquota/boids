@@ -171,6 +171,12 @@ Each agent now inherits ten quantitative trait loci. These are not additional UI
 
 The four newer loci use bounded quantitative inheritance and mutation. Older six-locus snapshots migrate to ten loci by preserving their original six values and initialising acceleration, agility, risk tolerance, and exploration to neutral values. This is a compatibility migration, not an inferred reconstruction of missing historical genes.
 
+### Neural genome homology
+
+Each connection has a stable innovation ID derived from its directed source and destination nodes. Parent genomes are aligned by innovation during crossover; disjoint genes are considered independently rather than assuming that the same array position represents the same connection. Mate-preference genome distance uses innovation matches and homologous weight differences. The registry is persisted in schema-v6 snapshots, and older saved genomes reconstruct IDs from their stored endpoints.
+
+This is an innovation-aligned fixed-size genome, not a complete NEAT implementation: historical split/add-node events, enabled/disabled genes, bias genes, speciation, and fitness-sharing are not implemented yet.
+
 ### Pedigree and kinship
 
 Every individual has a unique 32-bit ID. Offspring records store the actual maternal and paternal IDs, while generation depth remains a separate field. The worker retains a pedigree map independently of the live population, so an individual's parents can remain known after they die.
@@ -183,4 +189,4 @@ World snapshots now use schema version 5 and persist the pedigree map. Older sna
 
 The active worker does not spawn a separate predator population. Predation is conspecific: members of the single evolving boid population may attack smaller agents based on inherited aggression, relative body size, sensory range, bite strength, and kin protection. Older references to predator counts, autonomous predator hunger, or predator-only movement controls do not describe the current implementation and should not be used to configure experiments.
 
-The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v5 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
+The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v6 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
