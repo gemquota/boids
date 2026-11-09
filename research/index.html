@@ -17,13 +17,13 @@
 <aside class="side"><h3>REPORT CONTENTS</h3><input id="navSearch" class="search" placeholder="Filter sections…" aria-label="Filter contents">
 <div id="sideLinks">
 <button data-target="overview" class="active">Executive synthesis</button>
-<button data-target="flocking">01.1 Reynolds model</button><button data-target="flocking" class="sub">01.2 Perception & neighbourhoods</button><button data-target="flocking" class="sub">01.3 Flocking extensions</button><button data-target="flocking" class="sub">01.4 Failure modes</button>
-<button data-target="physics">02.1 Motion integration</button><button data-target="physics" class="sub">02.2 Neighbour search</button><button data-target="physics" class="sub">02.3 Contact & boundaries</button><button data-target="physics" class="sub">02.4 Fluids & currents</button>
-<button data-target="ecology">03.1 Energy economy</button><button data-target="ecology" class="sub">03.2 Predation as a role</button><button data-target="ecology" class="sub">03.3 Density & niches</button><button data-target="ecology" class="sub">03.4 Life history</button>
-<button data-target="evolution">04.1 Inheritance</button><button data-target="evolution" class="sub">04.2 Selection & drift</button><button data-target="evolution" class="sub">04.3 Mate choice & kin</button><button data-target="evolution" class="sub">04.4 Coevolution</button>
-<button data-target="brains">05.1 Neural control</button><button data-target="brains" class="sub">05.2 Neuroevolution</button><button data-target="brains" class="sub">05.3 Plasticity & learning</button><button data-target="brains" class="sub">05.4 Interpretability</button>
-<button data-target="architecture">06.1 Simulation loop</button><button data-target="architecture" class="sub">06.2 Data model</button><button data-target="architecture" class="sub">06.3 Performance</button><button data-target="architecture" class="sub">06.4 Validation</button>
-<button data-target="experiments">07.1 Experiment matrix</button><button data-target="experiments" class="sub">07.2 Metrics & analysis</button><button data-target="experiments" class="sub">07.3 Roadmap</button>
+<button data-target="flocking">01.1 Reynolds model</button><button data-target="flocking" data-section="f2" class="sub">01.2 Perception & neighbourhoods</button><button data-target="flocking" data-section="f3" class="sub">01.3 Flocking extensions</button><button data-target="flocking" data-section="f4" class="sub">01.4 Failure modes</button>
+<button data-target="physics">02.1 Motion integration</button><button data-target="physics" data-section="p2" class="sub">02.2 Neighbour search</button><button data-target="physics" data-section="p3" class="sub">02.3 Contact & boundaries</button><button data-target="physics" data-section="p4" class="sub">02.4 Fluids & currents</button>
+<button data-target="ecology">03.1 Energy economy</button><button data-target="ecology" data-section="e2" class="sub">03.2 Predation as a role</button><button data-target="ecology" data-section="e3" class="sub">03.3 Density & niches</button><button data-target="ecology" data-section="e4" class="sub">03.4 Life history</button>
+<button data-target="evolution">04.1 Inheritance</button><button data-target="evolution" data-section="v2" class="sub">04.2 Selection & drift</button><button data-target="evolution" data-section="v3" class="sub">04.3 Mate choice & kin</button><button data-target="evolution" data-section="v4" class="sub">04.4 Coevolution</button>
+<button data-target="brains">05.1 Neural control</button><button data-target="brains" class="sub">05.2 Neuroevolution</button><button data-target="brains" data-section="n3" class="sub">05.3 Plasticity & learning</button><button data-target="brains" data-section="n4" class="sub">05.4 Interpretability</button>
+<button data-target="architecture">06.1 Simulation loop</button><button data-target="architecture" data-section="a2" class="sub">06.2 Data model</button><button data-target="architecture" data-section="a3" class="sub">06.3 Performance</button><button data-target="architecture" data-section="a4" class="sub">06.4 Validation</button>
+<button data-target="experiments">07.1 Experiment matrix</button><button data-target="experiments" class="sub">07.2 Metrics & analysis</button><button data-target="experiments" data-section="x3" class="sub">07.3 Roadmap</button>
 <button data-target="sources">Bibliography & source notes</button>
 </div></aside>
 <main><div class="crumb" id="crumb">ATLAS / <span>OVERVIEW</span></div>
@@ -146,10 +146,18 @@
 (()=>{const pages=[...document.querySelectorAll('.page')],tabs=[...document.querySelectorAll('#tabs button')],links=[...document.querySelectorAll('#sideLinks button')],crumb=document.getElementById('crumb');let current='overview';
 const labels={overview:'OVERVIEW',flocking:'COLLECTIVE MOTION',physics:'PHYSICAL SIMULATION',ecology:'ECOLOGY',evolution:'EVOLUTION',brains:'NEURAL SYSTEMS',architecture:'ARCHITECTURE',experiments:'EXPERIMENT PROGRAM',sources:'SOURCES'};
 function show(id){if(!labels[id])return;current=id;pages.forEach(p=>p.classList.toggle('active',p.id===id));tabs.forEach(b=>b.classList.toggle('active',b.dataset.page===id));links.forEach(b=>b.classList.toggle('active',b.dataset.target===id));crumb.innerHTML='ATLAS / <span>'+labels[id]+'</span>';history.replaceState(null,'','#'+id);window.scrollTo({top:0,behavior:'smooth'});}
-tabs.forEach(b=>b.addEventListener('click',()=>show(b.dataset.page)));links.forEach(b=>b.addEventListener('click',()=>show(b.dataset.target)));
-document.querySelectorAll('[data-anchor]').forEach(b=>b.addEventListener('click',()=>{const target=document.getElementById(b.dataset.anchor);if(target)target.scrollIntoView({behavior:'smooth',block:'start'});}));
+tabs.forEach(b=>b.addEventListener('click',()=>show(b.dataset.page)));links.forEach(b=>b.addEventListener('click',()=>{show(b.dataset.target);if(b.dataset.section){const t=document.getElementById(b.dataset.section);if(t){t.scrollIntoView({behavior:'smooth',block:'start'});crumb.innerHTML='ATLAS / '+labels[b.dataset.target]+' / <span>'+t.textContent+'</span>';}}}));
+document.querySelectorAll('[data-anchor]').forEach(b=>b.addEventListener('click',()=>{const target=document.getElementById(b.dataset.anchor);if(target){target.scrollIntoView({behavior:'smooth',block:'start'});crumb.innerHTML='ATLAS / '+labels[current]+' / <span>'+target.textContent+'</span>';}}));
 document.getElementById('navSearch').addEventListener('input',e=>{const q=e.target.value.toLowerCase();links.forEach(b=>b.hidden=!b.textContent.toLowerCase().includes(q));});
 document.getElementById('sourceSearch').addEventListener('input',e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('#sourcesList .source').forEach(s=>s.hidden=!s.textContent.toLowerCase().includes(q));});
+// Every report subsection receives a compact conceptual graph when it has no dedicated figure.
+document.querySelectorAll('.page h3[id]').forEach((h,i)=>{
+ const next=h.nextElementSibling;
+ if(next && next.classList && next.classList.contains('viz')) return;
+ const svg='<svg viewBox="0 0 620 105" role="img" aria-label="Conceptual relationship graph"><path d="M28 8V78H600" stroke="#52676e" fill="none"/><path d="M35 68 C100 65 105 20 180 28 S270 72 340 48 S440 15 505 30 S560 54 590 20" stroke="#79e0bd" stroke-width="2.5" fill="none"/><path d="M35 55 C100 42 140 60 205 49 S320 25 385 42 S500 68 590 45" stroke="#85bfff" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/><text x="35" y="96" fill="#9aada9" font-size="9">conceptual response</text><text x="550" y="96" fill="#9aada9" font-size="9">state →</text></svg>';
+ const fig=document.createElement('figure');fig.className='viz';fig.innerHTML=svg+'<figcaption>Conceptual graph · illustrative relationship only; not measured simulation output.</figcaption>';
+ h.insertAdjacentElement('afterend',fig);
+});
 document.querySelectorAll('details').forEach(d=>{d.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target===d.querySelector('summary'))d.open=!d.open;});});
 const hash=location.hash.slice(1);if(labels[hash])show(hash);
 })();
