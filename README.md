@@ -1,6 +1,6 @@
 # BOIDS // evolutionary field
 
-**A full-screen, browser-based evolutionary ecosystem.** Flocks move through a changing environment, forage, avoid predators, compete for resources, choose mates, reproduce, and pass sparse neural-network genomes to the next generation.
+**A full-screen, browser-based evolutionary ecosystem.** Boids move through a changing environment, forage, compete for resources, choose mates, reproduce, and pass inherited neural and ecological traits to the next generation. Predation is an evolved strategy inside the single boid population, not a separate predator species.
 
 The project combines classic boids-style local steering with an experimental evolutionary simulation: each agent carries its own inherited neural controller, internal state, energy budget, age, reproductive state, and lineage.
 
@@ -19,9 +19,27 @@ No framework, bundler, package installation, or build step is required. The site
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
-- Food patches with finite renewable stock, predators, obstacles, currents, ageing, starvation, and density pressure.
+- Food patches with finite renewable stock, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body size, speed, bite strength, sensory range, and kin affinity.
+- Hunting traits are inherited and mutated alongside neural connection genes; successful predation, energy costs, size trade-offs, and kin protection create selection pressure within one shared population.
+- Observatory panels can be opened together; charts support pinch zoom, double-tap reset, numeric axes and increments, and optional grid lines.
 - Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
 - Browser-local persistence for settings, presets, world snapshots, and Observatory history.
+
+## Control taxonomy
+
+All 100 sliders are registered, persisted, and assigned to a tab and collapsible category.
+
+| Tab | Categories |
+|---|---|
+| Motion | Population & timing; locomotion; schooling & spacing; environmental flow |
+| Neural brain | Network architecture; learning & plasticity; neural behaviour |
+| Genetics | Mutation & topology; inheritance |
+| Reproduction | Mate choice; reproductive strategy; maturation & lifespan |
+| Selection | Ecological selection; predation phenotype selection; energy economics |
+| Environment | World geometry; food web; habitat & presentation |
+| Dynamics | Spatial interaction; food sensing & foraging; predation & social response; survival mechanics; advanced movement, current, neural, life-history, genetic-variation and phenotype controls |
+
+The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
 
 ## Getting started
 
