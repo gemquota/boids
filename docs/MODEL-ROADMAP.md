@@ -26,7 +26,7 @@ This roadmap is the implementation contract for moving the project from a flocki
 - Preserve the fixed-step accumulator when rendering falls behind, so the simulation slows rather than silently skipping simulation time.
 - Assign unique 32-bit individual IDs and store actual maternal and paternal IDs.
 - Upgrade ancestry buffers to 32-bit values and migrate old snapshots without pretending legacy generation counters are real parent identities.
-- Include RNG state and the next identity counter in schema-v5 world snapshots.
+- Include RNG state and the next identity counter in schema-v6 world snapshots.
 - Preserve per-agent render caches during death compaction.
 
 Remaining Phase 1 work:
@@ -75,6 +75,14 @@ Remaining work:
 
 ### Phase 5. Neuroevolution and lifetime learning
 
+**Status: first innovation-tracked neural genome implementation committed on evolutionary-ecology-phase4-neuroevolution; topology and learning upgrades remain.**
+
+- Neural connections now carry stable innovation IDs derived from their directed endpoint pair.
+- Crossover aligns matching innovations and treats unmatched genes as disjoint candidates instead of assuming array slot g is homologous in both parents.
+- Neural distance for mate preference compares innovation sets and homologous weights rather than positional endpoints.
+- Innovation registries and per-agent maternal/paternal innovation arrays persist in schema-v6 snapshots; older genomes receive reconstructed endpoint-based IDs during restore.
+
+Remaining work:
 - Give connection genes stable historical/innovation IDs so crossover can align homologous genes.
 - Separate connection topology, weights, biases, and enabled state.
 - Decide whether to evolve topology (innovation-tracked NEAT-like approach) or use a fixed homologous topology. Do not claim topology evolution while crossing unrelated array slots.
@@ -122,4 +130,4 @@ A phase is not complete merely because its code exists. Each phase needs:
 
 ## Current limitations
 
-The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but the kinship estimate is depth-limited to eight pedigree generations and becomes a lower bound when the bounded pedigree store has discarded ancestors. The ten-locus phenotype is in place, but its selection gradients and heritability are not yet measured. Neural genes still use positional loci rather than innovation-tracked homologous genes. The current fitness and learning reward remain heuristic.
+The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but the kinship estimate is depth-limited to eight pedigree generations and becomes a lower bound when the bounded pedigree store has discarded ancestors. The ten-locus phenotype is in place, but its selection gradients and heritability are not yet measured. Neural connections now use endpoint-derived innovation IDs for homology, but they do not yet have full historical innovation events, enabled-state genes, bias genes, or species-aware NEAT selection. The current fitness and learning reward remain heuristic.
