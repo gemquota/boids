@@ -57,7 +57,7 @@ jobs:
               'schemaVersion:2', 'requestId:m.requestId',
               'Math.round(values[key])', 'distanceWeight+geneticWeight',
               'let pursuitAccel=', 'cfg.threatSteering;ay+=threatY',
-              'cfg.neuralTurnGain+vx[i]/heading*accelSignal'
+              'turnSignal*cfg.neuralTurnGain+vx[i]/heading*accelSignal'
           ]
           missing_worker = [item for item in required_worker if item not in worker]
           if missing_worker:
