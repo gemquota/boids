@@ -19,7 +19,7 @@ No framework, bundler, package installation, or build step is required. The site
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
-- Food patches with finite renewable stock, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body size, speed, bite strength, sensory range, and kin affinity.
+- Food patches with finite renewable stock, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body mass, speed, bite strength, sensory range, kin affinity, acceleration, agility, risk tolerance, and exploration.
 - Hunting traits are inherited and mutated alongside neural connection genes; successful predation, energy costs, size trade-offs, and kin protection create selection pressure within one shared population.
 - Observatory panels can be opened together; charts support pinch zoom, double-tap reset, numeric axes and increments, and optional grid lines.
 - Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
@@ -50,7 +50,9 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Seeded xorshift randomness, with the generator state persisted in world snapshots.
 - Randomised agent evaluation order to remove fixed low-index priority from sequential resource claims.
 - Persistent 32-bit individual IDs and actual parent IDs. Generation depth is retained separately and is no longer used as an identity surrogate for kin checks.
-- Schema-v3 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
+- Ten inherited quantitative traits: aggression, body mass, speed, bite strength, kin affinity, sensory range, acceleration, agility, risk tolerance, and exploration. The new traits influence acceleration, turning, attack commitment, escape response, food attraction, and exploratory noise.
+- Body mass now has a nonlinear maintenance cost and a speed trade-off, rather than being only a visual and attack-size multiplier.
+- Schema-v4 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
 
 This is a **foundational Phase 1 implementation plus the first Phase 2 interaction slice**. Movement reads a shared position/velocity snapshot, while food claims and conspecific attacks are resolved in batches. Energy accounting, richer trade-offs, runtime reproducibility tests, and full pedigree analysis remain in progress. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
 

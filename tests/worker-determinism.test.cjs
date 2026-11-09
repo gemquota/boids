@@ -73,6 +73,26 @@ const restoredSnapshot = restored.__boidsTest.exportSnapshot();
 assert.deepEqual(Array.from(restoredSnapshot.arrays.individualId), Array.from(api.individualId.subarray(0, api.N)));
 assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.parentA.subarray(0, api.N)));
 assert.equal(restoredSnapshot.rngState, api.rngState);
-assert.equal(restoredSnapshot.schemaVersion, 3);
+assert.equal(restoredSnapshot.schemaVersion, 4);
+assert.equal(restoredSnapshot.arrays.traitGenes.length, api.N * 10, 'ten inherited traits must be stored per agent');
+assert.ok(restoredSnapshot.arrays.traitGenes[before * 10 + 6] >= .55, 'offspring acceleration trait must be inherited');
 
-console.log('Worker deterministic replay, unique identities, pedigree inheritance, and schema-v3 restore passed.');
+// Schema-v3 snapshots used six packed traits; migration must preserve those and initialise four new loci.
+const legacy = api.exportSnapshot();
+legacy.schemaVersion = 3;
+const legacyTraits = new Float32Array(api.N * 6);
+const legacyPaternalTraits = new Float32Array(api.N * 6);
+for (let i = 0; i < api.N; i++) {
+  legacyTraits.set(legacy.arrays.traitGenes.subarray(i * 10, i * 10 + 6), i * 6);
+  legacyPaternalTraits.set(legacy.arrays.paternalTraits.subarray(i * 10, i * 10 + 6), i * 6);
+}
+legacy.arrays.traitGenes = legacyTraits;
+legacy.arrays.paternalTraits = legacyPaternalTraits;
+const migrated = makeWorld(777);
+migrated.__boidsTest.restoreSnapshot(legacy);
+const migratedTraits = migrated.__boidsTest.exportSnapshot().arrays.traitGenes;
+assert.equal(migratedTraits.length, api.N * 10);
+assert.equal(migratedTraits[6], 1, 'legacy acceleration locus should receive neutral migration value');
+assert.equal(migratedTraits[8], .5, 'legacy risk locus should receive neutral migration value');
+
+console.log('Worker deterministic replay, unique identities, pedigree inheritance, and schema-v4 restore and schema-v3 phenotype migration passed.');
