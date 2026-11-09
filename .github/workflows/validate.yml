@@ -39,14 +39,14 @@ jobs:
               raise SystemExit('Slider registries not found')
           static_ids = re.findall(r"'([A-Za-z][A-Za-z0-9]*)'", static.group(1))
           extra_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
-          trait_block = re.search(r'const expressionTraits=\\[([\\s\\S]*?)\\];', html)
-          expression_fields = re.search(r'const expressionFields=\\[([\\s\\S]*?)\\];', html)
-          mutation_fields = re.search(r'const expressionMutationFields=\\[([\\s\\S]*?)\\];', html)
+          trait_block = re.search(r'const expressionTraits=\[([\s\S]*?)\];', html)
+          expression_fields = re.search(r'const expressionFields=\[([\s\S]*?)\];', html)
+          mutation_fields = re.search(r'const expressionMutationFields=\[([\s\S]*?)\];', html)
           if not trait_block or not expression_fields or not mutation_fields:
               raise SystemExit('Per-locus expression control schema missing')
-          traits = re.findall(r"\\{key:'([A-Za-z]+)'", trait_block.group(1))
-          fields = re.findall(r"\\{key:'([A-Za-z]+)'", expression_fields.group(1))
-          mutation_fields = re.findall(r"\\{key:'([A-Za-z]+)'", mutation_fields.group(1))
+          traits = re.findall(r"\{key:'([A-Za-z]+)'", trait_block.group(1))
+          fields = re.findall(r"\{key:'([A-Za-z]+)'", expression_fields.group(1))
+          mutation_fields = re.findall(r"\{key:'([A-Za-z]+)'", mutation_fields.group(1))
           expression_ids = [f'expr_{trait}_{field}' for trait in traits for field in fields]
           mutation_ids = [f'trait_{trait}_{field}' for trait in traits for field in mutation_fields]
           ids = static_ids + extra_ids + expression_ids + mutation_ids
