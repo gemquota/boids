@@ -52,7 +52,7 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Persistent 32-bit individual IDs and actual parent IDs. Generation depth is retained separately and is no longer used as an identity surrogate for kin checks.
 - Schema-v3 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
 
-This is a **partial Phase 1 foundation**, not a claim that all interactions are simultaneous. Feeding and attack resolution still occur during the agent pass and are explicitly scheduled for the next interaction-resolution phase. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
+This is a **foundational Phase 1 implementation plus the first Phase 2 interaction slice**. Movement reads a shared position/velocity snapshot, while food claims and conspecific attacks are resolved in batches. Energy accounting, richer trade-offs, runtime reproducibility tests, and full pedigree analysis remain in progress. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
 
 ## Getting started
 
