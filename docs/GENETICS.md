@@ -125,9 +125,9 @@ The observatory currently reports:
 The observatory also retains up to 600 in-memory telemetry samples per run, including living population, cumulative births, deaths, conceptions, predator kills, mutations, mean diversity, age, energy, fitness, speed and genome-weight statistics. A separate 24-band history tracks the living population in genome-derived hue cohorts over time. These cohorts are visual phenotype groupings, not formal species labels or reproductively isolated taxa. The history is reset when a new randomized population is created and is not saved across page reloads. The historical heatmap is a genome-signature distribution, not a persistent per-locus allele-sequencing archive.
 
 
-## v0.2.0 gene expression update
+## v0.2 gene expression engine
 
-The canonical ten-locus schema is defined in genetics.js. The worker uses shared bounded expression helpers.
+The canonical ten-locus schema and genotype-to-phenotype expression engine are defined in genetics.js. Each locus stores an inherited allele independently from its expressed phenotype. The worker consumes phenotype values for movement, sensing, hunting, energy costs and behaviour; it does not use the raw allele as the physical output.
 
 | Locus | Runtime expression in v0.2.0 |
 |---:|---|
@@ -143,3 +143,40 @@ The canonical ten-locus schema is defined in genetics.js. The worker uses shared
 | 9 Exploration | Wandering-noise amplitude and food-attraction strength |
 
 Kin protection is relatedness × kin affinity × global kin-protection strength. Personal perception radius is global perception × sensory range. Food detection uses the larger of minimum food range and personal perception × food-range scale. The spatial grid cell size covers the maximum supported sensory range. The neural connection genome remains fixed-slot in this release; structural neural evolution and population persistence are later phases.
+
+### Expression configuration
+
+Each locus has its own independent expression configuration:
+
+- **Phenotype minimum and maximum:** the physical/behavioural output range. These bounds are not the allele's stored gene bounds.
+- **Curve:** Linear, Exponential, Logarithmic, Sigmoid, Threshold, Plateau or Inverse.
+- **Curve strength:** exponent/steepness for the nonlinear profiles.
+- **Curve midpoint:** transition location for Sigmoid and Threshold.
+- **Expression bias:** shifts the normalized allele input before curve evaluation.
+- **Environmental sensitivity:** shifts normalized expression according to the worker's environmental signal. In the current implementation that signal is global environmental harshness plus a small local shelter-cover contribution, clamped to 0–1.
+- **Mutation rate and magnitude:** per-locus mutation probability and normalized perturbation size.
+- **Heritability / inheritance fidelity:** controls small non-mutational deviation around the mid-parent allele. This is an explicit simplified inheritance control, not a measured statistical heritability estimate.
+
+The expression mapping is:
+
+`normalizedGene = clamp((allele - geneMin) / (geneMax - geneMin), 0, 1)`
+
+`phenotype = phenotypeMin + curve(normalizedGene) * (phenotypeMax - phenotypeMin)`
+
+Environmental modulation is applied to the normalized curve output before phenotype bounds. A zero environmental-sensitivity setting leaves the curve unaffected by the environmental signal.
+
+### Curve behaviour
+
+| Curve | Behaviour |
+|---|---|
+| Linear | Proportional expression across the range. |
+| Exponential | Low expression at low allele values, then a sharper increase toward the upper end. |
+| Logarithmic | Strong early expression followed by diminishing returns. |
+| Sigmoid | Smooth transition around the configured midpoint. |
+| Threshold | Little/no expression before the midpoint, then a smooth ramp. |
+| Plateau | Rapid early expression that progressively saturates. |
+| Inverse | Reverses the direction so higher alleles produce lower expression. |
+
+The former global Cruising speed slider has been removed. The Speed locus now sets each agent's velocity cap through its own phenotype minimum/maximum and expression curve. Global mutation probability and magnitude controls apply to neural connection genes only; each of the ten quantitative loci has separate mutation controls.
+
+Changing expression settings never modifies existing allele values. Existing world snapshots retain their genomes and receive default expression settings for any fields absent from an older snapshot.
