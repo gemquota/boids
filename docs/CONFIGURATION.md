@@ -127,3 +127,30 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 ## Settings persistence
 
 The Save settings action stores the current UI configuration in browser-local storage. Load settings restores it in that browser profile. Defaults restores the shipped initial settings. This saves configuration only; it does not serialize the live population, genomes, environment state or history.
+
+## Additional ecology controls (100-slider configuration)
+
+The Dynamics tab adds 25 independently adjustable controls, grouped into collapsible accordions:
+
+| Group | Controls |
+|---|---|
+| Movement | Flocking noise, alignment persistence, cohesion bias, separation falloff, neighbour-density sensitivity |
+| Water dynamics | Current drift, eddy frequency, food regrowth, food depletion, food competition |
+| Reproduction | Mate-drive variation, mate-distance bias |
+| Genetic variation | Mutation drift, connection rewiring chance, lineage variation |
+| Neural dynamics | Neural output noise, response inertia, learning momentum, sensory noise |
+| Life history | Juvenile growth rate, adult maintenance cost |
+| Predator ecology | Search radius, hunger persistence, turning gain, satiation |
+
+These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and predator pursuit. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
+
+## Presets, randomisation and persistent worlds
+
+- **Save preset** stores the complete slider values, behaviour mode, channel masks and world toggles under a user-defined name in browser-local storage.
+- **Apply preset** restores a saved configuration.
+- **Randomise ecology** makes bounded variations around the current configuration while constraining population, food, predator and reproduction settings to a plausible starting range.
+- **Reset defaults** restores the tuned ecological baseline and original slider limits.
+- **World persistence** stores a structured snapshot in IndexedDB, including agent positions and velocities, energy, age, pregnancy, genomes, neural state, food, predators, reefs, simulation counters and historical observatory samples. Snapshots are refreshed periodically and when the page becomes hidden. Data remains local to the browser profile and device.
+- **Observatory history** is also cached locally so charts can repopulate between visits.
+
+The simulation state is browser-local. Clearing site data or using another browser/device removes access to that local snapshot.
