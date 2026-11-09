@@ -80,8 +80,8 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 | Renewable food patches | 0–40 | 14 | Number of finite, regenerating food sources. |
 | Food preference | 0–2 | 0.75 | Strength of steering toward stocked food patches. |
 | Metabolic rate | 0.25–3 | 1 | Scales energy expenditure. |
-| Juvenile age | 0–40 | 8 | Age below which predators receive a vulnerability multiplier. |
-| Juvenile vulnerability | 0–4 | 1.5 | Multiplier on predator attack probability for juveniles. |
+| Juvenile age | 0–40 | 8 | Age below which agents are more vulnerable to conspecific attacks. |
+| Juvenile vulnerability | 0–4 | 1.5 | Multiplier on conspecific attack probability for juveniles. |
 | Food regeneration | 0–1 | 0.12 | Rate at which food-patch stock recovers. |
 | Current strength | 0–1.8 | 0.45 | Base environmental flow strength. |
 | Trail persistence | 0.04–0.5 | 0.14 | Canvas trail fade amount; lower values retain trails longer. |
@@ -152,8 +152,27 @@ These controls are wired into steering, sensory inputs, resource cycling, neural
 
 The simulation state is browser-local. Clearing site data or using another browser/device removes access to that local snapshot.
 
+## Inherited phenotype
+
+Each agent now inherits ten quantitative trait loci. These are not additional UI sliders: they are individual genetic traits sampled at population creation and recombined/mutated during reproduction.
+
+| Locus | Meaning | Current model effect |
+|---|---|---|
+| Aggression | Attack propensity | Conspecific hunting eligibility and attack commitment |
+| Body mass | Relative physical size | Attack size advantage, nonlinear maintenance cost, modest speed trade-off, and visual scale |
+| Speed | Cruising speed phenotype | Individual maximum-speed multiplier |
+| Bite strength | Capture capability | Attack success probability and attack ranking |
+| Kin affinity | Relative protection of relatives | Reduces willingness to attack close kin |
+| Sensory range | Detection distance | Scales threat and prey detection distance |
+| Acceleration | Burst response | Scales movement acceleration and force authority |
+| Agility | Manoeuvrability | Scales evolved neural turning response |
+| Risk tolerance | Risk acceptance | Increases attack commitment and reduces threat-flee response |
+| Exploration | Exploratory tendency | Increases stochastic steering and reduces direct food attraction |
+
+The four newer loci use bounded quantitative inheritance and mutation. Older six-locus snapshots migrate to ten loci by preserving their original six values and initialising acceleration, agility, risk tolerance, and exploration to neutral values. This is a compatibility migration, not an inferred reconstruction of missing historical genes.
+
 ## Model integrity update
 
 The active worker does not spawn a separate predator population. Predation is conspecific: members of the single evolving boid population may attack smaller agents based on inherited aggression, relative body size, sensory range, bite strength, and kin protection. Older references to predator counts, autonomous predator hunger, or predator-only movement controls do not describe the current implementation and should not be used to configure experiments.
 
-The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v3 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
+The phase-one worker update now uses a fixed 1/60-second simulation step, a seeded random generator, double-buffered movement state, unique individual IDs, and schema-v4 snapshots. Food claims are collected from the same pre-movement state and proportionally allocated when patches are oversubscribed. Conspecific attacks are queued and resolved after agent decisions, with at most one rewarded kill per target.
