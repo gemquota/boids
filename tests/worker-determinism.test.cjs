@@ -84,6 +84,7 @@ assert.equal(api.selectedParentEvents, 4, 'each birth should contribute two succ
 const experimentSample = api.evaluatePopulation();
 assert.equal(experimentSample.selectionDifferentials.length, 10, 'selection differentials should be reported for all inherited loci');
 assert.ok(experimentSample.selectionDifferentials.every(Number.isFinite), 'selection differentials must be finite');
+assert.ok(Number.isFinite(experimentSample.selectionAggression), 'per-locus selection series should be available to the Observatory');
 assert.ok(experimentSample.meanLifetimeOffspring >= 0, 'lifetime reproductive success should be measurable');
 const experimentData = api.exportExperimentData();
 assert.equal(experimentData.format, 'boids-experiment-v1');
