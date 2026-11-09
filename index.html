@@ -102,6 +102,7 @@ for(const trait of expressionTraits){
  const details=document.createElement('details');details.className='controlAccordion';details.open=trait.key==='speed';
  const summary=document.createElement('summary');summary.textContent=trait.label+' expression';details.append(summary);
  const grid=document.createElement('div');grid.className='grid';
+ const preview=document.createElement('canvas');preview.className='chart expressionCurve';preview.width=480;preview.height=140;preview.setAttribute('aria-label',trait.label+' gene expression curve preview');
  const curveWrap=document.createElement('div');curveWrap.className='control';
  const curveLabel=document.createElement('label');curveLabel.htmlFor='expr_'+trait.key+'_curve';curveLabel.textContent='Expression curve';
  const curveSelect=document.createElement('select');curveSelect.id='expr_'+trait.key+'_curve';
@@ -117,8 +118,8 @@ for(const trait of expressionTraits){
   const input=document.createElement('input');Object.assign(input,{id,type:'range',min:lo,max:hi,step:field.step,value});
   wrap.append(label,output,input);grid.append(wrap);expressionRanges.push(id);input.addEventListener('input',()=>drawExpressionCurve(trait,preview));
  }
- details.append(grid);expressionHost.append(details);
- curveSelect.addEventListener('change',()=>{config({['expr_'+trait.key+'_curve']:curveSelect.value});try{localStorage.setItem('boids.settings.v2',JSON.stringify(readSettings()))}catch(e){}});
+ details.append(grid,preview);expressionHost.append(details);drawExpressionCurve(trait,preview);
+ curveSelect.addEventListener('change',()=>{drawExpressionCurve(trait,preview);config({['expr_'+trait.key+'_curve']:curveSelect.value});try{localStorage.setItem('boids.settings.v2',JSON.stringify(readSettings()))}catch(e){}});
 }
 ranges.push(...expressionRanges);
 
