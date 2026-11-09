@@ -47,9 +47,9 @@ test('environmental sensitivity modulates phenotype without changing genotype',(
 test('inheritance fidelity and locus mutation are independently configurable',()=>{
   const t=genetics.TRAITS[2],mid=(t.geneMin+t.geneMax)/2;
   assert.equal(genetics.inheritTrait(mid,mid,2,{rate:0,magnitude:.5,heritability:1},()=>.99),mid);
-  const mutated=genetics.inheritTrait(mid,mid,2,{rate:1,magnitude:.5,heritability:1},()=>1);
+  const mutated=genetics.inheritTrait(mid,mid,2,{rate:1,magnitude:.5,heritability:1},()=>.75);
   assert.ok(mutated>mid);
-  const drifted=genetics.inheritTrait(mid,mid,2,{rate:0,magnitude:0,heritability:0},()=>1);
+  const drifted=genetics.inheritTrait(mid,mid,2,{rate:0,magnitude:0,heritability:0},()=>.75);
   assert.ok(drifted>mid);
 });
 
