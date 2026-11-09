@@ -16,7 +16,7 @@ The eight sensory channels are:
 | 0 | Local neighbour density |
 | 1 | Neighbour alignment |
 | 2 | Separation pressure |
-| 3 | Predator threat |
+| 3 | Aggressive conspecific threat |
 | 4 | Food proximity |
 | 5 | Eligible mate proximity |
 | 6 | Energy reserve |
