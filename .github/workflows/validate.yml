@@ -58,7 +58,7 @@ jobs:
               'schemaVersion:4', 'requestId:m.requestId', 'rngState,nextIndividualId', 'individualId:individualId.slice(0,N)', 'parentA[child]=individualId[mother]', 'updateOrder[orderIndex]', 'xNext[i]=x[i]+nextVx', 'let swap=x;x=xNext', 'const fixedDt=1/60', 'accumulator+=elapsed*cfg.timeScale', 'foodDemandByPatch[best]+=cfg.foodBite*cfg.foodDepletion', 'foodGain=foodGainByAgent[i]', 'attackTarget[i]=huntIndex', 'attackWinner[target]=hunter',
               'Math.round(values[key])', 'distanceWeight+geneticWeight',
               'huntIndex=-1', 'cfg.aggressionSelection*ag', 'traitGenes[i*10+1]', 'cfg.threatSteering;ay+=threatY',
-              'turnSignal*cfg.neuralTurnGain+vx[i]/heading*accelSignal'
+              'turnSignal*cfg.neuralTurnGain*traitGenes[i*10+7]+vx[i]/heading*accelSignal'
           ]
           missing_worker = [item for item in required_worker if item not in worker]
           if missing_worker:
