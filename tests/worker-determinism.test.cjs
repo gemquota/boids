@@ -40,12 +40,6 @@ function run(seed) {
 
 const a = run(123456);
 const b = run(123456);
-assert.ok(a.__boidsTest.food.every(f => f.quality >= .7 && f.quality <= 1.3), 'food patches should have bounded quality');
-assert.ok(a.__boidsTest.food.every(f => f.productivity >= .65 && f.productivity <= 1.35), 'food patches should have bounded productivity');
-a.__boidsTest.obstacles = [{ x: a.__boidsTest.x[0], y: a.__boidsTest.y[0], r: 60 }];
-a.__boidsTest.update(1 / 60, 5000);
-assert.ok(a.__boidsTest.coverByAgent[0] > .5, 'reef obstacles should provide measurable shelter cover');
-assert.ok(a.__boidsTest.currentSeasonalFactor >= .44 && a.__boidsTest.currentSeasonalFactor <= 1, 'seasonal resource factor should remain bounded');
 const sa = a.__boidsTest.exportSnapshot();
 const sb = b.__boidsTest.exportSnapshot();
 
@@ -54,6 +48,12 @@ for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'paren
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
 assert.equal(new Set(Array.from(sa.arrays.individualId)).size, sa.N, 'individual IDs must be unique');
+assert.ok(a.__boidsTest.food.every(f => f.quality >= .7 && f.quality <= 1.3), 'food patches should have bounded quality');
+assert.ok(a.__boidsTest.food.every(f => f.productivity >= .65 && f.productivity <= 1.35), 'food patches should have bounded productivity');
+a.__boidsTest.obstacles = [{ x: a.__boidsTest.x[0], y: a.__boidsTest.y[0], r: 60 }];
+a.__boidsTest.update(1 / 60, 5000);
+assert.ok(a.__boidsTest.coverByAgent[0] > .5, 'reef obstacles should provide measurable shelter cover');
+assert.ok(a.__boidsTest.currentSeasonalFactor >= .44 && a.__boidsTest.currentSeasonalFactor <= 1, 'seasonal resource factor should remain bounded');
 
 // A parent pair must be stored as persistent individual identities, not generation counters.
 const api = a.__boidsTest;
