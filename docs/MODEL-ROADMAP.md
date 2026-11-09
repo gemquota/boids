@@ -130,7 +130,15 @@ Remaining work:
 
 ### Phase 8. Performance, calibration, and release quality
 
-- Profile the corrected model at 100, 250, 500, and 1,000 agents on desktop and representative mobile devices.
+**Status: automated release-quality foundation committed on evolutionary-ecology-phase7-release-quality; device/browser verification and calibration remain.**
+
+- Worker reports update time, draw time, fixed-step count, and simulation backlog to the Observatory.
+- CI parses the inline application script as well as the worker.
+- A CPU benchmark exercises 100, 250, 500, and 1,000 agents with fixed food/obstacle workloads and a generous regression ceiling.
+- Model assumptions, dimensionless units, calibration targets, and release gates are documented in docs/MODEL-CALIBRATION.md.
+
+Remaining work:
+- Profile the corrected model at 100, 250, 500, and 1,000 agents on representative desktop and mobile devices.
 - Optimise neighbour queries, collision/attack resolution, food lookup, telemetry aggregation, and rendering based on measurements.
 - Consider GPU compute only after the CPU reference model is correct and profiling demonstrates a bottleneck.
 - Calibrate qualitative parameters against explicit target behaviours or published empirical ranges where appropriate. Otherwise label them dimensionless and illustrative.
