@@ -142,7 +142,7 @@ The canonical ten-locus schema and genotype-to-phenotype expression engine are d
 | 8 Risk tolerance | Hunting probability and threat-response trade-off |
 | 9 Exploration | Wandering-noise amplitude and food-attraction strength |
 
-Kin protection is relatedness × kin affinity × global kin-protection strength. Perception radius is directly expressed per agent from the Perception radius locus (default phenotype bounds 18–90 world units); there is no universal global perception-radius multiplier. Food detection uses the larger of minimum food range and personal perception × food-range scale. The spatial grid cell size covers the maximum supported sensory range. The neural connection genome remains fixed-slot in this release; structural neural evolution and population persistence are later phases.
+Kin protection is relatedness × kin affinity × global kin-protection strength. Perception radius is directly expressed per agent from the Perception radius locus (default phenotype bounds 18–90 world units); there is no universal global perception-radius multiplier. Food detection uses the larger of minimum food range and personal perception radius × food-range scale. The spatial grid cell size covers the maximum configured perception radius. The neural connection genome remains fixed-slot in this release; structural neural evolution and population persistence are later phases.
 
 ### Expression configuration
 
