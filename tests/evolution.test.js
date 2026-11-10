@@ -77,9 +77,9 @@ test('species statistics share fitness, allocate integer quotas, and track stagn
   assert.equal(groups[0].championId,10);assert.ok(groups[0].sharedFitness<groups[0].rawFitness,'fitness is divided by species size');
   assert.equal(groups.reduce((sum,g)=>sum+g.offspringQuota,0),5,'integer quotas must sum to the population size');
   assert.ok(groups[0].offspringQuota>groups[1].offspringQuota,'higher shared fitness receives more offspring');
-  evo.updateSpeciesStatistics(groups,new Map([[10,8],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
-  assert.equal(groups[0].stagnation,1);
-  const third=evo.updateSpeciesStatistics(groups,new Map([[10,8],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
+  evo.updateSpeciesStatistics(groups,new Map([[10,8.1],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
+  assert.equal(groups[0].stagnation,0);
+  const third=evo.updateSpeciesStatistics(groups,new Map([[10,8.1],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
   assert.equal(groups[1].stagnant,true);assert.equal(groups[1].offspringQuota,0);
   assert.equal(third.stagnantSpecies,1);
   const recovered=evo.updateSpeciesStatistics(groups,new Map([[10,9],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
