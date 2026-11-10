@@ -178,9 +178,12 @@ test('allele statistics report richness, frequencies, and expected heterozygosit
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
 });
 
-test('parent-offspring regression reports slope and refuses undersized samples',()=>{
-  const h=evo.parentOffspringHeritability([1,2,3,4],[2,4,6,8]);assert.equal(h.slope,2);assert.equal(h.n,4);
-  assert.equal(evo.parentOffspringHeritability([1,2],[2,4]).heritability,null);
+test('parent-offspring regression reports slope uncertainty and refuses undersized samples',()=>{
+  const h=evo.parentOffspringHeritability([1,2,3,4,5],[2.1,3.9,6.2,7.8,10.1]);
+  assert.equal(h.n,5);assert.equal(h.rawSlope,h.slope);assert.ok(h.slopeStandardError>0);
+  assert.ok(h.slopeConfidenceInterval95[0]<h.slope&&h.slope<h.slopeConfidenceInterval95[1]);
+  const small=evo.parentOffspringHeritability([1,2],[2,4]);
+  assert.equal(small.heritability,null);assert.equal(small.slopeConfidenceInterval95,null);
 });
 
 test('replicate summaries and permutation comparisons are reproducible',()=>{
