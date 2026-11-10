@@ -123,7 +123,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Implement isolated experiment worlds that cannot mutate the user's live world.
 - [x] Implement deterministic independent replicate-seed derivation. (Execution in isolated worlds remains outstanding.)
 - [x] Implement one- and multi-parameter sweeps.
-- [ ] Implement factorial and Latin-hypercube designs for larger parameter spaces.
+- [x] Implement deterministic factorial and Latin-hypercube designs with run limits.
 - [ ] Implement bounded concurrency, pause/resume, cancellation, and progress reporting.
 - [ ] Stream telemetry rather than retaining unbounded per-tick history.
 - [x] Calculate mean, SD, median, IQR, and confidence intervals across replicate outcomes.
@@ -185,7 +185,7 @@ A task is not complete because a function exists. It must have:
 - [x] Added persistent species age, champion, best-fitness, stagnation, shared-fitness, and integer offspring-quota statistics; wired quota pressure into female reproductive drive and male mate selection, with a champion reproductive bonus.
 - [x] Added Observatory cards/chart series for species age, stagnation, and champion fitness; added a configurable stagnation limit.
 - [x] Added unit, worker, snapshot, UI, and CI coverage for species lifecycle and quota behaviour.
-- [x] Added immutable experiment manifest validation, deterministic replicate seed derivation, Kaplan-Meier survival curves, and BH/Holm multiple-comparison correction with tests.
+- [x] Added immutable experiment manifest validation, deterministic replicate seed derivation, Kaplan-Meier survival curves, BH/Holm multiple-comparison correction, and factorial/Latin-hypercube designs with tests.
 - [x] Added continuous spatial habitat fields and connected nutrient/moisture productivity to plant biomass growth, habitat suitability to spore establishment, and temperature anomaly to consumer maintenance costs.
 
 - [x] Inspected current model roadmap, chromosome format, genetics primitives, worker, and genetics tests.
