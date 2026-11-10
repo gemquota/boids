@@ -134,6 +134,9 @@ assert.ok(Number.isFinite(experimentSample.meanInbreeding), 'population inbreedi
 assert.equal(experimentSample.maleCount + experimentSample.femaleCount, experimentSample.count, 'sex counts must sum to population size');
 assert.equal(experimentSample.sexRatioEffectiveSize, 4 * experimentSample.maleCount * experimentSample.femaleCount / Math.max(1, experimentSample.maleCount + experimentSample.femaleCount), 'sex-ratio Ne must use the documented formula');
 assert.ok(Number.isFinite(experimentSample.regulatoryActivity), 'regulatory expression activity should be measurable');
+assert.ok(experimentSample.regulatoryCopyMean>=1&&experimentSample.regulatoryCopyMean<=64,'live regulatory copy number should be measured');
+assert.ok(experimentSample.regulatoryCopyMax<=64,'regulatory copy count must respect the structural limit');
+assert.ok(Number.isFinite(experimentSample.regulatoryCopyStrengthMean),'regulatory network strength should be measured');
 for(const key of ['habitatTemperature','habitatMoisture','habitatNutrients','habitatSuitability'])assert.ok(experimentSample[key]>=0&&experimentSample[key]<=1, key+' must remain bounded');
 const habitatA=api.sampleHabitat(100,120),habitatB=api.sampleHabitat(500,350);
 assert.ok(Object.values(habitatA).every(Number.isFinite),'habitat field samples must be finite');
@@ -201,6 +204,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.equal(restoredSnapshot.schemaVersion, 14);
 assert.deepEqual(restoredSnapshot.regulatoryGenomes,api.regulatoryGenomes.slice(0,api.N),'regulatory copy genomes must survive snapshots');
+assert.deepEqual(restoredSnapshot.paternalRegulatoryGenomes,api.paternalRegulatoryGenomes.slice(0,api.N),'paternal regulatory copy genomes must survive snapshots');
 assert.deepEqual(restoredSnapshot.regulatoryRegistry,api.exportSnapshot().regulatoryRegistry,'regulatory copy registry must survive snapshots');
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
