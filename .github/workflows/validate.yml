@@ -142,7 +142,7 @@ jobs:
           if missing_ui:
               raise SystemExit('Missing settings/persistence/help safeguards: ' + ', '.join(missing_ui))
           required_worker = [
-              'schemaVersion:8', 'selectionAggression:selectionDifferentials[0]', 'updateMs:lastUpdateMs', 'drawMs:lastDrawMs', 'requestId:m.requestId', 'rngState,nextIndividualId', 'individualId:individualId.slice(0,N)', 'parentA[child]=individualId[mother]', 'updateOrder[orderIndex]', 'xNext[i]=x[i]+nextVx', 'let swap=x;x=xNext', 'const fixedDt=1/60', 'accumulator+=elapsed*cfg.timeScale', 'foodDemandByPatch[best]+=cfg.foodBite*cfg.foodDepletion', 'foodGain=foodGainByAgent[i]', 'attackTarget[i]=huntIndex', 'attackWinner[target]=hunter',
+              'schemaVersion:9', 'selectionAggression:selectionDifferentials[0]', 'updateMs:lastUpdateMs', 'drawMs:lastDrawMs', 'requestId:m.requestId', 'rngState,nextIndividualId', 'individualId:individualId.slice(0,N)', 'parentA[child]=individualId[mother]', 'updateOrder[orderIndex]', 'xNext[i]=x[i]+nextVx', 'let swap=x;x=xNext', 'const fixedDt=1/60', 'accumulator+=elapsed*cfg.timeScale', 'foodDemandByPatch[best]+=cfg.foodBite*cfg.foodDepletion', 'foodGain=foodGainByAgent[i]', 'attackTarget[i]=huntIndex', 'attackWinner[target]=hunter',
               'Math.round(values[key])', 'distanceWeight+geneticWeight',
               'huntIndex=-1', 'cfg.aggressionSelection*ag', 'phenotype(i,1)', 'cfg.threatSteering;ay+=threatY',
               'turnSignal*cfg.neuralTurnGain*phenotype(i,7)+vx[i]/heading*accelSignal'
@@ -165,10 +165,10 @@ jobs:
               raise SystemExit('Feeding and hunting must not mutate targets sequentially inside the agent loop')
           if 'traitGenes[i*6+1]' in worker or 'traitGenes.slice(0,N*6)' in worker:
               raise SystemExit('Ten-locus phenotype indexing must be used consistently')
-          for item in ['phenotype(i,6)', 'phenotype(i,7)', 'phenotype(i,8)', 'phenotype(i,9)', 'BoidsGenetics.inheritTrait', 'BoidsGenetics.express', 'cfg.geneExpression', 'cfg.traitMutation', 'schemaVersion:8', 'function kinshipCoefficient', 'kinshipRelatedness(individualId[i],individualId[j])', 'recordPedigree(individualId[child],parentA[child],parentB[child])', 'pedigree:Array.from(pedigree.entries())']:
+          for item in ['phenotype(i,6)', 'phenotype(i,7)', 'phenotype(i,8)', 'phenotype(i,9)', 'BoidsGenetics.inheritTrait', 'BoidsGenetics.express', 'cfg.geneExpression', 'cfg.traitMutation', 'schemaVersion:9', 'function kinshipCoefficient', 'kinshipRelatedness(individualId[i],individualId[j])', 'recordPedigree(individualId[child],parentA[child],parentB[child])', 'pedigree:Array.from(pedigree.entries())']:
               if item not in worker:
                   raise SystemExit('Missing inherited phenotype mechanic: ' + item)
-          for item in ['innovationFor(src,dst)', 'innovationRegistry:Array.from(innovationRegistry.entries())', 'paternalInnovation.set(innovation.subarray', 'function cloneGenome(child,mother,fatherOffset)', 'genesA=new Map(),genesB=new Map()']:
+          for item in ['innovationFor(src,dst)', 'innovationRegistry:Array.from(innovationRegistry.entries())', 'applyPaternalChromosome(mother,paternalChromosomes[mother])', 'function cloneGenome(child,mother,fatherOffset)', 'genesA=new Map(),genesB=new Map()']:
               if item not in worker:
                   raise SystemExit('Missing innovation-tracked neuroevolution invariant: ' + item)
           if 'let pa=mo+g*3,pb=fatherOffset+g*3' in worker:
@@ -196,7 +196,7 @@ jobs:
                   raise SystemExit('Missing functional experiment export UI: ' + item)
           if 'Math.random()' in worker:
               raise SystemExit('Worker must use the seeded random generator for reproducible experiments')
-          for item in ['function seedRandom(seed)', 'function random()', 'new Uint32Array(cap)', 'paternalId[mother]=individualId[father]', 'schemaVersion:8', 'traitGenes=new Float32Array(cap*10)', 'for(let k=0;k<10;k++)', 'riskTolerance:meanRiskTolerance/Math.max(1,N)']:
+          for item in ['function seedRandom(seed)', 'function random()', 'new Uint32Array(cap)', 'paternalId[mother]=individualId[father]', 'schemaVersion:9', 'traitGenes=new Float32Array(cap*10)', 'for(let k=0;k<10;k++)', 'riskTolerance:meanRiskTolerance/Math.max(1,N)']:
               if item not in worker:
                   raise SystemExit('Missing phase-one simulation invariant: ' + item)
           if 'for(let i=0;i<N;i++){let energyBefore=energy[i]' in worker:
