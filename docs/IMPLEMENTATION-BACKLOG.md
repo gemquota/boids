@@ -35,7 +35,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement add-connection mutation with cycle/recurrent policy and duplicate prevention.
 - [x] Implement split-connection mutation.
 - [x] Implement connection deletion.
-- [ ] Implement node deletion with incident-edge handling.
+- [x] Implement node deletion with incident-edge handling.
 - [x] Implement enable/disable mutation.
 - [x] Implement weight, bias, and activation mutations.
 - [ ] Implement recurrent connection mutation.
