@@ -55,7 +55,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Adapt compatibility threshold toward a configurable target species count.
 - [x] Track species identity, age, size, representative, best fitness, and stagnation.
 - [x] Apply fitness sharing within species.
-- [ ] Preserve champions / configurable elitism.
+- [x] Preserve species champions with configurable reproductive-pressure elitism (`speciesChampionBonus`); this overlapping sexual population protects champion contribution rather than copying a clone into a discrete next generation.
 - [ ] Protect new structural innovations from immediate elimination.
 - [x] Implement species-aware parent selection and species-specific offspring allocation. (Integer quota targets are allocated from shared fitness and converted to reproductive pressure in the overlapping-generation model; same-species mating is preferred with fallback.)
 - [x] Handle extinct species and representative replacement.
