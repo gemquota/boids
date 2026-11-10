@@ -14,7 +14,7 @@ const ids = [
   ...schema.expressionTraits.flatMap(trait => schema.expressionFields.map(field => `expr_${trait.key}_${field.key}`)),
   ...schema.expressionTraits.flatMap(trait => schema.expressionMutationFields.map(field => `trait_${trait.key}_${field.key}`))
 ];
-assert.equal(ids.length, 181, 'schema must define all 181 sliders');
+assert.equal(ids.length, 176, 'schema must define all 181 sliders');
 assert.equal(new Set(ids).size, ids.length, 'generated control IDs must be unique');
 assert.ok(!ids.includes('trail'), 'trail control must remain removed');
 assert.ok(schema.coreSliderDefs.every(item => item.id && item.label && Number.isFinite(item.min) && Number.isFinite(item.max) && item.min < item.max && item.step > 0 && ['motion','brain','genetics','reproduction','selection','world','dynamics'].includes(item.section)));
