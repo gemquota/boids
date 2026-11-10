@@ -168,7 +168,7 @@ jobs:
           for item in ['phenotype(i,6)', 'phenotype(i,7)', 'phenotype(i,8)', 'phenotype(i,9)', 'BoidsGenetics.inheritTrait', 'BoidsGenetics.express', 'cfg.geneExpression', 'cfg.traitMutation', 'schemaVersion:9', 'function kinshipCoefficient', 'kinshipRelatedness(individualId[i],individualId[j])', 'recordPedigree(individualId[child],parentA[child],parentB[child])', 'pedigree:Array.from(pedigree.entries())']:
               if item not in worker:
                   raise SystemExit('Missing inherited phenotype mechanic: ' + item)
-          for item in ['innovationFor(src,dst)', 'innovationRegistry:Array.from(innovationRegistry.entries())', 'paternalInnovation.set(innovation.subarray', 'function cloneGenome(child,mother,fatherOffset)', 'genesA=new Map(),genesB=new Map()']:
+          for item in ['innovationFor(src,dst)', 'innovationRegistry:Array.from(innovationRegistry.entries())', 'applyPaternalChromosome(mother,paternalChromosomes[mother])', 'function cloneGenome(child,mother,fatherOffset)', 'genesA=new Map(),genesB=new Map()']:
               if item not in worker:
                   raise SystemExit('Missing innovation-tracked neuroevolution invariant: ' + item)
           if 'let pa=mo+g*3,pb=fatherOffset+g*3' in worker:
