@@ -12,7 +12,7 @@
     {index:2,key:'speed',label:'Speed',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:1.375,phenotypeMax:4.125},
     {index:3,key:'biteStrength',label:'Bite strength',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
     {index:4,key:'kinAffinity',label:'Kin affinity',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
-    {index:5,key:'sensoryRange',label:'Sensory range',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
+    {index:5,key:'sensoryRange',label:'Perception radius',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:18,phenotypeMax:90},
     {index:6,key:'acceleration',label:'Acceleration',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
     {index:7,key:'agility',label:'Agility',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
     {index:8,key:'riskTolerance',label:'Risk tolerance',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
@@ -61,8 +61,8 @@
     const modulated=clamp(shaped+(env-.5)*sensitivity,0,1);
     return min+modulated*(max-min);
   }
-  function perceptionRadius(base,rangeGene){return base*clamp(Number(rangeGene)||1,.55,1.65)}
-  function foodSenseRange(basePerception,rangeGene,foodRangeScale,minRange){return Math.max(Number(minRange)||0,perceptionRadius(basePerception,rangeGene)*(Number(foodRangeScale)||0))}
+  function perceptionRadius(expresssedRadius){return Math.max(1,Number(expresssedRadius)||1)}
+  function foodSenseRange(expresssedRadius,foodRangeScale,minRange){return Math.max(Number(minRange)||0,perceptionRadius(expresssedRadius)*(Number(foodRangeScale)||0))}
   function kinProtection(relatedness,affinityGene){return clamp(Number(relatedness)||0,0,1)*clamp(Number(affinityGene)||0,0,1)}
   function explorationNoise(baseNoise,explorationGene){return Math.max(0,Number(baseNoise)||0)*(.5+clamp(Number(explorationGene)||1,.55,1.65))}
   function foodSteering(baseSteering,explorationGene){return Math.max(0,Number(baseSteering)||0)*(1.5-clamp(Number(explorationGene)||1,.55,1.65)*.5)}
