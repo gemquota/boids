@@ -38,7 +38,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement node deletion with incident-edge handling.
 - [x] Implement enable/disable mutation.
 - [x] Implement weight, bias, and activation mutations.
-- [ ] Implement recurrent connection mutation.
+- [x] Implement recurrent connection mutation.
 - [x] Implement innovation-aligned crossover.
 - [x] Inherit disjoint/excess genes according to parent fitness.
 - [x] Implement disabled-gene inheritance probability.
@@ -53,15 +53,15 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Calculate compatibility distance from excess, disjoint, and matching genes.
 - [x] Assign individuals to species using representatives and compatibility threshold.
 - [x] Adapt compatibility threshold toward a configurable target species count.
-- [ ] Track species identity, age, size, representative, best fitness, and stagnation.
-- [ ] Apply fitness sharing within species.
+- [x] Track species identity, age, size, representative, best fitness, and stagnation.
+- [x] Apply fitness sharing within species.
 - [ ] Preserve champions / configurable elitism.
 - [ ] Protect new structural innovations from immediate elimination.
-- [ ] Implement species-aware parent selection and species-specific offspring allocation. (Same-species mate preference and bounded species-size reproductive pressure are live; explicit per-generation offspring quotas and fitness sharing remain outstanding.)
+- [x] Implement species-aware parent selection and species-specific offspring allocation. (Integer quota targets are allocated from shared fitness and converted to reproductive pressure in the overlapping-generation model; same-species mating is preferred with fallback.)
 - [x] Handle extinct species and representative replacement.
 - [x] Persist species state across save/restore.
-- [ ] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory.
-- [ ] Test speciation under controlled synthetic genomes and selection pressure.
+- [ ] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory. (Counts, sizes, age, stagnation, champion fitness and quota pressure are visible; per-species innovation/topology detail remains outstanding.)
+- [x] Test speciation under controlled synthetic genomes and selection pressure.
 
 ## D. Regulatory genetics and gene expression
 
@@ -181,6 +181,11 @@ A task is not complete because a function exists. It must have:
 
 ## Work log
 
+- [x] Added explicit recurrent-edge mutation to the live NEAT mutation path and exposed its rate as a control.
+- [x] Added persistent species age, champion, best-fitness, stagnation, shared-fitness, and integer offspring-quota statistics; wired quota pressure into female reproductive drive and male mate selection, with a champion reproductive bonus.
+- [x] Added Observatory cards/chart series for species age, stagnation, and champion fitness; added a configurable stagnation limit.
+- [x] Added unit, worker, snapshot, UI, and CI coverage for species lifecycle and quota behaviour.
+
 - [x] Inspected current model roadmap, chromosome format, genetics primitives, worker, and genetics tests.
 - [x] Created an isolated implementation branch for the completion programme.
-- [ ] Implement and test first variable-genome / regulatory / population-metrics foundation.
+- [x] Implement and test first variable-genome / regulatory / population-metrics foundation.
