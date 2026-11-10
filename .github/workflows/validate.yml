@@ -105,7 +105,7 @@ jobs:
               raise SystemExit('River and creek terrain must be rendered')
           if "ctx.fillStyle='#040911';ctx.fillRect(0,0,W,H)" not in worker or "ctx.fillStyle='rgba(4,9,17,'+cfg.trail+')'" in worker:
               raise SystemExit('Canvas must be fully cleared every frame; permanent trails are forbidden')
-          waterways = re.search(r'function drawWaterways\\(\\)\\{([\\s\\S]*?)\\nfunction draw\\(', worker)
+          waterways = re.search(r'function drawWaterways\(\)\{([\s\S]*?)\nfunction draw\(', worker)
           if not waterways or 'buildRiverNetwork()' not in waterways.group(1) or 'organicPath(' not in worker:
               raise SystemExit('Organic river network renderer missing')
           for feature in ['function buildRiverNetwork()', 'function organicPath(', 'tributaries.push(creek)', 'feeders.push(organicPath', 'testPath(network.main)']:
