@@ -112,11 +112,35 @@
   }
 
   function assignSpecies(individuals,previous=[],options={}){
-    const threshold=Math.max(.01,finite(options.threshold,3)),coefficients=options.coefficients||{},species=previous.map(s=>({id:s.id,representative:cloneGenome(s.representative),members:[]}));let nextId=Math.max(0,...species.map(s=>s.id))+1;
+    const threshold=Math.max(.01,finite(options.threshold,3)),coefficients=options.coefficients||{},species=previous.map(s=>({...s,representative:cloneGenome(s.representative),members:[]}));let nextId=Math.max(0,...species.map(s=>s.id))+1;
     for(const individual of individuals){let best=null,bestDistance=Infinity;for(const s of species){const d=compatibilityDistance(individual.genome,s.representative,coefficients);if(d<threshold&&d<bestDistance){best=s;bestDistance=d}}
       if(best)best.members.push(individual);else species.push({id:nextId++,representative:cloneGenome(individual.genome),members:[individual]})}
     for(const s of species)if(s.members.length)s.representative=cloneGenome(s.members[0].genome);
     return species.filter(s=>s.members.length);
+  }
+
+  function updateSpeciesStatistics(species,fitnessById,options={}){
+    const stagnationLimit=Math.max(1,Math.floor(finite(options.stagnationLimit,40))),improvementEpsilon=Math.max(0,finite(options.improvementEpsilon,.001));
+    let totalAdjusted=0,totalRaw=0,totalMembers=0;
+    for(const group of species){
+      const values=group.members.map(member=>Math.max(0,finite(fitnessById instanceof Map?fitnessById.get(member.id):fitnessById?.[member.id],0)));
+      const rawTotal=values.reduce((sum,value)=>sum+value,0),adjusted=rawTotal/Math.max(1,group.members.length),bestIndex=values.reduce((best,value,index)=>value>values[best]?index:best,0),bestFitness=values.length?values[bestIndex]:0;
+      group.age=Math.max(0,Math.floor(finite(group.age,0)))+1;
+      const priorBest=finite(group.bestFitness,-Infinity),improved=bestFitness>priorBest+improvementEpsilon;
+      group.bestFitness=improved?bestFitness:Math.max(0,priorBest);
+      group.stagnation=improved?0:Math.max(0,Math.floor(finite(group.stagnation,0)))+1;
+      group.championId=values.length?group.members[bestIndex].id:null;
+      group.rawFitness=rawTotal;group.sharedFitness=adjusted;group.stagnant=group.stagnation>=stagnationLimit;
+      totalRaw+=rawTotal;totalAdjusted+=adjusted;totalMembers+=group.members.length;
+    }
+    const viable=species.filter(group=>group.members.length&&!group.stagnant),pool=viable.length?viable:species.filter(group=>group.members.length);
+    const poolFitness=pool.reduce((sum,group)=>sum+group.sharedFitness,0),totalQuota=totalMembers;
+    const quotas=pool.map(group=>({id:group.id,exact:poolFitness>0?group.sharedFitness/poolFitness*totalQuota:totalQuota/Math.max(1,pool.length)}));
+    let assigned=0;for(const item of quotas){item.quota=Math.floor(item.exact);item.remainder=item.exact-item.quota;assigned+=item.quota}
+    quotas.sort((a,b)=>b.remainder-a.remainder||a.id-b.id);for(let i=0;i<totalQuota-assigned;i++)if(quotas.length)quotas[i%quotas.length].quota++;
+    const quotaById=new Map(quotas.map(item=>[item.id,item.quota]));
+    for(const group of species){group.offspringQuota=quotaById.get(group.id)||0;group.reproductivePressure=group.members.length?group.offspringQuota/group.members.length:0}
+    return{totalAdjustedFitness:totalAdjusted,totalRawFitness:totalRaw,totalMembers,quotaById,viableSpecies:pool.length,stagnantSpecies:species.filter(group=>group.stagnant).length};
   }
 
   function evaluateRegulation(loci,regulators=[],environment={},definitions={}){
@@ -200,5 +224,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
 });
