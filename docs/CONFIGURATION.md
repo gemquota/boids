@@ -10,7 +10,6 @@ Values below describe the current slider ranges and initial UI values. Some cont
 | Simulation speed | 0.25–3 | 1 | Scales the simulation timestep and therefore all simulated processes. |
 | Current turbulence | 0–2 | 0.35 | Adds local variation to the environmental flow field. |
 
-| Perception radius | 18–90 | 42 | Flocking-neighbour distance. |
 | Personal space | 0–3.5 | 1.8 | Separation steering weight. |
 | School alignment | 0–3 | 1.15 | Alignment steering weight. |
 | Group cohesion | 0–3 | 1.05 | Cohesion steering weight. |
@@ -48,7 +47,7 @@ The sensory and behavioural-output checkboxes enable or disable individual chann
 
 ## Ten-locus gene expression
 
-The global Cruising speed control has been removed. Speed is now an expressed phenotype derived from each agent's inherited Speed locus. All ten loci use the same expression architecture, with independent settings per locus.
+The global Cruising speed and Perception radius controls have been removed. Both are now expressed phenotypes derived from each agent's inherited loci. Perception radius is measured in world units and directly sets that agent's flocking, threat/prey and food-sensing neighbourhood. All ten loci use the same expression architecture, with independent settings per locus.
 
 | Locus | Default phenotype minimum | Default phenotype maximum |
 |---|---:|---:|
@@ -57,7 +56,7 @@ The global Cruising speed control has been removed. Speed is now an expressed ph
 | Speed | 1.375 | 4.125 |
 | Bite strength | 0.55 | 1.65 |
 | Kin affinity | 0 | 1 |
-| Sensory range | 0.55 | 1.65 |
+| Perception radius | 18 | 90 |
 | Acceleration | 0.55 | 1.65 |
 | Agility | 0.55 | 1.65 |
 | Risk tolerance | 0 | 1 |
