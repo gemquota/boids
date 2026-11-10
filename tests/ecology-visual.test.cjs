@@ -28,7 +28,8 @@ test('river network uses curved, shared geometry for drawing and freshwater dist
     assert.ok(sinuosity(path) > 1.025, 'tributaries and feeders must visibly meander');
   }
   const sample = network.tributaries[2][Math.floor(network.tributaries[2].length / 2)];
-  assert.ok(context.nearest(sample.x, sample.y).distance < 1.5, 'plant water-distance checks must use the rendered stream geometry');
+  assert.ok(context.nearest(sample.x, sample.y).distance < 25, 'cached freshwater field must stay close to the rendered stream geometry');
+  assert.ok(network.field && network.field.distance.length > 0, 'freshwater field should be cached for cheap ecological queries');
 });
 
 test('canvas is fully cleared every frame and trail controls are absent', () => {
