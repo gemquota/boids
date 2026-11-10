@@ -88,9 +88,11 @@
   const dependencyRules=Object.freeze({ageMin:'ageMax must be at least ageMin + 1',ageMax:'lifespan must be at least ageMax + 1',lifespan:'lifespan must be at least ageMax + 1'});
   function normalizeDependencies(values,current={}){
     const next={...current,...values},patch={};
+    const definition=id=>coreSliderDefs.find(item=>item.id===id);
+    const roundUp=(id,value)=>{const item=definition(id);if(!item)return value;return Math.min(item.max,item.min+Math.ceil((value-item.min)/item.step)*item.step)};
     const ageMin=Number(next.ageMin),ageMax=Number(next.ageMax),lifespan=Number(next.lifespan);
-    if(Number.isFinite(ageMin)&&Number.isFinite(ageMax)&&ageMax<ageMin+1){patch.ageMax=ageMin+1;next.ageMax=patch.ageMax;}
-    if(Number.isFinite(next.ageMax)&&Number.isFinite(lifespan)&&lifespan<Number(next.ageMax)+1)patch.lifespan=Number(next.ageMax)+1;
+    if(Number.isFinite(ageMin)&&Number.isFinite(ageMax)&&ageMax<ageMin+1){patch.ageMax=roundUp('ageMax',ageMin+1);next.ageMax=patch.ageMax;}
+    if(Number.isFinite(next.ageMax)&&Number.isFinite(lifespan)&&lifespan<Number(next.ageMax)+1)patch.lifespan=roundUp('lifespan',Number(next.ageMax)+1);
     return Object.freeze(patch);
   }
   const freeze=list=>Object.freeze(list.map(item=>Object.freeze(item)));
