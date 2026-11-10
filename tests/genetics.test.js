@@ -49,6 +49,17 @@ test('environmental sensitivity modulates phenotype without changing genotype',(
   assert.equal(neutral,.5);
   assert.ok(low<neutral&&high>neutral);
 });
+test('cis-regulatory alleles shift trait expression and environmental responsiveness',()=>{
+  const trait=genetics.TRAITS[0],settings={min:0,max:1,curve:'linear',bias:0,environmentSensitivity:.4};
+  const quiet=genetics.express(.5,trait,settings,.5,.1);
+  const active=genetics.express(.5,trait,settings,.5,.9);
+  const quietStress=genetics.express(.5,trait,settings,1,.1);
+  const activeStress=genetics.express(.5,trait,settings,1,.9);
+  assert.ok(active>quiet);
+  assert.ok(activeStress>active);
+  assert.ok(quietStress>quiet);
+});
+
 test('inheritance fidelity and locus mutation are independently configurable',()=>{
   const t=genetics.TRAITS[2],mid=(t.geneMin+t.geneMax)/2;
   assert.equal(genetics.inheritTrait(mid,mid,2,{rate:0,magnitude:.5,heritability:1},()=>.99),mid);
@@ -62,7 +73,7 @@ const fs=require('node:fs');
 const worker=fs.readFileSync(require('node:path').join(__dirname,'../boids-worker.js'),'utf8');
 test('worker uses expression output, not raw genes, for physical behaviour',()=>{
   assert.match(worker,/function phenotype\(i,k\)/);
-  assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);
+  assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);\n  assert.match(worker,/regulatoryGenes\[i\*10\+k\]/);\n  assert.match(worker,/cloneRegulatoryGenes\(child,mother\)/);
   for(const index of [0,1,2,3,4,5,6,7,8,9])assert.ok(worker.includes('phenotype(i,'+index+')'),'missing expressed locus '+index);
   assert.match(worker,/BoidsGenetics\.inheritTrait/);
   assert.match(worker,/cfg\.geneExpression/);
