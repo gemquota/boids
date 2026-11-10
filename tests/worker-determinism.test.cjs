@@ -280,10 +280,12 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationBirthTime.entries()),'structural innovation protection ages must survive snapshot restoration');
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
-assert.equal(restoredSnapshot.schemaVersion, 20);
+assert.equal(restoredSnapshot.schemaVersion, 21);
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
+assert.deepEqual(restoredSnapshot.agentRegulatoryGenomes,api.exportSnapshot().agentRegulatoryGenomes,'trans-regulatory gene copies and edges must persist');
+assert.deepEqual(restoredSnapshot.regulatoryRegistry,api.regulatoryRegistry,'regulatory innovation identities must persist');
 assert.equal(JSON.stringify(restoredSnapshot.agentLearnedWeights), JSON.stringify(api.exportSnapshot().agentLearnedWeights), 'learned weight overlays must survive snapshot restore');
 assert.equal(JSON.stringify(restoredSnapshot.agentNeuralStates), JSON.stringify(api.exportSnapshot().agentNeuralStates), 'recurrent neural state must survive snapshot restore');
 assert.equal(restoredSnapshot.chromosomes.length, api.N);
@@ -360,6 +362,8 @@ const migratedTraits = migrated.__boidsTest.exportSnapshot().arrays.traitGenes;
 assert.equal(migratedTraits.length, api.N * 10);
 assert.equal(migratedTraits[6], 1, 'legacy acceleration locus should receive neutral migration value');
 assert.equal(migratedTraits[8], .5, 'legacy risk locus should receive neutral migration value');
+assert.equal(migrated.__boidsTest.agentRegulatoryGenomes[0].nodes.length,10,'legacy snapshots should receive neutral trans-regulatory gene records');
+assert.ok(migrated.__boidsTest.agentRegulatoryGenomes[0].nodes.every(node=>node.effect===0),'legacy migration must not invent active trans-regulatory effects');
 assert.equal(migrated.__boidsTest.exportSnapshot().arrays.innovation.length, api.N * api.cfg.connections, 'legacy neural genes should receive innovation IDs');
 assert.equal(migrated.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'legacy restore should reconstruct the live pedigree from parent IDs');
 
