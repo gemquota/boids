@@ -186,7 +186,7 @@
   }
   function effectiveBreederSize(contributions={}){
     const effective=values=>{const clean=values.map(value=>Math.max(0,finite(value,0))),total=clean.reduce((sum,value)=>sum+value,0),squares=clean.reduce((sum,value)=>sum+value*value,0);return squares>0?total*total/squares:0};
-    const female=effective(contributions.female||[]),male=effective(contributions.male||[]),combined=female>0&&male>0?4*female*male/(female+male):0;
+    const female=effective(contributions.female||[]),male=effective(contributions.male||[]),combined=female>0&&male>0?2*female*male/(female+male):0;
     return{effectiveFemales:female,effectiveMales:male,effectiveBreeders:combined,femaleContributors:(contributions.female||[]).filter(value=>value>0).length,maleContributors:(contributions.male||[]).filter(value=>value>0).length};
   }
 
@@ -266,5 +266,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient,effectiveBreederSize});
 });
