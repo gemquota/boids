@@ -175,14 +175,16 @@
 
   function linearRegression(x,y){
     const pairs=x.map((v,i)=>[Number(v),Number(y[i])]).filter(([a,b])=>Number.isFinite(a)&&Number.isFinite(b)),n=pairs.length;
-    if(n<3)return{n,slope:null,intercept:null,rSquared:null,correlation:null};
+    if(n<3)return{n,slope:null,intercept:null,rSquared:null,correlation:null,slopeStandardError:null,slopeConfidenceInterval95:null};
     const mx=pairs.reduce((s,p)=>s+p[0],0)/n,my=pairs.reduce((s,p)=>s+p[1],0)/n;
     const xx=pairs.reduce((s,p)=>s+(p[0]-mx)**2,0),xy=pairs.reduce((s,p)=>s+(p[0]-mx)*(p[1]-my),0),yy=pairs.reduce((s,p)=>s+(p[1]-my)**2,0);
-    if(xx===0)return{n,slope:null,intercept:null,rSquared:null,correlation:null};
+    if(xx===0)return{n,slope:null,intercept:null,rSquared:null,correlation:null,slopeStandardError:null,slopeConfidenceInterval95:null};
     const slope=xy/xx,intercept=my-slope*mx,correlation=xx>0&&yy>0?clamp(xy/Math.sqrt(xx*yy),-1,1):null,rSquared=correlation===null?null:correlation*correlation;
-    return{n,slope,intercept,rSquared,correlation};
+    const residuals=pairs.reduce((sum,[a,b])=>sum+(b-(intercept+slope*a))**2,0),slopeStandardError=Math.sqrt(Math.max(0,residuals/(n-2)/xx));
+    const t95=[0,12.706,4.303,3.182,2.776,2.571,2.447,2.365,2.306,2.262,2.228,2.201,2.179,2.160,2.145,2.131,2.120,2.110,2.101,2.093,2.086,2.080,2.074,2.069,2.064,2.060,2.056,2.052,2.048,2.045,2.042],critical=t95[n-2]||1.96;
+    return{n,slope,intercept,rSquared,correlation,slopeStandardError,slopeConfidenceInterval95:[slope-critical*slopeStandardError,slope+critical*slopeStandardError]};
   }
-  function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'mid-parent offspring regression'}}
+  function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,rawSlope:regression.slope,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'mid-parent offspring regression; t-based slope interval'}}
 
   function seededRandom(seed=1){
     let state=(Number(seed)>>>0)||0x6d2b79f5;
