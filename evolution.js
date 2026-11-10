@@ -81,6 +81,21 @@
     return normalizeGenome(child);
   }
 
+  function compileNetwork(input){
+    const genome=normalizeGenome(input),nodes=genome.nodes.slice().sort((a,b)=>a.id-b.id),index=new Map(nodes.map((n,i)=>[n.id,i]));
+    const inputs=nodes.map((n,i)=>n.type==='input'?i:-1).filter(i=>i>=0),hidden=nodes.map((n,i)=>n.type==='hidden'?i:-1).filter(i=>i>=0),outputs=nodes.map((n,i)=>n.type==='output'?i:-1).filter(i=>i>=0);
+    const incoming=nodes.map(()=>[]),recurrent=nodes.map(()=>[]);
+    for(const gene of genome.connections)if(gene.enabled){const edge={source:index.get(gene.source),weight:gene.weight};(gene.recurrent?recurrent:incoming)[index.get(gene.destination)].push(edge)}
+    return Object.freeze({nodes,inputs,hidden,outputs,incoming,recurrent,connectionCount:genome.connections.filter(g=>g.enabled).length});
+  }
+  function activateNetwork(compiled,inputValues,previousState=new Float32Array(compiled.nodes.length)){
+    const values=new Float32Array(compiled.nodes.length),state=new Float32Array(compiled.nodes.length);
+    for(let k=0;k<compiled.inputs.length;k++)values[compiled.inputs[k]]=finite(inputValues[k],0);
+    for(const i of compiled.hidden){let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);state[i]=values[i]}
+    const outputs=[];for(const i of compiled.outputs){let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);outputs.push(values[i])}
+    return{outputs,state};
+  }
+
   function compatibilityDistance(aInput,bInput,coefficients={}){
     const a=normalizeGenome(aInput).connections,b=normalizeGenome(bInput).connections,am=new Map(a.map(g=>[g.innovation,g])),bm=new Map(b.map(g=>[g.innovation,g]));
     const all=[...new Set([...am.keys(),...bm.keys()])].sort((x,y)=>x-y),maxA=a.length?Math.max(...am.keys()):0,maxB=b.length?Math.max(...bm.keys()):0;
@@ -151,5 +166,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compatibilityDistance,assignSpecies,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,pedigreeKinship,inbreedingCoefficient});
 });
