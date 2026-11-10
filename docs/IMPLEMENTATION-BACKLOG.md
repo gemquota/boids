@@ -91,11 +91,11 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Calculate pedigree kinship with documented founder and missing-ancestor policy.
 - [x] Calculate individual and population inbreeding coefficients.
 - [ ] Track pedigree truncation and uncertainty explicitly.
-- [ ] Estimate effective population size using appropriate temporal/cohort methods.
+- [ ] Estimate effective population size using temporal/cohort methods. (A preliminary lifetime, sex-structured realised-contribution estimate is implemented; temporal/cohort Ne remains outstanding.)
 - [ ] Estimate additive genetic variance and phenotypic variance.
 - [x] Estimate preliminary mid-parent/offspring regression from conception-time parental trait records (living-offspring sample).
 - [x] Report per-trait heritability sample sizes and t-based 95% regression-slope intervals in worker telemetry/export.
-- [ ] Report uncertainty and assumptions for every population-genetic estimate; variance-based Ne and additive-variance uncertainty remain outstanding.
+- [ ] Report uncertainty and assumptions for every population-genetic estimate; variance-based Ne and additive-variance uncertainty remain outstanding. (The lifetime effective-breeder estimate is explicitly labelled as a realised-contribution approximation, not temporal Ne.)
 - [ ] Track trait covariance and genetic/environmental covariance where identifiable.
 - [x] Track realised lifetime reproductive success and lineage contribution.
 - [x] Track all-cause age-at-death and right-censored living-agent observations with bounded, delayed-entry Kaplan–Meier telemetry.
@@ -183,6 +183,8 @@ A task is not complete because a function exists. It must have:
 6. Performance evidence where it adds recurring computation.
 
 ## Work log
+
+- [x] Added lifetime sex-specific reproductive contribution tracking and an inverse-Simpson effective breeder estimator, combining effective female and male contributions with a harmonic sex-structured estimate. Persisted parental sex identities through schema-18 snapshots and exposed the estimate in the Observatory. This is explicitly not presented as temporal/cohort Ne.
 
 - [x] Added per-species topology summaries to live telemetry: member count, mean node/connection counts, enabled connections, unique innovation count, age, stagnation, champion fitness and offspring quota. Added Observatory summary cards and trend series with worker regression tests.
 
