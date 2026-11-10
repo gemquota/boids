@@ -54,15 +54,13 @@ jobs:
               raise SystemExit('All ten trait loci must use the rapid-evolution mutation baseline')
           if "get('experiment')==='rapid-evolution'" not in html or 'saved world restore bypassed' not in html:
               raise SystemExit('Fresh experiment launch must bypass stale local snapshots')
+          core = re.search(r'const coreSliderDefs=(\[[\s\S]*?\])\.map', schema)
           extra = re.search(r'const extraSliderDefs=(\[[\s\S]*?\])\.map', schema)
-          if not extra or 'const ranges=[];' not in html or 'BoidsConfigSchema' not in html:
+          if not core or not extra or 'const ranges=[];' not in html or 'BoidsConfigSchema' not in html:
               raise SystemExit('Slider definitions or runtime registry missing')
-          static_ids = []
-          for tag in re.findall(r'<input\b[^>]*>', html):
-              if re.search(r"""\btype=["']range["']""", tag):
-                  match = re.search(r"""\bid=["']([^"']+)["']""", tag)
-                  if match:
-                      static_ids.append(match.group(1))
+          if re.search(r'<input\b[^>]*type=["\']range["\']', html):
+              raise SystemExit('Range controls must be generated from the shared schema, not hand-authored in HTML')
+          core_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', core.group(1))
           extra_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
           if 'document.querySelectorAll(\'#controls input[type="range"]\')' not in html:
               raise SystemExit('Runtime slider discovery must scan the configuration drawer')
@@ -76,7 +74,7 @@ jobs:
           mutation_fields = re.findall(r"\{key:'([A-Za-z]+)'", mutation_fields.group(1))
           expression_ids = [f'expr_{trait}_{field}' for trait in traits for field in fields]
           mutation_ids = [f'trait_{trait}_{field}' for trait in traits for field in mutation_fields]
-          ids = static_ids + extra_ids + expression_ids + mutation_ids
+          ids = core_ids + extra_ids + expression_ids + mutation_ids
           if len(ids) != 182 or len(set(ids)) != 182:
               raise SystemExit(f'Expected 182 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
           if "curveSelect.id='expr_'+trait.key+'_curve'" not in html or 'expressionCurves' not in html:
