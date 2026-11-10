@@ -19,7 +19,7 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 - Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception with sample sizes and t-based regression-slope intervals, delayed-entry Kaplan–Meier all-cause survival, provisional additive/phenotypic variance and covariance summaries, species entropy, and a reproductive-skew-adjusted effective-breeder index from inverse-Simpson parental contributions by sex, with persisted lifetime contribution and parent-sex state.
 - Plant-only basal renewable resources, clonal plant growth/spores, freshwater networks, thirst, seasonal variation, reefs/shelter, and conspecific predation.
 - Observatory panels for population, reproduction, genetics, species, neural topology, and run history.
-- Browser-local IndexedDB world snapshots. Worker snapshot schema is **20**; the browser storage envelope has its own schema version.
+- Browser-local IndexedDB world snapshots. Worker snapshot schema is **21**; the browser storage envelope has its own schema version.
 
 ## Configuration
 
@@ -48,7 +48,7 @@ That is 185 unique numeric controls. Do not hand-maintain a separate count in UI
 This is an exploratory agent-based artificial ecology, **not a biologically calibrated model**.
 
 - Trait alleles are quantitative loci, not paired diploid Mendelian chromosomes.
-- The live worker's regulatory inheritance is currently cis-regulatory. The more general trans-regulatory and epistatic functions in `evolution.js` are analysis/model primitives, not a fully integrated gene-copy regulatory network.
+- The live worker combines inherited cis-regulatory modifiers with variable-length trans-regulatory gene networks. Stable gene-copy/edge identities, duplication/deletion, signed activation/repression, environmental/stage inputs and bounded expression are integrated into offspring inheritance and phenotype calculation; broader configurable multi-locus epistasis and controlled-environment validation remain incomplete.
 - Expected gene diversity from binned trait values is not observed diploid heterozygosity.
 - The current heritability estimate is preliminary and uses conception-time parental trait records; sample-size, pedigree-truncation and selection-related limitations still apply.
 - The effective-breeder index uses realised lifetime parental offspring contributions, inverse-Simpson effective counts within each sex and their harmonic mean. It is not classical or temporal/cohort Ne for this overlapping-generation population.
