@@ -113,9 +113,11 @@ const secondChildId = api.individualId[before + 1];
 api.conceive(0, 1);
 api.deliver(0);
 const thirdChildId = api.individualId[before + 2];
-for (const id of [firstChildId,secondChildId,thirdChildId]) { const index = Array.from(api.individualId.subarray(0,api.N)).indexOf(id); api.parentA[index] = 999999; api.parentB[index] = 888888; }
+const originalParentPairs=[firstChildId,secondChildId,thirdChildId].map(id=>{const index=Array.from(api.individualId.subarray(0,api.N)).indexOf(id);return{index,a:api.parentA[index],b:api.parentB[index]}});
+for (const pair of originalParentPairs) { api.parentA[pair.index] = 999999; api.parentB[pair.index] = 888888; }
 const cohortMetrics = api.populationGeneticsMetrics();
 assert.deepEqual(cohortMetrics.heritabilitySampleSizes,Array(10).fill(3),'heritability sampling must not depend on parents remaining alive');
+for(const pair of originalParentPairs){api.parentA[pair.index]=pair.a;api.parentB[pair.index]=pair.b;}
 const cohortSnapshot=api.exportSnapshot();
 const cohortRestored=makeWorld(123456).__boidsTest;
 cohortRestored.restoreSnapshot(cohortSnapshot);
