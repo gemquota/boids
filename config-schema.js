@@ -1,0 +1,56 @@
+/* Shared declarative schema for generated simulation controls. */
+(function(root,factory){
+  const api=factory();
+  if(typeof module==='object'&&module.exports)module.exports=api;
+  else root.BoidsConfigSchema=api;
+})(typeof self!=='undefined'?self:globalThis,function(){
+  'use strict';
+  const extraSliderDefs=[["flockNoise","Flocking noise","0","0.4","0.01","0.08","Movement"],["alignmentMemory","Alignment persistence","0.2","1.5","0.05","0.9","Movement"],["cohesionBias","Cohesion bias","0.2","1.5","0.05","1","Movement"],["separationExponent","Separation falloff","0.5","2","0.05","1","Movement"],["neighbourDensityScale","Neighbour density sensitivity","0.5","2","0.05","1","Movement"],["flowDrift","Current drift multiplier","0.2","2","0.05","1","Water dynamics"],["eddyFrequency","Eddy frequency","0.5","2","0.05","1","Water dynamics"],["foodRegrowth","Food regrowth multiplier","0","2","0.05","1","Water dynamics"],["foodDepletion","Food depletion multiplier","0.2","2","0.05","1","Water dynamics"],["foodCompetition","Food energy yield multiplier","0","2","0.05","1","Water dynamics"],["mateDriveNoise","Mate drive variation","0","0.5","0.01","0.12","Reproduction"],["mateDistanceBias","Mate proximity weighting","0","2","0.05","1","Reproduction"],["mutationDrift","Mutation drift","0","0.3","0.01","0.04","Genetic variation"],["rewireChance","Connection rewiring chance","0.05","0.5","0.01","0.18","Genetic variation"],["lineageDrift","Lineage variation","0","0.5","0.01","0.08","Genetic variation"],["neuralNoise","Neural output noise","0","0.5","0.01","0.04","Neural dynamics"],["neuralInertia","Neural turn damping","0","0.9","0.01","0.25","Neural dynamics"],["learningMomentum","Plasticity multiplier","0","0.8","0.01","0.2","Neural dynamics"],["sensoryNoise","Sensory noise","0","0.3","0.01","0.03","Neural dynamics"],["juvenileGrowth","Juvenile ageing multiplier","0.5","2","0.05","1","Life history"],["adultMaintenance","Adult maintenance cost","0.5","2","0.05","1","Life history"],["attackRangeScale","Attack and detection range scale","0.5","3","0.05","1.25","Predation phenotype"],].map(([id,label,min,max,step,value,group])=>({id,label,min:Number(min),max:Number(max),step:Number(step),value:Number(value),group}));
+  const expressionTraits=[
+ {key:'aggression',label:'Aggression',min:0,max:1,upper:1.2,rate:.04,magnitude:.11,heritability:.96},
+ {key:'bodySize',label:'Body size',min:.55,max:1.65,upper:3,rate:.04,magnitude:.11,heritability:.96},
+ {key:'speed',label:'Speed',min:.1,max:.5,upper:8,rate:.04,magnitude:.11,heritability:.96},
+ {key:'biteStrength',label:'Bite strength',min:.55,max:1.65,upper:3,rate:.04,magnitude:.11,heritability:.96},
+ {key:'kinAffinity',label:'Kin affinity',min:0,max:1,upper:1.2,rate:.04,magnitude:.11,heritability:.96},
+ {key:'sensoryRange',label:'Perception radius',min:18,max:90,upper:180,rate:.04,magnitude:.11,heritability:.96},
+ {key:'acceleration',label:'Acceleration',min:.55,max:1.65,upper:3,rate:.04,magnitude:.11,heritability:.96},
+ {key:'agility',label:'Agility',min:.55,max:1.65,upper:3,rate:.04,magnitude:.11,heritability:.96},
+ {key:'riskTolerance',label:'Risk tolerance',min:0,max:1,upper:1.2,rate:.04,magnitude:.11,heritability:.96},
+ {key:'exploration',label:'Exploration',min:.55,max:1.65,upper:3,rate:.04,magnitude:.11,heritability:.96}
+];
+  const expressionFields=[
+ {key:'min',label:'Phenotype minimum',lo:0,step:.01},
+ {key:'max',label:'Phenotype maximum',lo:0,step:.01},
+ {key:'strength',label:'Curve strength',lo:.1,hi:8,step:.05,value:2},
+ {key:'midpoint',label:'Curve midpoint',lo:.01,hi:.99,step:.01,value:.5},
+ {key:'bias',label:'Expression bias',lo:-.5,hi:.5,step:.01,value:0},
+ {key:'environmentSensitivity',label:'Environmental sensitivity',lo:0,hi:1,step:.01,value:0}
+];
+  const expressionMutationFields=[
+ {key:'rate',label:'Mutation rate',lo:0,hi:.2,step:.001,value:.016},
+ {key:'magnitude',label:'Mutation magnitude',lo:0,hi:.5,step:.005,value:.075},
+ {key:'heritability',label:'Heritability / inheritance fidelity',lo:0,hi:1,step:.01,value:.98}
+];
+  const expressionCurves=[['linear','Linear'],['exponential','Exponential'],['logarithmic','Logarithmic'],['sigmoid','Sigmoid'],['threshold','Threshold'],['plateau','Plateau'],['inverse','Inverse']];
+  const coreSliderDefs=[["count","Population","10","1000","10","500","motion",""],["timeScale","Simulation speed",".25","3",".05",".55","motion","timeScale"],["turbulence","Current turbulence","0","2",".05",".35","motion",""],["separation","Personal space","0","3.5",".05","1.8","motion",""],["alignment","School alignment","0","3",".05","1.15","motion",""],["cohesion","Group cohesion","0","3",".05","1.05","motion",""],["force","Steering authority",".02",".3",".005",".065","motion",""],["connections","Connection genes per brain","4","64","1","18","brain",""],["hidden","Internal neuron count","2","24","1","8","brain",""],["brainRate","Neural update interval","1","12","1","3","brain",""],["plasticity","Reward-modulated learning rate","0",".5",".01",".08","brain",""],["traceDecay","Eligibility trace decay",".5",".999",".001",".92","brain",""],["rewardScale","Reward sensitivity","0","4",".05","1","brain",""],["mutation","Neural connection mutation probability","0",".5",".005",".055","genetics",""],["mutationSize","Neural connection mutation magnitude",".01","1.5",".01",".32","genetics",""],["crossover","Genome crossover mixing","0","1",".01",".5","genetics",""],["learned","Parental weight blending","0","1",".01",".15","genetics",""],["drive","Reproductive drive","0","1",".01",".55","reproduction",""],["mateSearch","Mate search effort","1","40","1","10","reproduction",""],["ageMin","Earliest reproductive age","2","100","1","18","reproduction",""],["ageMax","Latest reproductive age","30","400","5","160","reproduction",""],["lifespan","Maximum lifespan","80","1000","10","420","reproduction",""],["matePreference","Mate preference","-1","1",".05",".65","reproduction",""],["fertility","Fertility / offspring","1","6","1","2","reproduction",""],["gestation","Gestation duration","2","120","1","24","reproduction",""],["energyThreshold","Reproductive energy threshold",".1","1",".01",".68","reproduction",""],["mateRadius","Mate search radius","15","180","5","70","reproduction",""],["predation","Predation pressure","0","1",".01",".45","selection",""],["starvation","Starvation pressure","0","1",".01",".2","selection",""],["competition","Competition pressure","0","1",".01",".25","selection",""],["harshness","Environmental harshness","0","1",".01",".25","selection",""],["aging","Ageing rate","0","1",".01",".25","selection",""],["selection","Selection intensity","0","1",".01",".5","selection",""],["aggressionSelection","Aggression selection pressure","0","2",".05",".72","selection",""],["sizeSelection","Body-size selection pressure","0","2",".05",".58","selection",""],["kinProtection","Kin protection strength","0","2",".05",".82","selection",""],["attackCost","Attack energy cost","0",".5",".01",".1","selection",""],["worldWidth","World width (× screen)",".5","2",".05","1","world",""],["worldHeight","World height (× screen)",".5","2",".05","1","world",""],["boidSize","Boid size",".5","3",".05","1","world",""],["obstacles","Reef structures","0","18","1","7","world",""],["foodPatches","Renewable food patches","0","40","1","14","world",""],["foodPreference","Food preference","0","2",".05",".75","world",""],["metabolicRate","Metabolic rate",".25","3",".05","1","world",""],["juvenileAge","Juvenile age","0","40","1","8","world",""],["juvenileVulnerability","Juvenile predation vulnerability","0","4",".1","1.5","world",""],["foodRegen","Food regeneration","0","1",".01",".12","world",""],["flow","Current strength","0","1.8",".05",".45","world",""],["trail","Trail persistence","0",".5",".01","0","world",""],["obstacleBuffer","Obstacle clearance distance","0","100","2","28","dynamics",""],["obstacleAvoidance","Obstacle avoidance strength","0","4","0.05","1.5","dynamics",""],["pointerRadius","Pointer influence radius","40","400","5","167","dynamics",""],["pointerForce","Pointer interaction force","0","8","0.1","2.8","dynamics",""],["separationRadius","Personal-space radius factor","0.1","1","0.01","0.43","dynamics",""],["currentPrimary","Primary current wave strength","0","1","0.01","0.34","dynamics",""],["currentSecondary","Secondary current wave strength","0","0.5","0.01","0.12","dynamics",""],["turbulenceGain","Turbulence force gain","0","1","0.01","0.24","dynamics",""],["foodRangeScale","Food attraction range scale","0.5","5","0.1","2","dynamics",""],["foodMinRange","Minimum food attraction range","20","200","5","60","dynamics",""],["foodSteering","Food-seeking steering gain","0","1","0.01","0.22","dynamics",""],["foodBite","Food consumed per contact","0.00001","0.0002","0.000005","0.00004","dynamics",""],["foodEnergyYield","Energy yield from food","1","10","0.1","4","dynamics",""],["threatSteering","Threat-avoidance steering gain","0","6","0.1","2.4","dynamics",""],["neuralTurnGain","Neural turning output gain","0","2","0.05","0.5","dynamics",""],["neuralAccelGain","Neural acceleration output gain","0","2","0.05","0.35","dynamics",""],["neuralFleeGain","Neural flee output gain","0","3","0.05","1","dynamics",""],["neuralMateGain","Neural mate-seeking output gain","0","2","0.05","0.3","dynamics",""],["densityMortality","Crowding mortality coefficient","0","5e-7","1e-8","8e-8","dynamics",""],["backgroundCost","Baseline metabolic cost","0.00001","0.0001","0.0000025","0.00004","dynamics",""],["foodCapacity","Food patch storage capacity","0.25","3","0.05","1","dynamics",""]].map(([id,label,min,max,step,value,section,help])=>({id,label,min:Number(min),max:Number(max),step:Number(step),value:Number(value),section,help}));
+  const traitKeys=new Set(expressionTraits.map(item=>item.key));
+  const expressionFieldKeys=new Set([...expressionFields.map(item=>item.key),'curve']);
+  const mutationFieldKeys=new Set(expressionMutationFields.map(item=>item.key));
+  function resolveWorkerMapping(id){
+    let match=/^expr_([A-Za-z]+)_([A-Za-z]+)$/.exec(id);
+    if(match&&traitKeys.has(match[1])&&expressionFieldKeys.has(match[2]))return Object.freeze({target:'geneExpression',trait:match[1],field:match[2]});
+    match=/^trait_([A-Za-z]+)_([A-Za-z]+)$/.exec(id);
+    if(match&&traitKeys.has(match[1])&&mutationFieldKeys.has(match[2]))return Object.freeze({target:'traitMutation',trait:match[1],field:match[2]});
+    return Object.freeze({target:'cfg',key:id});
+  }
+  const freeze=list=>Object.freeze(list.map(item=>Object.freeze(item)));
+  return Object.freeze({
+    coreSliderDefs:freeze(coreSliderDefs),
+    extraSliderDefs:freeze(extraSliderDefs),
+    expressionTraits:freeze(expressionTraits),
+    expressionFields:freeze(expressionFields),
+    expressionMutationFields:freeze(expressionMutationFields),
+    expressionCurves:freeze(expressionCurves.map(pair=>pair)),
+    resolveWorkerMapping
+  });
+});

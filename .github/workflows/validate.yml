@@ -23,6 +23,10 @@ jobs:
           PY
           node --check /tmp/boids-app.js
           node --check boids-worker.js
+          node --check config-registry.js
+          node --check config-schema.js
+          node tests/config-schema.test.cjs
+          node tests/config-registry.test.cjs
           node tests/genetics.test.js
           node tests/worker-determinism.test.cjs
           node tests/html-script-syntax.test.cjs
@@ -33,6 +37,8 @@ jobs:
           import re
           html = open('index.html', encoding='utf-8').read()
           worker = open('boids-worker.js', encoding='utf-8').read()
+          registry = open('config-registry.js', encoding='utf-8').read()
+          schema = open('config-schema.js', encoding='utf-8').read()
           import json
           baseline_match = re.search(r'const ecologicalBaseline=(\{.*?\});for\(const trait of expressionTraits\)', html)
           if not baseline_match:
@@ -44,19 +50,23 @@ jobs:
           for key, value in expected.items():
               if baseline.get(key) != value:
                   raise SystemExit(f'Unexpected rapid-evolution baseline {key}: {baseline.get(key)}')
-          if html.count('rate:.04,magnitude:.11,heritability:.96') != 10:
+          if schema.count('rate:.04,magnitude:.11,heritability:.96') != 10:
               raise SystemExit('All ten trait loci must use the rapid-evolution mutation baseline')
           if "get('experiment')==='rapid-evolution'" not in html or 'saved world restore bypassed' not in html:
               raise SystemExit('Fresh experiment launch must bypass stale local snapshots')
-          static = re.search(r'const ranges=\[([^]]+)\]', html)
-          extra = re.search(r'const extraSliderDefs=(\[[\s\S]*?\])\.map', html)
-          if not static or not extra:
-              raise SystemExit('Slider registries not found')
-          static_ids = re.findall(r"'([A-Za-z][A-Za-z0-9]*)'", static.group(1))
+          core = re.search(r'const coreSliderDefs=(\[[\s\S]*?\])\.map', schema)
+          extra = re.search(r'const extraSliderDefs=(\[[\s\S]*?\])\.map', schema)
+          if not core or not extra or 'const ranges=[];' not in html or 'BoidsConfigSchema' not in html:
+              raise SystemExit('Slider definitions or runtime registry missing')
+          if re.search(r'<input\b[^>]*type=["\']range["\']', html):
+              raise SystemExit('Range controls must be generated from the shared schema, not hand-authored in HTML')
+          core_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', core.group(1))
           extra_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
-          trait_block = re.search(r'const expressionTraits=\[([\s\S]*?)\];', html)
-          expression_fields = re.search(r'const expressionFields=\[([\s\S]*?)\];', html)
-          mutation_fields = re.search(r'const expressionMutationFields=\[([\s\S]*?)\];', html)
+          if 'document.querySelectorAll(\'#controls input[type="range"]\')' not in html:
+              raise SystemExit('Runtime slider discovery must scan the configuration drawer')
+          trait_block = re.search(r'const expressionTraits=\[([\s\S]*?)\];', schema)
+          expression_fields = re.search(r'const expressionFields=\[([\s\S]*?)\];', schema)
+          mutation_fields = re.search(r'const expressionMutationFields=\[([\s\S]*?)\];', schema)
           if not trait_block or not expression_fields or not mutation_fields:
               raise SystemExit('Per-locus expression control schema missing')
           traits = re.findall(r"\{key:'([A-Za-z]+)'", trait_block.group(1))
@@ -64,7 +74,7 @@ jobs:
           mutation_fields = re.findall(r"\{key:'([A-Za-z]+)'", mutation_fields.group(1))
           expression_ids = [f'expr_{trait}_{field}' for trait in traits for field in fields]
           mutation_ids = [f'trait_{trait}_{field}' for trait in traits for field in mutation_fields]
-          ids = static_ids + extra_ids + expression_ids + mutation_ids
+          ids = core_ids + extra_ids + expression_ids + mutation_ids
           if len(ids) != 182 or len(set(ids)) != 182:
               raise SystemExit(f'Expected 182 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
           if "curveSelect.id='expr_'+trait.key+'_curve'" not in html or 'expressionCurves' not in html:
@@ -72,6 +82,8 @@ jobs:
           missing = [key for key in extra_ids if f'cfg.{key}' not in worker]
           if missing:
               raise SystemExit('Controls not wired into worker: ' + ', '.join(missing))
+          if 'BoidsConfigSchema.resolveWorkerMapping(key)' not in worker:
+              raise SystemExit('Worker must resolve settings through the shared configuration schema')
           if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
               raise SystemExit('World snapshot/restore handlers missing')
           if "new Worker('./boids-worker.js?v=20261110-trait-history-slower-v8')" not in html:
@@ -119,11 +131,13 @@ jobs:
           if 'indexedDB.open' not in html or 'persistObservatory' not in html:
               raise SystemExit('Persistent world/observatory storage missing')
           required_ui = [
-              'Math.round((clamped-lo)/step)', 'applySettings({...ecologicalBaseline',
+              'parameterRegistry.apply(v)', 'applySettings({...ecologicalBaseline',
               'schemaVersion=2', 'snapshotWaiters', 'flushPersistentState', 'store.put(prior.result,\'previous\')', 'store.get(\'previous\')',
               'Object.assign(helpDescriptions,'
           ]
           missing_ui = [item for item in required_ui if item not in html]
+          if 'Math.round((bounded-min)/step)' not in registry:
+              missing_ui.append('registry step normalization')
           if missing_ui:
               raise SystemExit('Missing settings/persistence/help safeguards: ' + ', '.join(missing_ui))
           required_worker = [
