@@ -91,6 +91,22 @@ test('parent-offspring regression reports slope and refuses undersized samples',
   assert.equal(evo.parentOffspringHeritability([1,2],[2,4]).heritability,null);
 });
 
+test('replicate summaries and permutation comparisons are reproducible',()=>{
+  const a=evo.summarizeReplicates([1,2,3,4,5],{seed:7,bootstrapSamples:300});
+  const b=evo.summarizeReplicates([1,2,3,4,5],{seed:7,bootstrapSamples:300});
+  assert.deepEqual(a,b);assert.equal(a.n,5);assert.ok(a.confidenceInterval95[0]<=a.mean&&a.confidenceInterval95[1]>=a.mean);
+  const comparison=evo.compareReplicates([5,6,7,8],[1,2,3,4],{seed:9,permutations:500,bootstrapSamples:300});
+  assert.ok(comparison.difference>0);assert.ok(comparison.pValue>=0&&comparison.pValue<=1);
+  assert.deepEqual(comparison,evo.compareReplicates([5,6,7,8],[1,2,3,4],{seed:9,permutations:500,bootstrapSamples:300}));
+});
+
+test('parameter sweeps enumerate deterministic cartesian configurations and enforce limits',()=>{
+  const sweep=evo.parameterSweep({speed:[1,2],predation:[0,.5,1]});
+  assert.equal(sweep.length,6);assert.deepEqual(sweep[0].config,{speed:1,predation:0});
+  assert.throws(()=>evo.parameterSweep({a:[1,2],b:[1,2]},3),/exceeds/);
+  assert.deepEqual(evo.replicateSeeds(123,4),evo.replicateSeeds(123,4));
+});
+
 test('pedigree kinship and offspring inbreeding use parent identities',()=>{
   const pedigree=new Map([[1,[0,0]],[2,[0,0]],[3,[1,2]],[4,[1,2]],[5,[3,4]]]);
   assert.equal(evo.pedigreeKinship(1,2,pedigree),0);
