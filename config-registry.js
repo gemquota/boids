@@ -26,7 +26,7 @@
         section:section?section.dataset.section:'',
         group:summary?summary.textContent.trim():'',
         min:Number(element.min),max:Number(element.max),step,
-        precision:precision(element.step),defaultValue:Number(element.defaultValue??element.value)
+        precision:precision(element.step),defaultValue:Number(element.defaultValue!==''?element.defaultValue:element.value)
       }));
     }
     const byId=new Map(entries.map(entry=>[entry.id,entry]));
