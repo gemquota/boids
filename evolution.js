@@ -144,6 +144,34 @@
     return{totalAdjustedFitness:totalAdjusted,totalRawFitness:totalRaw,totalMembers,quotaById,viableSpecies:pool.length,stagnantSpecies:species.filter(group=>group.stagnant).length};
   }
 
+  function normalizeRegulatoryGenome(input){
+    if(!input||!Array.isArray(input.copies))throw new TypeError('Regulatory genome requires a copies array');
+    const ids=new Set(),copies=input.copies.map(g=>({id:Number(g.id),source:Number(g.source),target:Number(g.target),threshold:clamp(finite(g.threshold,.5),0,1),strength:clamp(finite(g.strength,0),-2,2),mode:g.mode==='repress'?'repress':'activate',environment:g.environment?String(g.environment):null,environmentWeight:clamp(finite(g.environmentWeight,0),-2,2)}));
+    for(const gene of copies){if(!Number.isInteger(gene.id)||gene.id<1||gene.id>0xffffffff)throw new RangeError('Regulatory copy ID must be uint32 and nonzero');if(ids.has(gene.id))throw new Error('Duplicate regulatory copy ID '+gene.id);ids.add(gene.id);if(!Number.isInteger(gene.source)||gene.source<0||gene.source>9||!Number.isInteger(gene.target)||gene.target<0||gene.target>9)throw new RangeError('Regulatory loci must be in the range 0..9')}
+    return{version:1,copies};
+  }
+  function createRegulatoryInnovationRegistry(state={}){
+    let nextId=Math.max(1,Math.floor(finite(state.nextId,1)));
+    function allocate(){if(nextId>0xffffffff)throw new RangeError('Regulatory copy ID space exhausted');return nextId++}
+    return Object.freeze({allocate,snapshot:()=>({nextId})});
+  }
+  function mutateRegulatoryGenome(input,registry,random=Math.random,options={}){
+    const genome=normalizeRegulatoryGenome(input),rates={point:.08,duplicate:.01,delete:.005,rewire:.01,mode:.005,...options.rates},limits={maxCopies:64,strengthStep:.12,thresholdStep:.08,...options.limits};
+    for(const gene of genome.copies){
+      if(random()<rates.point){gene.strength=clamp(gene.strength+(random()*2-1)*limits.strengthStep,-2,2);gene.threshold=clamp(gene.threshold+(random()*2-1)*limits.thresholdStep,0,1);gene.environmentWeight=clamp(gene.environmentWeight+(random()*2-1)*limits.strengthStep,-2,2)}
+      if(random()<rates.mode)gene.mode=gene.mode==='activate'?'repress':'activate';
+      if(random()<rates.rewire){gene.source=randomIndex(10,random);gene.target=randomIndex(10,random)}
+    }
+    if(random()<rates.delete&&genome.copies.length>1)genome.copies.splice(randomIndex(genome.copies.length,random),1);
+    if(random()<rates.duplicate&&genome.copies.length<limits.maxCopies&&genome.copies.length){const source=genome.copies[randomIndex(genome.copies.length,random)],copy={...source,id:registry.allocate(),strength:clamp(source.strength+(random()*2-1)*limits.strengthStep,-2,2),threshold:clamp(source.threshold+(random()*2-1)*limits.thresholdStep,0,1)};if(random()<.5)copy.source=randomIndex(10,random);if(random()<.5)copy.target=randomIndex(10,random);genome.copies.push(copy)}
+    genome.copies.sort((a,b)=>a.id-b.id);return normalizeRegulatoryGenome(genome);
+  }
+  function expressRegulatoryNetwork(input,loci,environment={},passes=2){
+    const genome=normalizeRegulatoryGenome(input),base=Array.from({length:10},(_,i)=>clamp(finite(loci?.[i],.5),0,1));let expression=base.slice();
+    for(let pass=0;pass<Math.max(1,Math.min(8,Math.floor(finite(passes,2))));pass++){const next=expression.slice();for(const gene of genome.copies){const source=expression[gene.source],env=gene.environment?finite(environment[gene.environment],0):0,signal=source+env*gene.environmentWeight-gene.threshold,effect=gene.mode==='repress'?-1:1;next[gene.target]=clamp(next[gene.target]+effect*signal*gene.strength,0,1)}expression=next}
+    return expression;
+  }
+
   function evaluateRegulation(loci,regulators=[],environment={},definitions={}){
     const expression={...loci};
     for(let pass=0;pass<Math.max(1,Math.min(8,finite(definitions.passes,2)));pass++){
@@ -267,5 +295,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,factorialDesign,latinHypercubeDesign,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,normalizeRegulatoryGenome,createRegulatoryInnovationRegistry,mutateRegulatoryGenome,expressRegulatoryNetwork,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,factorialDesign,latinHypercubeDesign,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
 });
