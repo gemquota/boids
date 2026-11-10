@@ -34,7 +34,7 @@ jobs:
           html = open('index.html', encoding='utf-8').read()
           worker = open('boids-worker.js', encoding='utf-8').read()
           import json
-          baseline_match = re.search(r'const ecologicalBaseline=(\\{.*?\\});for\\(const trait of expressionTraits\\)', html)
+          baseline_match = re.search(r'const ecologicalBaseline=(\{.*?\});for\(const trait of expressionTraits\)', html)
           if not baseline_match:
               raise SystemExit('Rapid-evolution startup baseline missing')
           baseline = json.loads(baseline_match.group(1))
