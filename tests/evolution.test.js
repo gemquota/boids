@@ -53,6 +53,31 @@ test('compiled neural networks execute variable hidden topologies in dependency 
   assert.equal(result.state.length,4);
 });
 
+test('recurrent neural connections retain state across activations',()=>{
+  const genome={nodes:[{id:0,type:'input'},{id:1,type:'hidden'},{id:2,type:'output'}],connections:[
+    {innovation:1,source:0,destination:1,weight:1},
+    {innovation:2,source:1,destination:1,weight:.5,recurrent:true},
+    {innovation:3,source:1,destination:2,weight:1}
+  ]};
+  const compiled=evo.compileNetwork(genome),state=new Float32Array(compiled.nodes.length),workspace={values:new Float32Array(128),state:new Float32Array(128),outputs:new Float32Array(8)};
+  const first=evo.activateNetwork(compiled,[1],state,workspace),saved=first.state.slice();
+  const second=evo.activateNetwork(compiled,[0],saved,workspace);
+  assert.ok(second.outputs[0]>0);
+  assert.ok(second.state[compiled.nodes.findIndex(n=>n.id===1)]>0);
+});
+
+test('splitting a recurrent hidden edge preserves recurrence on the downstream half',()=>{
+  const genome={nodes:[{id:0,type:'input'},{id:1,type:'hidden'},{id:2,type:'output'}],connections:[
+    {innovation:1,source:0,destination:1,weight:1},
+    {innovation:2,source:1,destination:1,weight:.5,recurrent:true},
+    {innovation:3,source:1,destination:2,weight:1}
+  ]};
+  const registry=evo.createInnovationRegistry({nextInnovation:100,nextNode:4});
+  const mutated=evo.mutateGenome(genome,registry,()=>.4,{rates:{weight:0,addConnection:0,splitConnection:1,deleteConnection:0,toggleConnection:0,bias:0}});
+  assert.ok(mutated.connections.some(g=>g.source===4&&g.destination===1&&g.recurrent));
+  assert.ok(mutated.connections.some(g=>g.source===1&&g.destination===4&&!g.recurrent));
+});
+
 test('split mutations compile into a live two-edge path',()=>{
   const registry=evo.createInnovationRegistry({nextInnovation:20,nextNode:8});
   const mutated=evo.mutateGenome(baseGenome(),registry,fixed(0),{rates:{weight:0,addConnection:0,splitConnection:1,deleteConnection:0,toggleConnection:0,bias:0}});
