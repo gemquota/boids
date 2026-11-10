@@ -167,6 +167,31 @@ delete legacy.innovationRegistry;
 delete legacy.nextInnovationId;
 delete legacy.arrays.innovation;
 delete legacy.arrays.paternalInnovation;
+// Reconstruct the pre-v9 float-triple layout to model a genuine historical export.
+for (let i = 0; i < legacy.N; i++) {
+  const decoded = BoidsChromosome.decode(legacy.chromosomes[i]);
+  for (let g = 0; g < decoded.source.length; g++) {
+    const offset = (i * legacy.cfg.connections + g) * 3;
+    legacy.arrays.genome[offset] = decoded.source[g];
+    legacy.arrays.genome[offset + 1] = decoded.destination[g];
+  }
+  const paternal = legacy.paternalChromosomes[i];
+  if (paternal) {
+    const paternalDecoded = BoidsChromosome.decode(paternal);
+    for (let g = 0; g < paternalDecoded.source.length; g++) {
+      const offset = (i * legacy.cfg.connections + g) * 3;
+      legacy.arrays.paternalGenome[offset] = paternalDecoded.source[g];
+      legacy.arrays.paternalGenome[offset + 1] = paternalDecoded.destination[g];
+    }
+  }
+}
+delete legacy.chromosomes;
+delete legacy.paternalChromosomes;
+delete legacy.chromosomeFormat;
+delete legacy.arrays.connectionSource;
+delete legacy.arrays.connectionDestination;
+delete legacy.arrays.paternalConnectionSource;
+delete legacy.arrays.paternalConnectionDestination;
 delete legacy.pedigree;
 delete legacy.pedigreeTruncated;
 delete legacy.reproductiveSuccess;
