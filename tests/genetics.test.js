@@ -5,12 +5,15 @@ const genetics=require('../genetics.js');
 
 test('ten stable loci have ordered indices and valid gene bounds',()=>{
   assert.equal(genetics.TRAITS.length,10);
+  assert.equal(genetics.TRAITS[5].label,'Perception radius');
+  assert.equal(genetics.DEFAULT_EXPRESSION.sensoryRange.min,18);
+  assert.equal(genetics.DEFAULT_EXPRESSION.sensoryRange.max,90);
   assert.deepEqual(genetics.TRAITS.map(g=>g.index),[0,1,2,3,4,5,6,7,8,9]);
   for(const gene of genetics.TRAITS) assert.ok(gene.min<gene.max,gene.key);
 });
-test('legacy sensory, kin and exploration helpers remain bounded',()=>{
-  assert.ok(Math.abs(genetics.perceptionRadius(100,.55)-55)<1e-12);
-  assert.ok(Math.abs(genetics.perceptionRadius(100,1.65)-165)<1e-12);
+test('perception radius helpers use expressed world-unit values',()=>{
+  assert.ok(Math.abs(genetics.perceptionRadius(42)-42)<1e-12);
+  assert.ok(Math.abs(genetics.perceptionRadius(0)-1)<1e-12);
   assert.equal(genetics.kinProtection(.8,0),0);
   assert.ok(Math.abs(genetics.kinProtection(.8,.5)-.4)<1e-12);
   assert.ok(Math.abs(genetics.explorationNoise(.08,1)-.12)<1e-12);
@@ -62,5 +65,8 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
   assert.match(worker,/BoidsGenetics\.inheritTrait/);
   assert.match(worker,/cfg\.geneExpression/);
   assert.match(worker,/cfg\.traitMutation/);
+  assert.match(worker,/cfg\.geneExpression\.sensoryRange\?\.max\?\?0\)<=3/);
   assert.doesNotMatch(worker,/cfg\.speed/);
+  assert.doesNotMatch(worker,/cfg\.perception/);
+  assert.match(worker,/perceptionRadius=phenotype\(i,5\)/);
 });
