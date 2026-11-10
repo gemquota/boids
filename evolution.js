@@ -174,15 +174,17 @@
     return{schemaVersion:1,nodes,edges};
   }
   function mutateRegulatoryGenome(input,registry,random=Math.random,options={}){
-    const genome=normalizeRegulatoryGenome(input),rates={duplicate:.02,delete:.005,addEdge:.02,deleteEdge:.005,weight:.08,bias:.05,effect:.05,...options.rates},limits={maxNodes:64,maxEdges:256,...options.limits};
+    const genome=normalizeRegulatoryGenome(input),rates={duplicate:.02,delete:.005,insert:.01,rearrange:.005,addEdge:.02,deleteEdge:.005,weight:.08,bias:.05,effect:.05,...options.rates},limits={maxNodes:64,maxEdges:256,...options.limits};
     let nextGene=Math.max(1,Math.floor(finite(registry?.nextGene,1))),nextEdge=Math.max(1,Math.floor(finite(registry?.nextEdge,1)));
     const pick=items=>items.length?items[randomIndex(items.length,random)]:null;
     for(const node of genome.nodes){nextGene=Math.max(nextGene,node.id+1)}
     for(const edge of genome.edges){nextEdge=Math.max(nextEdge,edge.id+1)}
     if(random()<rates.duplicate&&genome.nodes.length<limits.maxNodes){const original=pick(genome.nodes);if(original){const copy={...original,id:nextGene++};copy.bias=clamp(copy.bias+(random()-.5)*.2,-8,8);copy.effect=clamp(copy.effect+(random()-.5)*.2,-4,4);genome.nodes.push(copy);const incident=genome.edges.filter(edge=>edge.enabled&&(edge.source===original.id||edge.target===original.id));for(const edge of incident){if(genome.edges.length>=limits.maxEdges)break;genome.edges.push({...edge,id:nextEdge++,source:edge.source===original.id?copy.id:edge.source,target:edge.target===original.id?copy.id:edge.target,weight:clamp(edge.weight+(random()-.5)*.1,-4,4)})}}}
     if(random()<rates.delete&&genome.nodes.length>1){const node=pick(genome.nodes);if(node){genome.nodes=genome.nodes.filter(value=>value.id!==node.id);genome.edges=genome.edges.filter(edge=>edge.source!==node.id&&edge.target!==node.id)}}
+    if(random()<rates.insert&&genome.nodes.length<limits.maxNodes){const template=pick(genome.nodes);if(template){const inserted={...template,id:nextGene++,bias:clamp(template.bias+(random()-.5)*.4,-8,8),effect:clamp(template.effect+(random()-.5)*.4,-4,4)};genome.nodes.push(inserted);if(genome.edges.length<limits.maxEdges)genome.edges.push({id:nextEdge++,source:template.id,target:inserted.id,weight:(random()-.5)*.4,enabled:true})}}
     if(random()<rates.addEdge&&genome.nodes.length>1&&genome.edges.length<limits.maxEdges){const source=pick(genome.nodes),target=pick(genome.nodes);if(source&&target&&source.id!==target.id&&!genome.edges.some(edge=>edge.source===source.id&&edge.target===target.id))genome.edges.push({id:nextEdge++,source:source.id,target:target.id,weight:(random()-.5)*2,enabled:true})}
     if(random()<rates.deleteEdge&&genome.edges.length)genome.edges.splice(randomIndex(genome.edges.length,random),1);
+    if(random()<rates.rearrange){for(let i=genome.nodes.length-1;i>0;i--){const j=randomIndex(i+1,random);[genome.nodes[i],genome.nodes[j]]=[genome.nodes[j],genome.nodes[i]]}for(let i=genome.edges.length-1;i>0;i--){const j=randomIndex(i+1,random);[genome.edges[i],genome.edges[j]]=[genome.edges[j],genome.edges[i]]}}
     for(const node of genome.nodes){if(random()<rates.bias)node.bias=clamp(node.bias+(random()-.5)*.5,-8,8);if(random()<rates.effect)node.effect=clamp(node.effect+(random()-.5)*.5,-4,4)}
     for(const edge of genome.edges)if(random()<rates.weight)edge.weight=clamp(edge.weight+(random()-.5)*.5,-4,4);
     if(registry){registry.nextGene=nextGene;registry.nextEdge=nextEdge}
