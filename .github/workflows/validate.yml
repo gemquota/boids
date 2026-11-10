@@ -104,6 +104,12 @@ jobs:
           if 'lake(W*.22' in waterways.group(1) or 'lake(W*.76' in waterways.group(1):
               raise SystemExit('Legacy isolated lake geometry must remain removed')
 
+          if 'function nearestFreshwater(' not in worker or 'waterGrowth=clamp(1.58-waterDistance/175,.35,1.5)' not in worker:
+              raise SystemExit('Plant water-distance growth modifiers are missing')
+          if 'thirst[i]=Math.min(1,thirst[i]+dt*.012)' not in worker or 'waterPull=clamp((thirst[i]-.24)/.7,0,1)' not in worker:
+              raise SystemExit('Boid hydration and water-seeking behaviour are missing')
+          if 'thirst:thirst.slice(0,N)' not in worker or 'meanThirst,dehydratedCount' not in worker:
+              raise SystemExit('Hydration persistence and telemetry are missing')
           if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
               raise SystemExit('Initial plant spore dispersal missing')
           if 'plants.push(makePlantNode({x:rand(42' in worker:
