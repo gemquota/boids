@@ -16,10 +16,10 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 - Variable-length NEAT-style node and connection genomes with historical innovations, add/split/delete mutations, enabled and recurrent edges, activation/bias mutation, homologous crossover, and separate lifetime learned-weight overlays.
 - Live compatibility-based speciation, adaptive thresholding, fitness sharing, species age/stagnation statistics, integer offspring quotas, champion reproductive pressure, and same-species mate preference with fallback.
 - Inherited cis-regulatory modifiers that affect trait-expression bias and environmental responsiveness.
-- Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception with sample sizes and t-based regression-slope intervals, delayed-entry Kaplan–Meier cohort survival, species entropy, and an idealised sex-ratio effective-size estimate.
+- Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception with sample sizes and t-based regression-slope intervals, delayed-entry Kaplan–Meier cohort survival, species entropy, and a reproductive-skew-adjusted effective-breeder index from inverse-Simpson parental contributions by sex.
 - Plant-only basal renewable resources, clonal plant growth/spores, freshwater networks, thirst, seasonal variation, reefs/shelter, and conspecific predation.
 - Observatory panels for population, reproduction, genetics, species, neural topology, and run history.
-- Browser-local IndexedDB world snapshots. Worker snapshot schema is **13**; the browser storage envelope has its own schema version.
+- Browser-local IndexedDB world snapshots. Worker snapshot schema is **17**; the browser storage envelope has its own schema version.
 
 ## Configuration
 
@@ -50,8 +50,8 @@ This is an exploratory agent-based artificial ecology, **not a biologically cali
 - Trait alleles are quantitative loci, not paired diploid Mendelian chromosomes.
 - The live worker's regulatory inheritance is currently cis-regulatory. The more general trans-regulatory and epistatic functions in `evolution.js` are analysis/model primitives, not a fully integrated gene-copy regulatory network.
 - Expected gene diversity from binned trait values is not observed diploid heterozygosity.
-- The current heritability estimate is preliminary and uses available living-parent records; survivorship and sample-selection limitations apply.
-- The sex-ratio effective population-size estimate assumes idealised reproductive conditions and is not a variance-based estimate for this overlapping-generation population.
+- The current heritability estimate is preliminary and uses conception-time parental trait records; sample-size, pedigree-truncation and selection-related limitations still apply.
+- The effective-breeder index uses recorded parental offspring contributions and is not a classical Ne estimate or a temporal/cohort estimator for this overlapping-generation population.
 - Fitness remains a model-specific proxy, not a calibrated biological objective.
 - Experiment statistics and deterministic sweep helpers exist, but isolated multi-replicate experiment-world orchestration, full replay archives, and experiment UI are not complete.
 - Habitat gradients, nutrients, fragmentation, and controlled disturbance scenarios remain limited compared with the plant/freshwater baseline.
