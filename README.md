@@ -38,7 +38,7 @@ All 181 numeric sliders are registered, persisted, and assigned to a tab and col
 | Reproduction | Mate choice; reproductive strategy; maturation & lifespan |
 | Selection | Ecological selection; predation phenotype selection; energy economics |
 | Environment | World geometry; food web; habitat & presentation |
-| Dynamics | Spatial interaction; food sensing & foraging; predation & social response; survival mechanics; advanced movement, current, neural, life-history, genetic-variation and phenotype controls |
+| Dynamics | Spatial interaction; plant sensing & grazing; predation & social response; survival mechanics; advanced movement, current, neural, life-history, genetic-variation and phenotype controls |
 
 The Genetics tab contains ten collapsible locus editors, each with phenotype bounds, curve selection, curve controls, environmental sensitivity, mutation rate, mutation magnitude and inheritance fidelity. The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
 
@@ -177,7 +177,7 @@ Local neighbour queries use a spatial hash rebuilt during simulation updates. St
 - Cohesion toward the local group.
 - Obstacle avoidance.
 - Environmental current and turbulence.
-- Food seeking.
+- Plant seeking.
 - Predator avoidance.
 - Pointer-driven attraction or repulsion.
 
