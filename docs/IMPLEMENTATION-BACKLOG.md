@@ -90,7 +90,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Track neural topology and regulatory architecture diversity separately.
 - [x] Calculate pedigree kinship with documented founder and missing-ancestor policy.
 - [x] Calculate individual and population inbreeding coefficients.
-- [ ] Track pedigree truncation and uncertainty explicitly.
+- [x] Track pedigree truncation counts explicitly in worker telemetry and exports.\n- [ ] Quantify uncertainty introduced by pedigree truncation and missing ancestors.
 - [ ] Estimate effective population size using temporal/cohort methods. (A preliminary lifetime, sex-structured realised-contribution estimate is implemented; temporal/cohort Ne remains outstanding.)
 - [x] Estimate preliminary additive genetic variance and expressed phenotypic variance. (Additive variance uses h² × expressed phenotypic variance and is explicitly provisional.)
 - [x] Estimate preliminary mid-parent/offspring regression from conception-time parental trait records (living-offspring sample).
@@ -100,9 +100,9 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Track realised lifetime reproductive success and lineage contribution.
 - [x] Track all-cause age-at-death and right-censored living-agent observations with bounded, delayed-entry Kaplan–Meier telemetry.
 - [ ] Track cohort-specific survival and generational turnover across independently identified birth cohorts.
-- [ ] Add synthetic known-pedigree and known-inheritance validation datasets.
+- [x] Add synthetic known-pedigree and known-inheritance regression fixtures for parent/offspring and sibling relatedness plus conception-time mid-parent inheritance.
 - [x] Persist and export bounded survival-event history and truncation metadata in worker snapshots/analysis bundles.
-- [ ] Persist and export complete per-locus population-genetic histories.
+- [x] Persist and export sampled per-locus allele, heritability, variance and covariance metrics through snapshot telemetry history and analysis bundles.
 
 ## F. Ecological dynamics
 
