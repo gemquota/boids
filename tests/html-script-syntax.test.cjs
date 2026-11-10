@@ -5,6 +5,10 @@ const vm = require('node:vm');
 const html = fs.readFileSync('index.html', 'utf8');
 const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(code => code.trim());
 assert.ok(scripts.length > 0, 'index.html should contain an application script');
+assert.ok(html.includes('src="./config-registry.js?'), 'configuration registry must load before the application');
+assert.ok(html.includes('BoidsConfigRegistry.create(document,ranges)'), 'all declared range controls must be registered');
+assert.ok(html.includes('parameterRegistry.read()'), 'saved settings must be read through the registry');
+assert.ok(html.includes('parameterRegistry.apply(v)'), 'applied settings must be normalized through the registry');
 for (let i = 0; i < scripts.length; i++) {
   new vm.Script(scripts[i], { filename: 'index.html:inline-script-' + i });
 }
