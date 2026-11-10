@@ -70,7 +70,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Give every gene copy a stable identity independent of chromosome position. (Implemented for the standalone regulatory-genome API; not yet wired into live offspring inheritance or snapshots.)
 - [ ] Implement gene duplication with independent copy identity. (Implemented and tested in the standalone regulatory-genome API; live worker integration remains.)
 - [ ] Implement gene deletion and chromosome-length changes. (Regulatory copy deletion is implemented and tested in the standalone API; live worker integration remains.)
-- [ ] Implement gene insertion/rearrangement without invalidating stable identities.
+- [ ] Implement gene insertion/rearrangement without invalidating stable identities. (The standalone regulatory-genome API now supports insertion and identity-preserving node/edge reordering with tests; live worker inheritance, snapshots and expression integration remain.)
 - [ ] Implement regulatory edges with activation and repression. (Standalone variable regulatory networks now support signed trans-regulatory edges and iterative expression; live worker integration remains.)
 - [ ] Implement regulatory thresholds, strengths, and environmental input channels.
 - [ ] Implement multi-locus phenotype equations.
@@ -184,6 +184,10 @@ A task is not complete because a function exists. It must have:
 6. Performance evidence where it adds recurring computation.
 
 ## Work log
+
+- [x] Added deterministic regulatory gene insertion and identity-preserving node/edge rearrangement mutations to the standalone regulatory-genome API, with tests proving existing gene and edge identities survive the operation. Live-worker integration remains open.
+
+
 
 - [x] Replaced the live NEAT plasticity loop's fixed `cfg.connections` cap with per-agent variable-length eligibility traces aligned to the full evolved genome. Schema 19 persists them and migrates available legacy traces; regression tests prove connections beyond the legacy slot limit continue learning and restore correctly.
 
