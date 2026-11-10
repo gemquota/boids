@@ -48,7 +48,7 @@ The codec rejects malformed hexadecimal, odd-length byte strings, unknown record
 
 The worker snapshot schema is **13**. It persists full variable-length genomes, innovation registry and species state, inherited regulatory loci, learned-weight overlays, recurrent activations, pedigree and relevant ecological/RNG state. Restore supports older schema versions through explicit migration/defaulting logic.
 
-The browser IndexedDB envelope uses `storageSchemaVersion: 2`; the worker's `schemaVersion: 14` remains intact. The two fields are distinct and must never overwrite one another.
+The browser IndexedDB envelope uses `storageSchemaVersion: 2`; the worker's `schemaVersion: 15` remains intact. The two fields are distinct and must never overwrite one another.
 
 ## Compatibility rules
 
