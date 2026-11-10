@@ -26,6 +26,7 @@ jobs:
           node --check config-registry.js
           node --check config-schema.js
           node tests/config-schema.test.cjs
+          node tests/ecology-visual.test.cjs
           node tests/config-registry.test.cjs
           node tests/genetics.test.js
           node tests/worker-determinism.test.cjs
@@ -92,28 +93,19 @@ jobs:
               raise SystemExit('World snapshot/restore handlers missing')
           if "new Worker('./boids-worker.js?v=20261110-trait-history-slower-v8')" not in html:
               raise SystemExit('Plant renderer worker cache-bust missing')
-          if 'function drawCrystal(p)' not in worker or 'hexPath(p.x,p.y,r,p.angle)' not in worker:
-              raise SystemExit('Hexagonal crystal plant renderer missing')
-          if 'function drawPlant(' in worker:
-              raise SystemExit('Legacy circular plant renderer must remain removed')
-          palette = re.search(r'function plantPalette\(p\)\{([^}]+)\}', worker)
-          arms = re.search(r'function drawPolypArms\(p,r\)\{([\s\S]*?)\}\nfunction drawCrystal', worker)
-          if not palette or 'paired=(hue+22)%360' not in palette.group(1):
-              raise SystemExit('Plant colonies must use a restrained two-hue palette')
-          if not arms or 'ctx.arc(' in arms.group(1) or 'hexPath(tipX,tipY' not in arms.group(1):
-              raise SystemExit('Plant polyp tips must be faceted, never circular')
+          if 'function drawPlantNode(p)' not in worker or 'function drawPlantFronds(p)' not in worker:
+              raise SystemExit('Ribbon-kelp plant renderer missing')
+          if 'function drawCrystal(p)' in worker or 'function drawPolypArms(' in worker:
+              raise SystemExit('Old crystal-polyp plant renderer must remain removed')
           if 'ctx.arc(sp.x,sp.y' in worker:
               raise SystemExit('Plant spores must be faceted, never circular')
-          if 'for(let ring=' in worker:
-              raise SystemExit('Legacy layered plant growth rings must remain removed')
-          crystal = re.search(r'function drawCrystal\(p\)\{([\s\S]*?)\}\nfunction drawWaterways', worker)
-          if not crystal or 'ctx.arc(' in crystal.group(1):
-              raise SystemExit('Plant body renderer must contain no circular geometry')
+          if 'ctx.shadowBlur=16' in worker or 'function lagoon(' in worker:
+              raise SystemExit('Oversized plant glow and lagoon circles must remain removed')
           if 'function drawWaterways()' not in worker or 'drawWaterways();ctx.save()' not in worker:
               raise SystemExit('River and creek terrain must be rendered')
           if "ctx.fillStyle='#040911';ctx.fillRect(0,0,W,H)" not in worker or "ctx.fillStyle='rgba(4,9,17,'+cfg.trail+')'" in worker:
               raise SystemExit('Canvas must be fully cleared every frame; permanent trails are forbidden')
-          waterways = re.search(r'function drawWaterways\(\)\{([\s\S]*?)\nfunction draw\(', worker)
+          waterways = re.search(r'function drawWaterways\\(\\)\\{([\\s\\S]*?)\\nfunction draw\\(', worker)
           if not waterways or 'buildRiverNetwork()' not in waterways.group(1) or 'organicPath(' not in worker:
               raise SystemExit('Organic river network renderer missing')
           for feature in ['function buildRiverNetwork()', 'function organicPath(', 'tributaries.push(creek)', 'feeders.push(organicPath', 'testPath(network.main)']:
@@ -121,9 +113,8 @@ jobs:
                   raise SystemExit('Curved drainage network missing: ' + feature)
           if 'function lagoon(' in worker or 'lagoon(end.x' in worker:
               raise SystemExit('Oversized tributary-end lagoons must remain removed')
-          if 'lake(W*.22' in waterways.group(1) or 'lake(W*.76' in waterways.group(1):
-              raise SystemExit('Legacy isolated lake geometry must remain removed')
-
+          if 'function drawPlantFronds(p)' not in worker or 'ctx.arc(' in worker[worker.index('function drawPlantFronds(p)'):worker.index('function drawWaterways()')]:
+              raise SystemExit('Plant body must use narrow fronds and no circular geometry')
           if 'function nearestFreshwater(' not in worker or 'waterGrowth=clamp(1.58-waterDistance/175,.35,1.5)' not in worker:
               raise SystemExit('Plant water-distance growth modifiers are missing')
           if 'thirst[i]=Math.min(1,thirst[i]+dt*.012)' not in worker or 'waterPull=clamp((thirst[i]-.24)/.7,0,1)' not in worker:
@@ -210,5 +201,5 @@ jobs:
                   raise SystemExit('Missing phase-one simulation invariant: ' + item)
           if 'for(let i=0;i<N;i++){let energyBefore=energy[i]' in worker:
               raise SystemExit('Agent updates must use the shuffled immutable update cohort')
-          print('Validated 182 sliders, per-locus expression wiring, deterministic RNG, double-buffered motion, stable pedigree IDs and snapshot migration.')
+          print('Validated 181 sliders, per-locus expression wiring, deterministic RNG, double-buffered motion, stable pedigree IDs and snapshot migration.')
           PY
