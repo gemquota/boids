@@ -201,7 +201,7 @@ This is a simplified two-sex mating and gestation model, not a complete biologic
 
 ### Food, predators, and selection
 
-Food patches contain finite stock and regenerate over time. Feeding removes stock and transfers energy to agents. Food attraction, consumption, energy yield, and regeneration can be adjusted independently.
+Food patches contain finite stock and regenerate over time. Boids brake to a stop while feeding. A procedural fractal plant ecology grows from mother plants: attached daughter branches mature into reproductive nodes, release drifting spores, and establish new colonies. Boids graze nodes before or after reproduction, suppressing growth when they consume them. Food attraction, consumption, energy yield, and regeneration can be adjusted independently.
 
 Predation is conspecific: agents within the same evolving population can hunt smaller agents when inherited aggression, relative body size, perception radius, bite strength, and kin-protection traits make an attack viable. There is no separate predator caste or independently spawned predator species. Juvenile vulnerability modifies the risk faced by younger agents. Attack proposals are resolved after the agent decision pass so one prey target cannot generate multiple kill rewards in the same tick.
 
