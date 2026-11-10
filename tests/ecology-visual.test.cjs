@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const worker = fs.readFileSync(require.resolve('../boids-worker.js'), 'utf8');
 const schema = require('../config-schema.js');
+const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
 
 test('river network uses curved, shared geometry for drawing and freshwater distance', () => {
   const start = worker.indexOf('let riverNetworkCache=null;');
@@ -47,15 +48,43 @@ test('initial and released spores float before landing and only settled spores c
   assert.doesNotMatch(worker, /if\(sp\.life>7\)/);
 });
 
-test('plant renderer uses narrow ribbon fronds and small faceted crowns, not circular bodies', () => {
+test('plant renderer combines ribbon fronds with visible faceted hexagonal growth crowns', () => {
   const start = worker.indexOf('function drawPlantFronds(p)');
   const end = worker.indexOf('function drawWaterways()', start);
   assert.ok(start >= 0 && end > start);
   const renderer = worker.slice(start, end);
   assert.match(renderer, /quadraticCurveTo/);
+  assert.match(renderer, /r=2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
+  assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
   assert.doesNotMatch(renderer, /ctx\.arc\(/);
   assert.doesNotMatch(worker, /function drawCrystal\(p\)|function drawPolypArms\(/);
   assert.doesNotMatch(worker, /function lagoon\(/);
 });
 console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore germination and ribbon-plant rendering passed.');
+
+
+test('plants and boids are the only food sources', () => {
+  assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
+  assert.match(worker, /Math.max\(64,Math.min\(120,Math.round\(W\*H\/14000\)\)\)/);
+  assert.match(worker, /plantGain/);
+  assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
+  assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
+  assert.doesNotMatch(html, /id="foodPatches"|id="foodRegen"|Renewable food patches/);
+  assert.ok(schema.coreSliderDefs.some(item => item.id === 'plantPreference' && item.label === 'Plant preference'));
+  assert.ok(!schema.coreSliderDefs.some(item => /foodPatches|foodRegen|foodBite|foodEnergyYield|foodCapacity/.test(item.id)));
+});
+
+test('boid display colour ignores mutable neural connection weights', () => {
+  const start = worker.indexOf('function phenotypeHue(i)');
+  const end = worker.indexOf('\n', start);
+  const hue = worker.slice(start, end);
+  assert.doesNotMatch(hue, /genome\[o\+2\]|weight/);
+  assert.match(hue, /traitGenes/);
+});
+
+test('observatory charts do not redraw while the drawer is closed', () => {
+  assert.match(html, /panel==='analysis'&&Date\.now\(\)-lastChartRender>3500/);
+  assert.match(html, /if\(which==='analysis'\).*?redrawCharts\(\)/);
+  assert.match(worker, /const includeHistory=now-lastHistoryPost>5000/);
+});
