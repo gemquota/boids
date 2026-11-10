@@ -56,7 +56,8 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Track species identity, age, size, representative, best fitness, and stagnation.
 - [x] Apply fitness sharing within species.
 - [x] Preserve species champions with configurable reproductive-pressure elitism (`speciesChampionBonus`); this overlapping sexual population protects champion contribution rather than copying a clone into a discrete next generation.
-- [ ] Protect new structural innovations from immediate elimination.
+- [x] Protect newly introduced NEAT structural innovations with configurable grace duration/bonus, stable innovation IDs and schema-20 persistence; protection expires deterministically.
+- [x] Protect new structural innovations with persisted introduction times and a configurable grace window/selection bonus; the bonus expires after the configured simulation-time window.
 - [x] Implement species-aware parent selection and species-specific offspring allocation. (Integer quota targets are allocated from shared fitness and converted to reproductive pressure in the overlapping-generation model; same-species mating is preferred with fallback.)
 - [x] Handle extinct species and representative replacement.
 - [x] Persist species state across save/restore.
