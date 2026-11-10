@@ -15,6 +15,7 @@ These versions are independent. Never overwrite the worker's `schemaVersion` wit
 The worker accepts snapshots with no version marker or a `schemaVersion` no newer than 19. It rejects snapshots newer than the runtime. Migration is primarily field-presence-based rather than a chain of one function per historical schema: older records are hydrated with explicit defaults where safe, and unavailable historical information is not fabricated.
 
 | Missing or legacy state | Restore behaviour |
+| Variable-length per-agent eligibility traces (schema 19) | Persist traces aligned to each agent's innovation-identified connections; older snapshots reconstruct available trace slots from the legacy fixed-size eligibility array and initialize remaining entries to zero |
 |---|---|
 | Legacy `foodPreference`, `foodRangeScale`, `foodMinRange`, `foodSteering` config | Map to the corresponding plant-resource controls when the new plant field is absent |
 | Legacy compact chromosome / fixed-slot genome data | Decode the typed chromosome projection and rebuild the runtime connection representation; full modern NEAT objects remain the authoritative representation when present |
