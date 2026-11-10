@@ -23,6 +23,8 @@ jobs:
           PY
           node --check /tmp/boids-app.js
           node --check boids-worker.js
+          node --check config-registry.js
+          node tests/config-registry.test.cjs
           node tests/genetics.test.js
           node tests/worker-determinism.test.cjs
           node tests/html-script-syntax.test.cjs
@@ -119,7 +121,7 @@ jobs:
           if 'indexedDB.open' not in html or 'persistObservatory' not in html:
               raise SystemExit('Persistent world/observatory storage missing')
           required_ui = [
-              'Math.round((clamped-lo)/step)', 'applySettings({...ecologicalBaseline',
+              'Math.round((bounded-min)/step)', 'parameterRegistry.apply(v)', 'applySettings({...ecologicalBaseline',
               'schemaVersion=2', 'snapshotWaiters', 'flushPersistentState', 'store.put(prior.result,\'previous\')', 'store.get(\'previous\')',
               'Object.assign(helpDescriptions,'
           ]
