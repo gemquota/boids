@@ -217,7 +217,7 @@ The model is intentionally qualitative. Parameter values are simulation controls
 
 ---
 
-## The 176-slider configuration
+## The 173-slider configuration
 
 The controls are distributed across the main simulation tabs and the advanced Dynamics tab. Accordion groups keep related parameters together.
 
