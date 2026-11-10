@@ -50,8 +50,9 @@
       const candidates=genome.connections.filter(g=>g.enabled);
       if(candidates.length){const old=candidates[randomIndex(candidates.length,random)],innovation=registry.split(old.innovation,old.source,old.destination);old.enabled=false;
         if(!genome.nodes.some(n=>n.id===innovation.nodeId))genome.nodes.push({id:innovation.nodeId,type:'hidden',activation:'tanh',bias:0});
-        if(!genome.connections.some(g=>g.innovation===innovation.left))genome.connections.push({innovation:innovation.left,source:old.source,destination:innovation.nodeId,weight:1,enabled:true,recurrent:false});
-        if(!genome.connections.some(g=>g.innovation===innovation.right))genome.connections.push({innovation:innovation.right,source:innovation.nodeId,destination:old.destination,weight:old.weight,enabled:true,recurrent:false});
+        const sourceNode=genome.nodes.find(n=>n.id===old.source),leftRecurrent=!!old.recurrent&&sourceNode?.type==='output',rightRecurrent=!!old.recurrent&&sourceNode?.type!=='output';
+        if(!genome.connections.some(g=>g.innovation===innovation.left))genome.connections.push({innovation:innovation.left,source:old.source,destination:innovation.nodeId,weight:1,enabled:true,recurrent:leftRecurrent});
+        if(!genome.connections.some(g=>g.innovation===innovation.right))genome.connections.push({innovation:innovation.right,source:innovation.nodeId,destination:old.destination,weight:old.weight,enabled:true,recurrent:rightRecurrent});
       }
     }
     if(random()<rates.addConnection&&genome.connections.length<limits.maxConnections){
@@ -94,7 +95,7 @@
     values.fill(0,0,size);state.fill(0,0,size);outputs.fill(0,0,compiled.outputs.length);
     for(let k=0;k<compiled.inputs.length;k++)values[compiled.inputs[k]]=finite(inputValues[k],0);
     for(const i of compiled.hidden){let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState?.[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);state[i]=values[i]}
-    for(let k=0;k<compiled.outputs.length;k++){const i=compiled.outputs[k];let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState?.[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);outputs[k]=values[i]}
+    for(let k=0;k<compiled.outputs.length;k++){const i=compiled.outputs[k];let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState?.[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);state[i]=values[i];outputs[k]=values[i]}
     return{outputs,state};
   }
 
