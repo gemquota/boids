@@ -95,6 +95,30 @@ test('species statistics share fitness, allocate integer quotas, and track stagn
   assert.equal(recovered.totalMembers,5);
 });
 
+test('experiment manifests are immutable and derive reproducible independent seeds',()=>{
+  const manifest=evo.createExperimentManifest({modelVersion:'test-7',seed:42,replicates:4,scenario:'drought',config:{count:100,nested:{rate:.2}}});
+  assert.equal(Object.isFrozen(manifest),true);assert.equal(Object.isFrozen(manifest.config.nested),true);
+  const first=evo.deriveReplicateSeeds(manifest),second=evo.deriveReplicateSeeds(manifest);
+  assert.deepEqual(first,second);assert.equal(first.length,4);assert.equal(new Set(first).size,4);
+  assert.throws(()=>evo.createExperimentManifest({replicates:0}),/between 1 and 10000/);
+});
+
+test('Kaplan-Meier survival handles events, censoring and median survival',()=>{
+  const result=evo.kaplanMeier([{time:1,event:true},{time:2,event:false},{time:3,event:true},{time:4,event:true}]);
+  assert.equal(result.n,4);assert.equal(result.events,3);assert.equal(result.censored,1);
+  assert.equal(result.curve[1].survival,.75);assert.equal(result.median,3);
+  assert.ok(result.curve.every(point=>point.lower>=0&&point.upper<=1&&point.lower<=point.survival&&point.upper>=point.survival));
+});
+
+test('multiple-comparison corrections preserve order and control adjusted p-values',()=>{
+  const values=[.01,.04,.03,.2];
+  const bh=evo.correctPValues(values,'BH'),holm=evo.correctPValues(values,'holm');
+  assert.equal(bh.length,4);assert.equal(holm.length,4);
+  assert.ok(bh.every((value,index)=>value>=values[index]&&value<=1));
+  assert.ok(holm.every((value,index)=>value>=values[index]&&value<=1));
+  assert.ok(holm.every((value,index)=>value>=bh[index]-1e-12));
+});
+
 test('recurrent neural connections retain state across activations',()=>{
   const genome={nodes:[{id:0,type:'input'},{id:1,type:'hidden'},{id:2,type:'output'}],connections:[
     {innovation:1,source:0,destination:1,weight:1},
