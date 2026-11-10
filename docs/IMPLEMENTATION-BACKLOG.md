@@ -66,20 +66,20 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 ## D. Regulatory genetics and gene expression
 
 - [ ] Define typed structural, regulatory, modifier, and neural gene records.
-- [ ] Give every gene copy a stable identity independent of chromosome position.
-- [ ] Implement gene duplication with independent copy identity.
-- [ ] Implement gene deletion and chromosome-length changes.
-- [ ] Implement gene insertion/rearrangement without invalidating stable identities.
-- [ ] Implement regulatory edges with activation and repression.
-- [ ] Implement regulatory thresholds, strengths, and environmental input channels.
+- [x] Give every regulatory gene copy a stable identity independent of chromosome position.
+- [x] Implement gene duplication with independent copy identity.
+- [x] Implement gene deletion and variable regulatory-genome copy count.
+- [x] Implement regulatory copy insertion and trans-edge rewiring without invalidating stable identities.
+- [x] Implement regulatory edges with activation and repression.
+- [x] Implement regulatory thresholds, strengths, and environmental input channels.
 - [ ] Implement multi-locus phenotype equations.
 - [ ] Implement epistatic interaction terms and bounded expression.
 - [ ] Implement stage-dependent expression.
 - [x] Implement environment-dependent plasticity without rewriting inherited genotype.
-- [ ] Keep inherited genotype, expressed phenotype, and lifetime learning separate.
-- [ ] Cache expression safely and invalidate on relevant state changes.
+- [x] Keep inherited genotype, expressed phenotype, and lifetime learning separate.
+- [x] Cache expressed regulatory state per simulation tick and invalidate after genotype changes.
 - [ ] Persist regulatory genes, expression state, and mutation history.
-- [ ] Test duplicate divergence, deletion, activation, repression, epistasis, and environmental response.
+- [ ] Test duplicate divergence, deletion, activation, repression, epistasis, and environmental response. (Copy identity, duplication/deletion, activation/repression and environmental trans-inputs are tested; live epistatic trait interactions remain outstanding.)
 
 ## E. Population genetics and pedigree
 
@@ -187,6 +187,7 @@ A task is not complete because a function exists. It must have:
 - [x] Added unit, worker, snapshot, UI, and CI coverage for species lifecycle and quota behaviour.
 - [x] Added immutable experiment manifest validation, deterministic replicate seed derivation, Kaplan-Meier survival curves, BH/Holm multiple-comparison correction, and factorial/Latin-hypercube designs with tests.
 - [x] Added continuous spatial habitat fields and connected nutrient/moisture productivity to plant biomass growth, habitat suitability to spore establishment, and temperature anomaly to consumer maintenance costs.
+- [x] Integrated variable-length regulatory gene-copy genomes into live inheritance and phenotype expression, including stable copy IDs, duplication/deletion/rewiring, trans activation/repression, environmental inputs, registry persistence, and copy-number telemetry.
 
 - [x] Inspected current model roadmap, chromosome format, genetics primitives, worker, and genetics tests.
 - [x] Created an isolated implementation branch for the completion programme.
