@@ -104,8 +104,8 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 ## F. Ecological dynamics
 
 - [ ] Define spatial and temporal scales for habitat fields.
-- [ ] Implement smooth temperature, moisture, nutrient, current, shelter, and suitability gradients.
-- [ ] Implement field sampling with stable interpolation and deterministic boundaries.
+- [x] Implement smooth deterministic temperature, moisture, nutrient, current, shelter, and suitability fields. (The continuous analytic fields cover temperature/moisture/nutrients/currents/suitability; obstacle cover supplies shelter.)
+- [x] Implement deterministic continuous habitat-field sampling with bounded world-edge behaviour. (Analytic fields are used instead of a sampled grid/interpolation layer.)
 - [ ] Model plant biomass, local depletion, regeneration, and carrying stock.
 - [ ] Model resource quality and productivity as distinct properties.
 - [ ] Model density-dependent plant growth and competition.
@@ -113,7 +113,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Add habitat-specific energetic trade-offs and niche opportunities.
 - [ ] Add refugia, bottlenecks, territories, and fragmented habitats.
 - [ ] Add controlled disturbances: resource collapse, seasonal shifts, fragmentation, shelter loss, and bottlenecks.
-- [ ] Measure resource use, recovery, consumer pressure, and ecological feedback.
+- [ ] Measure resource use, recovery, consumer pressure, and ecological feedback. (Population telemetry now includes mean habitat temperature, moisture, soil nutrients and suitability.)
 - [ ] Validate that no artificial food patches are reintroduced; plants remain the basal renewable resource.
 - [ ] Test whether distinct niches support persistent strategies across independent seeds.
 
@@ -186,6 +186,7 @@ A task is not complete because a function exists. It must have:
 - [x] Added Observatory cards/chart series for species age, stagnation, and champion fitness; added a configurable stagnation limit.
 - [x] Added unit, worker, snapshot, UI, and CI coverage for species lifecycle and quota behaviour.
 - [x] Added immutable experiment manifest validation, deterministic replicate seed derivation, Kaplan-Meier survival curves, and BH/Holm multiple-comparison correction with tests.
+- [x] Added continuous spatial habitat fields and connected nutrient/moisture productivity to plant biomass growth, habitat suitability to spore establishment, and temperature anomaly to consumer maintenance costs.
 
 - [x] Inspected current model roadmap, chromosome format, genetics primitives, worker, and genetics tests.
 - [x] Created an isolated implementation branch for the completion programme.
