@@ -180,10 +180,10 @@ test('regulatory activation, repression, and epistatic phenotype expression are 
 test('regulatory gene copies retain stable identities through duplication and deletion',()=>{
   const base={nodes:[{id:1,locus:'aggression',bias:.2,effect:1},{id:2,locus:'size',bias:0,effect:.5}],edges:[{id:1,source:1,target:2,weight:.8}]};
   const registry={nextGene:3,nextEdge:2};
-  const duplicated=evo.mutateRegulatoryGenome(base,registry,()=>0,{rates:{duplicate:1,delete:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  const duplicated=evo.mutateRegulatoryGenome(base,registry,()=>0,{rates:{duplicate:1,delete:0,insert:0,rearrange:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
   assert.equal(duplicated.nodes.length,3);assert.equal(new Set(duplicated.nodes.map(node=>node.id)).size,3);
   assert.equal(duplicated.nodes[2].id,3);assert.ok(duplicated.edges.some(edge=>edge.source===3||edge.target===3),'duplicated locus should retain regulatory connections');
-  const deleted=evo.mutateRegulatoryGenome(duplicated,registry,()=>0,{rates:{duplicate:0,delete:1,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  const deleted=evo.mutateRegulatoryGenome(duplicated,registry,()=>0,{rates:{duplicate:0,delete:1,insert:0,rearrange:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
   assert.equal(deleted.nodes.length,2);assert.ok(deleted.edges.every(edge=>deleted.nodes.some(node=>node.id===edge.source)&&deleted.nodes.some(node=>node.id===edge.target)));
 });
 
