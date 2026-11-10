@@ -16,7 +16,7 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 - Variable-length NEAT-style node and connection genomes with historical innovations, add/split/delete mutations, enabled and recurrent edges, activation/bias mutation, homologous crossover, and separate lifetime learned-weight overlays.
 - Live compatibility-based speciation, adaptive thresholding, fitness sharing, species age/stagnation statistics, integer offspring quotas, champion reproductive pressure, and same-species mate preference with fallback.
 - Inherited cis-regulatory modifiers that affect trait-expression bias and environmental responsiveness.
-- Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception, with sample sizes and t-based regression-slope intervals, species entropy, and an idealised sex-ratio effective-size estimate.
+- Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception with sample sizes and t-based regression-slope intervals, Kaplan–Meier cohort survival, species entropy, and an idealised sex-ratio effective-size estimate.
 - Plant-only basal renewable resources, clonal plant growth/spores, freshwater networks, thirst, seasonal variation, reefs/shelter, and conspecific predation.
 - Observatory panels for population, reproduction, genetics, species, neural topology, and run history.
 - Browser-local IndexedDB world snapshots. Worker snapshot schema is **13**; the browser storage envelope has its own schema version.
