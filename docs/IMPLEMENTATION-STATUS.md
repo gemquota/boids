@@ -13,7 +13,7 @@
 - [x] Added live population metrics: per-trait binned allele richness/frequencies, expected gene diversity (Hₑ), mid-parent heritability estimates with sample sizes, pedigree inbreeding, species entropy, and regulatory activity/variance.
 - [x] Persisted variable-length genomes, innovation registry, species representatives, parental genome/fitness state, regulatory loci, and neural topology through schema-12 snapshots, including adaptive species threshold state, inherited genotype, lifetime learned-weight overlays, and recurrent neural activation state. Legacy snapshots migrate with neutral regulatory defaults.
 - [x] Added deterministic tests for genome validation, mutation, crossover, activation, speciation, regulatory expression, population metrics, snapshot round-trips, replicate summaries, permutation tests, and parameter sweeps.
-- [x] Added GitHub Actions coverage for evolutionary tests, existing genetics checks, worker determinism, and project validation. The existing validation workflow passed on commit `087ad44`; later changes updated its expected control count/cache-bust and added live NEAT, regulatory and Observatory assertions. The updated workflow is running against the latest branch head.
+- [x] Added GitHub Actions coverage for evolutionary tests, existing genetics checks, worker determinism, and project validation. All three workflows passed on the current branch head `184dc49`: full project validation, evolutionary model tests, and genetics checks. Full validation includes worker determinism, snapshot migration, brain-inspector payloads, configuration controls, browser-script syntax, and the worker benchmark.
 
 ## Still incomplete
 
