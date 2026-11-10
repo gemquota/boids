@@ -25,4 +25,10 @@ assert.ok(Object.isFrozen(schema) && Object.isFrozen(schema.coreSliderDefs) && O
 assert.deepEqual(schema.expressionCurves.map(([value]) => value), ['linear','exponential','logarithmic','sigmoid','threshold','plateau','inverse']);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'attackRangeScale').value, 1.25);
 assert.equal(schema.expressionTraits.find(item => item.key === 'speed').upper, 8);
+assert.deepEqual(schema.resolveWorkerMapping('count'), { target: 'cfg', key: 'count' });
+assert.deepEqual(schema.resolveWorkerMapping('flockNoise'), { target: 'cfg', key: 'flockNoise' });
+assert.deepEqual(schema.resolveWorkerMapping('expr_speed_curve'), { target: 'geneExpression', trait: 'speed', field: 'curve' });
+assert.deepEqual(schema.resolveWorkerMapping('expr_speed_min'), { target: 'geneExpression', trait: 'speed', field: 'min' });
+assert.deepEqual(schema.resolveWorkerMapping('trait_aggression_rate'), { target: 'traitMutation', trait: 'aggression', field: 'rate' });
+assert.deepEqual(schema.resolveWorkerMapping('expr_unknown_min'), { target: 'cfg', key: 'expr_unknown_min' });
 console.log('Shared configuration schema: 182 sliders, bounds, defaults and curve options passed.');
