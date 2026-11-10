@@ -31,6 +31,9 @@ assert.deepEqual(schema.normalizeDependencies({ ageMin: 40 }, { ageMin: 18, ageM
 assert.deepEqual(schema.normalizeDependencies({ ageMax: 90 }, { ageMin: 18, ageMax: 80, lifespan: 85 }), { lifespan: 100 });
 assert.deepEqual(schema.normalizeDependencies({ lifespan: 120 }, { ageMin: 18, ageMax: 80, lifespan: 100 }), {});
 assert.deepEqual(schema.normalizeDependencies({ ageMin: 18 }, { ageMin: 18, ageMax: 30, lifespan: 100 }), {});
+assert.deepEqual(schema.normalizeDependencies({ expr_speed_min: 1.2 }, { expr_speed_min: 0.75, expr_speed_max: 1.1 }), { expr_speed_max: 1.21 });
+assert.deepEqual(schema.normalizeDependencies({ expr_speed_max: 0 }, { expr_speed_min: 0, expr_speed_max: 0 }), { expr_speed_max: 0.01 });
+assert.deepEqual(schema.normalizeDependencies({ expr_speed_max: 1.5 }, { expr_speed_min: 1.8, expr_speed_max: 2.25 }), { expr_speed_min: 1.49 });
 assert.equal(schema.expressionTraits.find(item => item.key === 'speed').upper, 8);
 assert.deepEqual(schema.resolveWorkerMapping('count'), { target: 'cfg', key: 'count' });
 assert.deepEqual(schema.resolveWorkerMapping('flockNoise'), { target: 'cfg', key: 'flockNoise' });
