@@ -4,9 +4,9 @@
 
 `config-schema.js` defines numeric controls, defaults, ranges, steps, grouping, field-guide text and dependency normalization. `config-registry.js` binds those definitions to the UI range inputs. Do not maintain a second manually counted list.
 
-Current configuration inventory: **182 unique numeric controls**:
+Current configuration inventory: **183 unique numeric controls**:
 - 64 core controls;
-- 28 advanced controls;
+- 29 advanced controls;
 - 60 expression controls (10 loci × 6);
 - 30 mutation/inheritance controls (10 loci × 3).
 
@@ -36,7 +36,7 @@ Exact IDs, ranges, increments, defaults and dependencies are defined in `config-
 - Reset restores declared defaults and clears custom endpoint overrides.
 - Settings persistence and world snapshot persistence are separate systems.
 - Every exposed control must have a worker-side effect or be explicitly documented as a presentation/analysis-only setting.
-- Adding/removing a control requires updating tests and the 182-control inventory assertion.
+- Adding/removing a control requires updating tests and the 183-control inventory assertion.
 
 ## Simulation and persistence versions
 
