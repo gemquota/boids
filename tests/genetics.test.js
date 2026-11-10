@@ -71,6 +71,7 @@ test('inheritance fidelity and locus mutation are independently configurable',()
 
 const fs=require('node:fs');
 const worker=fs.readFileSync(require('node:path').join(__dirname,'../boids-worker.js'),'utf8');
+const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
 test('worker uses expression output, not raw genes, for physical behaviour',()=>{
   assert.match(worker,/function phenotype\(i,k\)/);
   assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);
@@ -84,4 +85,13 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
   assert.doesNotMatch(worker,/cfg\.speed/);
   assert.doesNotMatch(worker,/cfg\.perception/);
   assert.match(worker,/perceptionRadius=phenotype\(i,5\)/);
+});
+
+
+test('Observatory exposes live species and population-genetic metrics',()=>{
+  for(const id of ['mSpecies','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mInbreeding','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
+  assert.ok(html.includes('geneticsHistoryChart'));
+  assert.ok(html.includes('speciesCount'));
+  assert.ok(html.includes('function drawNetwork(m)'));
+  assert.match(html,/positions=new Map\(\)/);
 });
