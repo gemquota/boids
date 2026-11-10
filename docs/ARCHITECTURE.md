@@ -49,7 +49,7 @@ There is one boid population. Predation is conspecific. Plants are the basal ren
 
 ## Persistence
 
-The worker's world snapshot schema is **13**. It includes configuration, agent and ecological state, variable-length genomes, learned-weight overlays, recurrent state, regulatory loci, pedigree, innovation/species state, RNG and sampled histories where supported. The browser stores the worker snapshot with a separate `storageSchemaVersion: 2` field. The worker's `schemaVersion: 14` is never overwritten by the IndexedDB envelope version. Legacy records whose worker version was previously overwritten to 2 remain readable through worker migration defaults.
+The worker's world snapshot schema is **13**. It includes configuration, agent and ecological state, variable-length genomes, learned-weight overlays, recurrent state, regulatory loci, pedigree, innovation/species state, RNG and sampled histories where supported. The browser stores the worker snapshot with a separate `storageSchemaVersion: 2` field. The worker's `schemaVersion: 15` is never overwritten by the IndexedDB envelope version. Legacy records whose worker version was previously overwritten to 2 remain readable through worker migration defaults.
 
 When adding persistent state:
 1. add it to snapshot export;
