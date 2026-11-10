@@ -80,14 +80,16 @@ jobs:
               raise SystemExit('Hexagonal crystal plant renderer missing')
           if 'function drawPlant(' in worker:
               raise SystemExit('Legacy circular plant renderer must remain removed')
-          palette = re.search(r'function plantPalette\\(p\\)\\{([^}]+)\\}', worker)
-          arms = re.search(r'function drawPolypArms\\(p,r\\)\\{([\\s\\S]*?)\\}\\nfunction drawCrystal', worker)
+          palette = re.search(r'function plantPalette\(p\)\{([^}]+)\}', worker)
+          arms = re.search(r'function drawPolypArms\(p,r\)\{([\s\S]*?)\}\nfunction drawCrystal', worker)
           if not palette or 'paired=(hue+28)%360' not in palette.group(1):
               raise SystemExit('Plant colonies must use a restrained two-hue palette')
           if not arms or 'ctx.arc(' in arms.group(1) or 'hexPath(tipX,tipY' not in arms.group(1):
               raise SystemExit('Plant polyp tips must be faceted, never circular')
+          if 'ctx.arc(sp.x,sp.y' in worker:
+              raise SystemExit('Plant spores must be faceted, never circular')
           if 'for(let ring=' in worker:
-              raise SystemExit('Legacy circular-style plant growth rings must remain removed')
+              raise SystemExit('Legacy layered plant growth rings must remain removed')
           if 'Math.max(10,Math.min(18,Math.round(W*H/65000)))' not in worker:
               raise SystemExit('Visible mature plant colony seeding missing')
           if 'size:rand(.62,.92),biomass,age,adultNode:age>=9' not in worker:
