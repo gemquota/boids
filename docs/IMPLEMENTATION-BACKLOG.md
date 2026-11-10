@@ -85,7 +85,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 - [ ] Define allele/locus semantics for every supported gene type.
 - [x] Track per-locus allele frequencies and allele richness.
-- [x] Track observed and expected heterozygosity where diploid allele representation supports it.
+- [ ] Track observed and expected heterozygosity where diploid allele representation supports it.
 - [ ] Track genome-wide and locus-specific diversity without using colour as a proxy.
 - [ ] Track neural topology and regulatory architecture diversity separately.
 - [x] Calculate pedigree kinship with documented founder and missing-ancestor policy.
@@ -93,7 +93,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Track pedigree truncation and uncertainty explicitly.
 - [ ] Estimate effective population size using appropriate temporal/cohort methods.
 - [ ] Estimate additive genetic variance and phenotypic variance.
-- [x] Estimate narrow-sense heritability with parent-offspring and mid-parent regression.
+- [ ] Estimate narrow-sense heritability with parent-offspring and mid-parent regression.
 - [ ] Report sample sizes, uncertainty, and assumptions for every estimate.
 - [ ] Track trait covariance and genetic/environmental covariance where identifiable.
 - [x] Track realised lifetime reproductive success and lineage contribution.
