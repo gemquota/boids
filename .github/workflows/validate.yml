@@ -74,7 +74,7 @@ jobs:
               raise SystemExit('Controls not wired into worker: ' + ', '.join(missing))
           if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
               raise SystemExit('World snapshot/restore handlers missing')
-          if "new Worker('./boids-worker.js?v=20261110-fractal-water-v6')" not in html:
+          if "new Worker('./boids-worker.js?v=20261110-water-germination-v7')" not in html:
               raise SystemExit('Plant renderer worker cache-bust missing')
           if 'function drawCrystal(p)' not in worker or 'hexPath(p.x,p.y,r,p.angle)' not in worker:
               raise SystemExit('Hexagonal crystal plant renderer missing')
@@ -110,6 +110,8 @@ jobs:
               raise SystemExit('Boid hydration and water-seeking behaviour are missing')
           if 'thirst:thirst.slice(0,N)' not in worker or 'meanThirst,dehydratedCount' not in worker:
               raise SystemExit('Hydration persistence and telemetry are missing')
+          if 'waterProximity=clamp(1-waterDistance/260,0,1),germinationChance=.12+.88*waterProximity' not in worker:
+              raise SystemExit('Freshwater-biased spore germination is missing')
           if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
               raise SystemExit('Initial plant spore dispersal missing')
           if 'plants.push(makePlantNode({x:rand(42' in worker:
