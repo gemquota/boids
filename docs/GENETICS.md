@@ -31,7 +31,7 @@ The ten-locus model is polygenic only in the broad sense that multiple loci cont
 
 The live worker carries inherited cis-regulatory modifiers that alter trait-expression bias and environmental responsiveness. These modifiers are distinct from the underlying trait loci.
 
-`evolution.js` also provides general regulatory activation/repression and epistatic-expression primitives. Those functions are independently testable, but a full live trans-regulatory network with stable gene-copy identity, duplication/deletion/rearrangement and stage-specific expression remains outstanding. Do not document those primitives as fully integrated live biology.
+`evolution.js` also provides an independently tested variable-length regulatory-genome API with stable gene/edge identities, duplication, deletion, insertion, identity-preserving rearrangement, crossover, signed activation/repression, environmental inputs and bounded iterative expression. This remains a standalone model primitive: it is not yet connected to live offspring inheritance, worker snapshots, the phenotype cache or Observatory. A fully integrated live trans-regulatory network and stage-specific expression remain outstanding. Do not document the standalone API as fully integrated live biology.
 
 ## Neural genomes and NEAT
 
