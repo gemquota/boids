@@ -365,8 +365,10 @@ $('closeAxis').addEventListener('click',()=>$('axisOverlay').classList.remove('o
 $('axisOverlay').addEventListener('click',e=>{if(e.target===$('axisOverlay'))$('axisOverlay').classList.remove('open')});
 $('axisApply').addEventListener('click',()=>{let ids=$('axisOverlay').dataset.ids.split(','),vals=[$('axisEditMin').value,$('axisEditMax').value,$('axisEditStep').value];if(vals[0]!==''&&vals[1]!==''&&Number(vals[1])<=Number(vals[0])){$('axisTitle').textContent='Maximum must exceed minimum';return}ids.forEach((id,i)=>$(id).value=vals[i]);$('axisOverlay').classList.remove('open');redrawCharts()});
 $('axisAuto').addEventListener('click',()=>{for(const id of $('axisOverlay').dataset.ids.split(','))$(id).value='';$('axisOverlay').classList.remove('open');redrawCharts()});
-$('expandTimeline').addEventListener('click',()=>{let m=$('timelineModule'),expanded=m.classList.toggle('isExpanded');$('expandTimeline').textContent=expanded?'Close expanded graph':'Expand graph';redrawCharts()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('timelineModule').classList.remove('isExpanded');$('expandTimeline').textContent='Expand graph';$('axisOverlay').classList.remove('open')}});
+const timelineModule=$('timelineModule'),timelineHome=timelineModule.parentNode,timelineAnchor=timelineModule.nextSibling;
+function setTimelineExpanded(expanded){if(expanded){document.body.appendChild(timelineModule);timelineModule.classList.add('isExpanded');$('expandTimeline').textContent='Close expanded graph'}else{timelineModule.classList.remove('isExpanded');timelineHome.insertBefore(timelineModule,timelineAnchor);$('expandTimeline').textContent='Expand graph'}redrawCharts()}
+$('expandTimeline').addEventListener('click',()=>setTimelineExpanded(!timelineModule.classList.contains('isExpanded')));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(timelineModule.classList.contains('isExpanded'))setTimelineExpanded(false);$('axisOverlay').classList.remove('open')}});
 for(const id of ['chartGrid'])$(id).addEventListener('change',redrawCharts);
 
 let axisHoldTimer=null;
