@@ -186,7 +186,7 @@ test('regulatory genomes preserve stable copy identities through duplication and
   const registry=evo.createRegulatoryInnovationRegistry({nextId:100});
   const genome={copies:[{id:1,source:0,target:1,strength:.4,threshold:.5,mode:'activate'},{id:2,source:1,target:2,strength:.3,threshold:.4,mode:'repress'}]};
   assert.equal(evo.normalizeRegulatoryGenome(genome).copies.length,2);
-  assert.throws(()=>evo.normalizeRegulatoryGenome({copies:[...genome.copies,{...genome.copies[0]]]}),/Duplicate regulatory copy ID/);
+  assert.throws(()=>evo.normalizeRegulatoryGenome({copies:[...genome.copies,{...genome.copies[0]}]}),/Duplicate regulatory copy ID/);
   const duplicated=evo.mutateRegulatoryGenome(genome,registry,()=>0,{rates:{point:0,duplicate:1,delete:0,rewire:0,mode:0}});
   assert.equal(duplicated.copies.length,3);assert.equal(duplicated.copies[2].id,100);
   assert.equal(duplicated.copies[0].id,1);assert.equal(duplicated.copies[1].id,2);
