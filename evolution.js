@@ -154,7 +154,7 @@
     const slope=xy/xx,intercept=my-slope*mx,rSquared=yy?clamp(xy*xy/(xx*yy),0,1):null;
     return{n,slope,intercept,rSquared};
   }
-  function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'parent-offspring regression'}}
+  function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'mid-parent offspring regression'}}
 
   function seededRandom(seed=1){
     let state=(Number(seed)>>>0)||0x6d2b79f5;
