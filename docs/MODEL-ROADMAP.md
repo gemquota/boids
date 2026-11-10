@@ -31,7 +31,7 @@ This roadmap describes work remaining after the merged evolutionary-ecology foun
 - Make allele/locus semantics explicit; add diploid pairs only if observed heterozygosity is a required model concept.
 - Improve heritability sampling by recording both parental genotypes at conception.
 - Report uncertainty and sample quality, including survivorship and pedigree-truncation limitations.
-- Add variance-based/temporal effective population size, additive genetic variance, phenotypic variance and trait covariance.
+- Add temporal/cohort effective population size, stronger uncertainty for provisional additive/phenotypic variance and trait covariance, and environmental covariance decomposition.
 - Validate estimators against synthetic populations with known pedigrees and inheritance parameters.
 
 ### 4. Ecological dynamics
