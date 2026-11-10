@@ -67,6 +67,14 @@ test('activation mutations change node expression and node deletion removes inci
   assert.ok(deleted.connections.every(g=>deleted.nodes.some(n=>n.id===g.source)&&deleted.nodes.some(n=>n.id===g.destination)));
 });
 
+test('recurrent mutation promotes enabled feed-forward genes to recurrent edges',()=>{
+  const registry=evo.createInnovationRegistry({nextInnovation:50,nextNode:8});
+  const mutated=evo.mutateGenome(baseGenome(),registry,()=>0,{rates:{weight:0,addConnection:0,splitConnection:0,deleteConnection:0,toggleConnection:0,recurrent:1,deleteNode:0,activation:0,bias:0}});
+  assert.equal(mutated.connections[0].recurrent,true);
+  assert.equal(mutated.connections[0].innovation,baseGenome().connections[0].innovation);
+  assert.ok(evo.compileNetwork(mutated).recurrent.some(edges=>edges.length));
+});
+
 test('species statistics share fitness, allocate integer quotas, and track stagnation',()=>{
   const groups=[
     {id:1,representative:baseGenome(),members:[{id:10},{id:11},{id:12}]},
