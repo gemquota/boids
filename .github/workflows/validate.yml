@@ -74,16 +74,32 @@ jobs:
               raise SystemExit('Controls not wired into worker: ' + ', '.join(missing))
           if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
               raise SystemExit('World snapshot/restore handlers missing')
-          if "new Worker('./boids-worker.js?v=20261110-plants-v2')" not in html:
+          if "new Worker('./boids-worker.js?v=20261110-plants-v4')" not in html:
               raise SystemExit('Plant renderer worker cache-bust missing')
           if 'function drawCrystal(p)' not in worker or 'hexPath(p.x,p.y,r,p.angle)' not in worker:
               raise SystemExit('Hexagonal crystal plant renderer missing')
           if 'function drawPlant(' in worker:
               raise SystemExit('Legacy circular plant renderer must remain removed')
-          if 'Math.max(10,Math.min(18,Math.round(W*H/65000)))' not in worker:
-              raise SystemExit('Visible mature plant colony seeding missing')
-          if 'size:rand(.62,.92),biomass,age,adultNode:age>=9' not in worker:
-              raise SystemExit('Mature initial plant nodes missing')
+          palette = re.search(r'function plantPalette\(p\)\{([^}]+)\}', worker)
+          arms = re.search(r'function drawPolypArms\(p,r\)\{([\s\S]*?)\}\nfunction drawCrystal', worker)
+          if not palette or 'paired=(hue+22)%360' not in palette.group(1):
+              raise SystemExit('Plant colonies must use a restrained two-hue palette')
+          if not arms or 'ctx.arc(' in arms.group(1) or 'hexPath(tipX,tipY' not in arms.group(1):
+              raise SystemExit('Plant polyp tips must be faceted, never circular')
+          if 'ctx.arc(sp.x,sp.y' in worker:
+              raise SystemExit('Plant spores must be faceted, never circular')
+          if 'for(let ring=' in worker:
+              raise SystemExit('Legacy layered plant growth rings must remain removed')
+          crystal = re.search(r'function drawCrystal\(p\)\{([\s\S]*?)\}\nfunction drawWaterways', worker)
+          if not crystal or 'ctx.arc(' in crystal.group(1):
+              raise SystemExit('Plant body renderer must contain no circular geometry')
+          if 'function drawWaterways()' not in worker or 'drawWaterways();ctx.save()' not in worker:
+              raise SystemExit('River and lake terrain must be rendered')
+
+          if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
+              raise SystemExit('Initial plant spore dispersal missing')
+          if 'plants.push(makePlantNode({x:rand(42' in worker:
+              raise SystemExit('Plants must begin as dispersed spores, not pre-grown nodes')
           if 'indexedDB.open' not in html or 'persistObservatory' not in html:
               raise SystemExit('Persistent world/observatory storage missing')
           required_ui = [
