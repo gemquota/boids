@@ -51,12 +51,18 @@ jobs:
               raise SystemExit('All ten trait loci must use the rapid-evolution mutation baseline')
           if "get('experiment')==='rapid-evolution'" not in html or 'saved world restore bypassed' not in html:
               raise SystemExit('Fresh experiment launch must bypass stale local snapshots')
-          static = re.search(r'const ranges=\[([^]]+)\]', html)
           extra = re.search(r'const extraSliderDefs=(\[[\s\S]*?\])\.map', html)
-          if not static or not extra:
-              raise SystemExit('Slider registries not found')
-          static_ids = re.findall(r"'([A-Za-z][A-Za-z0-9]*)'", static.group(1))
-          extra_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
+          if not extra or 'const ranges=[];' not in html:
+              raise SystemExit('Slider definitions or runtime registry missing')
+          static_ids = []
+          for tag in re.findall(r'<input\\b[^>]*>', html):
+              if re.search(r'\\btype=["\\']range["\\']', tag):
+                  match = re.search(r'\\bid=["\\']([^"\\']+)["\\']', tag)
+                  if match:
+                      static_ids.append(match.group(1))
+          extra_ids = re.findall(r'\\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
+          if 'document.querySelectorAll(\'#controls input[type="range"]\')' not in html:
+              raise SystemExit('Runtime slider discovery must scan the configuration drawer')
           trait_block = re.search(r'const expressionTraits=\[([\s\S]*?)\];', html)
           expression_fields = re.search(r'const expressionFields=\[([\s\S]*?)\];', html)
           mutation_fields = re.search(r'const expressionMutationFields=\[([\s\S]*?)\];', html)
