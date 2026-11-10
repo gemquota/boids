@@ -19,7 +19,7 @@ function makeWorld(seed) {
   };
   vm.createContext(sandbox);
   sandbox.importScripts = (...paths) => { for (const path of paths) { const filePath = path.split('?')[0]; vm.runInContext(fs.readFileSync(filePath, 'utf8'), sandbox, { filename: path }); } };
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, sampleHabitat, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get regulatoryGenomes(){return regulatoryGenomes}, get paternalRegulatoryGenomes(){return paternalRegulatoryGenomes}, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, sampleHabitat, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -49,6 +49,7 @@ for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'paren
   assert.deepEqual(Array.from(sa.arrays[key]), Array.from(sb.arrays[key]), 'same seed must reproduce ' + key);
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
+assert.equal(JSON.stringify(sa.regulatoryGenomes),JSON.stringify(sb.regulatoryGenomes),'same seed must reproduce regulatory gene-copy genomes');
 assert.equal(JSON.stringify(sa.neatGenomes), JSON.stringify(sb.neatGenomes), 'same seed must reproduce variable-length neural genomes');
 assert.equal(JSON.stringify(sa.agentLearnedWeights), JSON.stringify(sb.agentLearnedWeights), 'same seed must reproduce lifetime learned weights');
 assert.equal(JSON.stringify(sa.agentNeuralStates), JSON.stringify(sb.agentNeuralStates), 'same seed must reproduce recurrent neural state');
@@ -92,7 +93,10 @@ api.age[0] = 30;
 api.age[1] = 30;
 api.pregnant[0] = 0;
 api.energy[0] = 1;
+api.cfg.regulatoryMutationRate=0;api.cfg.regulatoryDuplicationRate=1;api.cfg.regulatoryDeletionRate=0;api.cfg.regulatoryRewireRate=0;api.cfg.regulatoryModeMutationRate=0;
+const maternalRegulatoryIds=api.regulatoryGenomes[0].copies.map(g=>g.id),paternalRegulatoryIds=api.regulatoryGenomes[1].copies.map(g=>g.id);
 api.conceive(0, 1);
+assert.deepEqual(api.paternalRegulatoryGenomes[0].map(g=>g.id),paternalRegulatoryIds,'paternal regulatory copy identities must be stored at conception');
 api.cfg.fertility = 1;
 const before = api.N;
 api.deliver(0);
@@ -100,6 +104,9 @@ assert.equal(api.N, before + 1, 'delivery should append one offspring');
 assert.equal(api.parentA[before], api.individualId[0], 'offspring should retain maternal identity');
 assert.equal(api.parentB[before], api.individualId[1], 'offspring should retain paternal identity');
 assert.notEqual(api.individualId[before], api.individualId[0], 'offspring identity must be unique');
+assert.ok(api.regulatoryGenomes[before].copies.length>0,'offspring must inherit regulatory gene copies');
+assert.ok(api.regulatoryGenomes[before].copies.some(g=>!maternalRegulatoryIds.includes(g.id)),'offspring may inherit paternal regulatory copy identities');
+assert.ok(api.regulatoryGenomes[before].copies.some(g=>g.id>=100),'offspring duplication must allocate a new stable regulatory copy ID');
 const firstChildId = api.individualId[before];
 assert.equal(api.kinshipRelatedness(api.individualId[0], firstChildId), .5, 'parent and offspring should have 0.5 relatedness');
 api.conceive(0, 1);
@@ -191,7 +198,9 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 13);
+assert.equal(restoredSnapshot.schemaVersion, 14);
+assert.deepEqual(restoredSnapshot.regulatoryGenomes,api.regulatoryGenomes.slice(0,api.N),'regulatory copy genomes must survive snapshots');
+assert.deepEqual(restoredSnapshot.regulatoryRegistry,api.exportSnapshot().regulatoryRegistry,'regulatory copy registry must survive snapshots');
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
