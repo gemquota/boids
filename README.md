@@ -15,7 +15,7 @@ No framework, bundler, package installation, or build step is required. The site
 
 - Full-screen, responsive simulation with touch and pointer interaction.
 - Dedicated simulation worker using typed arrays, spatial indexing, and OffscreenCanvas.
-- **182 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
+- **181 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
@@ -228,7 +228,7 @@ The controls are distributed across the main simulation tabs and the advanced Dy
 | **Genetics** | Mutation probability and magnitude, crossover, parental weight blending, mutation drift, rewiring, and lineage variation. |
 | **Reproduction** | Reproductive drive, age windows, lifespan, mate preference, fertility, gestation, energy threshold, mate radius, candidate sampling, and mate-drive variation. |
 | **Selection** | Predation, starvation, competition, environmental harshness, ageing, and selection intensity. |
-| **Environment** | Predator population, reefs, food patches, food regeneration, food attraction, metabolic rate, juvenile vulnerability, currents, and trail persistence. |
+| **Environment** | Predator population, reefs, food patches, food regeneration, food attraction, metabolic rate, juvenile vulnerability, currents. |
 | **Dynamics** | Flocking noise, alignment persistence, cohesion bias, separation falloff, density sensitivity, current drift, eddy frequency, food depletion and yield, neural output dynamics, sensory noise, life-history costs, and predator ecology. |
 
 The Dynamics controls are grouped into Movement, Water dynamics, Reproduction, Genetic variation, Neural dynamics, Life history, and Predator ecology.

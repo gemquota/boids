@@ -115,10 +115,10 @@ assert.ok(adultClones.every(p => p.biomass >= .72 && p.age >= 9), 'adult clones 
 assert.ok(plantApi.plantCounters.asexualBuds >= 2, 'clonal budding should be counted');
 const beforeGermination = plantApi.plants.length;
 const waterLanding = plantApi.nearestFreshwater(500, 300);
-plantApi.spores.push({ x: waterLanding.x, y: waterLanding.y, vx: 0, vy: 0, life: 7.1, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
+plantApi.spores.push({ x: waterLanding.x, y: waterLanding.y, vx: 0, vy: 0, life: 7.1, settleAfter: 7, landed: true, settleClock: 1.8, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
 plantApi.growPlants(.01);
 const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && p.x > 450);
-assert.ok(germinated, 'a viable dispersed asexual spore should germinate into a clonal seedling');
+assert.ok(germinated, 'a landed, viable asexual spore should germinate into a clonal seedling');
 assert.ok(plantApi.plants.length > beforeGermination, 'adult clonal nodes should continue branching during the next growth tick');
 assert.equal(plantApi.plantCounters.sporesGerminated, 1);
 const oldPlant = { id: 9002, parent: 0, root: 9002, x: 600, y: 300, angle: 0, size: .3, biomass: .2, age: 100, children: 0, lifespan: 100, senescent: false };
