@@ -89,7 +89,7 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
 
 
 test('Observatory exposes live species and population-genetic metrics',()=>{
-  for(const id of ['mSpecies','mSpeciesThreshold','mSpeciesQuota','mSpeciesAge','mSpeciesStagnant','mSpeciesChampion','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mInbreeding','mNe','mEffectiveBreeders','mEffectiveFemales','mEffectiveMales','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
+  for(const id of ['mSpecies','mSpeciesThreshold','mSpeciesQuota','mSpeciesAge','mSpeciesStagnant','mSpeciesChampion','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mPhenotypicVariance','mAdditiveVariance','mInbreeding','mNe','mEffectiveBreeders','mEffectiveFemales','mEffectiveMales','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
   assert.ok(html.includes('geneticsHistoryChart'));
   assert.ok(html.includes('speciesCount'));
   assert.ok(html.includes('speciesStagnationLimit'));
