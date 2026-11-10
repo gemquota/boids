@@ -38,6 +38,6 @@
     expressionTraits:freeze(expressionTraits),
     expressionFields:freeze(expressionFields),
     expressionMutationFields:freeze(expressionMutationFields),
-    expressionCurves:freeze(expressionCurves.map(([value,label])=>({value,label})))
+    expressionCurves:freeze(expressionCurves.map(pair=>pair))
   });
 });
