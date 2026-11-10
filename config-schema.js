@@ -90,9 +90,17 @@
     const next={...current,...values},patch={};
     const definition=id=>coreSliderDefs.find(item=>item.id===id);
     const roundUp=(id,value)=>{const item=definition(id);if(!item)return value;return Math.min(item.max,item.min+Math.ceil((value-item.min)/item.step)*item.step)};
+    const roundField=(trait,field,value,direction)=>{const item=expressionFields.find(entry=>entry.key===field),lo=item?.lo??0,hi=item?.hi??trait.upper,step=item?.step??.01,units=(value-lo)/step;return Math.max(lo,Math.min(hi,lo+(direction==='up'?Math.ceil(units-1e-9):Math.floor(units+1e-9))*step))};
     const ageMin=Number(next.ageMin),ageMax=Number(next.ageMax),lifespan=Number(next.lifespan);
     if(Number.isFinite(ageMin)&&Number.isFinite(ageMax)&&ageMax<ageMin+1){patch.ageMax=roundUp('ageMax',ageMin+1);next.ageMax=patch.ageMax;}
     if(Number.isFinite(next.ageMax)&&Number.isFinite(lifespan)&&lifespan<Number(next.ageMax)+1)patch.lifespan=roundUp('lifespan',Number(next.ageMax)+1);
+    for(const trait of expressionTraits){
+      const minKey='expr_'+trait.key+'_min',maxKey='expr_'+trait.key+'_max',min=Number(next[minKey]),max=Number(next[maxKey]);
+      if(!Number.isFinite(min)||!Number.isFinite(max)||max>min)continue;
+      if(values[minKey]!==undefined&&values[maxKey]===undefined)patch[maxKey]=roundField(trait,'max',min+.01,'up');
+      else if(values[maxKey]!==undefined&&values[minKey]===undefined)patch[minKey]=roundField(trait,'min',max-.01,'down');
+      else patch[maxKey]=roundField(trait,'max',min+.01,'up');
+    }
     return Object.freeze(patch);
   }
   const freeze=list=>Object.freeze(list.map(item=>Object.freeze(item)));
