@@ -38,8 +38,8 @@ jobs:
           if not baseline_match:
               raise SystemExit('Rapid-evolution startup baseline missing')
           baseline = json.loads(baseline_match.group(1))
-          expected = {'count': 800, 'timeScale': 1.35, 'connections': 24, 'hidden': 10, 'brainRate': 2,
-                      'mutation': 0.055, 'mutationSize': 0.28, 'drive': 0.78, 'ageMin': 10,
+          expected = {'count': 800, 'timeScale': 0.55, 'connections': 24, 'hidden': 10, 'brainRate': 2,
+                      'mutation': 0.075, 'mutationSize': 0.34, 'drive': 0.78, 'ageMin': 10,
                       'gestation': 14, 'selection': 0.72, 'foodPatches': 26, 'foodRegen': 0.22}
           for key, value in expected.items():
               if baseline.get(key) != value:
@@ -170,7 +170,7 @@ jobs:
           for item in ['hungerMin','hungerMax','thirstMin','thirstMax','hungryCount','thirstyCount','predatingCount','plantEatingCount','plantEatingFlag[i]=1','huntingFlag[i]=1']:
               if item not in worker:
                   raise SystemExit('Missing live feeding/hydration telemetry: ' + item)
-          for item in ['id="ccHungerRange"','id="ccThirstRange"','id="ccHungry"','id="ccThirsty"','id="ccCarnivore"','id="ccHerbivore"','id="ccDeaths"','id="ccPredation"']:
+          for item in ['id="ccHungerMin"','id="ccHungerMean"','id="ccHungerMax"','id="ccThirstMin"','id="ccThirstMean"','id="ccThirstMax"','id="ccDrive"','id="ccAggressionMean"','id="ccHungry"','id="ccThirsty"','id="ccCarnivore"','id="ccHerbivore"','id="ccDeaths"','id="ccPredation"','id="traitHistoryChart"','id="traitHistoryLegend"']:
               if item not in html:
                   raise SystemExit('Missing grouped command-centre metric: ' + item)
           for item in ['id="mUpdateMs"', 'id="mDrawMs"', 'id="mBacklog"']:
