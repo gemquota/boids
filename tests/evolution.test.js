@@ -40,6 +40,27 @@ test('crossover aligns matching innovations and only inherits unmatched genes fr
   assert.ok(child.connections.some(g=>g.innovation===1&&g.weight===-.5));
 });
 
+test('compiled neural networks execute variable hidden topologies in dependency order',()=>{
+  const genome={nodes:[{id:0,type:'input'},{id:4,type:'hidden'},{id:5,type:'hidden'},{id:9,type:'output'}],connections:[
+    {innovation:1,source:0,destination:5,weight:1},
+    {innovation:2,source:5,destination:4,weight:1},
+    {innovation:3,source:4,destination:9,weight:1}
+  ]};
+  const compiled=evo.compileNetwork(genome);
+  assert.deepEqual(compiled.hidden,[5,4]);
+  const result=evo.activateNetwork(compiled,[1],new Float32Array(compiled.nodes.length));
+  assert.ok(result.outputs[0]>.5);
+  assert.equal(result.state.length,4);
+});
+
+test('split mutations compile into a live two-edge path',()=>{
+  const registry=evo.createInnovationRegistry({nextInnovation:20,nextNode:8});
+  const mutated=evo.mutateGenome(baseGenome(),registry,fixed(0),{rates:{weight:0,addConnection:0,splitConnection:1,deleteConnection:0,toggleConnection:0,bias:0}});
+  const compiled=evo.compileNetwork(mutated),result=evo.activateNetwork(compiled,[1,0],new Float32Array(compiled.nodes.length));
+  assert.equal(mutated.nodes.filter(n=>n.type==='hidden').length,2);
+  assert.ok(result.outputs[0]>0);
+});
+
 test('compatibility distance is invariant to connection array ordering',()=>{
   const a=baseGenome(),b=baseGenome();b.connections.reverse();
   assert.equal(evo.compatibilityDistance(a,b),0);
