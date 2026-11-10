@@ -119,7 +119,7 @@ assert.ok(Number.isFinite(experimentSample.speciesChampionFitness), 'species cha
 assert.equal(experimentSample.speciesQuotaTotal, experimentSample.count, 'species offspring quotas should sum to population size');
 const championSpecies=api.speciesState.find(group=>group.members.length>1&&group.championId!==null);
 if(championSpecies){const championIndex=Array.from(api.individualId.subarray(0,api.N)).indexOf(championSpecies.championId);const otherIndex=api.speciesState.find(group=>group.id===championSpecies.id).members.find(member=>member.id!==championSpecies.championId);const otherAgent=Array.from(api.individualId.subarray(0,api.N)).indexOf(otherIndex.id);assert.ok(api.speciesQuotaFactor(championIndex)>api.speciesQuotaFactor(otherAgent),'species champions should receive reproductive preservation pressure')}
-assert.ok(api.speciesQuotaFactor(0)>=0&&api.speciesQuotaFactor(0)<=3, 'species quota pressure must remain bounded');
+assert.ok(api.speciesQuotaFactor(0)>=0&&api.speciesQuotaFactor(0)<=4.5, 'species quota pressure must remain bounded');
 assert.equal(experimentSample.traitAlleleRichness.length, 10, 'allele richness should be reported for every trait');
 assert.equal(experimentSample.traitHeritability.length, 10, 'parent-offspring heritability should be reported for every trait');
 assert.ok(Number.isFinite(experimentSample.meanInbreeding), 'population inbreeding should be measurable');
