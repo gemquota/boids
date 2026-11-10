@@ -177,6 +177,33 @@ test('regulatory activation, repression, and epistatic phenotype expression are 
   assert.ok(repressed.b<1);
 });
 
+test('regulatory gene copies retain stable identities through duplication and deletion',()=>{
+  const base={nodes:[{id:1,locus:'aggression',bias:.2,effect:1},{id:2,locus:'size',bias:0,effect:.5}],edges:[{id:1,source:1,target:2,weight:.8}]};
+  const registry={nextGene:3,nextEdge:2};
+  const duplicated=evo.mutateRegulatoryGenome(base,registry,()=>0,{rates:{duplicate:1,delete:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.equal(duplicated.nodes.length,3);assert.equal(new Set(duplicated.nodes.map(node=>node.id)).size,3);
+  assert.equal(duplicated.nodes[2].id,3);assert.ok(duplicated.edges.some(edge=>edge.source===3||edge.target===3),'duplicated locus should retain regulatory connections');
+  const deleted=evo.mutateRegulatoryGenome(duplicated,registry,()=>0,{rates:{duplicate:0,delete:1,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.equal(deleted.nodes.length,2);assert.ok(deleted.edges.every(edge=>deleted.nodes.some(node=>node.id===edge.source)&&deleted.nodes.some(node=>node.id===edge.target)));
+});
+
+test('regulatory crossover combines homologous and inherited gene copies by identity',()=>{
+  const a={nodes:[{id:1,locus:'aggression',bias:.2,effect:1}],edges:[]},b={nodes:[{id:1,locus:'aggression',bias:.6,effect:1},{id:2,locus:'aggression',bias:.1,effect:.4}],edges:[]};
+  const child=evo.crossoverRegulatoryGenome(a,b,()=>0);
+  assert.equal(child.nodes.find(node=>node.id===1).bias,.4);
+  assert.ok(child.nodes.some(node=>node.id===2),'unmatched regulatory copies can be inherited');
+});
+
+test('trans-regulatory expression responds to upstream activation, repression and environment',()=>{
+  const base={nodes:[{id:1,locus:'regA',bias:1,effect:1},{id:2,locus:'aggression',bias:0,effect:1,environment:'heat',environmentSensitivity:1}],edges:[{id:1,source:1,target:2,weight:1}]};
+  const activated=evo.evaluateRegulatoryGenome(base,{heat:1},5);
+  const repressed=evo.evaluateRegulatoryGenome({...base,edges:[{id:1,source:1,target:2,weight:-1}]},{heat:1},5);
+  const cool=evo.evaluateRegulatoryGenome(base,{heat:0},5);
+  assert.ok(activated.expression.aggression>repressed.expression.aggression);
+  assert.ok(activated.expression.aggression>cool.expression.aggression);
+  assert.equal(activated.nodeCount,2);assert.equal(activated.edgeCount,1);
+});
+
 test('allele statistics report richness, frequencies, and expected heterozygosity',()=>{
   const stats=evo.alleleStatistics([0,0,1,1]);assert.equal(stats.sampleSize,4);assert.equal(stats.alleleRichness,2);assert.equal(stats.expectedHeterozygosity,.5);
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
