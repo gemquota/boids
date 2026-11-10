@@ -28,6 +28,7 @@
 ## Next implementation sequence
 
 1. Extend NEAT protection from champion reproductive preference to explicit elitist inheritance, protect newly introduced structural innovations, and expose per-species innovation/topology detail.
+2. Build isolated experiment-world orchestration around immutable manifests and deterministic replicate seeds; add factorial / Latin-hypercube designs, progress/cancellation, and export/replay.
 2. Finish NEAT selection pressure: fitness sharing, champion preservation, stagnation, and species-specific offspring quotas.
 3. Expand regulatory genetics with stable gene-copy identity, trans-regulatory edges, duplication/deletion, and epistatic trait equations.
 4. Add effective population size, genetic/phenotypic variance, uncertainty, and cohort survival estimates.
