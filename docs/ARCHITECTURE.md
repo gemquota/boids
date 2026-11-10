@@ -37,6 +37,19 @@ Keep these layers distinct:
 
 The current worker uses variable-length genomes as the neural source of truth while retaining compatibility/projection arrays for legacy runtime consumers. Those projections are transitional and must not become a second independently mutable genome.
 
+## Neural storage bounds and legacy projections
+
+The variable-length `agentGenomes`, compiled networks and per-agent recurrent state are authoritative. The fixed-size typed arrays (`genome`, `connectionSource`, `connectionDestination`, `innovation`, `brainState` and `eligibility`) remain bounded legacy projections for compatibility, snapshots and older execution paths; they must not be treated as the evolved genome's maximum topology.
+
+Current bounds are aligned:
+- UI/configuration legacy connection slots: 4–64.
+- Legacy hidden-neuron count: 2–24; the legacy scratch buffer has 40 entries for the 8 inputs, up to 24 hidden neurons and 8 outputs.
+- Live NEAT mutation limits: 128 nodes and 512 connections.
+- Compiled neural workspace: 128 values/state slots, matching the live node ceiling.
+- The live per-agent genome, innovation map and recurrent state are variable-length structures.
+
+Configuration schema tests enforce the legacy control bounds; evolution tests cover variable-length genes, graph validation, recurrent execution and structural mutation. Any increase to the node ceiling must update the compiled workspace and its tests in the same change.
+
 ## NEAT execution
 
 Node genes have stable IDs, type, activation and bias. Connection genes have historical innovation IDs, source/destination IDs, weights, enabled state and recurrent metadata. The worker compiles sparse networks and retains recurrent state per agent. Mutation and crossover are delegated to `evolution.js`.
