@@ -40,11 +40,12 @@
 
   function cloneGenome(genome){return clone(normalizeGenome(genome))}
   function mutateGenome(input,registry,random=Math.random,options={}){
-    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,deleteConnection:.01,toggleConnection:.01,bias:.08,...options.rates};
+    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,deleteConnection:.01,toggleConnection:.01,recurrent:.01,bias:.08,...options.rates};
     const limits={maxNodes:128,maxConnections:512,weightStep:.25,...options.limits};
     for(const gene of genome.connections)if(random()<rates.weight)gene.weight=clamp(gene.weight+(random()*2-1)*limits.weightStep,-5,5);
     for(const node of genome.nodes)if(node.type!=='input'&&random()<rates.bias)node.bias=clamp(node.bias+(random()*2-1)*limits.weightStep,-5,5);
     if(random()<rates.toggleConnection&&genome.connections.length){const g=genome.connections[randomIndex(genome.connections.length,random)];g.enabled=!g.enabled}
+    if(random()<rates.recurrent){const candidates=genome.connections.filter(g=>g.enabled&&!g.recurrent);if(candidates.length)candidates[randomIndex(candidates.length,random)].recurrent=true}
     if(random()<rates.deleteConnection&&genome.connections.length){genome.connections.splice(randomIndex(genome.connections.length,random),1)}
     if(random()<rates.deleteNode){const hidden=genome.nodes.filter(node=>node.type==='hidden');if(hidden.length>1){const removed=hidden[randomIndex(hidden.length,random)].id;genome.nodes=genome.nodes.filter(node=>node.id!==removed);genome.connections=genome.connections.filter(g=>g.source!==removed&&g.destination!==removed)}}
     if(random()<rates.activation){const hidden=genome.nodes.filter(node=>node.type!=='input'),choices=['tanh','sigmoid','relu','sin','linear'];if(hidden.length){const node=hidden[randomIndex(hidden.length,random)],available=choices.filter(value=>value!==node.activation);node.activation=available[randomIndex(available.length,random)]}}
