@@ -79,7 +79,7 @@ test('boid display colour ignores mutable neural connection weights', () => {
   const start = worker.indexOf('function phenotypeHue(i)');
   const end = worker.indexOf('\n', start);
   const hue = worker.slice(start, end);
-  assert.doesNotMatch(hue, /genome\[o\+2\]|weight/);
+  assert.doesNotMatch(hue, /genome\[o\+2\]|weight|connectionSource|connectionDestination/);
   assert.match(hue, /traitGenes/);
 });
 
