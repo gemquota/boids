@@ -91,7 +91,7 @@ jobs:
               raise SystemExit('Worker must resolve settings through the shared configuration schema')
           if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
               raise SystemExit('World snapshot/restore handlers missing')
-          if "new Worker('./boids-worker.js?v=20261110-trait-history-slower-v8')" not in html:
+          if "new Worker('./boids-worker.js?v=20261110-river-plant-v3')" not in html:
               raise SystemExit('Plant renderer worker cache-bust missing')
           if 'function drawPlantNode(p)' not in worker or 'function drawPlantFronds(p)' not in worker:
               raise SystemExit('Ribbon-kelp plant renderer missing')
