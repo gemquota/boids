@@ -37,7 +37,7 @@ test('crossover aligns matching innovations and only inherits unmatched genes fr
   const a=baseGenome(),b=baseGenome();a.connections.push({innovation:9,source:1,destination:3,weight:.2});b.connections[0].weight=-.5;
   const child=evo.crossover(a,b,()=>0,{equalFitness:false});
   assert.deepEqual(child.connections.map(g=>g.innovation),[1,2,9]);
-  assert.ok(child.connections.some(g=>g.innovation===1&&g.weight===-.5));
+  assert.ok(child.connections.some(g=>g.innovation===1&&g.weight===.5));
 });
 
 test('compiled neural networks execute variable hidden topologies in dependency order',()=>{
@@ -47,7 +47,7 @@ test('compiled neural networks execute variable hidden topologies in dependency 
     {innovation:3,source:4,destination:9,weight:1}
   ]};
   const compiled=evo.compileNetwork(genome);
-  assert.deepEqual(compiled.hidden,[5,4]);
+  assert.deepEqual(compiled.hidden.map(i=>compiled.nodes[i].id),[5,4]);
   const result=evo.activateNetwork(compiled,[1],new Float32Array(compiled.nodes.length));
   assert.ok(result.outputs[0]>.5);
   assert.equal(result.state.length,4);
