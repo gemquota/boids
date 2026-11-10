@@ -111,12 +111,10 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Control | Range | Initial value | Effect |
 |---|---:|---:|---|
 | Reef structures | 0–18 | 7 | Number of circular obstacles. |
-| Renewable food patches | 0–40 | 14 | Number of finite, regenerating food sources. |
-| Food preference | 0–2 | 0.75 | Strength of steering toward stocked food patches. |
+| Plant preference | 0–2 | 0.75 | Strength of steering toward edible plant biomass. |
 | Metabolic rate | 0.25–3 | 1 | Scales energy expenditure. |
 | Juvenile age | 0–40 | 8 | Age below which agents are more vulnerable to conspecific attacks. |
 | Juvenile vulnerability | 0–4 | 1.5 | Multiplier on conspecific attack probability for juveniles. |
-| Food regeneration | 0–1 | 0.12 | Rate at which food-patch stock recovers. |
 | Current strength | 0–1.8 | 0.45 | Base environmental flow strength. |
 
 ### Toggles
@@ -136,11 +134,8 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Primary current wave strength | 0–1 | 0.34 | Amplitude of the broad current wave. |
 | Secondary current wave strength | 0–0.5 | 0.12 | Amplitude of the finer current wave. |
 | Turbulence force gain | 0–1 | 0.24 | Scales irregular per-agent current perturbation. |
-| Food attraction range scale | 0.5–5 | 2 | Multiplier on perception radius for food attraction. |
-| Minimum food attraction range | 20–200 | 60 | Minimum distance at which food influences steering. |
-| Food-seeking steering gain | 0–1 | 0.22 | Direct steering force toward the nearest stocked patch. |
-| Food consumed per contact | 0.00001–0.0002 | 0.00004 | Stock removed by one successful food contact. |
-| Energy yield from food | 1–10 | 4 | Converts consumed food stock into energy. |
+| Plant sensing range scale | 0.5–5 | 2 | Multiplier on perception radius for detecting edible plants. |
+| Minimum plant sensing range | 20–200 | 60 | Minimum distance at which plants influence steering. |
 | Threat-avoidance steering gain | 0–6 | 2.4 | Scales steering away from nearby aggressive conspecifics. |
 | Neural turning output gain | 0–2 | 0.5 | Scales the evolved turn-neuron output. |
 | Neural acceleration output gain | 0–2 | 0.35 | Scales the evolved acceleration-neuron output. |
@@ -148,7 +143,6 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Neural mate-seeking output gain | 0–2 | 0.3 | Scales the evolved mate-seeking output. |
 | Crowding mortality coefficient | 0–0.0000005 | 0.00000008 | Density-dependent mortality above the neighbour threshold. |
 | Baseline metabolic cost | 0.00001–0.0001 | 0.00004 | Constant component of each agent's energy expenditure. |
-| Food patch storage capacity | 0.25–3 | 1 | Maximum renewable stock held by each food patch. |
 
 ## Rapid-evolution startup baseline
 
@@ -173,7 +167,7 @@ The shipped **Reset defaults** configuration is tuned for faster observable evol
 | Mate radius / random candidates | 78 / 12 | 96 / 20 |
 | Selection intensity | 0.45 | 0.72 |
 | Predation / competition pressure | 0.48 / 0.20 | 0.62 / 0.28 |
-| Food patches / regeneration | 20 / 0.16 | 26 / 0.22 |
+| Plant preference / plant growth | 0.75 / 0.16 | 0.95 / 0.16 |
 
 The profile increases the rate at which inherited neural and quantitative-trait variation appears, shortens the reproductive cycle, and strengthens survival/reproductive filtering. Food availability and energy yield are raised alongside selection so the population is not simply starved out. Neural learning is also slightly stronger, but lifetime plasticity is distinct from inherited evolution and should be evaluated separately.
 
@@ -199,7 +193,7 @@ The Dynamics tab adds 22 independently adjustable controls, grouped into collaps
 | Life history | Juvenile growth rate, adult maintenance cost |
 | Conspecific hunting | Aggression selection, size selection, kin protection, attack cost, attack range, juvenile vulnerability |
 
-These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and conspecific threat response. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; food energy yield multiplier changes energy received per bite rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, renewable food patches, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
+These controls are wired into steering, sensory inputs, resource cycling, neural plasticity, inheritance and conspecific threat response. Neural turn damping attenuates only the evolved turn output; the plasticity multiplier scales the learning update rather than maintaining a momentum buffer; juvenile ageing multiplier changes age progression rather than body growth; plant energy yield converts grazed biomass into energy rather than implementing contest competition; and mate proximity weighting is a score weight relative to genetic preference. The initial ecosystem configuration is tuned toward a moderately dense population, plant biomass as the sole renewable basal resource, varied currents, moderate predation and non-zero genetic variation. It is intended as a starting point for long-running dynamics, not a guarantee against extinction.
 
 ## Presets, randomisation and persistent worlds
 
@@ -227,7 +221,7 @@ Each agent inherits ten quantitative trait loci. The allele values are sampled a
 | Acceleration | Burst response | Scales movement acceleration and force authority |
 | Agility | Manoeuvrability | Scales evolved neural turning response |
 | Risk tolerance | Risk acceptance | Increases attack commitment and reduces threat-flee response |
-| Exploration | Exploratory tendency | Increases stochastic steering and reduces direct food attraction |
+| Exploration | Exploratory tendency | Increases stochastic steering and reduces direct plant attraction |
 
 The four newer loci use bounded quantitative inheritance and mutation. Older six-locus snapshots migrate to ten loci by preserving their original six values and initialising acceleration, agility, risk tolerance, and exploration to neutral values. This is a compatibility migration, not an inferred reconstruction of missing historical genes.
 
@@ -245,7 +239,7 @@ Selection differentials are the mean trait values of parents that have produced 
 
 ### Habitat, resources, and energetic costs
 
-Food patches carry three additional state variables: quality, productivity, and seasonal phase. Quality scales energy gained from feeding; productivity scales patch stock capacity and renewal; phase offsets a smooth seasonal regeneration cycle. Old snapshots without these fields are migrated to neutral values.
+Plant biomass is consumed directly by herbivorous boids. Carnivorous boids can gain energy by killing smaller members of the same population. Legacy snapshots may still contain obsolete food-patch data, but the current worker ignores it.
 
 Reef obstacles also provide local cover. Cover reduces perceived threat and lowers the probability that an agent is successfully attacked. It is derived from current agent/obstacle positions and is not stored in snapshots.
 
