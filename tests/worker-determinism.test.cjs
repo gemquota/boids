@@ -123,6 +123,8 @@ assert.equal(api.reproductiveSuccess.get(api.individualId[1]), 3, 'paternal life
 assert.equal(api.selectedParentEvents, 6, 'each birth should contribute two successful parent events');
 const experimentSample = api.evaluatePopulation();
 assert.equal(experimentSample.selectionDifferentials.length, 10, 'selection differentials should be reported for all inherited loci');
+assert.equal(experimentSample.traitHeritabilityConfidenceIntervals.length,10,'heritability uncertainty intervals should be exposed for every locus');
+assert.equal(experimentSample.traitHeritabilityRawSlopes.length,10,'unbounded regression slopes should remain available for diagnostics');
 assert.ok(experimentSample.speciesCount >= 1, 'NEAT species should be measured in live population telemetry');
 assert.ok(Number.isFinite(experimentSample.speciesQuotaPressureMean), 'species size should influence reproductive pressure');
 assert.ok(Number.isFinite(experimentSample.speciesMeanAge), 'species age should be tracked');
