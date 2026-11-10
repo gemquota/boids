@@ -24,7 +24,7 @@
   }
 
   function createInnovationRegistry(state={}){
-    let nextInnovation=Math.max(1,finite(state.nextInnovation,1));
+    let nextInnovation=Math.max(1000000,finite(state.nextInnovation,1000000));
     let nextNode=Math.max(1,finite(state.nextNode,1));
     const connections=new Map(state.connections||[]);
     const splits=new Map(state.splits||[]);
@@ -108,11 +108,9 @@
   }
 
   function assignSpecies(individuals,previous=[],options={}){
-    const threshold=Math.max(.01,finite(options.threshold,3)),coefficients=options.coefficients||{},species=previous.map(s=>({id:s.id,representative:cloneGenome(s.representative),members:[]})),unassigned=[];
+    const threshold=Math.max(.01,finite(options.threshold,3)),coefficients=options.coefficients||{},species=previous.map(s=>({id:s.id,representative:cloneGenome(s.representative),members:[]}));let nextId=Math.max(0,...species.map(s=>s.id))+1;
     for(const individual of individuals){let best=null,bestDistance=Infinity;for(const s of species){const d=compatibilityDistance(individual.genome,s.representative,coefficients);if(d<threshold&&d<bestDistance){best=s;bestDistance=d}}
-      if(best)best.members.push(individual);else unassigned.push(individual)}
-    let nextId=Math.max(0,...species.map(s=>s.id))+1;
-    for(const individual of unassigned)species.push({id:nextId++,representative:cloneGenome(individual.genome),members:[individual]});
+      if(best)best.members.push(individual);else species.push({id:nextId++,representative:cloneGenome(individual.genome),members:[individual]})}
     for(const s of species)if(s.members.length)s.representative=cloneGenome(s.members[0].genome);
     return species.filter(s=>s.members.length);
   }
