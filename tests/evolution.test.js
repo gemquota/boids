@@ -67,6 +67,26 @@ test('activation mutations change node expression and node deletion removes inci
   assert.ok(deleted.connections.every(g=>deleted.nodes.some(n=>n.id===g.source)&&deleted.nodes.some(n=>n.id===g.destination)));
 });
 
+test('species statistics share fitness, allocate integer quotas, and track stagnation',()=>{
+  const groups=[
+    {id:1,representative:baseGenome(),members:[{id:10},{id:11},{id:12}]},
+    {id:2,representative:baseGenome(),members:[{id:20},{id:21}]}
+  ];
+  const first=evo.updateSpeciesStatistics(groups,new Map([[10,8],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
+  assert.equal(groups[0].age,1);assert.equal(groups[0].stagnation,0);
+  assert.equal(groups[0].championId,10);assert.ok(groups[0].sharedFitness<groups[0].rawFitness,'fitness is divided by species size');
+  assert.equal(groups.reduce((sum,g)=>sum+g.offspringQuota,0),5,'integer quotas must sum to the population size');
+  assert.ok(groups[0].offspringQuota>groups[1].offspringQuota,'higher shared fitness receives more offspring');
+  evo.updateSpeciesStatistics(groups,new Map([[10,8],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
+  assert.equal(groups[0].stagnation,1);
+  const third=evo.updateSpeciesStatistics(groups,new Map([[10,8],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
+  assert.equal(groups[1].stagnant,true);assert.equal(groups[1].offspringQuota,0);
+  assert.equal(third.stagnantSpecies,1);
+  const recovered=evo.updateSpeciesStatistics(groups,new Map([[10,9],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
+  assert.equal(groups[0].stagnation,0);assert.equal(groups[0].bestFitness,9);
+  assert.equal(recovered.totalMembers,5);
+});
+
 test('recurrent neural connections retain state across activations',()=>{
   const genome={nodes:[{id:0,type:'input'},{id:1,type:'hidden'},{id:2,type:'output'}],connections:[
     {innovation:1,source:0,destination:1,weight:1},
