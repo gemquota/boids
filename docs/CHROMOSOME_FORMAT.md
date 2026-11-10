@@ -1,43 +1,59 @@
-# Hexadecimal chromosome format
+# Chromosome and genome persistence
 
-**Format identifier:** `boids-hex-gene-v1`  
-**Chromosome representation:** ordered array of uppercase hexadecimal strings, one independently decodable gene per string.
+## Two related representations
 
-The chromosome is the persistent genetic representation. The worker decodes it into typed runtime arrays for simulation. JSON snapshots preserve the hex strings as the canonical representation; typed arrays are also included as derived execution-state data and are reconstructed with their declared constructors on restore.
+The project has a typed hexadecimal gene-record codec in `chromosome.js` and a richer live NEAT genome object.
 
-## Gene records
+Do not conflate them:
 
-All multi-byte integers and IEEE-754 values use little-endian byte order.
+- The hexadecimal codec encodes ten stable trait-locus records and compact connection records.
+- The full variable-length NEAT genome stores node type, activation, bias, connection innovation, endpoints, weight, enabled state and recurrent state.
+- Schema-13 world snapshots preserve full NEAT genome objects and the additional learned-weight/recurrent state required to resume execution. Hexadecimal chromosome arrays are a compact typed representation/projection, not a lossless substitute for every NEAT field.
 
-| Gene | Byte layout | Length |
-|---|---|---:|
-| Trait | type:u8, stableTraitId:u8, value:f32 | 6 bytes |
-| Neural connection | type:u8, innovation:u32, source:u16, destination:u16, weight:f32 | 13 bytes |
+## Hexadecimal codec v1
 
-Gene type values:
+Each gene is an independently typed byte record encoded as uppercase hexadecimal.
 
-- `01`: trait gene
-- `02`: neural connection gene
+### Trait record
 
-Trait identifiers are stable semantic codes, not array offsets. The initial codes map to aggression `11`, body size `23`, speed `37`, bite strength `41`, kin affinity `52`, sensory range `68`, acceleration `73`, agility `84`, risk tolerance `96`, and exploration `A7` (hex). The decoder maps these identifiers into runtime loci; chromosome order does not carry trait meaning. The neural connection source and destination are unsigned 16-bit integers. They are not floating-point values. Weights and trait values are IEEE-754 binary32 values.
+| Field | Bytes | Encoding |
+|---|---:|---|
+| Type | 1 | `0x01` |
+| Stable locus ID | 1 | unsigned byte |
+| Value | 4 | little-endian Float32 |
 
-## Example
+Trait record length: 6 bytes.
 
-A connection gene with innovation 42, source neuron 3, destination neuron 12 and weight -0.742 has this conceptual byte layout:
+Stable trait IDs are declared in `chromosome.js`; they are not array offsets.
 
-```text
-02 | 2A 00 00 00 | 03 00 | 0C 00 | [4-byte little-endian float32]
-```
+### Connection record
 
-The encoder emits the bytes as one uppercase hexadecimal string. The actual final four bytes are generated from the exact float32 representation, not from a decimal text conversion.
+| Field | Bytes | Encoding |
+|---|---:|---|
+| Type | 1 | `0x02` |
+| Innovation | 4 | little-endian uint32 |
+| Source node | 2 | little-endian uint16 |
+| Destination node | 2 | little-endian uint16 |
+| Weight | 4 | little-endian Float32 |
 
-## Evolution and runtime
+Connection record length: 13 bytes.
 
-- Chromosomes are sequences, not fixed three-number records.
-- Gene order does not determine trait identity or neural endpoints.
-- Each gene is independently typed and length-validated.
-- The decoder returns `Uint16Array` source and destination arrays, `Uint32Array` innovation identifiers, and `Float32Array` weights and trait values.
-- Runtime arrays are derived working data. The worker refreshes the chromosome after reproduction and neural plasticity changes, and serializes a current chromosome for each creature when exporting a snapshot.
-- Schema-v8 snapshots remain loadable. Schema-v9 snapshots include `chromosomeFormat`, `chromosomes`, and `paternalChromosomes`.
+The compact connection record does not encode enabled state, recurrent state, node activation, or node bias. Those fields must be retained in the full NEAT genome snapshot.
 
-This is the first stable byte-level chromosome format. Future gene types must use new type identifiers and explicit payload layouts; existing type layouts must not be silently reinterpreted.
+## Validation
+
+The codec rejects malformed hexadecimal, odd-length byte strings, unknown record types, invalid record lengths, duplicate trait IDs, invalid innovation IDs, out-of-range node IDs and non-finite values.
+
+## World snapshot schema
+
+The worker snapshot schema is **13**. It persists full variable-length genomes, innovation registry and species state, inherited regulatory loci, learned-weight overlays, recurrent activations, pedigree and relevant ecological/RNG state. Restore supports older schema versions through explicit migration/defaulting logic.
+
+The browser IndexedDB envelope has a separate schema version. Do not label that wrapper version as the worker snapshot version.
+
+## Compatibility rules
+
+- Stable IDs must not be reassigned to unrelated genes.
+- Do not infer missing historical genes from phenotype colour.
+- Do not fabricate parental or pedigree records during migration.
+- When a new gene field is added, define its neutral legacy default and test it.
+- Round-trip tests must verify deterministic continuation, not only object equality.
