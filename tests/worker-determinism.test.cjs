@@ -49,7 +49,7 @@ for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'paren
   assert.deepEqual(Array.from(sa.arrays[key]), Array.from(sb.arrays[key]), 'same seed must reproduce ' + key);
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
-assert.deepEqual(sa.neatGenomes, sb.neatGenomes, 'same seed must reproduce variable-length neural genomes');
+assert.equal(JSON.stringify(sa.neatGenomes), JSON.stringify(sb.neatGenomes), 'same seed must reproduce variable-length neural genomes');
 assert.equal(new Set(Array.from(sa.arrays.individualId)).size, sa.N, 'individual IDs must be unique');
 a.__boidsTest.obstacles = [{ x: a.__boidsTest.x[0], y: a.__boidsTest.y[0], r: 60 }];
 a.__boidsTest.update(1 / 60, 5000);
