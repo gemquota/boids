@@ -2,7 +2,7 @@ name: Validate Boids
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, feat/evolutionary-ecology-completion]
 jobs:
   syntax-and-controls:
     runs-on: ubuntu-latest
