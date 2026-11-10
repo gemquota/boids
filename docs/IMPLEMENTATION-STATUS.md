@@ -41,3 +41,6 @@ A standalone variable-length regulatory-genome API now supports stable gene-copy
 The evolutionary model test suite previously had a deterministic fixture bug: a test intended to isolate split mutation used an RNG that also triggered the default recurrent-mutation probability. The fixture now explicitly sets unrelated mutation rates to zero. This preserves the assertion and makes the test test the intended mechanism.
 
 A feature is complete only when it is integrated where intended, covered by tests, persisted/migrated where stateful, observable where user-facing, documented with assumptions, and benchmarked where it adds recurring cost.
+
+
+Snapshot version domains and legacy restore behaviour are inventoried in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
