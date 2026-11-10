@@ -6,7 +6,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 - [ ] One evolving boid population; hunting and other strategies are behavioural differences, not a separate predator caste.
 - [ ] Persistent unique individual identity; generation counters are never used as kinship.
-- [ ] Deterministic fixed-step updates and serialisable random state.
+- [x] Deterministic fixed-step updates and serialisable random state.
 - [ ] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
 - [ ] Selection is based on realised survival and reproduction, not decorative fitness.
 - [ ] UI, worker, model documentation, snapshots, and exports describe the same mechanics.
@@ -26,40 +26,40 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## B. Variable-length NEAT genome
 
-- [ ] Replace fixed-slot connection genomes with variable-length connection genes.
-- [ ] Add explicit node genes with stable IDs, node type, activation, and bias.
-- [ ] Add connection enabled state and recurrent state metadata.
-- [ ] Persist historical innovation registry and next innovation counter.
-- [ ] Allocate connection innovations by historical mutation event, not only endpoint hash.
-- [ ] Allocate split-node innovations consistently for homologous connection splits.
-- [ ] Implement add-connection mutation with cycle/recurrent policy and duplicate prevention.
-- [ ] Implement split-connection mutation.
-- [ ] Implement connection deletion.
+- [x] Replace fixed-slot connection genomes with variable-length connection genes.
+- [x] Add explicit node genes with stable IDs, node type, activation, and bias.
+- [x] Add connection enabled state and recurrent state metadata.
+- [x] Persist historical innovation registry and next innovation counter.
+- [x] Allocate connection innovations by historical mutation event, not only endpoint hash.
+- [x] Allocate split-node innovations consistently for homologous connection splits.
+- [x] Implement add-connection mutation with cycle/recurrent policy and duplicate prevention.
+- [x] Implement split-connection mutation.
+- [x] Implement connection deletion.
 - [ ] Implement node deletion with incident-edge handling.
-- [ ] Implement enable/disable mutation.
-- [ ] Implement weight, bias, and activation mutations.
+- [x] Implement enable/disable mutation.
+- [x] Implement weight, bias, and activation mutations.
 - [ ] Implement recurrent connection mutation.
-- [ ] Implement innovation-aligned crossover.
-- [ ] Inherit disjoint/excess genes according to parent fitness.
-- [ ] Implement disabled-gene inheritance probability.
-- [ ] Validate graph references, node limits, and malformed genome rejection.
-- [ ] Implement sparse graph evaluation with deterministic topological/recurrent semantics.
+- [x] Implement innovation-aligned crossover.
+- [x] Inherit disjoint/excess genes according to parent fitness.
+- [x] Implement disabled-gene inheritance probability.
+- [x] Validate graph references, node limits, and malformed genome rejection.
+- [x] Implement sparse graph evaluation with deterministic topological/recurrent semantics.
 - [ ] Separate inherited starting weights from lifetime plasticity.
-- [ ] Migrate legacy fixed-slot genomes without silently changing their behaviour.
-- [ ] Add variable-length genome round-trip serialization tests.
+- [x] Migrate legacy fixed-slot genomes without silently changing their behaviour.
+- [x] Add variable-length genome round-trip serialization tests.
 
 ## C. NEAT speciation and selection
 
-- [ ] Calculate compatibility distance from excess, disjoint, and matching genes.
-- [ ] Assign individuals to species using representatives and compatibility threshold.
+- [x] Calculate compatibility distance from excess, disjoint, and matching genes.
+- [x] Assign individuals to species using representatives and compatibility threshold.
 - [ ] Adapt compatibility threshold toward a configurable target species count.
 - [ ] Track species identity, age, size, representative, best fitness, and stagnation.
 - [ ] Apply fitness sharing within species.
 - [ ] Preserve champions / configurable elitism.
 - [ ] Protect new structural innovations from immediate elimination.
-- [ ] Implement species-aware parent selection and offspring allocation.
-- [ ] Handle extinct species and representative replacement.
-- [ ] Persist species state across save/restore.
+- [x] Implement species-aware parent selection and offspring allocation.
+- [x] Handle extinct species and representative replacement.
+- [x] Persist species state across save/restore.
 - [ ] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory.
 - [ ] Test speciation under controlled synthetic genomes and selection pressure.
 
@@ -84,19 +84,19 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 ## E. Population genetics and pedigree
 
 - [ ] Define allele/locus semantics for every supported gene type.
-- [ ] Track per-locus allele frequencies and allele richness.
-- [ ] Track observed and expected heterozygosity where diploid allele representation supports it.
+- [x] Track per-locus allele frequencies and allele richness.
+- [x] Track observed and expected heterozygosity where diploid allele representation supports it.
 - [ ] Track genome-wide and locus-specific diversity without using colour as a proxy.
 - [ ] Track neural topology and regulatory architecture diversity separately.
-- [ ] Calculate pedigree kinship with documented founder and missing-ancestor policy.
-- [ ] Calculate individual and population inbreeding coefficients.
+- [x] Calculate pedigree kinship with documented founder and missing-ancestor policy.
+- [x] Calculate individual and population inbreeding coefficients.
 - [ ] Track pedigree truncation and uncertainty explicitly.
 - [ ] Estimate effective population size using appropriate temporal/cohort methods.
 - [ ] Estimate additive genetic variance and phenotypic variance.
-- [ ] Estimate narrow-sense heritability with parent-offspring and mid-parent regression.
+- [x] Estimate narrow-sense heritability with parent-offspring and mid-parent regression.
 - [ ] Report sample sizes, uncertainty, and assumptions for every estimate.
 - [ ] Track trait covariance and genetic/environmental covariance where identifiable.
-- [ ] Track realised lifetime reproductive success and lineage contribution.
+- [x] Track realised lifetime reproductive success and lineage contribution.
 - [ ] Track age-specific survival, cohort survival, and generational turnover.
 - [ ] Add synthetic known-pedigree and known-inheritance validation datasets.
 - [ ] Persist and export population-genetic histories.
@@ -122,14 +122,14 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Define immutable experiment manifests with model version, config, seed, and scenario.
 - [ ] Implement isolated experiment worlds that cannot mutate the user's live world.
 - [ ] Implement independent multi-seed replicates.
-- [ ] Implement one- and multi-parameter sweeps.
+- [x] Implement one- and multi-parameter sweeps.
 - [ ] Implement factorial and Latin-hypercube designs for larger parameter spaces.
 - [ ] Implement bounded concurrency, pause/resume, cancellation, and progress reporting.
 - [ ] Stream telemetry rather than retaining unbounded per-tick history.
-- [ ] Calculate mean, SD, median, IQR, and confidence intervals across replicate outcomes.
-- [ ] Implement effect sizes and bootstrap comparisons.
-- [ ] Implement regression and correlation analysis with documented assumptions.
-- [ ] Implement appropriate parametric/non-parametric group comparisons.
+- [x] Calculate mean, SD, median, IQR, and confidence intervals across replicate outcomes.
+- [x] Implement effect sizes and bootstrap comparisons.
+- [x] Implement regression and correlation analysis with documented assumptions.
+- [x] Implement appropriate parametric/non-parametric group comparisons.
 - [ ] Implement survival analysis and multiple-comparison correction where applicable.
 - [ ] Treat independent runs as replicates, not individual boids.
 - [ ] Compare experiment configurations and overlay replicate trajectories.
@@ -165,7 +165,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Test mobile Safari where available.
 - [ ] Test drawers, sliders, long-press bounds, charts, touch gestures, world interaction, pause/resume, and backgrounding.
 - [ ] Test long-running memory stability and large-world save/restore.
-- [ ] Run syntax, unit, integration, deterministic replay, migration, and performance regression tests in CI.
+- [x] Run syntax, unit, integration, deterministic replay, migration, and performance regression tests in CI.
 - [ ] Verify GitHub Pages deployment and production smoke tests.
 - [ ] Update model documentation and release notes only for implemented behaviour.
 
