@@ -12,6 +12,9 @@ assert.ok(html.includes('for(const d of coreSliderDefs)'), 'core controls must b
 assert.ok(html.includes('BoidsConfigRegistry.create(document,ranges)'), 'all declared range controls must be registered');
 assert.ok(html.includes('parameterRegistry.read()'), 'saved settings must be read through the registry');
 assert.ok(html.includes('parameterRegistry.apply(v)'), 'applied settings must be normalized through the registry');
+assert.ok(html.includes('state.storageSchemaVersion=2'), 'IndexedDB envelope must use its own schema field');
+assert.ok(!html.includes('state.schemaVersion=2'), 'browser persistence must not overwrite worker snapshot schema');
+assert.ok(html.includes('snapshot.storageSchemaVersion=2'), 'restoration must preserve worker snapshot schema');
 for (let i = 0; i < scripts.length; i++) {
   new vm.Script(scripts[i], { filename: 'index.html:inline-script-' + i });
 }
