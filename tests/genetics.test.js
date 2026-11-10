@@ -65,6 +65,7 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
   assert.match(worker,/BoidsGenetics\.inheritTrait/);
   assert.match(worker,/cfg\.geneExpression/);
   assert.match(worker,/cfg\.traitMutation/);
+  assert.match(worker,/cfg\.geneExpression\.sensoryRange\?\.max\?\?0\)<=3/);
   assert.doesNotMatch(worker,/cfg\.speed/);
   assert.doesNotMatch(worker,/cfg\.perception/);
   assert.match(worker,/perceptionRadius=phenotype\(i,5\)/);
