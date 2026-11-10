@@ -8,7 +8,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Persistent unique individual identity; generation counters are never used as kinship.
 - [x] Deterministic fixed-step updates and serialisable random state.
 - [x] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
-- [x] Selection is based on realised survival and reproduction, not decorative fitness. (Mortality removes individuals, reproduction is gated by realised condition/drive and mate selection, species quotas alter reproductive pressure, and lifetime offspring contribution is tracked; scalar fitness is a crossover-parent comparison proxy, not the sole selection mechanism.)
+- [x] Selection is based on realised survival and reproduction, not decorative fitness. Mortality removes individuals; selection fitness now incorporates survival duration, energy condition and lifetime offspring contribution, while mate choice and species quotas alter reproductive pressure. It remains a model-specific proxy, not a biological measurement.
 - [x] UI, worker, model documentation, snapshots, and exports describe the same implemented mechanics; incomplete mechanisms remain explicitly labelled as outstanding.
 - [ ] Existing plant-only ecology, terrain, drawers, controls, Observatory, presets, and saved worlds remain functional.
 
@@ -58,6 +58,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Preserve species champions with configurable reproductive-pressure elitism (`speciesChampionBonus`); this overlapping sexual population protects champion contribution rather than copying a clone into a discrete next generation.
 - [x] Protect newly introduced NEAT structural innovations with configurable grace duration/bonus, stable innovation IDs and schema-20 persistence; protection expires deterministically.
 - [x] Protect new structural innovations with persisted introduction times and a configurable grace window/selection bonus; the bonus expires after the configured simulation-time window.
+- [x] Reweight selection fitness using realised survival time and lifetime offspring contribution; deterministic tests compare matched worlds differing only in survival or reproduction records.
 - [x] Implement species-aware parent selection and species-specific offspring allocation. (Integer quota targets are allocated from shared fitness and converted to reproductive pressure in the overlapping-generation model; same-species mating is preferred with fallback.)
 - [x] Handle extinct species and representative replacement.
 - [x] Persist species state across save/restore.
