@@ -73,7 +73,9 @@ const fs=require('node:fs');
 const worker=fs.readFileSync(require('node:path').join(__dirname,'../boids-worker.js'),'utf8');
 test('worker uses expression output, not raw genes, for physical behaviour',()=>{
   assert.match(worker,/function phenotype\(i,k\)/);
-  assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);\n  assert.match(worker,/regulatoryGenes\[i\*10\+k\]/);\n  assert.match(worker,/cloneRegulatoryGenes\(child,mother\)/);
+  assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);
+  assert.match(worker,/regulatoryGenes\[i\*10\+k\]/);
+  assert.match(worker,/cloneRegulatoryGenes\(child,mother\)/);
   for(const index of [0,1,2,3,4,5,6,7,8,9])assert.ok(worker.includes('phenotype(i,'+index+')'),'missing expressed locus '+index);
   assert.match(worker,/BoidsGenetics\.inheritTrait/);
   assert.match(worker,/cfg\.geneExpression/);
