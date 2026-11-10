@@ -15,7 +15,7 @@ test('variable genomes validate nodes, innovation identities, and connection ref
 test('innovation registry returns stable connection and split history',()=>{
   const r=evo.createInnovationRegistry();assert.equal(r.connection(0,2),r.connection(0,2));
   const a=r.split(7,0,3),b=r.split(7,0,3);assert.deepEqual(a,b);assert.notEqual(a.left,a.right);
-  const state=r.snapshot();assert.equal(state.splits.length,1);
+  const state=r.snapshot();assert.equal(state.splits.length,1);assert.equal(evo.createInnovationRegistry({nextInnovation:73,nextNode:19}).snapshot().nextInnovation,73);assert.equal(evo.createInnovationRegistry({nextInnovation:73,nextNode:19}).snapshot().nextNode,19);
 });
 
 test('split mutation creates a hidden node and two historical connections',()=>{
