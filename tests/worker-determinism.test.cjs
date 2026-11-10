@@ -136,10 +136,11 @@ survivalRestored.restoreSnapshot(survivalSnapshot);
 assert.equal(JSON.stringify(survivalRestored.survivalHistory),JSON.stringify(api.survivalHistory),'survival events must survive snapshot restoration');
 assert.equal(JSON.stringify([...survivalRestored.survivalEntryAgeById.entries()]),JSON.stringify([...api.survivalEntryAgeById.entries()]),'delayed-entry ages must survive snapshot restoration');
 assert.equal(survivalRestored.survivalHistoryTruncated,api.survivalHistoryTruncated,'survival truncation count must survive snapshot restoration');
-const populationBeforeShrink=api.N;
-api.resizePopulation(populationBeforeShrink-1);
-assert.equal(api.N,populationBeforeShrink-1,'manual population reduction should remove one individual');
-assert.ok(api.survivalHistory.some(row=>!row.event),'manual removals must be censored rather than counted as deaths');
+const manualRemovalWorld=makeWorld(4321).__boidsTest;
+const populationBeforeShrink=manualRemovalWorld.N;
+manualRemovalWorld.resizePopulation(populationBeforeShrink-1);
+assert.equal(manualRemovalWorld.N,populationBeforeShrink-1,'manual population reduction should remove one individual');
+assert.ok(manualRemovalWorld.survivalHistory.some(row=>!row.event),'manual removals must be censored rather than counted as deaths');
 
 assert.equal(api.kinshipRelatedness(firstChildId, secondChildId), .5, 'full siblings should have 0.5 relatedness');
 assert.equal(api.reproductiveSuccess.get(motherId), 3, 'maternal lifetime reproductive success should count all three offspring');
