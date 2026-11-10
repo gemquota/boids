@@ -245,7 +245,7 @@ const expressionMutationFields=[
  {key:'magnitude',label:'Mutation magnitude',lo:0,hi:.5,step:.005,value:.075},
  {key:'heritability',label:'Heritability / inheritance fidelity',lo:0,hi:1,step:.01,value:.98}
 ];
-const expressionRanges=[];
+
 const expressionHost=$('geneExpressionControls');
 const expressionCurves=[['linear','Linear'],['exponential','Exponential'],['logarithmic','Logarithmic'],['sigmoid','Sigmoid'],['threshold','Threshold'],['plateau','Plateau'],['inverse','Inverse']];
 function drawExpressionCurve(trait,canvas){
@@ -274,7 +274,7 @@ for(const trait of expressionTraits){
   const label=document.createElement('label');label.htmlFor=id;label.textContent=field.label;
   const output=document.createElement('output');output.className='value';output.id=id+'Val';output.textContent=Number(value).toFixed(String(field.step).split('.')[1]?.length||0);
   const input=document.createElement('input');Object.assign(input,{id,type:'range',min:lo,max:hi,step:field.step,value});
-  wrap.append(label,output,input);shapeGrid.append(wrap);expressionRanges.push(id);input.addEventListener('input',()=>drawExpressionCurve(trait,preview));
+  wrap.append(label,output,input);shapeGrid.append(wrap);input.addEventListener('input',()=>drawExpressionCurve(trait,preview));
  }
  shape.append(shapeGrid,preview);details.append(shape);
  const mutation=document.createElement('details');mutation.className='controlAccordion geneMutation';const mutationSummary=document.createElement('summary');mutationSummary.textContent='Mutation & inheritance';mutation.append(mutationSummary);
