@@ -33,6 +33,21 @@ jobs:
           import re
           html = open('index.html', encoding='utf-8').read()
           worker = open('boids-worker.js', encoding='utf-8').read()
+          import json
+          baseline_match = re.search(r'const ecologicalBaseline=(\{.*?\});for\(const trait of expressionTraits\)', html)
+          if not baseline_match:
+              raise SystemExit('Rapid-evolution startup baseline missing')
+          baseline = json.loads(baseline_match.group(1))
+          expected = {'count': 800, 'timeScale': 1.35, 'connections': 24, 'hidden': 10, 'brainRate': 2,
+                      'mutation': 0.055, 'mutationSize': 0.28, 'drive': 0.78, 'ageMin': 10,
+                      'gestation': 14, 'selection': 0.72, 'foodPatches': 26, 'foodRegen': 0.22}
+          for key, value in expected.items():
+              if baseline.get(key) != value:
+                  raise SystemExit(f'Unexpected rapid-evolution baseline {key}: {baseline.get(key)}')
+          if html.count('rate:.04,magnitude:.11,heritability:.96') != 10:
+              raise SystemExit('All ten trait loci must use the rapid-evolution mutation baseline')
+          if "get('experiment')==='rapid-evolution'" not in html or 'saved world restore bypassed' not in html:
+              raise SystemExit('Fresh experiment launch must bypass stale local snapshots')
           static = re.search(r'const ranges=\[([^]]+)\]', html)
           extra = re.search(r'const extraSliderDefs=(\[[\s\S]*?\])\.map', html)
           if not static or not extra:

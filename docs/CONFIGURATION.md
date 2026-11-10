@@ -151,6 +151,37 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Baseline metabolic cost | 0.00001–0.0001 | 0.00004 | Constant component of each agent's energy expenditure. |
 | Food patch storage capacity | 0.25–3 | 1 | Maximum renewable stock held by each food patch. |
 
+## Rapid-evolution startup baseline
+
+The shipped **Reset defaults** configuration is tuned for faster observable evolutionary turnover while retaining a viable breeding population. It is an exploratory acceleration profile, not a claim that the model is biologically calibrated.
+
+| Parameter | Previous baseline | Rapid-evolution baseline |
+|---|---:|---:|
+| Starting population | 720 | 800 |
+| Simulation speed | 1.08 | 1.35 |
+| Neural connections / hidden neurons | 18 / 8 | 24 / 10 |
+| Neural update interval | 3 | 2 |
+| Neural connection mutation probability | 0.03 | 0.055 |
+| Neural mutation magnitude | 0.22 | 0.28 |
+| Connection rewiring chance | 0.20 | 0.28 |
+| Trait mutation rate (each of 10 loci) | 0.016 | 0.04 |
+| Trait mutation magnitude | 0.075 | 0.11 |
+| Inheritance fidelity | 0.98 | 0.96 |
+| Reproductive drive | 0.58 | 0.78 |
+| Earliest reproductive age | 18 | 10 |
+| Gestation duration | 24 | 14 |
+| Reproductive energy threshold | 0.62 | 0.54 |
+| Mate radius / random candidates | 78 / 12 | 96 / 20 |
+| Selection intensity | 0.45 | 0.72 |
+| Predation / competition pressure | 0.48 / 0.20 | 0.62 / 0.28 |
+| Food patches / regeneration | 20 / 0.16 | 26 / 0.22 |
+
+The profile increases the rate at which inherited neural and quantitative-trait variation appears, shortens the reproductive cycle, and strengthens survival/reproductive filtering. Food availability and energy yield are raised alongside selection so the population is not simply starved out. Neural learning is also slightly stronger, but lifetime plasticity is distinct from inherited evolution and should be evaluated separately.
+
+The experiment launch URL uses `?experiment=rapid-evolution`. That launch deliberately bypasses any previously saved browser world so an old snapshot cannot silently replace the new baseline. The seeded initial population is repeatable. The run still saves locally while open, and the export bundle records the full configuration, seed, population, pedigree, genomes, neural state and telemetry. Use the standard URL to resume an existing local world; use the experiment URL to start a fresh trial.
+
+**Interpretation warning:** stronger mutation can reduce adaptation if it overwhelms selection, and the current fitness/reward rules remain heuristic. Compare trait means, selection differentials, births/deaths, diversity and population size in the export rather than assuming that a higher mutation counter means faster useful evolution.
+
 ## Settings persistence
 
 The Save settings action stores the current UI configuration in browser-local storage. Load settings restores it in that browser profile. Defaults restores the shipped initial settings. This saves configuration only; it does not serialize the live population, genomes, environment state or history.
