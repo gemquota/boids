@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feat/evolutionary-ecology-completion, feat/boids-completion-workstream]
+    branches: [feat/evolutionary-ecology-completion]
   workflow_dispatch:
 
 jobs:
