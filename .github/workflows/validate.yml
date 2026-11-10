@@ -66,8 +66,8 @@ jobs:
           fields = re.findall(r"\{key:'([A-Za-z]+)'", fields_match.group(1))
           mutation_fields = re.findall(r"\{key:'([A-Za-z]+)'", mutations_match.group(1))
           ids = core_ids + extra_ids + [f'expr_{t}_{f}' for t in traits for f in fields] + [f'trait_{t}_{f}' for t in traits for f in mutation_fields]
-          if len(ids) != 182 or len(set(ids)) != 182:
-              raise SystemExit(f'Expected 182 unique controls, found {len(ids)} ({len(set(ids))} unique)')
+          if len(ids) != 186 or len(set(ids)) != 186:
+              raise SystemExit(f'Expected 186 unique controls, found {len(ids)} ({len(set(ids))} unique)')
           if any(x in ids for x in ['foodPatches','foodRegen','foodBite','foodEnergyYield','foodCapacity','foodRegrowth','foodDepletion','foodCompetition']):
               raise SystemExit('Legacy food-patch controls must be removed')
           if 'BoidsConfigSchema.fieldGuide' not in html or 'BoidsConfigSchema.normalizeDependencies' not in html:
@@ -89,7 +89,7 @@ jobs:
               raise SystemExit('Large Observatory histories must be throttled')
           if "panel==='analysis'&&Date.now()-lastChartRender>3500" not in html:
               raise SystemExit('Charts must not redraw while the Observatory drawer is closed')
-          if "new Worker('./boids-worker.js?v=20261110-habitat-v12')" not in html:
+          if "new Worker('./boids-worker.js?v=20261110-regulatory-network-v13')" not in html:
               raise SystemExit('Updated worker cache-bust missing')
           if 'r=2.8+Math.min(3.4,p.size*2.7)' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
               raise SystemExit('Faceted hexagonal plant crowns must remain visibly sized')
@@ -99,7 +99,7 @@ jobs:
               raise SystemExit('Spores must float, land, settle and then germinate')
           if 'BoidsEvolution.assignSpecies' not in worker or 'BoidsEvolution.updateSpeciesStatistics' not in worker or 'speciesThresholdCurrent' not in worker:
               raise SystemExit('Live adaptive NEAT speciation is missing')
-          if 'regulatoryGenes' not in worker or 'cloneRegulatoryGenes(child,mother)' not in worker:
+          if 'regulatoryGenes' not in worker or 'cloneRegulatoryGenes(child,mother)' not in worker or 'cloneRegulatoryGenome(child,mother,paternalRegulatoryGenomes[mother])' not in worker or 'regulatoryGenomes' not in worker:
               raise SystemExit('Inherited cis-regulatory genetics is missing')
           if 'traitAlleleFrequencies' not in worker or 'meanHeritability' not in worker or 'meanInbreeding' not in worker or 'sexRatioEffectiveSize' not in worker:
               raise SystemExit('Population genetics telemetry is missing')
@@ -109,5 +109,5 @@ jobs:
               raise SystemExit('Evolutionary Observatory metrics are missing')
           if 'recurrentMutationRate' not in worker or 'activationMutationRate' not in worker or 'nodeDeletionRate' not in worker or 'speciesStagnationLimit' not in worker or 'recurrentMutationRate' not in worker or 'updateSpeciesStatistics' not in evolution:
               raise SystemExit('Variable node activation and deletion mutations are missing')
-          print('Validated 182 controls, plant-only ecology, live NEAT topology, regulatory inheritance, population genetics and Observatory wiring.')
+          print('Validated 186 controls, plant-only ecology, live NEAT topology, regulatory inheritance, population genetics and Observatory wiring.')
           PY
