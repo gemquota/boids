@@ -209,7 +209,7 @@ assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.equal(restoredSnapshot.schemaVersion, 14);
-assert.deepEqual(restoredSnapshot.regulatoryGenomes.map(g=>g?.copies||null),api.regulatoryGenomes.slice(0,api.N).map(g=>g?.copies||null),'regulatory copy genomes must survive snapshots');
+assert.equal(restoredSnapshot.regulatoryGenomes.length,api.N,'regulatory genome population length must persist');for(let i=0;i<api.N;i++)assert.deepEqual(restoredSnapshot.regulatoryGenomes[i]?.copies||null,api.regulatoryGenomes[i]?.copies||null,'regulatory gene-copy genome must survive snapshot at individual '+i);
 assert.deepEqual(restoredSnapshot.paternalRegulatoryGenomes,api.paternalRegulatoryGenomes.slice(0,api.N),'paternal regulatory copy genomes must survive snapshots');
 assert.deepEqual(restoredSnapshot.regulatoryRegistry,api.exportSnapshot().regulatoryRegistry,'regulatory copy registry must survive snapshots');
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
