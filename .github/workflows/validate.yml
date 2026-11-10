@@ -56,8 +56,8 @@ jobs:
               raise SystemExit('Slider definitions or runtime registry missing')
           static_ids = []
           for tag in re.findall(r'<input\\b[^>]*>', html):
-              if re.search(r'\\btype=["\\']range["\\']', tag):
-                  match = re.search(r'\\bid=["\\']([^"\\']+)["\\']', tag)
+              if re.search(r"""\\btype=["']range["']""", tag):
+                  match = re.search(r"""\\bid=["']([^"']+)["']""", tag)
                   if match:
                       static_ids.append(match.group(1))
           extra_ids = re.findall(r'\\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
