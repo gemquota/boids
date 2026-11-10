@@ -39,3 +39,6 @@ Measure movement/spatial queries, neural evaluation, mutation/crossover/speciati
 - Isolated multi-replicate experiment-world orchestration, pause/resume/cancellation, complete replay archives and a dedicated experiment UI remain outstanding.
 - Spatial nutrient/temperature/habitat gradients, fragmentation, refugia and controlled disturbance scenarios are not yet comprehensive.
 - Browser/device smoke tests, mobile profiling, long-duration memory testing and production Pages verification remain release gates unless a current run explicitly records them.
+
+
+The independent version domains and field-presence migration defaults are documented in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
