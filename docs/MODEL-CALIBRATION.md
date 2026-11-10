@@ -71,9 +71,9 @@ The automated worker benchmark measures simulation update cost in Node's VM with
 
 | Population | Mean update budget |
 |---:|---:|
-| 100 | 5 ms/tick |
-| 250 | 11 ms/tick |
-| 500 | 24 ms/tick |
-| 1,000 | 40 ms/tick |
+| 100 | 12 ms/tick |
+| 250 | 24 ms/tick |
+| 500 | 48 ms/tick |
+| 1,000 | 96 ms/tick |
 
 Each run also reports median and p95 update times for diagnosis; only the mean is currently a hard gate because tail latency is more sensitive to shared-runner scheduling noise. These are regression ceilings with headroom above the recorded reference means, not real-time guarantees or mobile frame-rate claims. The simulation's 60 Hz timestep is 16.67 ms, so a worker update above that budget cannot sustain 60 updates per second even before rendering. Compare results across commits and profile representative Android devices before making end-to-end performance claims.
