@@ -9,7 +9,7 @@
   const TRAITS=Object.freeze([
     {index:0,key:'aggression',label:'Aggression',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
     {index:1,key:'bodySize',label:'Body size',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
-    {index:2,key:'speed',label:'Speed',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.75,phenotypeMax:2.25},
+    {index:2,key:'speed',label:'Speed',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.1,phenotypeMax:.5},
     {index:3,key:'biteStrength',label:'Bite strength',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
     {index:4,key:'kinAffinity',label:'Kin affinity',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
     {index:5,key:'sensoryRange',label:'Perception radius',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:18,phenotypeMax:90},
