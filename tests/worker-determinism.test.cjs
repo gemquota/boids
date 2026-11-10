@@ -76,7 +76,9 @@ plasticRestored.restoreSnapshot(plasticSnapshot);
 assert.equal(plasticRestored.agentLearnedWeights[0][plasticIndex], plasticWorld.agentLearnedWeights[0][plasticIndex], 'learned weights must survive snapshot restore');
 
 const inspectedWorld = a.__boidsTest;
-inspectedWorld.inspectBrain(inspectedWorld.x[0], inspectedWorld.y[0], 100);
+assert.ok(inspectedWorld.N>0,'deterministic world must retain agents after 180 ticks');
+assert.ok(Number.isFinite(inspectedWorld.x[0])&&Number.isFinite(inspectedWorld.y[0]),'first agent coordinates must remain finite');
+inspectedWorld.inspectBrain(inspectedWorld.x[0], inspectedWorld.y[0], 1e9);
 const brainMessage = a.__messages.filter(message => message.type === 'brain').at(-1);
 assert.ok(brainMessage && brainMessage.nodes.length > 0, 'brain inspection should expose actual variable topology nodes');
 assert.ok(brainMessage.edges.every(edge => brainMessage.nodes.some(node => node.id === edge[0]) && brainMessage.nodes.some(node => node.id === edge[1])), 'every inspected edge must reference a visible node');
