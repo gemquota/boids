@@ -44,3 +44,5 @@ A feature is complete only when it is integrated where intended, covered by test
 
 
 Snapshot version domains and legacy restore behaviour are inventoried in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
+
+The current sampled Observatory metrics and JSON analysis-bundle contract are inventoried in [TELEMETRY-EXPORTS.md](TELEMETRY-EXPORTS.md).
