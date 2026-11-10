@@ -126,7 +126,7 @@ assert.ok(survivalMetrics.survivalCensored>=api.N,'living agents must enter the 
 const survivalSnapshot=api.exportSnapshot();
 const survivalRestored=makeWorld(123456).__boidsTest;
 survivalRestored.restoreSnapshot(survivalSnapshot);
-assert.deepEqual(survivalRestored.survivalHistory,api.survivalHistory,'survival events must survive snapshot restoration');
+assert.equal(JSON.stringify(survivalRestored.survivalHistory),JSON.stringify(api.survivalHistory),'survival events must survive snapshot restoration');
 const populationBeforeShrink=api.N;
 api.resizePopulation(populationBeforeShrink-1);
 assert.equal(api.N,populationBeforeShrink-1,'manual population reduction should remove one individual');
