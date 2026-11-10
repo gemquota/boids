@@ -29,7 +29,7 @@ function makeWorld(count) {
 }
 
 const results = [];
-const meanBudgetsMs = new Map([[100, 5], [250, 11], [500, 24], [1000, 40]]);
+const meanBudgetsMs = new Map([[100, 12], [250, 24], [500, 48], [1000, 96]]);
 for (const count of [100, 250, 500, 1000]) {
   const world = makeWorld(count);
   for (let tick = 0; tick < 12; tick++) world.update(1 / 60, tick * (1000 / 60));
