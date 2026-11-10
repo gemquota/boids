@@ -1,5 +1,5 @@
 'use strict';
-importScripts('genetics.js');
+importScripts('genetics.js?v=20261110-slower-speed-v1');
 let canvas,ctx,W=1,H=1,viewW=1,viewH=1,dpr=1,cap=12000,N=0,frameNo=0,selectedAgent=-1;
 let xNext,yNext,vxNext,vyNext,individualId,paternalId,innovation,paternalInnovation,coverByAgent,currentSeasonalFactor=1,nextInnovationId=1,innovationRegistry=new Map(),nextIndividualId=1,rngState=20261110,updateOrder=new Uint32Array(0),foodClaimPatch=new Int32Array(0),foodGainByAgent=new Float32Array(0),foodDemandByPatch=new Float64Array(0),plantEatingFlag=new Uint8Array(0),huntingFlag=new Uint8Array(0),attackTarget=new Int32Array(0),attackScore=new Float32Array(0),attackWinner=new Int32Array(0),attackWinnerScore=new Float32Array(0),pedigree=new Map(),pedigreeTruncated=0,kinshipMemo=new Map();
 let x,y,vx,vy,age,energy,thirst,preg,pregnant,sex,fitness,lineage,parentA,parentB,paternalGenome,paternalLineage,genome,brainOut,brainState,eligibility,reward,hueCache,hueDirty,localCount,traitGenes,paternalTraits,phenotypeCache,cellHead,link,cols=1,rows=1,cellSize=42,phenotypeCacheReady=false;
