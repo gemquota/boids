@@ -8,6 +8,7 @@ assert.ok(scripts.length > 0, 'index.html should contain an application script')
 assert.ok(html.includes('src="./config-schema.js?'), 'shared configuration schema must load before the application');
 assert.ok(html.includes('src="./config-registry.js?'), 'configuration registry must load before the application');
 assert.ok(html.includes('BoidsConfigSchema'), 'application must consume the shared configuration schema');
+assert.ok(html.includes('for(const d of coreSliderDefs)'), 'core controls must be generated from the schema');
 assert.ok(html.includes('BoidsConfigRegistry.create(document,ranges)'), 'all declared range controls must be registered');
 assert.ok(html.includes('parameterRegistry.read()'), 'saved settings must be read through the registry');
 assert.ok(html.includes('parameterRegistry.apply(v)'), 'applied settings must be normalized through the registry');
