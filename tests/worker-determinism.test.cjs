@@ -50,6 +50,8 @@ for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'paren
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
 assert.equal(JSON.stringify(sa.neatGenomes), JSON.stringify(sb.neatGenomes), 'same seed must reproduce variable-length neural genomes');
+assert.equal(JSON.stringify(sa.agentLearnedWeights), JSON.stringify(sb.agentLearnedWeights), 'same seed must reproduce lifetime learned weights');
+assert.equal(JSON.stringify(sa.agentNeuralStates), JSON.stringify(sb.agentNeuralStates), 'same seed must reproduce recurrent neural state');
 assert.equal(new Set(Array.from(sa.arrays.individualId)).size, sa.N, 'individual IDs must be unique');
 const inspectedWorld = a.__boidsTest;
 inspectedWorld.inspectBrain(inspectedWorld.x[0], inspectedWorld.y[0], 100);
@@ -154,9 +156,11 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 11);
+assert.equal(restoredSnapshot.schemaVersion, 12);
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
+assert.equal(JSON.stringify(restoredSnapshot.agentLearnedWeights), JSON.stringify(api.exportSnapshot().agentLearnedWeights), 'learned weight overlays must survive snapshot restore');
+assert.equal(JSON.stringify(restoredSnapshot.agentNeuralStates), JSON.stringify(api.exportSnapshot().agentNeuralStates), 'recurrent neural state must survive snapshot restore');
 assert.equal(restoredSnapshot.chromosomes.length, api.N);
 assert.ok(restoredSnapshot.chromosomes.every(chromosome => chromosome.every(gene => /^[0-9A-F]+$/.test(gene))));
 const decodedFirst = BoidsChromosome.decode(restoredSnapshot.chromosomes[0]);
