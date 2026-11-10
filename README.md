@@ -21,6 +21,7 @@ No framework, bundler, package installation, or build step is required. The site
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
 - Plant biomass as the sole renewable basal food source, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body mass, speed, bite strength, perception radius, kin affinity, acceleration, agility, risk tolerance, and exploration.
+- A procedural river network with shared render/hydrology geometry, freshwater drinking, thirst accumulation, dehydration costs, and water-dependent plant growth.
 - Hunting traits are inherited and mutated independently from neural connection genes; successful predation, energy costs, size trade-offs, and kin protection create selection pressure within one shared population.
 - Observatory panels can be opened together; charts support pinch zoom, double-tap reset, numeric axes and increments, and optional grid lines.
 - Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
@@ -37,7 +38,7 @@ All 173 numeric sliders are registered, persisted, and assigned to a tab and col
 | Genetics | Neural mutation & topology; inheritance; ten-locus gene expression |
 | Reproduction | Mate choice; reproductive strategy; maturation & lifespan |
 | Selection | Ecological selection; predation phenotype selection; energy economics |
-| Environment | World geometry; food web; habitat & presentation |
+| Environment | World geometry; plant ecology; freshwater and hydration; habitat and presentation |
 | Dynamics | Spatial interaction; food sensing & foraging; predation & social response; survival mechanics; advanced movement, current, neural, life-history, genetic-variation and phenotype controls |
 
 The Genetics tab contains ten collapsible locus editors, each with phenotype bounds, curve selection, curve controls, environmental sensitivity, mutation rate, mutation magnitude and inheritance fidelity. The advanced dynamics tab contains its own nested accordions so specialist controls stay grouped without turning the main tabs into a scrollable junk drawer.
@@ -178,10 +179,10 @@ Local neighbour queries use a spatial hash rebuilt during simulation updates. St
 - Obstacle avoidance.
 - Environmental current and turbulence.
 - Plant foraging.
-- Predator avoidance.
+- Conspecific-threat avoidance.
 - Pointer-driven attraction or repulsion.
 
-World boundaries can wrap or reflect. Behaviour profiles change the balance between schooling, dispersal, predator evasion, and turbulent exploration.
+World boundaries can wrap or reflect. Behaviour profiles change the balance between schooling, dispersal, conspecific-threat evasion, and turbulent exploration.
 
 ### Evolving neural controllers
 
@@ -192,7 +193,7 @@ Each agent has a compact neural controller with **eight sensory channels**, a co
 | Neighbour density | Local crowding |
 | Neighbour alignment | Average nearby heading |
 | Separation pressure | Close-range personal-space pressure |
-| Predator threat | Nearby danger |
+| Conspecific threat | Nearby aggressive boids |
 | Plant proximity | Access to edible plant biomass |
 | Mate proximity | Potential reproductive partner |
 | Energy reserve | Current energy state |
@@ -312,7 +313,7 @@ The simulation is designed to keep the main interface responsive while the worke
 
 Current implementation choices include:
 - Worker-based simulation and Canvas2D rendering through OffscreenCanvas.
-- Spatial hashing for neighbour and predator searches.
+- Spatial hashing for neighbour and local hunting-target searches.
 - Typed arrays for agent state and genome data.
 - Reused neural scratch storage and rendering caches.
 - Batched rendering by hue bins.
