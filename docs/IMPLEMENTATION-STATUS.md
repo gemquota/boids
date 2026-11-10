@@ -22,7 +22,7 @@ This file describes the merged evolutionary-ecology foundation and the current c
 - Kaplan-Meier survival summaries and multiple-comparison p-value correction.
 - Immutable experiment manifest creation.
 
-These utilities are not equivalent to an isolated experiment runner. The live worker/UI does not yet orchestrate independent experiment worlds with pause/resume/cancellation and full replay.
+Per-trait phenotypic and preliminary additive variance, plus genotype/phenotype covariance matrices, are also computed in the live worker and exposed in the Observatory. Additive variance inherits the sampling and model assumptions of the preliminary heritability estimate. These utilities are not equivalent to an isolated experiment runner. The live worker/UI does not yet orchestrate independent experiment worlds with pause/resume/cancellation and full replay.
 
 A standalone variable-length regulatory-genome API now supports stable gene-copy/edge identities, duplication/deletion, identity-aligned crossover, signed trans-regulatory edges, environmental inputs and iterative expression. It is unit-tested but is not yet wired into live reproduction, phenotype calculation or snapshot persistence.
 
@@ -30,7 +30,7 @@ A standalone variable-length regulatory-genome API now supports stable gene-copy
 
 1. Explicit champion elitism and structural-innovation protection beyond reproductive pressure.
 2. Stable gene-copy identities, duplication/deletion/rearrangement, live trans-regulatory networks and stage-specific expression.
-3. Stronger population-genetic estimation: temporal/cohort effective population size, additive genetic variance, trait covariance, uncertainty and survivorship-bias-resistant heritability.
+3. Stronger population-genetic estimation: temporal/cohort effective population size, uncertainty for additive-variance and covariance estimates, environmental covariance under controlled contrasts, and survivorship-bias-resistant heritability.
 4. Broader spatial habitat, nutrient, temperature, fragmentation, refugia and disturbance dynamics.
 5. Isolated multi-replicate experiment execution, factorial/Latin-hypercube orchestration, progress/cancellation, comparison UI and replayable archives.
 6. Additional per-species innovation/topology inspection and deeper regulatory-network visualisation.
