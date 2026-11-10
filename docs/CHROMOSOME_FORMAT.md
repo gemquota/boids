@@ -11,7 +11,7 @@ All multi-byte integers and IEEE-754 values use little-endian byte order.
 
 | Gene | Byte layout | Length |
 |---|---|---:|
-| Trait | type:u8, traitId:u8, value:f32 | 6 bytes |
+| Trait | type:u8, stableTraitId:u8, value:f32 | 6 bytes |
 | Neural connection | type:u8, innovation:u32, source:u16, destination:u16, weight:f32 | 13 bytes |
 
 Gene type values:
@@ -19,7 +19,7 @@ Gene type values:
 - `01`: trait gene
 - `02`: neural connection gene
 
-The neural connection source and destination are unsigned 16-bit integers. They are not floating-point values. Weights and trait values are IEEE-754 binary32 values.
+Trait identifiers are stable semantic codes, not array offsets. The initial codes map to aggression `11`, body size `23`, speed `37`, bite strength `41`, kin affinity `52`, sensory range `68`, acceleration `73`, agility `84`, risk tolerance `96`, and exploration `A7` (hex). The decoder maps these identifiers into runtime loci; chromosome order does not carry trait meaning. The neural connection source and destination are unsigned 16-bit integers. They are not floating-point values. Weights and trait values are IEEE-754 binary32 values.
 
 ## Example
 
