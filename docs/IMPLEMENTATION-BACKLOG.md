@@ -22,7 +22,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Define stable public interfaces for genetics, neuroevolution, ecology, metrics, and experiments.
 - [ ] Keep worker as orchestration layer; extract model logic into testable modules.
 - [x] Add round-trip snapshot fixtures for representative old and current worlds (including legacy fixed-slot and trait-layout migration).
-- [ ] Add deterministic replay tests including reproduction, mutations, death compaction, and restore.
+- [x] Add deterministic replay tests including reproduction, mutation, death/removal, stable identity and snapshot restore.
 
 ## B. Variable-length NEAT genome
 
@@ -128,7 +128,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement one- and multi-parameter sweeps.
 - [ ] Implement factorial and Latin-hypercube designs for larger parameter spaces.
 - [ ] Implement bounded concurrency, pause/resume, cancellation, and progress reporting.
-- [ ] Stream telemetry rather than retaining unbounded per-tick history.
+- [x] Stream sampled telemetry with bounded rolling histories; survival events and all trend histories have explicit caps.
 - [x] Calculate mean, SD, median, IQR, and confidence intervals across replicate outcomes.
 - [x] Implement effect sizes and bootstrap comparisons.
 - [x] Implement regression and correlation analysis with documented assumptions.
@@ -141,16 +141,16 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## H. Observatory and controls
 
-- [ ] Add neural topology/species views.
+- [x] Add evolved-brain topology inspection and per-species topology/innovation summaries in the Observatory.
 - [ ] Add innovation history and structural mutation rates.
 - [ ] Add regulatory network and expression views.
-- [ ] Add allele frequency, heterozygosity, diversity, and effective population size views.
+- [x] Add allele richness/frequency, expected gene diversity, inbreeding, effective-breeder and sex-ratio Ne summaries plus sampled genetics trends; temporal/cohort Ne remains outstanding.
 - [ ] Add pedigree and inbreeding views.
-- [ ] Add heritability estimates with sample size and uncertainty.
+- [x] Add per-trait mid-parent heritability estimates, sample sizes and t-based 95% slope intervals.
 - [ ] Add ecological gradient/resource field views.
 - [ ] Add experiment design and parameter sweep controls.
 - [ ] Add replicate comparison and statistical output views.
-- [ ] Ensure charts consume sampled telemetry, not render-loop internals.
+- [x] Ensure Observatory history charts consume sampled worker telemetry rather than render-loop state.
 - [ ] Ensure every control is functional, persisted appropriately, and documented.
 - [ ] Keep UI responsive while worker and experiment jobs are busy.
 
@@ -159,8 +159,8 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Benchmark neural evaluation separately from movement and ecology.
 - [ ] Benchmark genetic mutation, crossover, and speciation separately.
 - [ ] Benchmark regulatory expression and population-statistics aggregation.
-- [ ] Benchmark rendering, snapshot serialization, restore, and experiment throughput.
-- [ ] Profile 100, 250, 500, 1,000, and stress-test populations.
+- [x] Benchmark draw traversal, JSON snapshot serialization and restore separately in the seeded CI baseline.\n- [ ] Benchmark isolated experiment throughput once the experiment runner exists.
+- [x] Profile seeded 100, 250, 500 and 1,000-agent workloads in CI.\n- [ ] Stress-test populations above 1,000 agents.
 - [ ] Profile representative Android hardware and desktop browsers.
 - [ ] Optimise allocation, sparse neural evaluation, spatial queries, and telemetry from measured bottlenecks.
 - [ ] Test Android Chrome and Firefox.
@@ -170,7 +170,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Test long-running memory stability and large-world save/restore.
 - [x] Run syntax, unit, integration, deterministic replay, migration, and performance regression tests in CI.
 - [ ] Verify GitHub Pages deployment and production smoke tests.
-- [ ] Update model documentation and release notes only for implemented behaviour.
+- [x] Reconcile model documentation and release notes with implemented behaviour; incomplete mechanisms remain labelled as gaps.
 
 ## Completion policy
 
