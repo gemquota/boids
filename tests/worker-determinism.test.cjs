@@ -127,6 +127,10 @@ const survivalSnapshot=api.exportSnapshot();
 const survivalRestored=makeWorld(123456).__boidsTest;
 survivalRestored.restoreSnapshot(survivalSnapshot);
 assert.deepEqual(survivalRestored.survivalHistory,api.survivalHistory,'survival events must survive snapshot restoration');
+const populationBeforeShrink=api.N;
+api.resizePopulation(populationBeforeShrink-1);
+assert.equal(api.N,populationBeforeShrink-1,'manual population reduction should remove one individual');
+assert.ok(api.survivalHistory.some(row=>!row.event),'manual removals must be censored rather than counted as deaths');
 
 assert.equal(api.kinshipRelatedness(firstChildId, secondChildId), .5, 'full siblings should have 0.5 relatedness');
 assert.equal(api.reproductiveSuccess.get(api.individualId[0]), 3, 'maternal lifetime reproductive success should count all three offspring');
