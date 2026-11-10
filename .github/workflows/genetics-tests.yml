@@ -1,7 +1,7 @@
 name: Genetics checks
 on:
   push:
-    branches: [release/v0.2-dna-update]
+    branches: [release/v0.2-dna-update, feat/evolutionary-ecology-completion]
   pull_request:
     branches: [main]
     paths:
