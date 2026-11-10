@@ -24,6 +24,8 @@ This file describes the merged evolutionary-ecology foundation and the current c
 
 These utilities are not equivalent to an isolated experiment runner. The live worker/UI does not yet orchestrate independent experiment worlds with pause/resume/cancellation and full replay.
 
+A standalone variable-length regulatory-genome API now supports stable gene-copy/edge identities, duplication/deletion, identity-aligned crossover, signed trans-regulatory edges, environmental inputs and iterative expression. It is unit-tested but is not yet wired into live reproduction, phenotype calculation or snapshot persistence.
+
 ## Still incomplete
 
 1. Explicit champion elitism and structural-innovation protection beyond reproductive pressure.
