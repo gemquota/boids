@@ -53,6 +53,20 @@ test('compiled neural networks execute variable hidden topologies in dependency 
   assert.equal(result.state.length,4);
 });
 
+test('activation mutations change node expression and node deletion removes incident genes',()=>{
+  const registry=evo.createInnovationRegistry({nextInnovation:100,nextNode:8});
+  const genome={nodes:[{id:0,type:'input'},{id:1,type:'hidden'},{id:2,type:'hidden'},{id:3,type:'output'}],connections:[
+    {innovation:1,source:0,destination:1,weight:1},
+    {innovation:2,source:1,destination:2,weight:1},
+    {innovation:3,source:2,destination:3,weight:1}
+  ]};
+  const activated=evo.mutateGenome(genome,registry,()=>0,{rates:{weight:0,addConnection:0,splitConnection:0,deleteConnection:0,toggleConnection:0,deleteNode:0,activation:1,bias:0}});
+  assert.notEqual(activated.nodes.find(n=>n.id===1).activation,'tanh');
+  const deleted=evo.mutateGenome(genome,registry,()=>0,{rates:{weight:0,addConnection:0,splitConnection:0,deleteConnection:0,toggleConnection:0,deleteNode:1,activation:0,bias:0}});
+  assert.equal(deleted.nodes.some(n=>n.id===1),false);
+  assert.ok(deleted.connections.every(g=>deleted.nodes.some(n=>n.id===g.source)&&deleted.nodes.some(n=>n.id===g.destination)));
+});
+
 test('recurrent neural connections retain state across activations',()=>{
   const genome={nodes:[{id:0,type:'input'},{id:1,type:'hidden'},{id:2,type:'output'}],connections:[
     {innovation:1,source:0,destination:1,weight:1},
