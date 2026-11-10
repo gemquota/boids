@@ -108,6 +108,8 @@ test('Kaplan-Meier survival handles events, censoring and median survival',()=>{
   assert.equal(result.n,4);assert.equal(result.events,3);assert.equal(result.censored,1);
   assert.equal(result.curve[1].survival,.75);assert.equal(result.median,3);
   assert.ok(result.curve.every(point=>point.lower>=0&&point.upper<=1&&point.lower<=point.survival&&point.upper>=point.survival));
+  const large=evo.kaplanMeier(Array.from({length:5000},(_,i)=>({time:i+1,event:true})));
+  assert.equal(large.events,5000);assert.equal(large.curve.length,5001);assert.equal(large.median,2500);
 });
 
 test('multiple-comparison corrections preserve order and control adjusted p-values',()=>{
