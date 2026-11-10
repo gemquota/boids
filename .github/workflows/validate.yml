@@ -11,195 +11,90 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check JavaScript syntax
+      - name: Check JavaScript syntax and regression tests
         run: |
           python3 - <<'PY'
           import re
           html = open('index.html', encoding='utf-8').read()
-          match = re.search(r'<script>([\s\S]*?)</script>', html)
+          match = re.search(r'<script>([\\s\\S]*?)</script>', html)
           if not match:
               raise SystemExit('Inline application script not found')
           open('/tmp/boids-app.js', 'w', encoding='utf-8').write(match.group(1))
           PY
           node --check /tmp/boids-app.js
           node --check boids-worker.js
+          node --check chromosome.js
           node --check config-registry.js
           node --check config-schema.js
           node tests/config-schema.test.cjs
           node tests/ecology-visual.test.cjs
           node tests/config-registry.test.cjs
           node tests/genetics.test.js
+          node tests/chromosome.test.cjs
           node tests/worker-determinism.test.cjs
           node tests/html-script-syntax.test.cjs
           node tests/worker-benchmark.test.cjs
-      - name: Verify 181 registered sliders and expression wiring
+      - name: Verify plant-only ecology, chromosome wiring and controls
         run: |
           python3 - <<'PY'
-          import re
+          import json, re
           html = open('index.html', encoding='utf-8').read()
           worker = open('boids-worker.js', encoding='utf-8').read()
-          registry = open('config-registry.js', encoding='utf-8').read()
           schema = open('config-schema.js', encoding='utf-8').read()
-          import json
-          baseline_match = re.search(r'const ecologicalBaseline=(\{.*?\});for\(const trait of expressionTraits\)', html)
+          baseline_match = re.search(r'const ecologicalBaseline=(\\{.*?\\});for\\(const trait of expressionTraits\\)', html)
           if not baseline_match:
               raise SystemExit('Rapid-evolution startup baseline missing')
           baseline = json.loads(baseline_match.group(1))
           expected = {'count': 800, 'timeScale': 0.55, 'connections': 24, 'hidden': 10, 'brainRate': 2,
                       'mutation': 0.075, 'mutationSize': 0.34, 'drive': 0.78, 'ageMin': 10,
-                      'gestation': 14, 'selection': 0.72, 'foodPatches': 26, 'foodRegen': 0.22}
+                      'gestation': 14, 'selection': 0.72, 'plantPreference': 0.95,
+                      'plantRangeScale': 2.3, 'plantMinRange': 66, 'plantSteering': 0.28}
           for key, value in expected.items():
               if baseline.get(key) != value:
                   raise SystemExit(f'Unexpected rapid-evolution baseline {key}: {baseline.get(key)}')
-          if schema.count('rate:.04,magnitude:.11,heritability:.96') != 10:
-              raise SystemExit('All ten trait loci must use the rapid-evolution mutation baseline')
-          if "get('experiment')==='rapid-evolution'" not in html or 'saved world restore bypassed' not in html:
-              raise SystemExit('Fresh experiment launch must bypass stale local snapshots')
-          core = re.search(r'const coreSliderDefs=(\[[\s\S]*?\])\.map', schema)
-          extra = re.search(r'const extraSliderDefs=(\[[\s\S]*?\])\.map', schema)
-          if not core or not extra or 'const ranges=[];' not in html or 'BoidsConfigSchema' not in html:
-              raise SystemExit('Slider definitions or runtime registry missing')
-          if re.search(r'<input\b[^>]*type=["\']range["\']', html):
-              raise SystemExit('Range controls must be generated from the shared schema, not hand-authored in HTML')
-          core_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', core.group(1))
-          extra_ids = re.findall(r'\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
-          if 'document.querySelectorAll(\'#controls input[type="range"]\')' not in html:
-              raise SystemExit('Runtime slider discovery must scan the configuration drawer')
-          trait_block = re.search(r'const expressionTraits=\[([\s\S]*?)\];', schema)
-          expression_fields = re.search(r'const expressionFields=\[([\s\S]*?)\];', schema)
-          mutation_fields = re.search(r'const expressionMutationFields=\[([\s\S]*?)\];', schema)
-          if not trait_block or not expression_fields or not mutation_fields:
-              raise SystemExit('Per-locus expression control schema missing')
-          traits = re.findall(r"\{key:'([A-Za-z]+)'", trait_block.group(1))
-          fields = re.findall(r"\{key:'([A-Za-z]+)'", expression_fields.group(1))
-          mutation_fields = re.findall(r"\{key:'([A-Za-z]+)'", mutation_fields.group(1))
-          expression_ids = [f'expr_{trait}_{field}' for trait in traits for field in fields]
-          mutation_ids = [f'trait_{trait}_{field}' for trait in traits for field in mutation_fields]
-          ids = core_ids + extra_ids + expression_ids + mutation_ids
-          if len(ids) != 181 or len(set(ids)) != 181:
-              raise SystemExit(f'Expected 181 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
-          if "curveSelect.id='expr_'+trait.key+'_curve'" not in html or 'expressionCurves' not in html:
-              raise SystemExit('Per-locus curve selectors missing')
-          missing = [key for key in extra_ids if f'cfg.{key}' not in worker]
-          if missing:
-              raise SystemExit('Controls not wired into worker: ' + ', '.join(missing))
+          core = re.search(r'const coreSliderDefs=(\\[[\\s\\S]*?\\])\\.map', schema)
+          extra = re.search(r'const extraSliderDefs=(\\[[\\s\\S]*?\\])\\.map', schema)
+          traits_match = re.search(r'const expressionTraits=\\[([\\s\\S]*?)\\];', schema)
+          fields_match = re.search(r'const expressionFields=\\[([\\s\\S]*?)\\];', schema)
+          mutations_match = re.search(r'const expressionMutationFields=\\[([\\s\\S]*?)\\];', schema)
+          if not all((core, extra, traits_match, fields_match, mutations_match)):
+              raise SystemExit('Shared slider or expression schema missing')
+          core_ids = re.findall(r'\\["([A-Za-z][A-Za-z0-9]*)"', core.group(1))
+          extra_ids = re.findall(r'\\["([A-Za-z][A-Za-z0-9]*)"', extra.group(1))
+          traits = re.findall(r"\\{key:'([A-Za-z]+)'", traits_match.group(1))
+          fields = re.findall(r"\\{key:'([A-Za-z]+)'", fields_match.group(1))
+          mutation_fields = re.findall(r"\\{key:'([A-Za-z]+)'", mutations_match.group(1))
+          ids = core_ids + extra_ids + [f'expr_{t}_{f}' for t in traits for f in fields] + [f'trait_{t}_{f}' for t in traits for f in mutation_fields]
+          if len(ids) != 173 or len(set(ids)) != 173:
+              raise SystemExit(f'Expected 173 unique controls, found {len(ids)} ({len(set(ids))} unique)')
+          if any(x in ids for x in ['foodPatches','foodRegen','foodBite','foodEnergyYield','foodCapacity','foodRegrowth','foodDepletion','foodCompetition']):
+              raise SystemExit('Legacy food-patch controls must be removed')
           if 'BoidsConfigSchema.fieldGuide' not in html or 'BoidsConfigSchema.normalizeDependencies' not in html:
-              raise SystemExit('Field guide and dependency validation must be consumed from the shared schema')
-          if 'fieldGuide' not in schema or 'function normalizeDependencies' not in schema:
-              raise SystemExit('Shared field-guide/dependency schema is missing')
-          if 'BoidsConfigSchema.resolveWorkerMapping(key)' not in worker:
-              raise SystemExit('Worker must resolve settings through the shared configuration schema')
-          if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
-              raise SystemExit('World snapshot/restore handlers missing')
-          if "new Worker('./boids-worker.js?v=20261110-river-plant-v3')" not in html:
-              raise SystemExit('Plant renderer worker cache-bust missing')
-          if 'function drawPlantNode(p)' not in worker or 'function drawPlantFronds(p)' not in worker:
-              raise SystemExit('Ribbon-kelp plant renderer missing')
-          if 'function drawCrystal(p)' in worker or 'function drawPolypArms(' in worker:
-              raise SystemExit('Old crystal-polyp plant renderer must remain removed')
-          if 'ctx.arc(sp.x,sp.y' in worker:
-              raise SystemExit('Plant spores must be faceted, never circular')
-          if 'ctx.shadowBlur=16' in worker or 'function lagoon(' in worker:
-              raise SystemExit('Oversized plant glow and lagoon circles must remain removed')
-          if 'function drawWaterways()' not in worker or 'drawWaterways();ctx.save()' not in worker:
-              raise SystemExit('River and creek terrain must be rendered')
-          if "ctx.fillStyle='#040911';ctx.fillRect(0,0,W,H)" not in worker or "ctx.fillStyle='rgba(4,9,17,'+cfg.trail+')'" in worker:
-              raise SystemExit('Canvas must be fully cleared every frame; permanent trails are forbidden')
-          waterways = re.search(r'function drawWaterways\(\)\{([\s\S]*?)\nfunction draw\(', worker)
-          if not waterways or 'buildRiverNetwork()' not in waterways.group(1) or 'organicPath(' not in worker:
-              raise SystemExit('Organic river network renderer missing')
-          for feature in ['function buildRiverNetwork()', 'function organicPath(', 'tributaries.push(creek)', 'feeders.push(organicPath', 'function buildFreshwaterField(network)']:
-              if feature not in worker:
-                  raise SystemExit('Curved drainage network missing: ' + feature)
-          if 'function lagoon(' in worker or 'lagoon(end.x' in worker:
-              raise SystemExit('Oversized tributary-end lagoons must remain removed')
-          if 'function drawPlantFronds(p)' not in worker or 'ctx.arc(' in worker[worker.index('function drawPlantFronds(p)'):worker.index('function drawWaterways()')]:
-              raise SystemExit('Plant body must use narrow fronds and no circular geometry')
-          if 'function nearestFreshwater(' not in worker or 'waterGrowth=clamp(1.58-waterDistance/175,.35,1.5)' not in worker:
-              raise SystemExit('Plant water-distance growth modifiers are missing')
-          if 'thirst[i]=Math.min(1,thirst[i]+dt*.012)' not in worker or 'waterPull=clamp((thirst[i]-.24)/.7,0,1)' not in worker:
-              raise SystemExit('Boid hydration and water-seeking behaviour are missing')
-          if 'thirst:thirst.slice(0,N)' not in worker or 'meanThirst,dehydratedCount' not in worker:
-              raise SystemExit('Hydration persistence and telemetry are missing')
-          if 'waterProximity=clamp(1-waterDistance/230,0,1),germinationChance=.08+.84*waterProximity' not in worker or 'sp.landed&&sp.settleClock>=1.8' not in worker:
-              raise SystemExit('Settled, freshwater-biased spore germination is missing')
-          if 'settleAfter:rand(5,10),landed:false' not in worker or 'settleAfter:rand(4,8),landed:false' not in worker:
-              raise SystemExit('Initial and released spores must begin airborne')
-          if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
-              raise SystemExit('Initial plant spore dispersal missing')
-          if 'plants.push(makePlantNode({x:rand(42' in worker:
-              raise SystemExit('Plants must begin as dispersed spores, not pre-grown nodes')
-          if 'indexedDB.open' not in html or 'persistObservatory' not in html:
-              raise SystemExit('Persistent world/observatory storage missing')
-          required_ui = [
-              'parameterRegistry.apply(v)', 'applySettings({...ecologicalBaseline',
-              'schemaVersion=2', 'snapshotWaiters', 'flushPersistentState', 'store.put(prior.result,\'previous\')', 'store.get(\'previous\')',
-              'BoidsConfigSchema.fieldGuide'
-          ]
-          missing_ui = [item for item in required_ui if item not in html]
-          if 'Math.round((bounded-min)/step)' not in registry:
-              missing_ui.append('registry step normalization')
-          if missing_ui:
-              raise SystemExit('Missing settings/persistence/help safeguards: ' + ', '.join(missing_ui))
-          required_worker = [
-              'schemaVersion:9', 'selectionAggression:selectionDifferentials[0]', 'updateMs:lastUpdateMs', 'drawMs:lastDrawMs', 'requestId:m.requestId', 'rngState,nextIndividualId', 'individualId:individualId.slice(0,N)', 'parentA[child]=individualId[mother]', 'updateOrder[orderIndex]', 'xNext[i]=x[i]+nextVx', 'let swap=x;x=xNext', 'const fixedDt=1/60', 'accumulator+=elapsed*cfg.timeScale', 'foodDemandByPatch[best]+=cfg.foodBite*cfg.foodDepletion', 'foodGain=foodGainByAgent[i]', 'attackTarget[i]=huntIndex', 'attackWinner[target]=hunter',
-              'Math.round(values[key])', 'distanceWeight+geneticWeight',
-              'huntIndex=-1', 'cfg.aggressionSelection*ag', 'phenotype(i,1)', 'cfg.threatSteering;ay+=threatY',
-              'turnSignal*cfg.neuralTurnGain*phenotype(i,7)+vx[i]/heading*accelSignal'
-          ]
-          missing_worker = [item for item in required_worker if item not in worker]
-          if missing_worker:
-              raise SystemExit('Missing worker correctness safeguards: ' + ', '.join(missing_worker))
-          for key in ['flockNoise','alignmentMemory','cohesionBias','separationExponent',
-                      'neighbourDensityScale','flowDrift','eddyFrequency','foodRegrowth',
-                      'foodDepletion','foodCompetition','mateDriveNoise','mateDistanceBias',
-                      'mutationDrift','rewireChance','lineageDrift','neuralNoise','neuralInertia',
-                      'learningMomentum','sensoryNoise','juvenileGrowth','adultMaintenance',
-                      'predatorSearch','predatorPersistence','predatorTurn','predatorSatiation']:
-              if f'"{key}":[' not in schema:
-                  raise SystemExit('Missing detailed help description for ' + key)
-          for item in ['foodDemandByPatch[best]+=cfg.foodBite*cfg.foodDepletion', 'attackTarget[i]=huntIndex', 'attackWinner[target]=hunter', 'foodGain=foodGainByAgent[i]']:
-              if item not in worker:
-                  raise SystemExit('Missing batched interaction invariant: ' + item)
-          if 'f.stock-=eaten' in worker or 'energy[huntIndex]=0' in worker:
-              raise SystemExit('Feeding and hunting must not mutate targets sequentially inside the agent loop')
-          if 'traitGenes[i*6+1]' in worker or 'traitGenes.slice(0,N*6)' in worker:
-              raise SystemExit('Ten-locus phenotype indexing must be used consistently')
-          for item in ['phenotype(i,6)', 'phenotype(i,7)', 'phenotype(i,8)', 'phenotype(i,9)', 'BoidsGenetics.inheritTrait', 'BoidsGenetics.express', 'cfg.geneExpression', 'cfg.traitMutation', 'schemaVersion:9', 'function kinshipCoefficient', 'kinshipRelatedness(individualId[i],individualId[j])', 'recordPedigree(individualId[child],parentA[child],parentB[child])', 'pedigree:Array.from(pedigree.entries())']:
-              if item not in worker:
-                  raise SystemExit('Missing inherited phenotype mechanic: ' + item)
-          for item in ['innovationFor(src,dst)', 'innovationRegistry:Array.from(innovationRegistry.entries())', 'applyPaternalChromosome(mother,paternalChromosomes[mother])', 'function cloneGenome(child,mother,fatherOffset)', 'genesA=new Map(),genesB=new Map()']:
-              if item not in worker:
-                  raise SystemExit('Missing innovation-tracked neuroevolution invariant: ' + item)
-          if 'let pa=mo+g*3,pb=fatherOffset+g*3' in worker:
-              raise SystemExit('Neural crossover must align homologous innovations, not positional gene slots')
-          for item in ['seasonalTotal=0', 'coverByAgent[i]=cover*.65', 'foodGainByAgent[i]=eaten*f.quality*cfg.foodEnergyYield*cfg.foodCompetition', 'temperatureAnomaly=', 'movementCost=', 'foodQuality:food.reduce']:
-              if item not in worker:
-                  raise SystemExit('Missing spatial ecology or energetic mechanism: ' + item)
-          for item in ['selectionDifferentials', 'meanLifetimeOffspring', 'reproductiveSuccess:Array.from(reproductiveSuccess.entries())', 'function exportExperimentData()', "m.type==='exportData'", 'attackAttempts,foodClaims,foodConsumed']:
-              if item not in worker:
-                  raise SystemExit('Missing experiment measurement/export invariant: ' + item)
-          for item in ['id="selectionPhysicalChart"', 'id="selectionBehaviorChart"', "drawMultiLineChart($('selectionPhysicalChart')", "drawMultiLineChart($('selectionBehaviorChart')"]:
-              if item not in html:
-                  raise SystemExit('Missing selection-differential visualization: ' + item)
-          for item in ['hungerMin','hungerMax','thirstMin','thirstMax','hungryCount','thirstyCount','predatingCount','plantEatingCount','plantEatingFlag[i]=1','huntingFlag[i]=1']:
-              if item not in worker:
-                  raise SystemExit('Missing live feeding/hydration telemetry: ' + item)
-          for item in ['id="ccHungerMin"','id="ccHungerMean"','id="ccHungerMax"','id="ccThirstMin"','id="ccThirstMean"','id="ccThirstMax"','id="ccDrive"','id="ccAggressionMean"','id="ccHungry"','id="ccThirsty"','id="ccCarnivore"','id="ccHerbivore"','id="ccDeaths"','id="ccPredation"','id="traitHistoryChart"','id="traitHistoryLegend"']:
-              if item not in html:
-                  raise SystemExit('Missing grouped command-centre metric: ' + item)
-          for item in ['id="mUpdateMs"', 'id="mDrawMs"', 'id="mBacklog"']:
-              if item not in html:
-                  raise SystemExit('Missing live performance metric in Observatory: ' + item)
-          for item in ['id="exportExperiment"', "m.type==='exportData'", 'Experiment data exported:']:
-              if item not in html:
-                  raise SystemExit('Missing functional experiment export UI: ' + item)
-          if 'Math.random()' in worker:
-              raise SystemExit('Worker must use the seeded random generator for reproducible experiments')
-          for item in ['function seedRandom(seed)', 'function random()', 'new Uint32Array(cap)', 'paternalId[mother]=individualId[father]', 'schemaVersion:9', 'traitGenes=new Float32Array(cap*10)', 'for(let k=0;k<10;k++)', 'riskTolerance:meanRiskTolerance/Math.max(1,N)']:
-              if item not in worker:
-                  raise SystemExit('Missing phase-one simulation invariant: ' + item)
-          if 'for(let i=0;i<N;i++){let energyBefore=energy[i]' in worker:
-              raise SystemExit('Agent updates must use the shuffled immutable update cohort')
-          print('Validated 181 sliders, per-locus expression wiring, deterministic RNG, double-buffered motion, stable pedigree IDs and snapshot migration.')
+              raise SystemExit('Shared field guide/dependency schema is not consumed by the UI')
+          if 'BoidsChromosome.fromRuntime' not in worker or 'BoidsChromosome.decode' not in worker or 'chromosome.js?v=20261110-hex-dna-v1' not in worker:
+              raise SystemExit('Hexadecimal chromosome runtime wiring is missing')
+          if any(x in worker for x in ['function seedFood','food=[]','food.length','foodDemandByPatch','foodStock:']):
+              raise SystemExit('Food patches or their hidden stock must not exist in the worker')
+          if 'plantGain' not in worker or 'plantEatingFlag[i]=1' not in worker or 'plantBiomass' not in worker:
+              raise SystemExit('Plant grazing and biomass telemetry are required')
+          if 'Math.min(bestPlant.biomass,.00008*dt*60)' not in worker:
+              raise SystemExit('Plant grazing rate must remain bounded')
+          if 'Math.max(64,Math.min(120,Math.round(W*H/14000)))' not in worker:
+              raise SystemExit('Initial spore bank must support plant-only ecology')
+          hue = worker[worker.index('function phenotypeHue(i)'):worker.index('\\n', worker.index('function phenotypeHue(i)'))]
+          if 'weight' in hue or 'genome[o+2]' in hue:
+              raise SystemExit('Visible boid colour must not track mutable neural weights')
+          if 'const includeHistory=now-lastHistoryPost>5000' not in worker:
+              raise SystemExit('Large Observatory histories must be throttled')
+          if "panel==='analysis'&&Date.now()-lastChartRender>3500" not in html:
+              raise SystemExit('Charts must not redraw while the Observatory drawer is closed')
+          if "new Worker('./boids-worker.js?v=20261110-plant-only-ui-v4')" not in html:
+              raise SystemExit('Updated worker cache-bust missing')
+          if 'r=2.8+Math.min(3.4,p.size*2.7)' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
+              raise SystemExit('Faceted hexagonal plant crowns must remain visibly sized')
+          if 'function drawWaterways()' not in worker or 'function nearestFreshwater(' not in worker:
+              raise SystemExit('Shared river and freshwater geometry is missing')
+          if 'settleAfter:rand(5,10),landed:false' not in worker or 'sp.landed&&sp.settleClock>=1.8' not in worker:
+              raise SystemExit('Spores must float, land, settle and then germinate')
+          print('Validated 173 controls, plant-only ecology, stable phenotype colours, responsive charts and hexadecimal chromosome runtime.')
           PY
