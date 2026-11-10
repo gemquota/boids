@@ -98,7 +98,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Report uncertainty and assumptions for every population-genetic estimate; variance-based Ne and additive-variance uncertainty remain outstanding.
 - [ ] Track trait covariance and genetic/environmental covariance where identifiable.
 - [x] Track realised lifetime reproductive success and lineage contribution.
-- [x] Track all-cause age-at-death and right-censored living-agent observations with bounded Kaplan–Meier telemetry.
+- [x] Track all-cause age-at-death and right-censored living-agent observations with bounded, delayed-entry Kaplan–Meier telemetry.
 - [ ] Track cohort-specific survival and generational turnover across independently identified birth cohorts.
 - [ ] Add synthetic known-pedigree and known-inheritance validation datasets.
 - [x] Persist and export bounded survival-event history and truncation metadata in worker snapshots/analysis bundles.
