@@ -15,7 +15,7 @@ No framework, bundler, package installation, or build step is required. The site
 
 - Full-screen, responsive simulation with touch and pointer interaction.
 - Dedicated simulation worker using typed arrays, spatial indexing, and OffscreenCanvas.
-- **181 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
+- **173 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
 - Canonical creature genomes stored as versioned hexadecimal gene strings, with typed runtime decoding and schema-v9 snapshot support.
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
@@ -28,7 +28,7 @@ No framework, bundler, package installation, or build step is required. The site
 
 ## Control taxonomy
 
-All 181 numeric sliders are registered, persisted, and assigned to a tab and collapsible category.
+All 173 numeric sliders are registered, persisted, and assigned to a tab and collapsible category.
 
 | Tab | Categories |
 |---|---|
@@ -60,7 +60,7 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Body mass now has a nonlinear maintenance cost and a speed trade-off, rather than being only a visual and attack-size multiplier.
 - Schema-v8 world snapshots with migration of older snapshots. Legacy generation-based parent fields are cleared rather than misrepresented as real pedigree data.
 
-This is a **foundational Phase 1 implementation plus the first Phase 2 interaction slice**. Movement reads a shared position/velocity snapshot, while food claims and conspecific attacks are resolved in batches. Energy accounting, richer trade-offs, runtime reproducibility tests, and full pedigree analysis remain in progress. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
+This is a **foundational Phase 1 implementation plus the first Phase 2 interaction slice**. Movement reads a shared position/velocity snapshot, agent evaluation order is seeded and shuffled, and conspecific attack proposals are resolved after agent decisions. The current worker uses plant biomass rather than food patches, and records feeding, predation, movement, and maintenance counters. Energy accounting, richer trade-offs, runtime reproducibility tests, and full pedigree analysis remain in progress. The full eight-phase plan, status, design invariants, and validation gates are in [docs/MODEL-ROADMAP.md](docs/MODEL-ROADMAP.md).
 
 ## Getting started
 
@@ -118,13 +118,13 @@ The configuration drawer is organised into tabs and collapsible accordion groups
 - **Reset slider limits** restores the original range boundaries.
 - **Reset defaults** restores the tuned ecological baseline and original slider limits.
 
-The 181-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
+The 173-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
 
 ### Presets and randomisation
 
 - **Save preset** stores a named configuration.
 - **Apply preset** restores the selected configuration.
-- **Randomise ecology** generates bounded variations around the current settings, with constraints on key population, food, predator, and reproduction values.
+- **Randomise ecology** generates bounded variations around the current settings, with constraints on key population, plant-growth, hunting, and reproduction values.
 - **Reset defaults** returns to the shipped ecological baseline.
 
 Presets include the slider configuration, behaviour mode, channel masks, and world toggles. Presets are stored in browser local storage and are not shared between devices.
@@ -159,7 +159,7 @@ All multi-byte values use little-endian byte order. Gene type `01` identifies a 
 
 For example, a connection from neuron 3 to neuron 12 with innovation ID 42 and weight -0.742 is encoded as one 13-byte record, then rendered as a 26-character hexadecimal gene string. The exact final four bytes are the little-endian binary32 representation of the weight.
 
-The worker decodes chromosome strings into execution arrays: `Uint16Array` for source and destination endpoints, `Uint32Array` for innovation IDs, and `Float32Array` for weights and trait values. These typed arrays are derived runtime data, not the canonical persistent chromosome. JSON itself does not preserve JavaScript typed-array constructors, so restore explicitly reconstructs the required typed arrays from the encoded data.
+The worker decodes chromosome strings into execution arrays: `Uint16Array` for source and destination endpoints, `Uint32Array` for innovation IDs, and `Float32Array` for weights and trait values. Boid display hue is calculated from connection endpoints and all ten inherited trait alleles; mutable connection weights are excluded, so lifetime neural plasticity does not make agents flicker through colours. These typed arrays are derived runtime data, not the canonical persistent chromosome. JSON itself does not preserve JavaScript typed-array constructors, so restore explicitly reconstructs the required typed arrays from the encoded data.
 
 Chromosomes are refreshed when inheritance or lifetime plasticity changes the genome. New population members, offspring, snapshot export, and restore all use the codec. Schema-v9 snapshots include the chromosome format identifier, maternal chromosomes, and conception-time paternal chromosomes; schema-v8 snapshots remain supported through migration.
 
@@ -177,7 +177,7 @@ Local neighbour queries use a spatial hash rebuilt during simulation updates. St
 - Cohesion toward the local group.
 - Obstacle avoidance.
 - Environmental current and turbulence.
-- Food seeking.
+- Plant foraging.
 - Predator avoidance.
 - Pointer-driven attraction or repulsion.
 
@@ -193,12 +193,12 @@ Each agent has a compact neural controller with **eight sensory channels**, a co
 | Neighbour alignment | Average nearby heading |
 | Separation pressure | Close-range personal-space pressure |
 | Predator threat | Nearby danger |
-| Food proximity | Access to nearby food |
+| Plant proximity | Access to edible plant biomass |
 | Mate proximity | Potential reproductive partner |
 | Energy reserve | Current energy state |
 | Age | Normalised life stage |
 
-The outputs influence turning, acceleration, alignment, cohesion, separation, fleeing, mate seeking, and reproductive drive. Input and output channel masks can disable individual channels.
+The outputs influence turning, acceleration, alignment, cohesion, separation, fleeing, mate seeking, and reproductive drive. Input and output channel masks can disable individual channels. Thirst is tracked separately from the eight neural inputs; it currently affects hydration and metabolic cost but is not a neural sensory channel.
 
 Each neural connection gene stores a directed source neuron, destination neuron, and signed weight. The persistent chromosome encodes that record as a typed hexadecimal gene; the worker decodes it into runtime typed arrays for fast neural evaluation. Source and destination indices are unsigned 16-bit integers, innovation IDs are unsigned 32-bit integers, and weights are float32. Hidden-to-hidden connections can use recurrent state carried between neural evaluations. Connection and hidden-neuron counts are configurable; when topology settings change, overlapping genome and brain-state data is retained where possible and new connections are initialised.
 
@@ -220,9 +220,11 @@ The reproductive system includes configurable:
 
 This is a simplified two-sex mating and gestation model, not a complete biological developmental or population-genetics simulation.
 
-### Food, predators, and selection
+### Plants, freshwater, and conspecific predation
 
-Plants are the only renewable basal food source; herbivorous boids consume plant biomass, while predatory boids gain energy by killing smaller boids. There are no independent food patches or hidden renewable food stocks. Boids brake to a stop while grazing. A procedural fractal plant ecology has a complete clonal life cycle: dispersed asexual spores drift, germinate into seedling colonies, grow through juvenile nodes, and mature into reproductive nodes. Mature nodes produce attached clonal buds; a sufficiently large mother becomes a grandmother and produces two fully grown adult daughter nodes that can branch immediately. Recursive budding builds the fractal colony. Mature nodes also release asexual spores that establish independent daughter colonies. Old nodes enter senescence, reduce growth and biomass, then die; surviving attached daughters detach and continue as independent clonal colonies when a parent dies. Grazing removes biomass and can delay maturation, suppress budding and prevent spore production. The Observatory records plant stage counts, total biomass, spore counts, budding, germination and deaths. Plant preference and sensing range control foraging. Plant biomass regrows through the plant life cycle and is not supplemented by a separate patch system.
+Plants are the only renewable basal food source. Herbivorous boids graze plant biomass; carnivorous boids gain energy by killing smaller members of the same boid population. There are no food patches, independent predator agents, or hidden renewable food stocks. Boids brake while grazing. The procedural plant ecology has a clonal life cycle: initial asexual spores drift while airborne and only become eligible to germinate after settling; seedlings grow through juvenile nodes into mature reproductive nodes. Mature plants produce attached clonal buds, larger colonies produce fully grown daughter nodes, and mature nodes release spores that can establish independent colonies. Recursive budding builds branching colonies. Senescent nodes lose biomass and die; surviving attached daughters detach and continue as independent colonies when a parent dies. Grazing removes biomass and can delay maturation, suppress budding, and prevent spore production. The Observatory records plant stages, biomass, spore counts, budding, germination, and deaths. Plant preference, sensing range, and steering gain control foraging.
+
+A procedural freshwater network supplies the world's main river, tributaries, and smaller feeder channels. Its curved paths are generated once and reused for both rendering and the freshwater-distance field, so the visible water and ecological water source share geometry. Plants grow faster near freshwater and more slowly farther away. Boids carry a thirst state: thirst accumulates over time, decreases when an agent is close enough to freshwater to drink, and increases metabolic costs when dehydration becomes severe. Offspring inherit the carrying parent's hydration state. The current neural sensory architecture does not yet include a dedicated water-sensing input or explicit water-seeking steering, so proximity drinking should not be mistaken for evolved navigation to water.
 
 Predation is conspecific: agents within the same evolving population can hunt smaller agents when inherited aggression, relative body size, perception radius, bite strength, and kin-protection traits make an attack viable. There is no separate predator caste or independently spawned predator species. Juvenile vulnerability modifies the risk faced by younger agents. Attack proposals are resolved after the agent decision pass so one prey target cannot generate multiple kill rewards in the same tick.
 
@@ -238,7 +240,7 @@ The model is intentionally qualitative. Parameter values are simulation controls
 
 ---
 
-## The 181-slider configuration
+## The 173-slider configuration
 
 The controls are distributed across the main simulation tabs and the advanced Dynamics tab. Accordion groups keep related parameters together.
 
@@ -249,16 +251,15 @@ The controls are distributed across the main simulation tabs and the advanced Dy
 | **Genetics** | Mutation probability and magnitude, crossover, parental weight blending, mutation drift, rewiring, and lineage variation. |
 | **Reproduction** | Reproductive drive, age windows, lifespan, mate preference, fertility, gestation, energy threshold, mate radius, candidate sampling, and mate-drive variation. |
 | **Selection** | Predation, starvation, competition, environmental harshness, ageing, and selection intensity. |
-| **Environment** | Predator population, reefs, plant preference and sensing, metabolic rate, juvenile vulnerability, currents. |
-| **Dynamics** | Flocking noise, alignment persistence, cohesion bias, separation falloff, density sensitivity, current drift, eddy frequency, plant growth and grazing, neural output dynamics, sensory noise, life-history costs, and predator ecology. |
+| **Environment** | Reef structures, plant preference and sensing, metabolic rate, juvenile vulnerability, currents, and freshwater-dependent hydration. |
+| **Dynamics** | Flocking noise, alignment persistence, cohesion bias, separation falloff, density sensitivity, current drift, eddy frequency, plant growth and grazing, neural output dynamics, sensory noise, life-history costs, and conspecific hunting. |
 
-The Dynamics controls are grouped into Movement, Water dynamics, Reproduction, Genetic variation, Neural dynamics, Life history, and Predator ecology.
+The Dynamics controls are grouped into Spatial interaction, Plant sensing & foraging, Predation & social response, and Survival mechanics.
 
 Some controls intentionally scale a specific part of an existing mechanic rather than introducing an entirely new subsystem. For example:
 - **Neural turn damping** attenuates the evolved turn output; it is not general velocity memory.
 - **Plasticity multiplier** scales the learning update; it does not maintain a separate momentum accumulator.
 - **Juvenile ageing multiplier** changes progression through the juvenile age threshold; it does not change body size.
-- **Food energy yield multiplier** changes the energy received per bite; it is not a separate contest-competition mechanic.
 - **Mate proximity weighting** adjusts the proximity term relative to genetic preference during mate ranking.
 
 See the [configuration reference](docs/CONFIGURATION.md) for the control ranges and initial values.
@@ -267,12 +268,16 @@ See the [configuration reference](docs/CONFIGURATION.md) for the control ranges 
 
 ## Evolutionary Observatory
 
-The bottom drawer provides live views into the current population and its evolution. Depending on the active panel, it exposes:
+The bottom drawer provides live views into the current population and its evolution. The Command Centre reports population, generation, plant biomass and stages, FPS, worker update time, hunger and thirst min/mean/max, hungry/thirsty counts, aggression min/mean/max, and the proportions currently hunting or grazing. Depending on the active panel, the Observatory also exposes:
 
 - Population size and population history.
-- Births, conceptions, deaths, predator kills, and gestation.
+- Births, conceptions, deaths, conspecific predation events, and gestation.
 - Mean age, energy, fitness, and reward.
 - Genetic diversity and gene-distribution history.
+- Normalized history for all ten expressed traits and per-trait selection differentials.
+- Plant lifecycle history, biomass, spore drift, germination, clonal budding, and plant deaths.
+- Feeding, predation, movement-energy, and maintenance-energy counters.
+- Full JSON experiment export, including the run snapshot, genomes, ecology state, and telemetry.
 - Connection-weight summaries and neural topology.
 - Individual brain inspection and connection graph.
 
@@ -293,7 +298,7 @@ The simulation stores data locally in the browser. Nothing is synchronised to a 
 | World snapshot | IndexedDB | Periodically saved and restored |
 | Observatory history | Browser-local storage | Restored with available historical samples |
 
-World snapshots include the simulation configuration and live state needed to resume the ecosystem, including agent positions and velocities, age, energy, pregnancy, genomes, neural state, food, predators, obstacles, counters, and historical samples.
+World snapshots include the simulation configuration and live state needed to resume the ecosystem, including agent positions and velocities, age, energy, thirst, pregnancy, hexadecimal chromosomes, neural state, trait alleles, pedigree, reefs, plants, airborne/settled spores, plant counters, RNG state, and historical samples. River geometry is regenerated deterministically from world dimensions.
 
 Snapshots are refreshed periodically and flushed when the page becomes hidden or is being unloaded. The save path waits for the worker's snapshot response and the IndexedDB transaction. A previous known-good snapshot is retained as a rollback copy, and invalid or unsupported newer snapshots can fall back to that copy.
 
@@ -312,6 +317,8 @@ Current implementation choices include:
 - Reused neural scratch storage and rendering caches.
 - Batched rendering by hue bins.
 - Adaptive quality controls that can reduce the active population when measured frame rate drops and restore it as performance recovers.
+
+The world is redrawn opaquely each frame; boid motion does not leave persistent trails. Boid hues are cached and derived from inherited genotype features rather than mutable neural weights.
 
 This is CPU simulation, not GPU compute. There is no WebGPU implementation at present. Actual population and frame rate depend on the device, browser, screen resolution, world size, and selected parameters. A configuration that runs comfortably on a desktop may be excessive on a phone.
 
@@ -336,7 +343,7 @@ The application requires browser support for Web Workers and OffscreenCanvas. Br
 
 The application is plain HTML and JavaScript. There is no compile step.
 
-At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 181-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
+At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 173-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
 
 A useful manual test pass includes:
 
@@ -347,7 +354,7 @@ A useful manual test pass includes:
 5. Change connection and hidden-neuron counts while the simulation is running.
 6. Randomise settings, apply a saved preset, and reset the ecological baseline.
 7. Verify integer sliders remain on valid step values after randomisation and restore.
-8. Observe feeding, plant regrowth, predator pursuit, deaths, conception, gestation, birth, and mutation.
+8. Observe plant grazing and regrowth, thirst and freshwater drinking, conspecific hunting, deaths, conception, gestation, birth, and mutation.
 9. Inspect an individual brain and confirm the Observatory updates.
 10. Reload the page and verify the world and historical data restore from the local snapshot.
 11. Run a sustained mobile performance test at several population levels.
@@ -372,6 +379,7 @@ boids/
 │   ├── CONFIGURATION.md         # Slider ranges, defaults and effects
 │   ├── GENETICS.md              # Neural architecture and inheritance mechanics
 │   ├── GENETICS_ROADMAP.md      # Checkpointed DNA Update plan
+│   ├── MODEL-CALIBRATION.md     # Units, assumptions, calibration targets and benchmark interpretation
 │   ├── MODEL-ROADMAP.md         # Eight-phase simulation correctness roadmap
 │   └── VALIDATION.md            # Test strategy and known limitations
 ├── tests/                      # Codec, genetics, worker and regression tests
