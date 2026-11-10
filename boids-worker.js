@@ -114,7 +114,7 @@ function populationGeneticsMetrics(){
  for(let i=0;i<N;i++)living.set(individualId[i],i);
  let inbreedingSum=0;
  for(let i=0;i<N;i++){
-  inbreedingSum+=BoidsEvolution.inbreedingCoefficient(individualId[i],pedigree);
+  inbreedingSum+=BoidsEvolution.inbreedingCoefficient(individualId[i],pedigree,12,kinshipMemo);
   const a=living.get(parentA[i]),b=living.get(parentB[i]);
   for(let k=0;k<10;k++){
    alleleValues[k].push(Math.round(BoidsGenetics.normalizeGene(traitGenes[i*10+k],k)*15));
