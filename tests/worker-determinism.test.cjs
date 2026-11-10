@@ -45,7 +45,7 @@ const b = run(123456);
 const sa = a.__boidsTest.exportSnapshot();
 const sb = b.__boidsTest.exportSnapshot();
 
-for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'parentA', 'parentB', 'traitGenes', 'genome', 'innovation']) {
+for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'parentA', 'parentB', 'traitGenes', 'regulatoryGenes', 'genome', 'innovation']) {
   assert.deepEqual(Array.from(sa.arrays[key]), Array.from(sb.arrays[key]), 'same seed must reproduce ' + key);
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
@@ -144,8 +144,8 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 10);
-assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
+assert.equal(restoredSnapshot.schemaVersion, 11);
+assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');\nassert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
 assert.equal(restoredSnapshot.chromosomes.length, api.N);
 assert.ok(restoredSnapshot.chromosomes.every(chromosome => chromosome.every(gene => /^[0-9A-F]+$/.test(gene))));
 const decodedFirst = BoidsChromosome.decode(restoredSnapshot.chromosomes[0]);
