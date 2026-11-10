@@ -2,19 +2,24 @@
 
 ## Completed in this branch
 
-- [x] Inspected current model roadmap, chromosome format, genetics primitives, worker, and genetics tests.
-- [x] Created isolated branch `feat/evolutionary-ecology-completion`.
+- [x] Inspected the existing worker, chromosome format, genetics primitives, test harness, and roadmap.
+- [x] Created isolated branch `feat/evolutionary-ecology-completion` and draft PR #44.
 - [x] Added the comprehensive implementation checklist in [IMPLEMENTATION-BACKLOG.md](IMPLEMENTATION-BACKLOG.md).
-- [x] Added `evolution.js` with variable-length genome validation, historical innovation registry primitives, structural mutation operators, innovation-aligned crossover, compatibility distance, species assignment, regulatory expression, multi-locus/epistatic phenotype expression, allele statistics, parent-offspring regression, and pedigree inbreeding calculations.
-- [x] Added focused Node tests in `tests/evolution.test.js`.
-- [x] Loaded the new module in the simulation worker.
-- [x] Added a GitHub Actions workflow to run all Node tests and syntax checks.
+- [x] Added `evolution.js` with variable-length genome validation, historical innovation/split registries, structural mutation, fitter-parent innovation-aligned crossover, compatibility distance, species assignment, compiled neural execution, regulatory expression, epistatic phenotypes, allele statistics, parent-offspring regression, and pedigree inbreeding calculations.
+- [x] Integrated variable-length genomes into the live worker. Initial legacy brains are migrated into node/connection genomes; the worker evaluates compiled variable topologies; offspring inherit through innovation-aligned crossover and structural mutation; fitter-parent selection uses parental fitness.
+- [x] Added per-agent recurrent neural state and reusable worker activation buffers to avoid allocating a new neural workspace for every boid on every tick.
+- [x] Persisted variable-length genomes, innovation registry state, parental genome/fitness state, and neural topology through schema-10 snapshots. Legacy snapshots still load through the fixed-slot migration path.
+- [x] Added tests for genome validation, structural mutation, crossover, compiled activation, species assignment, regulatory expression, population genetics, and pedigree calculations.
+- [x] Added a GitHub Actions workflow for evolutionary tests and syntax checks.
+- [x] Remote evolutionary test workflow passed on commit `593d12b`; the genetics regression workflow also passed on that commit. The full existing validation workflow is still running at the time of this update.
 
-## Not yet complete
+## Still incomplete
 
-The new evolutionary primitives are a tested-design foundation, not yet the full live NEAT integration. The existing worker still owns its legacy fixed-capacity neural representation and does not yet use the new variable-length genome for reproduction, evaluation, species-aware selection, or snapshots. Regulatory genes and population statistics are likewise not yet wired into reproduction, the Observatory, or world persistence.
-
-The test suite has been authored but could not be executed in this environment because the repository could not be cloned (network DNS resolution failed). The new GitHub Actions workflow will provide the first remote execution result after the branch is pushed/PR opened.
+- Species assignment exists and is tested, but species membership is not yet integrated into live worker telemetry or species-aware selection/offspring allocation.
+- Regulatory expression and epistatic phenotype functions exist, but regulatory loci are not yet inherited and expressed through the live ten-trait pipeline.
+- Population statistics helpers are tested, but allele-frequency, heritability, and inbreeding outputs are not yet wired into the Observatory and experiment exports.
+- Ecological extensions, controlled experiment runner, parameter sweeps, platform profiling, and mobile/browser interaction tests remain outstanding.
+- This branch has not been merged or deployed. The PR remains draft until the remaining runtime integration and validation are complete.
 
 ## Next implementation sequence
 
