@@ -1,0 +1,25 @@
+name: Evolutionary model tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feat/evolutionary-ecology-completion]
+  workflow_dispatch:
+
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run model tests
+        run: node --test tests/*.test.js
+      - name: Check worker and module syntax
+        run: |
+          node --check evolution.js
+          node --check genetics.js
+          node --check chromosome.js
+          node --check boids-worker.js
