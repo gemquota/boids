@@ -159,6 +159,8 @@ assert.equal(experimentSample.speciesQuotaTotal, experimentSample.count, 'specie
 assert.ok(Number.isFinite(experimentSample.speciesMeanNodes)&&experimentSample.speciesMeanNodes>0,'species neural node complexity should be measured');
 assert.ok(Number.isFinite(experimentSample.speciesMeanConnections)&&experimentSample.speciesMeanConnections>0,'species connection complexity should be measured');
 assert.ok(Number.isFinite(experimentSample.speciesInnovationDiversity)&&experimentSample.speciesInnovationDiversity>0,'species innovation diversity should be measured');
+assert.ok(Number.isFinite(experimentSample.effectiveBreeders)&&experimentSample.effectiveBreeders>=0,'realised effective breeders should be measured');
+assert.ok(Number.isFinite(experimentSample.effectiveFemales)&&Number.isFinite(experimentSample.effectiveMales),'sex-specific effective breeders should be measured');
 assert.equal(experimentSample.speciesTopology.length,experimentSample.speciesCount,'topology summaries should be available per species');
 assert.ok(experimentSample.speciesTopology.every(group=>group.members>=0&&group.innovationCount>=0&&group.meanNodes>=0&&group.meanConnections>=0),'per-species topology summaries should be well formed');
 const championSpecies=api.speciesState.find(group=>group.members.length>1&&group.championId!==null);
@@ -231,7 +233,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 17);
+assert.equal(restoredSnapshot.schemaVersion, 18);
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
