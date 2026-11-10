@@ -61,3 +61,6 @@ When adding persistent state:
 ## Performance constraints
 
 The hot path must avoid per-agent/per-tick object allocation where practical. Use typed arrays, sparse compiled edges, reusable activation workspaces, throttled telemetry and spatial indexing. Benchmark changes at several population sizes. A passing syntax test says nothing about runtime cost.
+
+
+See [snapshot schemas and migration behaviour](SNAPSHOT-MIGRATION.md) for the field-presence migration contract and the independent worker, IndexedDB and chromosome version domains.
