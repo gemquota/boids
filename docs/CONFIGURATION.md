@@ -118,7 +118,6 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Juvenile vulnerability | 0–4 | 1.5 | Multiplier on conspecific attack probability for juveniles. |
 | Food regeneration | 0–1 | 0.12 | Rate at which food-patch stock recovers. |
 | Current strength | 0–1.8 | 0.45 | Base environmental flow strength. |
-| Trail persistence | 0.04–0.5 | 0.14 | Canvas trail fade amount; lower values retain trails longer. |
 
 ### Toggles
 
