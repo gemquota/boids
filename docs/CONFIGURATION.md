@@ -136,6 +136,7 @@ Changing these controls never rewrites an existing genome. It changes the mappin
 | Turbulence force gain | 0–1 | 0.24 | Scales irregular per-agent current perturbation. |
 | Plant sensing range scale | 0.5–5 | 2 | Multiplier on perception radius for detecting edible plants. |
 | Minimum plant sensing range | 20–200 | 60 | Minimum distance at which plants influence steering. |
+| Plant-seeking steering gain | 0–1 | 0.22 | Direct steering force toward edible plant biomass. |
 | Threat-avoidance steering gain | 0–6 | 2.4 | Scales steering away from nearby aggressive conspecifics. |
 | Neural turning output gain | 0–2 | 0.5 | Scales the evolved turn-neuron output. |
 | Neural acceleration output gain | 0–2 | 0.35 | Scales the evolved acceleration-neuron output. |
