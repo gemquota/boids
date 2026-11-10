@@ -159,7 +159,7 @@ if 'BoidsConfigSchema.resolveWorkerMapping(key)' not in worker:
                       'mutationDrift','rewireChance','lineageDrift','neuralNoise','neuralInertia',
                       'learningMomentum','sensoryNoise','juvenileGrowth','adultMaintenance',
                       'predatorSearch','predatorPersistence','predatorTurn','predatorSatiation']:
-              if f'"{key}":[' not in html:
+              if f'"{key}":[' not in schema:
                   raise SystemExit('Missing detailed help description for ' + key)
           for item in ['foodDemandByPatch[best]+=cfg.foodBite*cfg.foodDepletion', 'attackTarget[i]=huntIndex', 'attackWinner[target]=hunter', 'foodGain=foodGainByAgent[i]']:
               if item not in worker:
