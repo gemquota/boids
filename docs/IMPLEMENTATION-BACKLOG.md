@@ -57,7 +57,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Apply fitness sharing within species.
 - [ ] Preserve champions / configurable elitism.
 - [ ] Protect new structural innovations from immediate elimination.
-- [ ] Implement species-aware parent selection and species-specific offspring allocation. (Same-species mate preference is live; offspring quotas and fitness sharing remain outstanding.)
+- [ ] Implement species-aware parent selection and species-specific offspring allocation. (Same-species mate preference and bounded species-size reproductive pressure are live; explicit per-generation offspring quotas and fitness sharing remain outstanding.)
 - [x] Handle extinct species and representative replacement.
 - [x] Persist species state across save/restore.
 - [ ] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory.
