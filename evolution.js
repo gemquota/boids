@@ -166,16 +166,16 @@
     const mean=sample.reduce((sum,v)=>sum+v,0)/n,variance=n>1?sample.reduce((sum,v)=>sum+(v-mean)**2,0)/(n-1):0,sd=Math.sqrt(variance),sorted=sample.slice().sort((a,b)=>a-b),rng=seededRandom(options.seed??1),iterations=Math.max(100,Math.min(20000,Math.floor(options.bootstrapSamples??2000))),means=new Array(iterations);
     for(let i=0;i<iterations;i++){let total=0;for(let j=0;j<n;j++)total+=sample[Math.floor(rng()*n)];means[i]=total/n}
     means.sort((a,b)=>a-b);
-    return{n,mean,standardDeviation:sd,standardError:sd/Math.sqrt(n),median:quantile(sorted,.5),confidenceInterval95:[quantile(means,.025),quantile(means,.975)],method:'percentile bootstrap',bootstrapSamples:iterations};
+    return{n,mean,standardDeviation:sd,standardError:sd/Math.sqrt(n),median:quantile(sorted,.5),firstQuartile:quantile(sorted,.25),thirdQuartile:quantile(sorted,.75),interquartileRange:quantile(sorted,.75)-quantile(sorted,.25),confidenceInterval95:[quantile(means,.025),quantile(means,.975)],method:'percentile bootstrap',bootstrapSamples:iterations};
   }
   function compareReplicates(aValues,bValues,options={}){
     const a=aValues.map(Number).filter(Number.isFinite),b=bValues.map(Number).filter(Number.isFinite);
     if(!a.length||!b.length)return{nA:a.length,nB:b.length,difference:null,pValue:null,confidenceInterval95:null,method:'two-sided permutation test'};
-    const mean=values=>values.reduce((sum,v)=>sum+v,0)/values.length,observed=mean(a)-mean(b),pooled=a.concat(b),rng=seededRandom(options.seed??1),iterations=Math.max(100,Math.min(50000,Math.floor(options.permutations??5000))),bootstrap=Math.max(100,Math.min(10000,Math.floor(options.bootstrapSamples??2000)));let extreme=0;const boot=new Array(bootstrap);
+    const mean=values=>values.reduce((sum,v)=>sum+v,0)/values.length,observed=mean(a)-mean(b),pooled=a.concat(b),variance=values=>values.length>1?values.reduce((sum,v)=>sum+(v-mean(values))**2,0)/(values.length-1):0,pooledDeviation=Math.sqrt(((a.length-1)*variance(a)+(b.length-1)*variance(b))/Math.max(1,a.length+b.length-2)),cohensD=pooledDeviation>0?observed/pooledDeviation:null,rng=seededRandom(options.seed??1),iterations=Math.max(100,Math.min(50000,Math.floor(options.permutations??5000))),bootstrap=Math.max(100,Math.min(10000,Math.floor(options.bootstrapSamples??2000)));let extreme=0;const boot=new Array(bootstrap);
     for(let i=0;i<iterations;i++){const shuffled=pooled.slice();for(let j=shuffled.length-1;j>0;j--){const k=Math.floor(rng()*(j+1));[shuffled[j],shuffled[k]]=[shuffled[k],shuffled[j]]}const diff=mean(shuffled.slice(0,a.length))-mean(shuffled.slice(a.length));if(Math.abs(diff)>=Math.abs(observed))extreme++}
     for(let i=0;i<bootstrap;i++){let am=0,bm=0;for(let j=0;j<a.length;j++)am+=a[Math.floor(rng()*a.length)];for(let j=0;j<b.length;j++)bm+=b[Math.floor(rng()*b.length)];boot[i]=am/a.length-bm/b.length}
     boot.sort((x,y)=>x-y);
-    return{nA:a.length,nB:b.length,difference:observed,pValue:(extreme+1)/(iterations+1),confidenceInterval95:[quantile(boot,.025),quantile(boot,.975)],method:'two-sided permutation test with percentile bootstrap interval',permutations:iterations,bootstrapSamples:bootstrap};
+    return{nA:a.length,nB:b.length,difference:observed,cohensD,pValue:(extreme+1)/(iterations+1),confidenceInterval95:[quantile(boot,.025),quantile(boot,.975)],method:'two-sided permutation test with percentile bootstrap interval',permutations:iterations,bootstrapSamples:bootstrap};
   }
   function parameterSweep(parameters={},limit=10000){
     const entries=Object.entries(parameters),combinations=[{}];
