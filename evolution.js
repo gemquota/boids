@@ -99,7 +99,7 @@
     for(let k=0;k<compiled.inputs.length;k++)values[compiled.inputs[k]]=finite(inputValues[k],0);
     for(const i of compiled.hidden){let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState?.[edge.source]||0)*edge.weight;values[i]=activateValue(sum,compiled.nodes[i].activation);state[i]=values[i]}
     for(let k=0;k<compiled.outputs.length;k++){const i=compiled.outputs[k];let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState?.[edge.source]||0)*edge.weight;values[i]=activateValue(sum,compiled.nodes[i].activation);state[i]=values[i];outputs[k]=values[i]}
-    return{outputs,state};
+    const result=workspace?.result||{};result.outputs=outputs;result.state=state;return result;
   }
 
   function compatibilityDistance(aInput,bInput,coefficients={}){
