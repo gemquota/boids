@@ -30,19 +30,17 @@ A passing workflow validates only the assertions it executes. It does not prove 
 
 ### Deterministic worker baseline
 
-Recorded on 2026-11-10 in GitHub Actions commit `8bcc68a49`, using the fixed benchmark seed `20261110`, 12 warm-up ticks and 36 measured simulation ticks per population. These are GitHub-hosted Ubuntu/Node measurements, not Android-device or browser-rendering guarantees.
+Recorded on 2026-11-10 in GitHub Actions commit `18f2035a02`, using fixed seed `20261110`, 12 warm-up ticks and 36 measured update/draw ticks per population. The worker runs in Node with a no-op Canvas context. These are reproducible CI reference measurements, not browser/device rendering guarantees.
 
-| Requested population | Initial | After warm-up | Final | Mean update | Median | p95 | CI budget |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | 100 | 100 | 100 | 10.449 ms | 8.259 ms | 14.878 ms | 25 ms |
-| 250 | 250 | 250 | 250 | 27.651 ms | 25.606 ms | 44.451 ms | 50 ms |
-| 500 | 500 | 498 | 497 | 57.402 ms | 55.914 ms | 67.990 ms | 100 ms |
-| 1,000 | 1,000 | 996 | 994 | 169.346 ms | 168.350 ms | 170.196 ms | 220 ms |
+| Requested | Initial | Post-warm-up | Final | Update mean | Update p95 | Draw mean | Draw p95 | Max backlog | Snapshot JSON | Restore | Heap delta |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 100 | 100 | 100 | 6.202 ms | 9.873 ms | 0.579 ms | 0.961 ms | 15 ms | 1,253,742 B | 35.847 ms | 12.05 MiB |
+| 250 | 250 | 250 | 250 | 19.708 ms | 32.726 ms | 0.721 ms | 1.150 ms | 15 ms | 3,122,406 B | 66.507 ms | 19.67 MiB |
+| 500 | 500 | 498 | 497 | 43.416 ms | 55.110 ms | 0.845 ms | 0.995 ms | 15 ms | 6,217,386 B | 107.203 ms | 25.74 MiB |
+| 1,000 | 1,000 | 996 | 994 | 121.226 ms | 125.701 ms | 1.177 ms | 1.222 ms | 15 ms | 12,500,159 B | 213.757 ms | 45.59 MiB |
 
-The benchmark includes simulation update work only. Population changes at 500/1,000 are retained as observed mortality during the benchmark window. Timing varies by runner load; use the values as a reproducible reference, not a cross-device performance claim.
+The benchmark records process heap delta, simulation update and draw timings, frame-step/backlog behaviour, serialized snapshot size and restore time. Heap delta is a coarse process-level measurement, not isolated worker memory or a browser heap profile. Population changes at 500/1,000 are observed mortality during the benchmark window. The existing update budgets remain 25/50/100/220 ms respectively.
 
-
-Measure movement/spatial queries, neural evaluation, mutation/crossover/speciation, regulation/statistics, rendering, telemetry, snapshot serialization/restore and experiment analysis separately. Profile representative population sizes (100, 250, 500, 1,000) and the intended Android device as well as desktop browsers. Avoid per-agent/per-tick allocations in hot paths.
 
 ## Known limitations
 
