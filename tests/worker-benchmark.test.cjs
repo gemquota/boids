@@ -33,7 +33,9 @@ const failures = [];
 const meanBudgetsMs = new Map([[100, 25], [250, 50], [500, 100], [1000, 220]]);
 for (const count of [100, 250, 500, 1000]) {
   const world = makeWorld(count);
+  const initialPopulation = world.N;
   for (let tick = 0; tick < 12; tick++) world.update(1 / 60, tick * (1000 / 60));
+  const postWarmupPopulation = world.N;
   const measuredTicks = 36;
   const samples = [];
   for (let tick = 0; tick < measuredTicks; tick++) {
@@ -48,7 +50,9 @@ for (const count of [100, 250, 500, 1000]) {
   const budget = meanBudgetsMs.get(count);
   results.push({
     requested: count,
-    actual: world.N,
+    initialPopulation,
+    postWarmupPopulation,
+    finalPopulation: world.N,
     meanMsPerTick: Number(meanMsPerTick.toFixed(3)),
     medianMsPerTick: Number(medianMsPerTick.toFixed(3)),
     p95MsPerTick: Number(p95MsPerTick.toFixed(3)),
@@ -61,7 +65,9 @@ console.log('Worker CPU benchmark (dimensionless reference workload; simulation 
 for (const result of results) {
   console.log(
     'N=' + result.requested +
-    ' actual=' + result.actual +
+    ' initial=' + result.initialPopulation +
+    ' postWarmup=' + result.postWarmupPopulation +
+    ' final=' + result.finalPopulation +
     ' mean=' + result.meanMsPerTick + 'ms' +
     ' median=' + result.medianMsPerTick + 'ms' +
     ' p95=' + result.p95MsPerTick + 'ms' +
