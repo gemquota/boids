@@ -74,7 +74,7 @@ jobs:
               raise SystemExit('Controls not wired into worker: ' + ', '.join(missing))
           if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
               raise SystemExit('World snapshot/restore handlers missing')
-          if "new Worker('./boids-worker.js?v=20261110-water-germination-v7')" not in html:
+          if "new Worker('./boids-worker.js?v=20261110-trait-history-slower-v8')" not in html:
               raise SystemExit('Plant renderer worker cache-bust missing')
           if 'function drawCrystal(p)' not in worker or 'hexPath(p.x,p.y,r,p.angle)' not in worker:
               raise SystemExit('Hexagonal crystal plant renderer missing')
