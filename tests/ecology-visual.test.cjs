@@ -66,11 +66,13 @@ console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore ge
 
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
+  assert.match(worker, /Math.max\(64,Math.min\(120,Math.round\(W\*H\/14000\)\)\)/);
   assert.match(worker, /plantGain/);
   assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
   assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
   assert.doesNotMatch(html, /id="foodPatches"|id="foodRegen"|Renewable food patches/);
-  assert.match(html, /Plant preference/);
+  assert.ok(schema.coreSliderDefs.some(item => item.id === 'plantPreference' && item.label === 'Plant preference'));
+  assert.ok(!schema.coreSliderDefs.some(item => /foodPatches|foodRegen|foodBite|foodEnergyYield|foodCapacity/.test(item.id)));
 });
 
 test('boid display colour ignores mutable neural connection weights', () => {
