@@ -155,6 +155,36 @@
   }
   function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'parent-offspring regression'}}
 
+  function seededRandom(seed=1){
+    let state=(Number(seed)>>>0)||0x6d2b79f5;
+    return function(){state^=state<<13;state^=state>>>17;state^=state<<5;return(state>>>0)/4294967296};
+  }
+  function quantile(sorted,p){if(!sorted.length)return null;const position=clamp(p,0,1)*(sorted.length-1),lo=Math.floor(position),hi=Math.ceil(position),fraction=position-lo;return sorted[lo]*(1-fraction)+sorted[hi]*fraction}
+  function summarizeReplicates(values,options={}){
+    const sample=values.map(Number).filter(Number.isFinite),n=sample.length;if(!n)return{n:0,mean:null,standardDeviation:null,standardError:null,confidenceInterval95:null,median:null};
+    const mean=sample.reduce((sum,v)=>sum+v,0)/n,variance=n>1?sample.reduce((sum,v)=>sum+(v-mean)**2,0)/(n-1):0,sd=Math.sqrt(variance),sorted=sample.slice().sort((a,b)=>a-b),rng=seededRandom(options.seed??1),iterations=Math.max(100,Math.min(20000,Math.floor(options.bootstrapSamples??2000))),means=new Array(iterations);
+    for(let i=0;i<iterations;i++){let total=0;for(let j=0;j<n;j++)total+=sample[Math.floor(rng()*n)];means[i]=total/n}
+    means.sort((a,b)=>a-b);
+    return{n,mean,standardDeviation:sd,standardError:sd/Math.sqrt(n),median:quantile(sorted,.5),confidenceInterval95:[quantile(means,.025),quantile(means,.975)],method:'percentile bootstrap',bootstrapSamples:iterations};
+  }
+  function compareReplicates(aValues,bValues,options={}){
+    const a=aValues.map(Number).filter(Number.isFinite),b=bValues.map(Number).filter(Number.isFinite);
+    if(!a.length||!b.length)return{nA:a.length,nB:b.length,difference:null,pValue:null,confidenceInterval95:null,method:'two-sided permutation test'};
+    const mean=values=>values.reduce((sum,v)=>sum+v,0)/values.length,observed=mean(a)-mean(b),pooled=a.concat(b),rng=seededRandom(options.seed??1),iterations=Math.max(100,Math.min(50000,Math.floor(options.permutations??5000))),bootstrap=Math.max(100,Math.min(10000,Math.floor(options.bootstrapSamples??2000))),extreme=0,boot=new Array(bootstrap);
+    for(let i=0;i<iterations;i++){const shuffled=pooled.slice();for(let j=shuffled.length-1;j>0;j--){const k=Math.floor(rng()*(j+1));[shuffled[j],shuffled[k]]=[shuffled[k],shuffled[j]]}const diff=mean(shuffled.slice(0,a.length))-mean(shuffled.slice(a.length));if(Math.abs(diff)>=Math.abs(observed))extreme++}
+    for(let i=0;i<bootstrap;i++){let am=0,bm=0;for(let j=0;j<a.length;j++)am+=a[Math.floor(rng()*a.length)];for(let j=0;j<b.length;j++)bm+=b[Math.floor(rng()*b.length)];boot[i]=am/a.length-bm/b.length}
+    boot.sort((x,y)=>x-y);
+    return{nA:a.length,nB:b.length,difference:observed,pValue:(extreme+1)/(iterations+1),confidenceInterval95:[quantile(boot,.025),quantile(boot,.975)],method:'two-sided permutation test with percentile bootstrap interval',permutations:iterations,bootstrapSamples:bootstrap};
+  }
+  function parameterSweep(parameters={},limit=10000){
+    const entries=Object.entries(parameters),combinations=[{}];
+    for(const [key,raw] of entries){const values=Array.isArray(raw)?raw:[raw];if(!values.length)throw new RangeError('Sweep parameter '+key+' has no values');if(combinations.length*values.length>limit)throw new RangeError('Parameter sweep exceeds '+limit+' combinations');const next=[];for(const base of combinations)for(const value of values)next.push({...base,[key]:value});combinations.splice(0,combinations.length,...next)}
+    return combinations.map((config,index)=>({id:index+1,config}));
+  }
+  function replicateSeeds(baseSeed,count){
+    const rng=seededRandom(baseSeed),n=Math.max(0,Math.min(10000,Math.floor(count)));return Array.from({length:n},()=>Math.max(1,Math.floor(rng()*0xffffffff)));
+  }
+
   function pedigreeKinship(a,b,pedigree,depth=12,memo=new Map()){
     if(!a||!b)return 0;if(a===b)return .5;if(depth<=0)return 0;
     const lo=Math.min(a,b),hi=Math.max(a,b),key=lo+':'+hi+':'+depth;if(memo.has(key))return memo.get(key);
@@ -166,5 +196,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
 });
