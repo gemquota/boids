@@ -24,6 +24,13 @@ assert.ok(schema.expressionMutationFields.every(item => item.key && item.label &
 assert.ok(Object.isFrozen(schema) && Object.isFrozen(schema.coreSliderDefs) && Object.isFrozen(schema.extraSliderDefs) && Object.isFrozen(schema.expressionTraits));
 assert.deepEqual(schema.expressionCurves.map(([value]) => value), ['linear','exponential','logarithmic','sigmoid','threshold','plateau','inverse']);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'attackRangeScale').value, 1.25);
+assert.ok(Object.isFrozen(schema.fieldGuide), 'field-guide metadata must be immutable');
+assert.equal(schema.fieldGuide.obstacleBuffer.length, 3, 'existing detailed field-guide explanations must be preserved');
+assert.equal(schema.fieldGuide.predatorSearch.length, 3, 'extended dynamics field-guide explanations must be preserved');
+assert.deepEqual(schema.normalizeDependencies({ ageMin: 40 }, { ageMin: 18, ageMax: 30, lifespan: 100 }), { ageMax: 41, lifespan: 42 });
+assert.deepEqual(schema.normalizeDependencies({ ageMax: 90 }, { ageMin: 18, ageMax: 80, lifespan: 85 }), { lifespan: 91 });
+assert.deepEqual(schema.normalizeDependencies({ lifespan: 120 }, { ageMin: 18, ageMax: 80, lifespan: 100 }), {});
+assert.deepEqual(schema.normalizeDependencies({ ageMin: 18 }, { ageMin: 18, ageMax: 30, lifespan: 100 }), {});
 assert.equal(schema.expressionTraits.find(item => item.key === 'speed').upper, 8);
 assert.deepEqual(schema.resolveWorkerMapping('count'), { target: 'cfg', key: 'count' });
 assert.deepEqual(schema.resolveWorkerMapping('flockNoise'), { target: 'cfg', key: 'flockNoise' });
@@ -31,4 +38,4 @@ assert.deepEqual(schema.resolveWorkerMapping('expr_speed_curve'), { target: 'gen
 assert.deepEqual(schema.resolveWorkerMapping('expr_speed_min'), { target: 'geneExpression', trait: 'speed', field: 'min' });
 assert.deepEqual(schema.resolveWorkerMapping('trait_aggression_rate'), { target: 'traitMutation', trait: 'aggression', field: 'rate' });
 assert.deepEqual(schema.resolveWorkerMapping('expr_unknown_min'), { target: 'cfg', key: 'expr_unknown_min' });
-console.log('Shared configuration schema: 182 sliders, bounds, defaults and curve options passed.');
+console.log('Shared configuration schema: 182 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
