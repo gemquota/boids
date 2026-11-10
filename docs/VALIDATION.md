@@ -7,7 +7,7 @@ The repository has separate workflows for:
 - evolutionary model tests (`node --test tests/*.test.js`, plus worker/module syntax);
 - genetics checks.
 
-The evolutionary test suite includes genome validation/mutation/crossover, recurrent and split-edge semantics, speciation/selection, regulatory primitives, allele and pedigree metrics, experiment manifests/replicate analysis, Kaplan–Meier survival analysis and multiple-comparison correction. Worker integration also tests recorded all-cause deaths, right-censoring of living/manual removals, and schema-20 persistence, including variable-length plasticity traces.
+The evolutionary test suite includes genome validation/mutation/crossover, recurrent and split-edge semantics, speciation/selection, regulatory primitives, allele and pedigree metrics, experiment manifests/replicate analysis, Kaplan–Meier survival analysis and multiple-comparison correction. Worker integration also tests recorded all-cause deaths, right-censoring of living/manual removals, and schema-20 persistence, including variable-length plasticity traces and structural-innovation grace state.
 
 A passing workflow validates only the assertions it executes. It does not prove biological validity, browser usability, deployment correctness or acceptable performance on every device.
 
