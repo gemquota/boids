@@ -5,6 +5,9 @@ const genetics=require('../genetics.js');
 
 test('ten stable loci have ordered indices and valid gene bounds',()=>{
   assert.equal(genetics.TRAITS.length,10);
+  assert.equal(genetics.TRAITS[5].label,'Perception radius');
+  assert.equal(genetics.DEFAULT_EXPRESSION.sensoryRange.min,18);
+  assert.equal(genetics.DEFAULT_EXPRESSION.sensoryRange.max,90);
   assert.deepEqual(genetics.TRAITS.map(g=>g.index),[0,1,2,3,4,5,6,7,8,9]);
   for(const gene of genetics.TRAITS) assert.ok(gene.min<gene.max,gene.key);
 });
