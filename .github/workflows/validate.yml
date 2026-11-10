@@ -83,10 +83,10 @@ jobs:
           if missing:
               raise SystemExit('Controls not wired into worker: ' + ', '.join(missing))
           if 'BoidsConfigSchema.fieldGuide' not in html or 'BoidsConfigSchema.normalizeDependencies' not in html:
-    raise SystemExit('Field guide and dependency validation must be consumed from the shared schema')
-if 'fieldGuide' not in schema or 'function normalizeDependencies' not in schema:
-    raise SystemExit('Shared field-guide/dependency schema is missing')
-if 'BoidsConfigSchema.resolveWorkerMapping(key)' not in worker:
+              raise SystemExit('Field guide and dependency validation must be consumed from the shared schema')
+          if 'fieldGuide' not in schema or 'function normalizeDependencies' not in schema:
+              raise SystemExit('Shared field-guide/dependency schema is missing')
+          if 'BoidsConfigSchema.resolveWorkerMapping(key)' not in worker:
               raise SystemExit('Worker must resolve settings through the shared configuration schema')
           if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
               raise SystemExit('World snapshot/restore handlers missing')
