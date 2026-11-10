@@ -42,10 +42,22 @@ function buildRiverNetwork(){
  }
  riverNetworkCache={width:W,height:H,main,tributaries,feeders};return riverNetworkCache;
 }
+function buildFreshwaterField(network){
+ if(network.field)return network.field;
+ const cellSize=Math.max(12,Math.min(24,Math.min(W,H)/32)),cols=Math.max(1,Math.ceil(W/cellSize)),rows=Math.max(1,Math.ceil(H/cellSize)),segments=[];
+ const addSegments=path=>{const stride=Math.max(1,Math.ceil((path.length-1)/12));for(let i=0;i<path.length-1;i+=stride){const a=path[i],b=path[Math.min(path.length-1,i+stride)],dx=b.x-a.x,dy=b.y-a.y;segments.push({x:a.x,y:a.y,dx,dy,len2:dx*dx+dy*dy||1})}};
+ addSegments(network.main);for(const path of network.tributaries)addSegments(path);for(const path of network.feeders)addSegments(path);
+ const distance=new Float32Array(cols*rows),nearestX=new Float32Array(cols*rows),nearestY=new Float32Array(cols*rows);
+ for(let gy=0;gy<rows;gy++)for(let gx=0;gx<cols;gx++){
+  const px=Math.min(W,(gx+.5)*cellSize),py=Math.min(H,(gy+.5)*cellSize),index=gy*cols+gx;let best=Infinity,bx=px,by=py;
+  for(const seg of segments){const t=clamp(((px-seg.x)*seg.dx+(py-seg.y)*seg.dy)/seg.len2,0,1),qx=seg.x+seg.dx*t,qy=seg.y+seg.dy*t,dx=px-qx,dy=py-qy,d2=dx*dx+dy*dy;if(d2<best){best=d2;bx=qx;by=qy}}
+  distance[index]=Math.sqrt(best);nearestX[index]=bx;nearestY[index]=by;
+ }
+ network.field={cellSize,cols,rows,distance,nearestX,nearestY};return network.field;
+}
 function nearestFreshwater(px,py){
- const network=buildRiverNetwork();let best={distance:1e9,x:px,y:py};
- const testPath=path=>{const stride=Math.max(1,Math.ceil((path.length-1)/16));for(let i=0;i<path.length-1;i+=stride){const a=path[i],b=path[Math.min(path.length-1,i+stride)],dx=b.x-a.x,dy=b.y-a.y,t=clamp(((px-a.x)*dx+(py-a.y)*dy)/(dx*dx+dy*dy||1),0,1),qx=a.x+dx*t,qy=a.y+dy*t,d=Math.hypot(px-qx,py-qy);if(d<best.distance)best={distance:d,x:qx,y:qy}}};
- testPath(network.main);for(const path of network.tributaries)testPath(path);for(const path of network.feeders)testPath(path);return best;
+ const field=buildFreshwaterField(buildRiverNetwork()),gx=clamp(Math.floor(px/field.cellSize),0,field.cols-1),gy=clamp(Math.floor(py/field.cellSize),0,field.rows-1),index=gy*field.cols+gx;
+ return{distance:field.distance[index],x:field.nearestX[index],y:field.nearestY[index]};
 }
 function plantStage(p){if(p.dead)return'dead';if(p.senescent||p.age>=(p.lifespan||84))return'senescent';if(p.greatGrandmother)return'great-grandmother';if(p.grandmother)return'grandmother';if(p.adultNode)return'mature';if(p.age<8||p.biomass<.32)return'seedling';if(p.age<18||p.biomass<.65)return'juvenile';return'mature'}
 function makePlantNode(values){let id=nextPlantId++;return{id,parent:0,root:id,x:0,y:0,angle:rand(0,TAU),size:.3,biomass:.2,age:0,children:0,grandmother:false,greatGrandmother:false,adultNode:false,offspring:0,sporeClock:0,depth:0,lifespan:rand(110,140),senescent:false,cloneParent:0,asexual:false,...values,id}}
