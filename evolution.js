@@ -184,6 +184,12 @@
     const t95=[0,12.706,4.303,3.182,2.776,2.571,2.447,2.365,2.306,2.262,2.228,2.201,2.179,2.160,2.145,2.131,2.120,2.110,2.101,2.093,2.086,2.080,2.074,2.069,2.064,2.060,2.056,2.052,2.048,2.045,2.042],critical=t95[n-2]||1.96;
     return{n,slope,intercept,rSquared,correlation,slopeStandardError,slopeConfidenceInterval95:[slope-critical*slopeStandardError,slope+critical*slopeStandardError]};
   }
+  function effectiveBreederSize(contributions={}){
+    const effective=values=>{const clean=values.map(value=>Math.max(0,finite(value,0))),total=clean.reduce((sum,value)=>sum+value,0),squares=clean.reduce((sum,value)=>sum+value*value,0);return squares>0?total*total/squares:0};
+    const female=effective(contributions.female||[]),male=effective(contributions.male||[]),combined=female>0&&male>0?4*female*male/(female+male):0;
+    return{effectiveFemales:female,effectiveMales:male,effectiveBreeders:combined,femaleContributors:(contributions.female||[]).filter(value=>value>0).length,maleContributors:(contributions.male||[]).filter(value=>value>0).length};
+  }
+
   function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,rawSlope:regression.slope,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'mid-parent offspring regression; t-based slope interval'}}
 
   function seededRandom(seed=1){
