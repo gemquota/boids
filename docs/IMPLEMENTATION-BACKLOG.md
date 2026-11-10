@@ -184,6 +184,10 @@ A task is not complete because a function exists. It must have:
 
 ## Work log
 
+- [x] Replaced the live NEAT plasticity loop's fixed `cfg.connections` cap with per-agent variable-length eligibility traces aligned to the full evolved genome. Schema 19 persists them and migrates available legacy traces; regression tests prove connections beyond the legacy slot limit continue learning and restore correctly.
+
+
+
 - [x] Recorded fixed-seed process-heap, update/draw, frame-backlog, snapshot-size and restore baselines at four population sizes; see `docs/PERFORMANCE-BASELINE.md`. Process heap delta is explicitly labelled as coarse, not isolated browser memory.
 
 
