@@ -167,6 +167,12 @@ jobs:
           for item in ['id="selectionPhysicalChart"', 'id="selectionBehaviorChart"', "drawMultiLineChart($('selectionPhysicalChart')", "drawMultiLineChart($('selectionBehaviorChart')"]:
               if item not in html:
                   raise SystemExit('Missing selection-differential visualization: ' + item)
+          for item in ['hungerMin','hungerMax','thirstMin','thirstMax','hungryCount','thirstyCount','predatingCount','plantEatingCount','plantEatingFlag[i]=1','huntingFlag[i]=1']:
+              if item not in worker:
+                  raise SystemExit('Missing live feeding/hydration telemetry: ' + item)
+          for item in ['id="ccHungerRange"','id="ccThirstRange"','id="ccHungry"','id="ccThirsty"','id="ccCarnivore"','id="ccHerbivore"','id="ccDeaths"','id="ccPredation"']:
+              if item not in html:
+                  raise SystemExit('Missing grouped command-centre metric: ' + item)
           for item in ['id="mUpdateMs"', 'id="mDrawMs"', 'id="mBacklog"']:
               if item not in html:
                   raise SystemExit('Missing live performance metric in Observatory: ' + item)
