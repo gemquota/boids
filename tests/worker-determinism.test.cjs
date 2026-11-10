@@ -17,7 +17,7 @@ function makeWorld(seed) {
     Array, Object, Number, String, Boolean, Set, Map, Date, JSON,
   };
   vm.createContext(sandbox);
-  sandbox.importScripts = (...paths) => { for (const path of paths) vm.runInContext(fs.readFileSync(path, 'utf8'), sandbox, { filename: path }); };
+  sandbox.importScripts = (...paths) => { for (const path of paths) { const filePath = path.split('?')[0]; vm.runInContext(fs.readFileSync(filePath, 'utf8'), sandbox, { filename: path }); } };
   vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get food(){return food}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get foodClaims(){return foodClaims}, get foodConsumed(){return foodConsumed}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
@@ -86,6 +86,8 @@ const experimentSample = api.evaluatePopulation();
 assert.equal(experimentSample.selectionDifferentials.length, 10, 'selection differentials should be reported for all inherited loci');
 assert.ok(experimentSample.selectionDifferentials.every(Number.isFinite), 'selection differentials must be finite');
 assert.ok(Number.isFinite(experimentSample.selectionAggression), 'per-locus selection series should be available to the Observatory');
+assert.ok(Number.isFinite(experimentSample.aggressionMin) && experimentSample.aggressionMin <= experimentSample.aggression, 'population aggression range should be reported');
+assert.equal(experimentSample.reproductiveDrive, 0, 'global reproductive drive setting should be included in telemetry');
 assert.ok(experimentSample.meanLifetimeOffspring >= 0, 'lifetime reproductive success should be measurable');
 const experimentData = api.exportExperimentData();
 assert.equal(experimentData.format, 'boids-analysis-bundle-v2');
