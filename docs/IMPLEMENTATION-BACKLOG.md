@@ -60,7 +60,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement species-aware parent selection and species-specific offspring allocation. (Integer quota targets are allocated from shared fitness and converted to reproductive pressure in the overlapping-generation model; same-species mating is preferred with fallback.)
 - [x] Handle extinct species and representative replacement.
 - [x] Persist species state across save/restore.
-- [ ] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory. (Counts, sizes, age, stagnation, champion fitness and quota pressure are visible; per-species innovation/topology detail remains outstanding.)
+- [x] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory. (Includes per-species member count, mean nodes/connections, enabled connections, innovation count, age, stagnation, champion fitness and quota allocation, plus population-level complexity trends.)
 - [x] Test speciation under controlled synthetic genomes and selection pressure.
 
 ## D. Regulatory genetics and gene expression
@@ -183,6 +183,8 @@ A task is not complete because a function exists. It must have:
 6. Performance evidence where it adds recurring computation.
 
 ## Work log
+
+- [x] Added per-species topology summaries to live telemetry: member count, mean node/connection counts, enabled connections, unique innovation count, age, stagnation, champion fitness and offspring quota. Added Observatory summary cards and trend series with worker regression tests.
 
 - [x] Added explicit recurrent-edge mutation to the live NEAT mutation path and exposed its rate as a control.
 - [x] Added persistent species age, champion, best-fitness, stagnation, shared-fitness, and integer offspring-quota statistics; wired quota pressure into female reproductive drive and male mate selection, with a champion reproductive bonus.
