@@ -53,7 +53,7 @@ Current worker metrics include:
 - 16-bin per-trait allele-frequency summaries and allele richness;
 - expected gene diversity (Hₑ) calculated from those bins;
 - pedigree-derived individual/population inbreeding;
-- preliminary mid-parent/offspring regression estimates and sample sizes;
+- preliminary mid-parent/offspring regression estimates using parental trait values recorded at conception, with sample sizes;
 - species entropy and regulatory activity/variance;
 - an idealised sex-ratio effective-size estimate.
 
