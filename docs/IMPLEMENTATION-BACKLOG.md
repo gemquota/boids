@@ -14,7 +14,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## A. Baseline, architecture, and compatibility
 
-- [ ] Record baseline deterministic runs at 100, 250, 500, and 1,000 agents.
+- [x] Record baseline deterministic runs at 100, 250, 500, and 1,000 agents. (GitHub Actions worker update baseline recorded in `docs/VALIDATION.md`; browser/device and render timing remain separate release gates.)
 - [ ] Record baseline memory, update, draw, backlog, snapshot-size, and restore timings.
 - [ ] Audit every fixed-size neural array and connection-count assumption.
 - [x] Inventory worker, IndexedDB-envelope and chromosome-codec schemas plus field-presence migration behaviour in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
@@ -183,6 +183,9 @@ A task is not complete because a function exists. It must have:
 6. Performance evidence where it adds recurring computation.
 
 ## Work log
+
+- [x] Recorded fixed-seed worker update baselines at 100/250/500/1,000 agents with initial, warm-up and final population counts plus mean/median/p95 timing. The run is a CI-hosted simulation-only reference, not an Android/browser-rendering benchmark.
+
 
 - [x] Added and tested standalone variable-length regulatory genomes with stable gene-copy and edge identities, gene duplication/deletion, incident-edge duplication/removal, identity-aligned crossover, regulatory activation/repression, environmental inputs and bounded iterative expression. This is a tested foundation, not yet connected to live offspring inheritance, phenotype calculation or snapshots.
 
