@@ -35,9 +35,12 @@ function makeWorld(seed) {
 }
 
 function run(seed) {
-  const world = makeWorld(seed);
-  for(let i=0;i<world.__boidsTest.N;i++)if(!Number.isFinite(world.__boidsTest.x[i])||!Number.isFinite(world.__boidsTest.y[i])||!Number.isFinite(world.__boidsTest.vx[i])||!Number.isFinite(world.__boidsTest.vy[i]))throw new Error('Non-finite initial agent '+i+' position/velocity '+world.__boidsTest.x[i]+','+world.__boidsTest.y[i]+','+world.__boidsTest.vx[i]+','+world.__boidsTest.vy[i]+' speedPhenotype='+world.__boidsTest.calculatePhenotype(i,2)+' regEnv='+JSON.stringify(world.__boidsTest.regulatoryEnvironment(i)));
-  for (let tick = 0; tick < 180; tick++) {const api=world.__boidsTest;api.update(1 / 60, 1000 + tick * (1000 / 60));for(let i=0;i<api.N;i++)if(!Number.isFinite(api.x[i])||!Number.isFinite(api.y[i]))throw new Error('Non-finite boid position at tick '+tick+', agent '+i+', phenotype='+Array.from({length:10},(_,k)=>api.phenotype(i,k)).join(',')+', regulatory='+JSON.stringify(api.regulatoryGenomes[i])+', velocity='+api.vx[i]+','+api.vy[i]+',next='+api.vxNext[i]+','+api.vyNext[i]+',brain='+Array.from(api.brainOut.subarray(i*8,i*8+8)).join(',')+',energy='+api.energy[i]+',age='+api.age[i]+',regExpr='+Array.from(api.regulatoryExpressionCache.subarray(i*10,i*10+10)).join(',')+',regBase='+Array.from(api.regulatoryGenes.subarray(i*10,i*10+10)).join(',')+',phenCache='+Array.from(api.phenotypeCache.subarray(i*10,i*10+10)).join(',')+',habitat='+JSON.stringify(api.sampleHabitat(api.x[i],api.y[i]))+',);}
+  const world = makeWorld(seed),api=world.__boidsTest;
+  for(let i=0;i<api.N;i++)if(!Number.isFinite(api.x[i])||!Number.isFinite(api.y[i])||!Number.isFinite(api.vx[i])||!Number.isFinite(api.vy[i]))throw new Error('Non-finite initial agent '+i);
+  for(let tick=0;tick<180;tick++){
+    api.update(1/60,1000+tick*(1000/60));
+    for(let i=0;i<api.N;i++)if(!Number.isFinite(api.x[i])||!Number.isFinite(api.y[i]))throw new Error('Non-finite boid position at tick '+tick+', agent '+i+', x='+api.x[i]+', y='+api.y[i]+', vx='+api.vx[i]+', vy='+api.vy[i]+', energy='+api.energy[i]);
+  }
   return world;
 }
 
