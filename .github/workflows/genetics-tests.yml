@@ -6,7 +6,9 @@ on:
     branches: [main]
     paths:
       - 'boids-worker.js'
+      - 'chromosome.js'
       - 'genetics.js'
+      - 'chromosome.js'
       - 'tests/**'
       - '.github/workflows/genetics-tests.yml'
 jobs:
@@ -18,6 +20,6 @@ jobs:
         with:
           node-version: 22
       - name: Syntax-check runtime
-        run: node --check boids-worker.js && node --check genetics.js
+        run: node --check boids-worker.js && node --check genetics.js && node --check chromosome.js
       - name: Run genetics tests
-        run: node --test tests/genetics.test.js
+        run: node --test tests/genetics.test.js tests/chromosome.test.cjs
