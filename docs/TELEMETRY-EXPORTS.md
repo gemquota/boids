@@ -24,7 +24,7 @@ The worker evaluates population metrics on its statistics cadence (not every ren
 The worker's `exportExperimentData()` returns `format: "boids-analysis-bundle-v2"` with:
 
 - **metadata:** export timestamp, experiment/run serial, seed, mode, simulation time, population, generation, configuration, worker snapshot schema, telemetry sample count, genome record count and notes.
-- **snapshot:** a JSON-safe worker world snapshot (schema 18), including current arrays, variable-length genomes, learned weights, recurrent state, regulatory modifiers, pedigree, innovation/species state, survival history and RNG/ecology state.
+- **snapshot:** a JSON-safe worker world snapshot (schema 19), including current arrays, variable-length genomes, learned weights, recurrent state, regulatory modifiers, pedigree, innovation/species state, survival history, per-agent variable-length plasticity traces and RNG/ecology state.
 - **telemetry:** sampled population records, including genetics, survival, species, ecology and performance fields.
 - **geneDistributionHistory / cohortHistory / neuralWeightHistory:** bounded sampled histories.
 - **selectionDifferentials:** per-trait selection differential summary.
