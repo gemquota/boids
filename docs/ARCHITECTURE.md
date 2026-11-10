@@ -64,3 +64,5 @@ The hot path must avoid per-agent/per-tick object allocation where practical. Us
 
 
 See [snapshot schemas and migration behaviour](SNAPSHOT-MIGRATION.md) for the field-presence migration contract and the independent worker, IndexedDB and chromosome version domains.
+
+See [Observatory telemetry and analysis exports](TELEMETRY-EXPORTS.md) for sampled metrics, retention limits and bundle contents.
