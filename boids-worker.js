@@ -93,14 +93,63 @@ function plantPalette(p){const seed=((p.root||p.id||1)*2654435761)>>>0,hue=(seed
 function drawPolypArms(p,r){const palette=plantPalette(p),mature=!!(p.adultNode||p.grandmother||p.greatGrandmother),senescent=!!p.senescent,count=senescent?3:mature?6:4,base=p.angle+(p.id%7)*.13,reach=(2.8+r*.78)*(mature?1.12:1)*(senescent?.72:1),wave=simTime*(senescent?.32:1.15)+(p.id%19)*.47;ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowBlur=3;ctx.shadowColor=palette.glow;for(let k=0;k<count;k++){let a=base+k*TAU/count,phase=wave+k*1.73,sway=Math.sin(phase)*.32,side=Math.cos(phase*.73)*.18,ux=Math.cos(a),uy=Math.sin(a),px=-uy,py=ux,sx=p.x+ux*r*.78,sy=p.y+uy*r*.78,ex=p.x+Math.cos(a+sway)*reach,ey=p.y+Math.sin(a+sway)*reach,cx=p.x+Math.cos(a+sway*.55+side*.25)*reach*.62,cy=p.y+Math.sin(a+sway*.55+side*.25)*reach*.62;ctx.strokeStyle=senescent?'rgba(184,194,202,.38)':palette.arm;ctx.lineWidth=Math.max(.8,r*.115);ctx.beginPath();ctx.moveTo(sx,sy);ctx.quadraticCurveTo(cx,cy,ex,ey);ctx.stroke();for(let t=-1;t<=1;t+=2){let ta=a+sway+t*(.34+Math.sin(phase+t)*.09),tipX=ex+Math.cos(ta)*reach*.38+px*side*reach*.22,tipY=ey+Math.sin(ta)*reach*.38+py*side*reach*.22,ctrlX=ex+Math.cos(ta-.18)*reach*.2,ctrlY=ey+Math.sin(ta-.18)*reach*.2;ctx.lineWidth=Math.max(.55,r*.065);ctx.strokeStyle=senescent?'rgba(184,194,202,.4)':palette.edge;ctx.beginPath();ctx.moveTo(ex,ey);ctx.quadraticCurveTo(ctrlX,ctrlY,tipX,tipY);ctx.stroke();ctx.fillStyle=senescent?'rgba(184,194,202,.45)':palette.accent;hexPath(tipX,tipY,Math.max(.55,r*.07),ta);ctx.fill()}}ctx.restore()}
 function drawCrystal(p){const palette=plantPalette(p),r=2.6+p.size*5.7,adult=!!p.adultNode,grand=!!p.grandmother,great=!!p.greatGrandmother,senescent=!!p.senescent,phase=p.biomass>=.72?1:.55;drawPolypArms(p,r);ctx.save();ctx.globalAlpha=(.78+Math.min(.2,p.biomass*.12))*(senescent?.42:1);ctx.shadowBlur=senescent?2:great?16:grand?12:9;ctx.shadowColor=senescent?'#9aa6ad':palette.glow;let g=ctx.createLinearGradient(p.x-r,p.y-r,p.x+r,p.y+r);g.addColorStop(0,senescent?'#a5adb2':palette.edge);g.addColorStop(.28,senescent?'#78838b':palette.base);g.addColorStop(.68,senescent?'#626d76':palette.deep);g.addColorStop(1,senescent?'#39434d':palette.accent);hexPath(p.x,p.y,r,p.angle);ctx.fillStyle=g;ctx.fill();ctx.lineWidth=Math.max(.9,r*.14);ctx.strokeStyle=senescent?'#aeb8be':palette.edge;ctx.stroke();ctx.shadowBlur=0;ctx.lineWidth=Math.max(.5,r*.075);for(let k=0;k<6;k++){let a=p.angle+k*Math.PI/3;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r);ctx.strokeStyle=k%2?palette.accent:palette.edge;ctx.globalAlpha=(senescent?.34:.62);ctx.stroke()}if(phase){ctx.globalAlpha=senescent?.2:.72;ctx.lineWidth=Math.max(.6,r*.07);for(let k=0;k<6;k++){let a=p.angle+k*Math.PI/3,b=p.angle+(k+1)*Math.PI/3;ctx.beginPath();ctx.moveTo(p.x+Math.cos(a)*r*.3,p.y+Math.sin(a)*r*.3);ctx.lineTo(p.x+Math.cos((a+b)/2)*r*.82,p.y+Math.sin((a+b)/2)*r*.82);ctx.lineTo(p.x+Math.cos(b)*r*.3,p.y+Math.sin(b)*r*.3);ctx.strokeStyle=k%2?palette.edge:palette.accent;ctx.stroke()}}if(adult||grand||great){ctx.globalAlpha=senescent?.3:.95;ctx.lineWidth=Math.max(1,r*(great?.2:grand?.16:.12));hexPath(p.x,p.y,r*1.12,p.angle);ctx.strokeStyle=great?palette.edge:palette.accent;ctx.stroke()}ctx.restore()}
 function drawWaterways(){
- const lake=(cx,cy,rx,ry,phase)=>{ctx.beginPath();ctx.moveTo(cx-rx*.92,cy-ry*.12);ctx.bezierCurveTo(cx-rx*1.08,cy-ry*.72,cx-rx*.28,cy-ry*1.08,cx+rx*.18,cy-ry*.88);ctx.bezierCurveTo(cx+rx*1.12,cy-ry*.72,cx+rx*1.08,cy+ry*.12,cx+rx*.72,cy+ry*.58);ctx.bezierCurveTo(cx+rx*.28,cy+ry*1.08,cx-rx*.52,cy+ry*.94,cx-rx*.86,cy+ry*.48);ctx.bezierCurveTo(cx-rx*1.12,cy+ry*.22,cx-rx*1.02,cy+ry*.02,cx-rx*.92,cy-ry*.12);ctx.closePath();ctx.fillStyle='rgba(16,91,119,.48)';ctx.strokeStyle='rgba(64,158,177,.42)';ctx.lineWidth=Math.max(2,H*.004);ctx.fill();ctx.stroke();ctx.save();ctx.globalAlpha=.32;ctx.strokeStyle='#83dce0';ctx.lineWidth=Math.max(1,H*.0018);for(let j=0;j<3;j++){let yy=cy-ry*.36+j*ry*.32;ctx.beginPath();ctx.moveTo(cx-rx*.48,yy);ctx.quadraticCurveTo(cx,yy+Math.sin(phase+j)*ry*.12,cx+rx*.48,yy-ry*.025);ctx.stroke()}ctx.restore()};
+ const fractal=(anchors,roughness,depth,seed)=>{
+  let points=[anchors[0]],counter=0;
+  const split=(a,b,level)=>{
+   if(level<=0){points.push(b);return}
+   const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+   const wave=Math.sin((seed+counter++*12.9898)*78.233)*Math.cos((seed+counter*4.123)*31.719);
+   const bend=wave*roughness*Math.pow(.57,depth-level);
+   const mid={x:(a.x+b.x)*.5-(dy/len)*bend,y:(a.y+b.y)*.5+(dx/len)*bend};
+   split(a,mid,level-1);split(mid,b,level-1);
+  };
+  for(let i=1;i<anchors.length;i++)split(anchors[i-1],anchors[i],depth);
+  return points;
+ };
+ const trace=pts=>{ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y)};
+ const strokeWater=(pts,width,outer='rgba(10,43,57,.82)',inner='rgba(24,105,135,.84)')=>{
+  trace(pts);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=outer;ctx.lineWidth=width*1.34;ctx.stroke();
+  trace(pts);ctx.strokeStyle=inner;ctx.lineWidth=width;ctx.stroke();
+  trace(pts);ctx.strokeStyle='rgba(130,211,216,.26)';ctx.lineWidth=Math.max(1,H*.002);ctx.stroke();
+ };
+ const lagoon=(cx,cy,rx,ry,seed)=>{
+  const pts=[];for(let i=0;i<24;i++){const a=i/24*TAU,r=1+.13*Math.sin(a*3+seed)+.07*Math.cos(a*5-seed*.7);pts.push({x:cx+Math.cos(a)*rx*r,y:cy+Math.sin(a)*ry*r})}
+  pts.push(pts[0]);ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.closePath();
+  ctx.fillStyle='rgba(17,91,115,.72)';ctx.strokeStyle='rgba(83,170,183,.48)';ctx.lineWidth=Math.max(1.5,H*.0025);ctx.fill();ctx.stroke();
+  ctx.save();ctx.globalAlpha=.3;ctx.strokeStyle='#8adce0';ctx.lineWidth=Math.max(1,H*.0015);
+  for(let j=0;j<3;j++){const yy=cy-ry*.35+j*ry*.34;ctx.beginPath();ctx.moveTo(cx-rx*.48,yy);ctx.quadraticCurveTo(cx,yy+Math.sin(seed+j)*ry*.14,cx+rx*.48,yy-ry*.04);ctx.stroke()}ctx.restore();
+ };
  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
- const river=()=>{ctx.beginPath();ctx.moveTo(-W*.04,H*.46);ctx.bezierCurveTo(W*.18,H*.31,W*.24,H*.76,W*.43,H*.56);ctx.bezierCurveTo(W*.59,H*.39,W*.66,H*.31,W*.78,H*.56);ctx.bezierCurveTo(W*.88,H*.76,W*.94,H*.63,W*1.04,H*.48)};
- river();ctx.strokeStyle='rgba(17,54,69,.72)';ctx.lineWidth=Math.max(22,H*.09);ctx.stroke();
- river();const rg=ctx.createLinearGradient(0,H*.35,0,H*.68);rg.addColorStop(0,'rgba(27,115,143,.78)');rg.addColorStop(.5,'rgba(22,94,126,.86)');rg.addColorStop(1,'rgba(12,65,96,.82)');ctx.strokeStyle=rg;ctx.lineWidth=Math.max(16,H*.065);ctx.stroke();
- river();ctx.strokeStyle='rgba(112,205,210,.32)';ctx.lineWidth=Math.max(1.2,H*.003);ctx.stroke();
- lake(W*.22,H*.22,W*.105,H*.105,.3);lake(W*.76,H*.78,W*.12,H*.09,1.1);
- ctx.restore()
+ // A narrow, continuous tidal coast touches the north-west and south-east corners.
+ const coast=fractal([{x:-W*.08,y:H*.015},{x:W*.18,y:H*.012},{x:W*.43,y:-H*.012},{x:W*.68,y:H*.025},{x:W*.91,y:H*.16},{x:W*1.012,y:H*.43},{x:W*1.012,y:H*.73},{x:W*1.08,y:H*1.08}],Math.min(W,H)*.012,4,17);
+ strokeWater(coast,Math.max(20,H*.052),'rgba(5,34,49,.94)','rgba(16,91,123,.9)');
+ // The main river is a single long, strongly meandering channel draining to the south-east coast.
+ const main=fractal([{x:W*.035,y:H*.31},{x:W*.16,y:H*.43},{x:W*.29,y:H*.29},{x:W*.39,y:H*.51},{x:W*.53,y:H*.62},{x:W*.64,y:H*.48},{x:W*.76,y:H*.68},{x:W*.88,y:H*.82},{x:W*.985,y:H*.91}],Math.min(W,H)*.035,5,31);
+ strokeWater(main,Math.max(15,H*.044),'rgba(9,43,57,.9)','rgba(24,107,137,.88)');
+ // Tributaries branch from the main channel; each ends in a connected, irregular billabong.
+ const creekSpecs=[
+  [.19,-1,.15,.13,1],[.34,1,.13,.15,2],[.48,-1,.17,.12,3],
+  [.61,1,.15,.14,4],[.74,-1,.13,.13,5],[.84,1,.09,.1,6]
+ ];
+ for(const [t,side,dx,dy,id] of creekSpecs){
+  const index=Math.max(0,Math.min(main.length-1,Math.floor(t*(main.length-1)))),start=main[index];
+  const end={x:clamp(start.x+W*dx, W*.035,W*.94),y:clamp(start.y+H*side*dy,H*.06,H*.94)};
+  const mid1={x:start.x+(end.x-start.x)*.28+W*.018*side,y:start.y+(end.y-start.y)*.3};
+  const mid2={x:start.x+(end.x-start.x)*.68-W*.014*side,y:start.y+(end.y-start.y)*.72};
+  const creek=fractal([start,mid1,mid2,end],Math.min(W,H)*.014,4,50+id);
+  strokeWater(creek,Math.max(4,H*.009),'rgba(10,49,63,.84)','rgba(34,126,151,.82)');
+  lagoon(end.x,end.y,Math.max(13,W*.018),Math.max(10,H*.026),id*.73);
+ }
+ // A few secondary forklets make the drainage network visibly recursive.
+ for(let k=0;k<3;k++){
+  const t=.27+k*.2,index=Math.floor(t*(main.length-1)),start=main[index],side=k%2?1:-1;
+  const end={x:clamp(start.x+W*(.055+k*.012),W*.04,W*.94),y:clamp(start.y+H*side*(.055+k*.012),H*.05,H*.95)};
+  const branch=fractal([start,{x:(start.x+end.x)*.5+W*.01*side,y:(start.y+end.y)*.5},end],Math.min(W,H)*.009,3,90+k);
+  strokeWater(branch,Math.max(2.5,H*.0045),'rgba(10,49,63,.78)','rgba(39,132,153,.74)');
+ }
+ // The estuary broadens where the river meets the coastal saltwater.
+ const mouth=main[main.length-1];lagoon(mouth.x,mouth.y,Math.max(23,W*.032),Math.max(15,H*.04),8.2);
+ ctx.restore();
 }
 function draw(){ctx.fillStyle='rgba(4,9,17,'+cfg.trail+')';ctx.fillRect(0,0,W,H);drawWaterways();ctx.save();ctx.globalAlpha=.13;ctx.strokeStyle='#527d91';for(let oi=0;oi<obstacles.length;oi++){let o=obstacles[oi];ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,TAU);ctx.stroke()}ctx.restore();for(let fi=0;fi<food.length;fi++){let f=food[fi];ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,TAU);ctx.fillStyle='rgba(83,218,161,'+(0.025+f.stock*.09)+')';ctx.fill();ctx.strokeStyle='rgba(83,218,161,.16)';ctx.stroke()}ctx.save();ctx.lineCap='round';let plantById=new Map();for(const p of plants)plantById.set(p.id,p);for(const p of plants){if(p.parent){let q=plantById.get(p.parent);if(q){let dx=p.x-q.x,dy=p.y-q.y,len=Math.hypot(dx,dy)||1;ctx.save();const palette=plantPalette(p);ctx.shadowBlur=7;ctx.shadowColor=palette.glow;ctx.strokeStyle=palette.arm;ctx.lineWidth=Math.max(1,Math.min(3,1+p.size*1.1));ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore()}}}for(const p of plants)drawCrystal(p);for(const sp of spores){ctx.save();ctx.shadowBlur=6;ctx.shadowColor='#65eaff';ctx.fillStyle='#c7f5ff';ctx.globalAlpha=.82;hexPath(sp.x,sp.y,1.8,Math.PI/6);ctx.fill();ctx.restore()}ctx.restore();for(let bin=0;bin<24;bin++)drawBins[bin].length=0;for(let i=0;i<N;i++){let hue=phenotypeHue(i),bin=Math.min(23,(hue/15)|0),d=Math.sqrt(vx[i]*vx[i]+vy[i]*vy[i])||1,a=drawBins[bin],p=a.length;a[p]=x[i];a[p+1]=y[i];a[p+2]=x[i]-vx[i]/d*5*cfg.boidSize*phenotype(i,1);a[p+3]=y[i]-vy[i]/d*5*cfg.boidSize*phenotype(i,1)}for(let bin=0;bin<24;bin++){let a=drawBins[bin];if(!a.length)continue;ctx.fillStyle='hsl('+(bin*15)+' 78% 68%)';ctx.globalAlpha=.88;for(let j=0;j<a.length;j+=4){ctx.beginPath();ctx.arc(a[j],a[j+1],Math.max(1.7,2.35*cfg.boidSize),0,TAU);ctx.fill()}}ctx.globalAlpha=1;if(selectedAgent>=0&&selectedAgent<N){ctx.save();ctx.strokeStyle='#ffffff';ctx.lineWidth=1.8;ctx.globalAlpha=.95;ctx.beginPath();ctx.arc(x[selectedAgent],y[selectedAgent],Math.max(10,10*cfg.boidSize),0,TAU);ctx.stroke();ctx.strokeStyle='#70f5d2';ctx.beginPath();ctx.arc(x[selectedAgent],y[selectedAgent],Math.max(15,15*cfg.boidSize),0,TAU);ctx.stroke();ctx.restore()}}
 function schedule(){setTimeout(()=>frame(performance.now()),16)}
