@@ -27,7 +27,7 @@ jobs:
           node tests/worker-determinism.test.cjs
           node tests/html-script-syntax.test.cjs
           node tests/worker-benchmark.test.cjs
-      - name: Verify 183 registered sliders and expression wiring
+      - name: Verify 182 registered sliders and expression wiring
         run: |
           python3 - <<'PY'
           import re
@@ -50,8 +50,8 @@ jobs:
           expression_ids = [f'expr_{trait}_{field}' for trait in traits for field in fields]
           mutation_ids = [f'trait_{trait}_{field}' for trait in traits for field in mutation_fields]
           ids = static_ids + extra_ids + expression_ids + mutation_ids
-          if len(ids) != 183 or len(set(ids)) != 183:
-              raise SystemExit(f'Expected 183 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
+          if len(ids) != 182 or len(set(ids)) != 182:
+              raise SystemExit(f'Expected 182 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
           if "curveSelect.id='expr_'+trait.key+'_curve'" not in html or 'expressionCurves' not in html:
               raise SystemExit('Per-locus curve selectors missing')
           missing = [key for key in extra_ids if f'cfg.{key}' not in worker]
@@ -123,5 +123,5 @@ jobs:
                   raise SystemExit('Missing phase-one simulation invariant: ' + item)
           if 'for(let i=0;i<N;i++){let energyBefore=energy[i]' in worker:
               raise SystemExit('Agent updates must use the shuffled immutable update cohort')
-          print('Validated 183 sliders, per-locus expression wiring, deterministic RNG, double-buffered motion, stable pedigree IDs and snapshot migration.')
+          print('Validated 182 sliders, per-locus expression wiring, deterministic RNG, double-buffered motion, stable pedigree IDs and snapshot migration.')
           PY
