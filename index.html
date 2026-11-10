@@ -213,7 +213,7 @@ button.action:hover{border-color:#6cf2d099;background:#6cf2d012;color:var(--acce
 <script src="./config-schema.js?v=20261110-neat-topology-v6"></script>
 <script src="./config-registry.js?v=20261110-registry-v1"></script>
 <script>
-(()=>{'use strict';const $=id=>document.getElementById(id),canvas=$('world');if(!('OffscreenCanvas'in window)||!canvas.transferControlToOffscreen){$('error').style.display='flex';return}const worker=new Worker('./boids-worker.js?v=20261110-live-survival-v22');const off=canvas.transferControlToOffscreen();worker.postMessage({type:'init',canvas:off,width:innerWidth,height:innerHeight,dpr:Math.min(devicePixelRatio||1,1.5)},[off]);let panel=null,paused=false,tracking=false,inspectMode=false,mode='repel',lastPointer=0,slow=0,fast=0,desired=2000,actual=2000,latestTelemetry=[],latestCohorts=[],chartPointer=null,exportRequest=0;
+(()=>{'use strict';const $=id=>document.getElementById(id),canvas=$('world');if(!('OffscreenCanvas'in window)||!canvas.transferControlToOffscreen){$('error').style.display='flex';return}const worker=new Worker('./boids-worker.js?v=20261110-live-survival-v23');const off=canvas.transferControlToOffscreen();worker.postMessage({type:'init',canvas:off,width:innerWidth,height:innerHeight,dpr:Math.min(devicePixelRatio||1,1.5)},[off]);let panel=null,paused=false,tracking=false,inspectMode=false,mode='repel',lastPointer=0,slow=0,fast=0,desired=2000,actual=2000,latestTelemetry=[],latestCohorts=[],chartPointer=null,exportRequest=0;
 const config=o=>worker.postMessage({type:'config',values:o});function resize(){worker.postMessage({type:'resize',width:innerWidth,height:innerHeight,dpr:Math.min(devicePixelRatio||1,1.5)})}addEventListener('resize',resize);resize();
 const ranges=[];
 for(const d of coreSliderDefs){
