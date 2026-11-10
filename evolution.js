@@ -84,9 +84,10 @@
   function compileNetwork(input){
     const genome=normalizeGenome(input),nodes=genome.nodes.slice().sort((a,b)=>a.id-b.id),index=new Map(nodes.map((n,i)=>[n.id,i]));
     const inputs=nodes.map((n,i)=>n.type==='input'?i:-1).filter(i=>i>=0),hidden=nodes.map((n,i)=>n.type==='hidden'?i:-1).filter(i=>i>=0),outputs=nodes.map((n,i)=>n.type==='output'?i:-1).filter(i=>i>=0);
-    const incoming=nodes.map(()=>[]),recurrent=nodes.map(()=>[]);
-    for(const gene of genome.connections)if(gene.enabled){const edge={source:index.get(gene.source),weight:gene.weight};(gene.recurrent?recurrent:incoming)[index.get(gene.destination)].push(edge)}
-    return Object.freeze({nodes,inputs,hidden,outputs,incoming,recurrent,connectionCount:genome.connections.filter(g=>g.enabled).length});
+    const incoming=nodes.map(()=>[]),recurrent=nodes.map(()=>[]),outgoing=nodes.map(()=>[]),indegree=new Int32Array(nodes.length);
+    for(const gene of genome.connections)if(gene.enabled){const source=index.get(gene.source),destination=index.get(gene.destination),edge={source,weight:gene.weight};(gene.recurrent?recurrent:incoming)[destination].push(edge);if(!gene.recurrent&&nodes[source].type==='hidden'&&nodes[destination].type==='hidden'){outgoing[source].push(destination);indegree[destination]++}}
+    const ordered=[],queue=hidden.filter(i=>indegree[i]===0);while(queue.length){const current=queue.shift();ordered.push(current);for(const destination of outgoing[current])if(--indegree[destination]===0)queue.push(destination)}for(const i of hidden)if(!ordered.includes(i))ordered.push(i);
+    return Object.freeze({nodes,inputs,hidden:ordered,outputs,incoming,recurrent,connectionCount:genome.connections.filter(g=>g.enabled).length});
   }
   function activateNetwork(compiled,inputValues,previousState=new Float32Array(compiled.nodes.length)){
     const values=new Float32Array(compiled.nodes.length),state=new Float32Array(compiled.nodes.length);
