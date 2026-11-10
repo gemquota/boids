@@ -88,7 +88,7 @@
     const incoming=nodes.map(()=>[]),recurrent=nodes.map(()=>[]),outgoing=nodes.map(()=>[]),indegree=new Int32Array(nodes.length);
     for(const gene of genome.connections)if(gene.enabled){const source=index.get(gene.source),destination=index.get(gene.destination),edge={source,weight:gene.weight};(gene.recurrent?recurrent:incoming)[destination].push(edge);if(!gene.recurrent&&nodes[source].type==='hidden'&&nodes[destination].type==='hidden'){outgoing[source].push(destination);indegree[destination]++}}
     const ordered=[],queue=hidden.filter(i=>indegree[i]===0);while(queue.length){const current=queue.shift();ordered.push(current);for(const destination of outgoing[current])if(--indegree[destination]===0)queue.push(destination)}for(const i of hidden)if(!ordered.includes(i))ordered.push(i);
-    return Object.freeze({nodes,inputs,hidden:ordered,outputs,incoming,recurrent,connectionCount:genome.connections.filter(g=>g.enabled).length});
+    return Object.freeze({nodes,index,inputs,hidden:ordered,outputs,incoming,recurrent,connectionCount:genome.connections.filter(g=>g.enabled).length});
   }
   function activateNetwork(compiled,inputValues,previousState,workspace){
     const size=compiled.nodes.length,values=workspace?.values?.length>=size?workspace.values:new Float32Array(size),state=workspace?.state?.length>=size?workspace.state:new Float32Array(size),outputs=workspace?.outputs?.length>=compiled.outputs.length?workspace.outputs:new Float32Array(compiled.outputs.length);
