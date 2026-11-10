@@ -182,6 +182,27 @@ test('regulatory activation, repression, and epistatic phenotype expression are 
   assert.ok(repressed.b<1);
 });
 
+test('regulatory genomes preserve stable copy identities through duplication and deletion',()=>{
+  const registry=evo.createRegulatoryInnovationRegistry({nextId:100});
+  const genome={copies:[{id:1,source:0,target:1,strength:.4,threshold:.5,mode:'activate'},{id:2,source:1,target:2,strength:.3,threshold:.4,mode:'repress'}]};
+  assert.equal(evo.normalizeRegulatoryGenome(genome).copies.length,2);
+  assert.throws(()=>evo.normalizeRegulatoryGenome({copies:[...genome.copies,{...genome.copies[0]]]}),/Duplicate regulatory copy ID/);
+  const duplicated=evo.mutateRegulatoryGenome(genome,registry,()=>0,{rates:{point:0,duplicate:1,delete:0,rewire:0,mode:0}});
+  assert.equal(duplicated.copies.length,3);assert.equal(duplicated.copies[2].id,100);
+  assert.equal(duplicated.copies[0].id,1);assert.equal(duplicated.copies[1].id,2);
+  const deleted=evo.mutateRegulatoryGenome(genome,registry,()=>0,{rates:{point:0,duplicate:0,delete:1,rewire:0,mode:0}});
+  assert.equal(deleted.copies.length,1);assert.ok([1,2].includes(deleted.copies[0].id));
+});
+
+test('trans-regulatory expression supports activation, repression and environmental inputs',()=>{
+  const loci=[.8,.5,.5,.5,.5,.5,.5,.5,.5,.5];
+  const activated=evo.expressRegulatoryNetwork({copies:[{id:1,source:0,target:1,strength:.5,threshold:.4,mode:'activate'}]},loci);
+  const repressed=evo.expressRegulatoryNetwork({copies:[{id:2,source:0,target:1,strength:.5,threshold:.4,mode:'repress'}]},loci);
+  const environment=evo.expressRegulatoryNetwork({copies:[{id:3,source:0,target:1,strength:.5,threshold:.4,mode:'activate',environment:'temperature',environmentWeight:.5}]},loci,{temperature:.8});
+  assert.ok(activated[1]>.5);assert.ok(repressed[1]<.5);assert.ok(environment[1]>activated[1]);
+  assert.ok(environment.every(value=>value>=0&&value<=1));
+});
+
 test('allele statistics report richness, frequencies, and expected heterozygosity',()=>{
   const stats=evo.alleleStatistics([0,0,1,1]);assert.equal(stats.sampleSize,4);assert.equal(stats.alleleRichness,2);assert.equal(stats.expectedHeterozygosity,.5);
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
