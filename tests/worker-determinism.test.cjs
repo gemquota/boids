@@ -88,6 +88,7 @@ assert.ok(a.__boidsTest.currentSeasonalFactor >= .44 && a.__boidsTest.currentSea
 const api = a.__boidsTest;
 api.sex[0] = 1;
 api.sex[1] = 0;
+const motherId=api.individualId[0],fatherId=api.individualId[1];
 const expectedMidParent = Array.from({length:10},(_,k)=>(api.traitGenes[k]+api.traitGenes[10+k])*.5);
 api.age[0] = 30;
 api.age[1] = 30;
@@ -134,8 +135,8 @@ assert.equal(api.N,populationBeforeShrink-1,'manual population reduction should 
 assert.ok(api.survivalHistory.some(row=>!row.event),'manual removals must be censored rather than counted as deaths');
 
 assert.equal(api.kinshipRelatedness(firstChildId, secondChildId), .5, 'full siblings should have 0.5 relatedness');
-assert.equal(api.reproductiveSuccess.get(api.individualId[0]), 3, 'maternal lifetime reproductive success should count all three offspring');
-assert.equal(api.reproductiveSuccess.get(api.individualId[1]), 3, 'paternal lifetime reproductive success should count all three offspring');
+assert.equal(api.reproductiveSuccess.get(motherId), 3, 'maternal lifetime reproductive success should count all three offspring');
+assert.equal(api.reproductiveSuccess.get(fatherId), 3, 'paternal lifetime reproductive success should count all three offspring');
 assert.equal(api.selectedParentEvents, 6, 'each birth should contribute two successful parent events');
 const experimentSample = api.evaluatePopulation();
 assert.equal(experimentSample.selectionDifferentials.length, 10, 'selection differentials should be reported for all inherited loci');
