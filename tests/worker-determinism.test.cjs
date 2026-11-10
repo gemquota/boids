@@ -156,6 +156,11 @@ assert.ok(Number.isFinite(experimentSample.speciesMeanAge), 'species age should 
 assert.ok(Number.isFinite(experimentSample.speciesStagnantCount), 'species stagnation should be tracked');
 assert.ok(Number.isFinite(experimentSample.speciesChampionFitness), 'species champion fitness should be tracked');
 assert.equal(experimentSample.speciesQuotaTotal, experimentSample.count, 'species offspring quotas should sum to population size');
+assert.ok(Number.isFinite(experimentSample.speciesMeanNodes)&&experimentSample.speciesMeanNodes>0,'species neural node complexity should be measured');
+assert.ok(Number.isFinite(experimentSample.speciesMeanConnections)&&experimentSample.speciesMeanConnections>0,'species connection complexity should be measured');
+assert.ok(Number.isFinite(experimentSample.speciesInnovationDiversity)&&experimentSample.speciesInnovationDiversity>0,'species innovation diversity should be measured');
+assert.equal(experimentSample.speciesTopology.length,experimentSample.speciesCount,'topology summaries should be available per species');
+assert.ok(experimentSample.speciesTopology.every(group=>group.members>=0&&group.innovationCount>=0&&group.meanNodes>=0&&group.meanConnections>=0),'per-species topology summaries should be well formed');
 const championSpecies=api.speciesState.find(group=>group.members.length>1&&group.championId!==null);
 if(championSpecies){const championIndex=Array.from(api.individualId.subarray(0,api.N)).indexOf(championSpecies.championId);const otherIndex=api.speciesState.find(group=>group.id===championSpecies.id).members.find(member=>member.id!==championSpecies.championId);const otherAgent=Array.from(api.individualId.subarray(0,api.N)).indexOf(otherIndex.id);assert.ok(api.speciesQuotaFactor(championIndex)>api.speciesQuotaFactor(otherAgent),'species champions should receive reproductive preservation pressure')}
 assert.ok(api.speciesQuotaFactor(0)>=0&&api.speciesQuotaFactor(0)<=4.5, 'species quota pressure must remain bounded');
