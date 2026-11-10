@@ -193,7 +193,7 @@ Each agent inherits ten quantitative trait loci. The allele values are sampled a
 | Speed | Velocity-cap potential | Sets the individual velocity cap through its configured expression function and phenotype bounds |
 | Bite strength | Capture capability | Attack success probability and attack ranking |
 | Kin affinity | Relative protection of relatives | Reduces willingness to attack close kin |
-| Sensory range | Detection distance | Scales threat and prey detection distance |
+| Perception radius | 18–90 world units | Sets each agent's flocking, threat/prey and food-sensing neighbourhood |
 | Acceleration | Burst response | Scales movement acceleration and force authority |
 | Agility | Manoeuvrability | Scales evolved neural turning response |
 | Risk tolerance | Risk acceptance | Increases attack commitment and reduces threat-flee response |
