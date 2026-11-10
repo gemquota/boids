@@ -137,7 +137,7 @@ if 'BoidsConfigSchema.resolveWorkerMapping(key)' not in worker:
           required_ui = [
               'parameterRegistry.apply(v)', 'applySettings({...ecologicalBaseline',
               'schemaVersion=2', 'snapshotWaiters', 'flushPersistentState', 'store.put(prior.result,\'previous\')', 'store.get(\'previous\')',
-              'Object.assign(helpDescriptions,'
+              'BoidsConfigSchema.fieldGuide'
           ]
           missing_ui = [item for item in required_ui if item not in html]
           if 'Math.round((bounded-min)/step)' not in registry:
