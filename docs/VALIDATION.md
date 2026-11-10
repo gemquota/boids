@@ -54,3 +54,7 @@ The benchmark records process heap delta, simulation update and draw timings, fr
 
 
 The independent version domains and field-presence migration defaults are documented in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
+
+The seeded CI baseline and its Node/no-op-Canvas limitations are recorded in [PERFORMANCE-BASELINE.md](PERFORMANCE-BASELINE.md).
+
+The sampled telemetry fields, history caps and analysis-bundle payload are inventoried in [TELEMETRY-EXPORTS.md](TELEMETRY-EXPORTS.md).
