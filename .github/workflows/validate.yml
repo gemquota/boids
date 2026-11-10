@@ -110,6 +110,8 @@ jobs:
               raise SystemExit('Boid hydration and water-seeking behaviour are missing')
           if 'thirst:thirst.slice(0,N)' not in worker or 'meanThirst,dehydratedCount' not in worker:
               raise SystemExit('Hydration persistence and telemetry are missing')
+          if 'waterProximity=clamp(1-waterDistance/260,0,1),germinationChance=.12+.83*waterProximity' not in worker:
+              raise SystemExit('Freshwater-biased spore germination is missing')
           if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
               raise SystemExit('Initial plant spore dispersal missing')
           if 'plants.push(makePlantNode({x:rand(42' in worker:
