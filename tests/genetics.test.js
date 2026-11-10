@@ -89,11 +89,13 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
 
 
 test('Observatory exposes live species and population-genetic metrics',()=>{
-  for(const id of ['mSpecies','mSpeciesThreshold','mSpeciesQuota','mSpeciesAge','mSpeciesStagnant','mSpeciesChampion','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mInbreeding','mNe','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
+  for(const id of ['mSpecies','mSpeciesThreshold','mSpeciesQuota','mSpeciesAge','mSpeciesStagnant','mSpeciesChampion','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mInbreeding','mNe','mHabitatTemp','mHabitatMoisture','mHabitatNutrients','mHabitatSuitability','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
   assert.ok(html.includes('geneticsHistoryChart'));
   assert.ok(html.includes('speciesCount'));
   assert.ok(html.includes('speciesStagnationLimit'));
   assert.ok(html.includes('speciesStagnantCount'));
+  assert.ok(html.includes('habitatTemperature'));
+  assert.ok(html.includes('habitatSuitability'));
   assert.ok(html.includes('function drawNetwork(m)'));
   assert.match(html,/positions=new Map\(\)/);
 });
