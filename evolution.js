@@ -40,7 +40,7 @@
 
   function cloneGenome(genome){return clone(normalizeGenome(genome))}
   function mutateGenome(input,registry,random=Math.random,options={}){
-    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,deleteConnection:.01,toggleConnection:.01,recurrent:.01,bias:.08,...options.rates};
+    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,deleteConnection:.01,toggleConnection:.01,recurrent:0,bias:.08,...options.rates};
     const limits={maxNodes:128,maxConnections:512,weightStep:.25,...options.limits};
     for(const gene of genome.connections)if(random()<rates.weight)gene.weight=clamp(gene.weight+(random()*2-1)*limits.weightStep,-5,5);
     for(const node of genome.nodes)if(node.type!=='input'&&random()<rates.bias)node.bias=clamp(node.bias+(random()*2-1)*limits.weightStep,-5,5);
