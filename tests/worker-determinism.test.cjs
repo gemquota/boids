@@ -19,11 +19,10 @@ function makeWorld(seed) {
   };
   vm.createContext(sandbox);
   sandbox.importScripts = (...paths) => { for (const path of paths) { const filePath = path.split('?')[0]; vm.runInContext(fs.readFileSync(filePath, 'utf8'), sandbox, { filename: path }); } };
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get food(){return food}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get foodClaims(){return foodClaims}, get foodConsumed(){return foodConsumed}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
-  api.cfg.foodPatches = 9;
   api.cfg.obstacles = 4;
   api.cfg.drive = 0;
   const context = {
@@ -51,8 +50,6 @@ for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'paren
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
 assert.equal(new Set(Array.from(sa.arrays.individualId)).size, sa.N, 'individual IDs must be unique');
-assert.ok(a.__boidsTest.food.every(f => f.quality >= .7 && f.quality <= 1.3), 'food patches should have bounded quality');
-assert.ok(a.__boidsTest.food.every(f => f.productivity >= .65 && f.productivity <= 1.35), 'food patches should have bounded productivity');
 a.__boidsTest.obstacles = [{ x: a.__boidsTest.x[0], y: a.__boidsTest.y[0], r: 60 }];
 a.__boidsTest.update(1 / 60, 5000);
 assert.ok(a.__boidsTest.coverByAgent[0] > .5, 'reef obstacles should provide measurable shelter cover');
@@ -197,13 +194,10 @@ delete legacy.pedigreeTruncated;
 delete legacy.reproductiveSuccess;
 delete legacy.counters.selectedTraitSums;
 delete legacy.counters.attackAttempts;
-delete legacy.counters.foodClaims;
-delete legacy.counters.foodConsumed;
 delete legacy.counters.movementEnergySpent;
 delete legacy.counters.maintenanceEnergySpent;
 delete legacy.counters.experimentSerial;
 delete legacy.counters.selectedParentEvents;
-legacy.food = legacy.food.map(({quality,productivity,phase,...patch}) => patch);
 const legacyTraits = new Float32Array(api.N * 6);
 const legacyPaternalTraits = new Float32Array(api.N * 6);
 for (let i = 0; i < api.N; i++) {
@@ -218,8 +212,6 @@ const migratedTraits = migrated.__boidsTest.exportSnapshot().arrays.traitGenes;
 assert.equal(migratedTraits.length, api.N * 10);
 assert.equal(migratedTraits[6], 1, 'legacy acceleration locus should receive neutral migration value');
 assert.equal(migratedTraits[8], .5, 'legacy risk locus should receive neutral migration value');
-assert.equal(migrated.__boidsTest.food[0].quality, 1, 'legacy food patches should receive neutral quality');
-assert.equal(migrated.__boidsTest.food[0].productivity, 1, 'legacy food patches should receive neutral productivity');
 assert.equal(migrated.__boidsTest.exportSnapshot().arrays.innovation.length, api.N * api.cfg.connections, 'legacy neural genes should receive innovation IDs');
 assert.equal(migrated.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'legacy restore should reconstruct the live pedigree from parent IDs');
 
