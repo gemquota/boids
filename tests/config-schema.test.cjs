@@ -42,4 +42,4 @@ assert.deepEqual(schema.resolveWorkerMapping('expr_speed_curve'), { target: 'gen
 assert.deepEqual(schema.resolveWorkerMapping('expr_speed_min'), { target: 'geneExpression', trait: 'speed', field: 'min' });
 assert.deepEqual(schema.resolveWorkerMapping('trait_aggression_rate'), { target: 'traitMutation', trait: 'aggression', field: 'rate' });
 assert.deepEqual(schema.resolveWorkerMapping('expr_unknown_min'), { target: 'cfg', key: 'expr_unknown_min' });
-console.log('Shared configuration schema: 182 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
+console.log('Shared configuration schema: 181 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
