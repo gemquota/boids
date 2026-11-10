@@ -44,7 +44,7 @@ function buildRiverNetwork(){
 }
 function nearestFreshwater(px,py){
  const network=buildRiverNetwork();let best={distance:1e9,x:px,y:py};
- const testPath=path=>{for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i],dx=b.x-a.x,dy=b.y-a.y,t=clamp(((px-a.x)*dx+(py-a.y)*dy)/(dx*dx+dy*dy||1),0,1),qx=a.x+dx*t,qy=a.y+dy*t,d=Math.hypot(px-qx,py-qy);if(d<best.distance)best={distance:d,x:qx,y:qy}}};
+ const testPath=path=>{const stride=Math.max(1,Math.ceil((path.length-1)/16));for(let i=0;i<path.length-1;i+=stride){const a=path[i],b=path[Math.min(path.length-1,i+stride)],dx=b.x-a.x,dy=b.y-a.y,t=clamp(((px-a.x)*dx+(py-a.y)*dy)/(dx*dx+dy*dy||1),0,1),qx=a.x+dx*t,qy=a.y+dy*t,d=Math.hypot(px-qx,py-qy);if(d<best.distance)best={distance:d,x:qx,y:qy}}};
  testPath(network.main);for(const path of network.tributaries)testPath(path);for(const path of network.feeders)testPath(path);return best;
 }
 function plantStage(p){if(p.dead)return'dead';if(p.senescent||p.age>=(p.lifespan||84))return'senescent';if(p.greatGrandmother)return'great-grandmother';if(p.grandmother)return'grandmother';if(p.adultNode)return'mature';if(p.age<8||p.biomass<.32)return'seedling';if(p.age<18||p.biomass<.65)return'juvenile';return'mature'}
