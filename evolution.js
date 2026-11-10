@@ -231,7 +231,7 @@
       }
       atRisk-=events+censored;index=next;
     }
-    return{n:rows.length,events:totalEvents,censored:totalCensored,curve,median:curve.find(point=>point.survival<=.5)?.time??null};
+    return{n:rows.length,events:totalEvents,censored:totalCensored,curve,median:curve.find(point=>point.survival<=.5+1e-12)?.time??null};
   }
   function correctPValues(values,method='BH'){
     const rows=values.map((p,index)=>({index,p:clamp(finite(p,1),0,1)})).sort((a,b)=>a.p-b.p),n=rows.length,adjusted=new Array(n);
