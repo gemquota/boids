@@ -74,6 +74,16 @@ jobs:
               raise SystemExit('Controls not wired into worker: ' + ', '.join(missing))
           if 'function exportSnapshot()' not in worker or 'function restoreSnapshot(' not in worker:
               raise SystemExit('World snapshot/restore handlers missing')
+          if "new Worker('./boids-worker.js?v=20261110-plants-v2')" not in html:
+              raise SystemExit('Plant renderer worker cache-bust missing')
+          if 'function drawCrystal(p)' not in worker or 'hexPath(p.x,p.y,r,p.angle)' not in worker:
+              raise SystemExit('Hexagonal crystal plant renderer missing')
+          if 'function drawPlant(' in worker:
+              raise SystemExit('Legacy circular plant renderer must remain removed')
+          if 'Math.max(10,Math.min(18,Math.round(W*H/65000)))' not in worker:
+              raise SystemExit('Visible mature plant colony seeding missing')
+          if 'size:rand(.62,.92),biomass,age,adultNode:age>=9' not in worker:
+              raise SystemExit('Mature initial plant nodes missing')
           if 'indexedDB.open' not in html or 'persistObservatory' not in html:
               raise SystemExit('Persistent world/observatory storage missing')
           required_ui = [
