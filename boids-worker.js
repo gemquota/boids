@@ -33,7 +33,7 @@ function growPlants(dt){
  const existingCount=plants.length;
  for(let i=0;i<existingCount;i++){
   const p=plants[i];p.grandmother=!!p.grandmother;p.greatGrandmother=!!p.greatGrandmother;p.adultNode=!!p.adultNode;p.senescent=!!p.senescent;p.offspring=p.offspring||0;p.lifespan=p.lifespan||rand(110,140);p.cloneParent=p.cloneParent||0;p.asexual=!!p.asexual;p.age+=dt;
-  const oldStage=plantStage(p);
+  const oldStage=plantStage(p);p.stage=oldStage;
   if(p.age>=p.lifespan){p.senescent=true;p.biomass=Math.max(0,p.biomass-dt*(.0045+Math.max(0,.22-p.biomass)*.01))}
   else{const maturityFactor=p.age>p.lifespan*.78?.28:1,waterDistance=nearestFreshwater(p.x,p.y).distance,waterGrowth=clamp(1.58-waterDistance/175,.35,1.5);p.biomass=Math.min(1.6,p.biomass+cfg.plantGrowth*dt*(p.depth?.095:.08)*maturityFactor*waterGrowth)}
   p.size=Math.max(.06,Math.min(1.6,.18+p.biomass*.85));
