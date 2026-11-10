@@ -18,7 +18,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Record baseline memory, update, draw, backlog, snapshot-size, and restore timings. (CI records process heap delta, update/draw timings, frame backlog, serialized snapshot size and restore time at 100/250/500/1,000 agents; browser/device profiling remains open.)
 - [ ] Audit every fixed-size neural array and connection-count assumption.
 - [x] Inventory worker, IndexedDB-envelope and chromosome-codec schemas plus field-presence migration behaviour in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
-- [ ] Inventory current Observatory telemetry and experiment export fields.
+- [x] Inventory current Observatory telemetry and analysis-export fields in [TELEMETRY-EXPORTS.md](TELEMETRY-EXPORTS.md); isolated experiment execution and replayable archives remain outstanding.
 - [ ] Define stable public interfaces for genetics, neuroevolution, ecology, metrics, and experiments.
 - [ ] Keep worker as orchestration layer; extract model logic into testable modules.
 - [x] Add round-trip snapshot fixtures for representative old and current worlds (including legacy fixed-slot and trait-layout migration).
@@ -184,7 +184,7 @@ A task is not complete because a function exists. It must have:
 
 ## Work log
 
-- [x] Recorded fixed-seed process-heap, update/draw, frame-backlog, snapshot-size and restore baselines at four population sizes; see `docs/VALIDATION.md`. Process heap delta is explicitly labelled as coarse, not isolated browser memory.
+- [x] Recorded fixed-seed process-heap, update/draw, frame-backlog, snapshot-size and restore baselines at four population sizes; see `docs/PERFORMANCE-BASELINE.md`. Process heap delta is explicitly labelled as coarse, not isolated browser memory.
 
 
 
