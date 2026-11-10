@@ -154,6 +154,7 @@ const decodedFirst = BoidsChromosome.decode(restoredSnapshot.chromosomes[0]);
 assert.ok(decodedFirst.source instanceof Uint16Array, 'source neuron indices must decode as uint16');
 assert.ok(decodedFirst.destination instanceof Uint16Array, 'destination neuron indices must decode as uint16');
 assert.deepEqual(Array.from(restoredSnapshot.arrays.connectionSource), Array.from(decodedFirst.source).concat(Array.from(restoredSnapshot.arrays.connectionSource).slice(decodedFirst.source.length)));
+for (let i = 0; i < api.N * api.cfg.connections; i++) { assert.equal(restoredSnapshot.arrays.genome[i * 3], 0, 'source index must not be shadow-stored as float'); assert.equal(restoredSnapshot.arrays.genome[i * 3 + 1], 0, 'destination index must not be shadow-stored as float'); }
 assert.ok(restoredSnapshot.pedigree.length >= api.N, 'snapshot should retain the pedigree graph');
 assert.equal(restored.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'restored pedigree should preserve kinship');
 assert.equal(restoredSnapshot.arrays.traitGenes.length, api.N * 10, 'ten inherited traits must be stored per agent');
