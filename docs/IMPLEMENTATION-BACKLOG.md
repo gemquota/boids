@@ -65,12 +65,12 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## D. Regulatory genetics and gene expression
 
-- [ ] Define typed structural, regulatory, modifier, and neural gene records.
-- [ ] Give every gene copy a stable identity independent of chromosome position.
-- [ ] Implement gene duplication with independent copy identity.
-- [ ] Implement gene deletion and chromosome-length changes.
+- [ ] Define typed structural, regulatory, modifier, and neural gene records. (A pure variable-length regulatory-genome API now defines stable regulatory gene/edge identities; runtime integration and unified typed records remain.)
+- [ ] Give every gene copy a stable identity independent of chromosome position. (Implemented for the standalone regulatory-genome API; not yet wired into live offspring inheritance or snapshots.)
+- [ ] Implement gene duplication with independent copy identity. (Implemented and tested in the standalone regulatory-genome API; live worker integration remains.)
+- [ ] Implement gene deletion and chromosome-length changes. (Regulatory copy deletion is implemented and tested in the standalone API; live worker integration remains.)
 - [ ] Implement gene insertion/rearrangement without invalidating stable identities.
-- [ ] Implement regulatory edges with activation and repression.
+- [ ] Implement regulatory edges with activation and repression. (Standalone variable regulatory networks now support signed trans-regulatory edges and iterative expression; live worker integration remains.)
 - [ ] Implement regulatory thresholds, strengths, and environmental input channels.
 - [ ] Implement multi-locus phenotype equations.
 - [ ] Implement epistatic interaction terms and bounded expression.
@@ -183,6 +183,8 @@ A task is not complete because a function exists. It must have:
 6. Performance evidence where it adds recurring computation.
 
 ## Work log
+
+- [x] Added and tested standalone variable-length regulatory genomes with stable gene-copy and edge identities, gene duplication/deletion, incident-edge duplication/removal, identity-aligned crossover, regulatory activation/repression, environmental inputs and bounded iterative expression. This is a tested foundation, not yet connected to live offspring inheritance, phenotype calculation or snapshots.
 
 - [x] Added per-trait expressed phenotypic variance, preliminary additive variance (h² × Vp), residual variance, and 10×10 phenotypic/genotypic trait covariance matrices to live population telemetry. Exposed mean variance summaries in the Observatory and added regression tests; uncertainty and living-offspring sampling bias remain explicit limitations.
 
