@@ -4,7 +4,7 @@
 
 | Layer | Current version | Meaning |
 |---|---:|---|
-| Worker world snapshot | `schemaVersion: 19` | Simulation state and deterministic continuation |
+| Worker world snapshot | `schemaVersion: 20` | Simulation state and deterministic continuation |
 | Browser IndexedDB envelope | `storageSchemaVersion: 2` | Browser storage wrapper and latest/previous snapshot slots |
 | Hexadecimal chromosome codec | `boids-hex-gene-v1` | Compact typed chromosome projection; not a complete NEAT genome |
 
@@ -12,10 +12,11 @@ These versions are independent. Never overwrite the worker's `schemaVersion` wit
 
 ## Restore policy
 
-The worker accepts snapshots with no version marker or a `schemaVersion` no newer than 19. It rejects snapshots newer than the runtime. Migration is primarily field-presence-based rather than a chain of one function per historical schema: older records are hydrated with explicit defaults where safe, and unavailable historical information is not fabricated.
+The worker accepts snapshots with no version marker or a `schemaVersion` no newer than 20. It rejects snapshots newer than the runtime. Migration is primarily field-presence-based rather than a chain of one function per historical schema: older records are hydrated with explicit defaults where safe, and unavailable historical information is not fabricated.
 
 | Missing or legacy state | Restore behaviour |
 | Variable-length per-agent eligibility traces (schema 19) | Persist traces aligned to each agent's innovation-identified connections; older snapshots reconstruct available trace slots from the legacy fixed-size eligibility array and initialize remaining entries to zero |
+| Structural-innovation protection ages (schema 20) | Persist the introduction time of new NEAT innovations so temporary reproductive preservation windows continue correctly after restore; older snapshots start with no active protection windows |
 |---|---|
 | Legacy `foodPreference`, `foodRangeScale`, `foodMinRange`, `foodSteering` config | Map to the corresponding plant-resource controls when the new plant field is absent |
 | Legacy compact chromosome / fixed-slot genome data | Decode the typed chromosome projection and rebuild the runtime connection representation; full modern NEAT objects remain the authoritative representation when present |
