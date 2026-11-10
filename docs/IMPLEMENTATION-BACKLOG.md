@@ -44,7 +44,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement disabled-gene inheritance probability.
 - [x] Validate graph references, node limits, and malformed genome rejection.
 - [x] Implement sparse graph evaluation with deterministic topological/recurrent semantics.
-- [ ] Separate inherited starting weights from lifetime plasticity.
+- [x] Separate inherited starting weights from lifetime plasticity.
 - [x] Migrate legacy fixed-slot genomes without silently changing their behaviour.
 - [x] Add variable-length genome round-trip serialization tests.
 
@@ -52,12 +52,12 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 - [x] Calculate compatibility distance from excess, disjoint, and matching genes.
 - [x] Assign individuals to species using representatives and compatibility threshold.
-- [ ] Adapt compatibility threshold toward a configurable target species count.
+- [x] Adapt compatibility threshold toward a configurable target species count.
 - [ ] Track species identity, age, size, representative, best fitness, and stagnation.
 - [ ] Apply fitness sharing within species.
 - [ ] Preserve champions / configurable elitism.
 - [ ] Protect new structural innovations from immediate elimination.
-- [x] Implement species-aware parent selection and offspring allocation.
+- [ ] Implement species-aware parent selection and species-specific offspring allocation. (Same-species mate preference is live; offspring quotas and fitness sharing remain outstanding.)
 - [x] Handle extinct species and representative replacement.
 - [x] Persist species state across save/restore.
 - [ ] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory.
@@ -75,7 +75,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Implement multi-locus phenotype equations.
 - [ ] Implement epistatic interaction terms and bounded expression.
 - [ ] Implement stage-dependent expression.
-- [ ] Implement environment-dependent plasticity without rewriting inherited genotype.
+- [x] Implement environment-dependent plasticity without rewriting inherited genotype.
 - [ ] Keep inherited genotype, expressed phenotype, and lifetime learning separate.
 - [ ] Cache expression safely and invalidate on relevant state changes.
 - [ ] Persist regulatory genes, expression state, and mutation history.
