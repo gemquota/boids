@@ -89,11 +89,12 @@
     const ordered=[],queue=hidden.filter(i=>indegree[i]===0);while(queue.length){const current=queue.shift();ordered.push(current);for(const destination of outgoing[current])if(--indegree[destination]===0)queue.push(destination)}for(const i of hidden)if(!ordered.includes(i))ordered.push(i);
     return Object.freeze({nodes,inputs,hidden:ordered,outputs,incoming,recurrent,connectionCount:genome.connections.filter(g=>g.enabled).length});
   }
-  function activateNetwork(compiled,inputValues,previousState=new Float32Array(compiled.nodes.length)){
-    const values=new Float32Array(compiled.nodes.length),state=new Float32Array(compiled.nodes.length);
+  function activateNetwork(compiled,inputValues,previousState,workspace){
+    const size=compiled.nodes.length,values=workspace?.values?.length>=size?workspace.values:new Float32Array(size),state=workspace?.state?.length>=size?workspace.state:new Float32Array(size),outputs=workspace?.outputs?.length>=compiled.outputs.length?workspace.outputs:new Float32Array(compiled.outputs.length);
+    values.fill(0,0,size);state.fill(0,0,size);outputs.fill(0,0,compiled.outputs.length);
     for(let k=0;k<compiled.inputs.length;k++)values[compiled.inputs[k]]=finite(inputValues[k],0);
-    for(const i of compiled.hidden){let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);state[i]=values[i]}
-    const outputs=[];for(const i of compiled.outputs){let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);outputs.push(values[i])}
+    for(const i of compiled.hidden){let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState?.[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);state[i]=values[i]}
+    for(let k=0;k<compiled.outputs.length;k++){const i=compiled.outputs[k];let sum=compiled.nodes[i].bias;for(const edge of compiled.incoming[i])sum+=values[edge.source]*edge.weight;for(const edge of compiled.recurrent[i])sum+=(previousState?.[edge.source]||0)*edge.weight;values[i]=Math.tanh(sum);outputs[k]=values[i]}
     return{outputs,state};
   }
 
