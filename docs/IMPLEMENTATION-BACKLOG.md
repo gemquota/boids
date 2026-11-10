@@ -93,8 +93,9 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Track pedigree truncation and uncertainty explicitly.
 - [ ] Estimate effective population size using appropriate temporal/cohort methods.
 - [ ] Estimate additive genetic variance and phenotypic variance.
-- [ ] Estimate narrow-sense heritability with parent-offspring and mid-parent regression.
-- [ ] Report sample sizes, uncertainty, and assumptions for every estimate.
+- [x] Estimate preliminary mid-parent/offspring regression from conception-time parental trait records (living-offspring sample).
+- [x] Report per-trait heritability sample sizes and t-based 95% regression-slope intervals in worker telemetry/export.
+- [ ] Report uncertainty and assumptions for every population-genetic estimate; variance-based Ne and additive-variance uncertainty remain outstanding.
 - [ ] Track trait covariance and genetic/environmental covariance where identifiable.
 - [x] Track realised lifetime reproductive success and lineage contribution.
 - [ ] Track age-specific survival, cohort survival, and generational turnover.
