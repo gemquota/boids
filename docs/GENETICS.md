@@ -29,7 +29,7 @@ The ten-locus model is polygenic only in the broad sense that multiple loci cont
 
 ## Regulatory inheritance
 
-The live worker carries inherited cis-regulatory modifiers that alter trait-expression bias and environmental responsiveness. These modifiers are distinct from the underlying trait loci.
+The live worker carries inherited cis-regulatory modifiers and variable-length trans-regulatory networks. Network nodes and edges have stable identities; offspring inherit networks by identity-aligned crossover and mutate gene copies, signed regulatory edges, thresholds, biases and effects. The bounded network expression receives environmental and life-stage inputs and contributes to the live phenotype modifier separately from the underlying quantitative trait loci and lifetime neural learning.
 
 `evolution.js` also provides an independently tested variable-length regulatory-genome API with stable gene/edge identities, duplication, deletion, insertion, identity-preserving rearrangement, crossover, signed activation/repression, environmental inputs and bounded iterative expression. This remains a standalone model primitive: it is not yet connected to live offspring inheritance, worker snapshots, the phenotype cache or Observatory. A fully integrated live trans-regulatory network and stage-specific expression remain outstanding. Do not document the standalone API as fully integrated live biology.
 
