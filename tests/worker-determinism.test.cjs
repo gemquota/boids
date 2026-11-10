@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const BoidsChromosome = require('../chromosome.js');
 
 const source = fs.readFileSync('boids-worker.js', 'utf8');
 
@@ -145,7 +146,14 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 8);
+assert.equal(restoredSnapshot.schemaVersion, 9);
+assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
+assert.equal(restoredSnapshot.chromosomes.length, api.N);
+assert.ok(restoredSnapshot.chromosomes.every(chromosome => chromosome.every(gene => /^[0-9A-F]+$/.test(gene))));
+const decodedFirst = BoidsChromosome.decode(restoredSnapshot.chromosomes[0]);
+assert.ok(decodedFirst.source instanceof Uint16Array, 'source neuron indices must decode as uint16');
+assert.ok(decodedFirst.destination instanceof Uint16Array, 'destination neuron indices must decode as uint16');
+assert.deepEqual(Array.from(restoredSnapshot.arrays.connectionSource), Array.from(decodedFirst.source).concat(Array.from(restoredSnapshot.arrays.connectionSource).slice(decodedFirst.source.length)));
 assert.ok(restoredSnapshot.pedigree.length >= api.N, 'snapshot should retain the pedigree graph');
 assert.equal(restored.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'restored pedigree should preserve kinship');
 assert.equal(restoredSnapshot.arrays.traitGenes.length, api.N * 10, 'ten inherited traits must be stored per agent');
