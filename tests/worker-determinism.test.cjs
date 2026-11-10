@@ -298,6 +298,13 @@ for (let i = 0; i < api.N; i++) {
 }
 legacy.arrays.traitGenes = legacyTraits;
 legacy.arrays.paternalTraits = legacyPaternalTraits;
+// Preserve the known pedigree fixture while exercising reconstruction without the pedigree map.
+for (const [childId,motherId,fatherId] of [[firstChildId,api.individualId[0],api.individualId[1]],[secondChildId,api.individualId[0],api.individualId[1]]]) {
+  const childIndex=Array.from(legacy.arrays.individualId).indexOf(childId);
+  assert.ok(childIndex>=0,'legacy fixture must contain each offspring identity');
+  legacy.arrays.parentA[childIndex]=motherId;
+  legacy.arrays.parentB[childIndex]=fatherId;
+}
 const migrated = makeWorld(777);
 migrated.__boidsTest.restoreSnapshot(legacy);
 const migratedTraits = migrated.__boidsTest.exportSnapshot().arrays.traitGenes;
