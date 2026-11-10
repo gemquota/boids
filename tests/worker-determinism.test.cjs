@@ -124,7 +124,7 @@ api.update(1/60,12000);
 assert.ok(api.survivalHistory.some(row=>row.event&&row.time>api.cfg.lifespan&&row.entry===initialEntryAge),'natural mortality must append a delayed-entry survival event');
 const survivalMetrics=api.populationSurvivalMetrics();
 assert.ok(survivalMetrics.survivalEvents>=1,'Kaplan-Meier telemetry must count recorded deaths');
-assert.ok(survivalMetrics.survivalCensored>=api.N,'living agents must enter the survival estimate as right-censored observations');
+assert.ok(survivalMetrics.survivalCensored>=api.N,'living agents must enter the survival estimate as right-censored observations: '+JSON.stringify({censored:survivalMetrics.survivalCensored,n:api.N,ages:Array.from(api.age.subarray(0,Math.min(8,api.N))),entries:Array.from(api.survivalEntryAge.subarray(0,Math.min(8,api.N))),history:api.survivalHistory.slice(0,3)}));
 assert.ok(survivalMetrics.survivalLeftTruncated>0,'initial agents with nonzero ages must enter the risk set only after delayed entry');
 const survivalSnapshot=api.exportSnapshot();
 const survivalRestored=makeWorld(123456).__boidsTest;
