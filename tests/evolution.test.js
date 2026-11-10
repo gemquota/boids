@@ -119,9 +119,9 @@ test('parent-offspring regression reports slope and refuses undersized samples',
 test('replicate summaries and permutation comparisons are reproducible',()=>{
   const a=evo.summarizeReplicates([1,2,3,4,5],{seed:7,bootstrapSamples:300});
   const b=evo.summarizeReplicates([1,2,3,4,5],{seed:7,bootstrapSamples:300});
-  assert.deepEqual(a,b);assert.equal(a.n,5);assert.ok(a.confidenceInterval95[0]<=a.mean&&a.confidenceInterval95[1]>=a.mean);
+  assert.deepEqual(a,b);assert.equal(a.n,5);assert.ok(a.interquartileRange>=0);assert.ok(a.firstQuartile<=a.median&&a.median<=a.thirdQuartile);assert.ok(a.confidenceInterval95[0]<=a.mean&&a.confidenceInterval95[1]>=a.mean);
   const comparison=evo.compareReplicates([5,6,7,8],[1,2,3,4],{seed:9,permutations:500,bootstrapSamples:300});
-  assert.ok(comparison.difference>0);assert.ok(comparison.pValue>=0&&comparison.pValue<=1);
+  assert.ok(comparison.difference>0);assert.ok(comparison.cohensD>0);assert.ok(comparison.pValue>=0&&comparison.pValue<=1);
   assert.deepEqual(comparison,evo.compareReplicates([5,6,7,8],[1,2,3,4],{seed:9,permutations:500,bootstrapSamples:300}));
 });
 
