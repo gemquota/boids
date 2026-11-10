@@ -41,7 +41,7 @@ Each agent carries a variable-length neural genome:
 
 Structural mutation includes connection addition, connection splitting, connection/node deletion, enable/disable changes, recurrent-edge mutation and node activation/bias/weight changes. Crossover aligns genes by innovation and handles disjoint/excess genes according to parent fitness. Sparse compiled networks execute in the worker with per-agent recurrent state.
 
-The live selection layer performs compatibility-based speciation, adaptive threshold control, fitness sharing, stagnation tracking, integer offspring quota allocation, champion reproductive pressure and same-species mate preference with fallback. This is NEAT-style selection in an overlapping-generation agent-based population, not a textbook generation-synchronous NEAT implementation.
+The live selection layer performs compatibility-based speciation, adaptive threshold control, fitness sharing, stagnation tracking, integer offspring quota allocation, configurable champion reproductive preservation, temporary structural-innovation grace windows and same-species mate preference with fallback. Selection fitness incorporates survival duration, energy condition and lifetime offspring contribution. This is NEAT-style selection in an overlapping-generation agent-based population, not a textbook generation-synchronous NEAT implementation.
 
 ## Lifetime learning
 
