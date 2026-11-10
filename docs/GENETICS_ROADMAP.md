@@ -2,7 +2,7 @@
 
 ## Current baseline
 
-The live runtime now includes ten quantitative trait loci, variable-length NEAT-style neural genomes, compatibility-based species selection, cis-regulatory modifiers, pedigree metrics and schema-17 snapshots. The project is an exploratory artificial ecology, not a calibrated biological model.
+The live runtime now includes ten quantitative trait loci, variable-length NEAT-style neural genomes, compatibility-based species selection, cis-regulatory modifiers, pedigree metrics and schema-18 snapshots. The project is an exploratory artificial ecology, not a calibrated biological model.
 
 | Area | Current status | Remaining work |
 |---|---|---|
@@ -10,8 +10,8 @@ The live runtime now includes ten quantitative trait loci, variable-length NEAT-
 | Neural topology | Variable-length, recurrent, innovation-tracked | Explicit elitism and innovation protection; further adversarial tests |
 | Speciation | Adaptive threshold, fitness sharing, stagnation and quotas | Stronger generation/overlapping-population validation and richer species telemetry |
 | Regulation | Inherited cis-regulatory modifiers; standalone trans/epistasis primitives | Stable gene-copy identity, duplication/deletion, live trans-regulatory networks and stage-specific expression |
-| Population genetics | Allele bins, Hₑ, pedigree inbreeding, preliminary h² and idealised sex-ratio Ne | Diploid representation if observed heterozygosity is desired; variance-based Ne, additive variance, covariance and uncertainty |
-| Persistence | Worker schema 17 and migration tests | User-facing import/export and broader corruption/large-world testing |
+| Population genetics | Allele bins, Hₑ, pedigree inbreeding, preliminary h² and realised-contribution effective-breeder index (not temporal/cohort Ne) | Diploid representation if observed heterozygosity is desired; variance-based Ne, additive variance, covariance and uncertainty |
+| Persistence | Worker schema 18 and migration tests | User-facing import/export and broader corruption/large-world testing |
 | Experiments | Manifests, seed derivation, sweeps and statistical helpers | Isolated replicate worlds, orchestration, pause/resume/cancel, comparison UI and replay archives |
 
 ## Completion criteria
