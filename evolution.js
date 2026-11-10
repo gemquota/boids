@@ -166,10 +166,10 @@
     if(random()<rates.duplicate&&genome.copies.length<limits.maxCopies&&genome.copies.length){const source=genome.copies[randomIndex(genome.copies.length,random)],copy={...source,id:registry.allocate(),strength:clamp(source.strength+(random()*2-1)*limits.strengthStep,-2,2),threshold:clamp(source.threshold+(random()*2-1)*limits.thresholdStep,0,1)};if(random()<.5)copy.source=randomIndex(10,random);if(random()<.5)copy.target=randomIndex(10,random);genome.copies.push(copy)}
     genome.copies.sort((a,b)=>a.id-b.id);return normalizeRegulatoryGenome(genome);
   }
-  function expressRegulatoryNetwork(input,loci,environment={},passes=2){
-    const genome=normalizeRegulatoryGenome(input),base=Array.from({length:10},(_,i)=>clamp(finite(loci?.[i],.5),0,1));let expression=base.slice();
-    for(let pass=0;pass<Math.max(1,Math.min(8,Math.floor(finite(passes,2))));pass++){const next=expression.slice();for(const gene of genome.copies){const source=expression[gene.source],env=gene.environment?finite(environment[gene.environment],0):0,signal=source+env*gene.environmentWeight-gene.threshold,effect=gene.mode==='repress'?-1:1;next[gene.target]=clamp(next[gene.target]+effect*signal*gene.strength,0,1)}expression=next}
-    return expression;
+  function expressRegulatoryNetwork(input,loci,environment={},passes=2,workspace){
+    const genome=input?.version===1&&Array.isArray(input.copies)?input:normalizeRegulatoryGenome(input),a=workspace?.a||new Float32Array(10),b=workspace?.b||new Float32Array(10);for(let i=0;i<10;i++)a[i]=clamp(finite(loci?.[i],.5),0,1);let expression=a,next=b;
+    for(let pass=0;pass<Math.max(1,Math.min(8,Math.floor(finite(passes,2))));pass++){next.set(expression);for(const gene of genome.copies){const source=expression[gene.source],env=gene.environment?finite(environment[gene.environment],0):0,signal=source+env*gene.environmentWeight-gene.threshold,effect=gene.mode==='repress'?-1:1;next[gene.target]=clamp(next[gene.target]+effect*signal*gene.strength,0,1)}const swap=expression;expression=next;next=swap}
+    if(workspace?.output){workspace.output.set(expression);return workspace.output}return Array.from(expression);
   }
 
   function evaluateRegulation(loci,regulators=[],environment={},definitions={}){
