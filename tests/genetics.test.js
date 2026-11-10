@@ -75,7 +75,9 @@ const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),
 test('worker uses expression output, not raw genes, for physical behaviour',()=>{
   assert.match(worker,/function phenotype\(i,k\)/);
   assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);
-  assert.match(worker,/regulatoryGenes\[i\*10\+k\]/);
+  assert.match(worker,/regulatoryExpressionCache\[i\*10\+k\]/);
+  assert.match(worker,/expressRegulatoryNetwork/);
+  assert.match(worker,/cloneRegulatoryGenome\(child,mother,paternalRegulatoryGenomes\[mother\]\)/);
   assert.match(worker,/cloneRegulatoryGenes\(child,mother\)/);
   for(const index of [0,1,2,3,4,5,6,7,8,9])assert.ok(worker.includes('phenotype(i,'+index+')'),'missing expressed locus '+index);
   assert.match(worker,/BoidsGenetics\.inheritTrait/);
