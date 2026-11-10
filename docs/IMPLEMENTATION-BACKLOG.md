@@ -72,9 +72,9 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement regulatory copy insertion and trans-edge rewiring without invalidating stable identities.
 - [x] Implement regulatory edges with activation and repression.
 - [x] Implement regulatory thresholds, strengths, and environmental input channels.
-- [ ] Implement multi-locus phenotype equations.
-- [ ] Implement epistatic interaction terms and bounded expression.
-- [ ] Implement stage-dependent expression.
+- [ ] Implement multi-locus phenotype equations. (Regulatory loci now cross-regulate one another; direct multi-structural-locus trait equations remain outstanding.)
+- [x] Implement nonlinear epistatic regulatory interaction terms with bounded expression. (Cross-trait structural-locus equations remain outstanding.)
+- [x] Implement stage-dependent expression through developmental and juvenile environmental input channels.
 - [x] Implement environment-dependent plasticity without rewriting inherited genotype.
 - [x] Keep inherited genotype, expressed phenotype, and lifetime learning separate.
 - [x] Cache expressed regulatory state per simulation tick and invalidate after genotype changes.
@@ -185,6 +185,7 @@ A task is not complete because a function exists. It must have:
 - [x] Added persistent species age, champion, best-fitness, stagnation, shared-fitness, and integer offspring-quota statistics; wired quota pressure into female reproductive drive and male mate selection, with a champion reproductive bonus.
 - [x] Added Observatory cards/chart series for species age, stagnation, and champion fitness; added a configurable stagnation limit.
 - [x] Added unit, worker, snapshot, UI, and CI coverage for species lifecycle and quota behaviour.
+- [x] Added developmental/juvenile environmental inputs and nonlinear epistatic regulatory edges with independent mutation controls and tests.
 - [x] Added immutable experiment manifest validation, deterministic replicate seed derivation, Kaplan-Meier survival curves, BH/Holm multiple-comparison correction, and factorial/Latin-hypercube designs with tests.
 - [x] Added continuous spatial habitat fields and connected nutrient/moisture productivity to plant biomass growth, habitat suitability to spore establishment, and temperature anomaly to consumer maintenance costs.
 - [x] Integrated variable-length regulatory gene-copy genomes into live inheritance and phenotype expression, including stable copy IDs, duplication/deletion/rewiring, trans activation/repression, environmental inputs, registry persistence, and copy-number telemetry.
