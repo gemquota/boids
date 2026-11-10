@@ -27,8 +27,8 @@ assert.equal(schema.extraSliderDefs.find(item => item.id === 'attackRangeScale')
 assert.ok(Object.isFrozen(schema.fieldGuide), 'field-guide metadata must be immutable');
 assert.equal(schema.fieldGuide.obstacleBuffer.length, 3, 'existing detailed field-guide explanations must be preserved');
 assert.equal(schema.fieldGuide.predatorSearch.length, 3, 'extended dynamics field-guide explanations must be preserved');
-assert.deepEqual(schema.normalizeDependencies({ ageMin: 40 }, { ageMin: 18, ageMax: 30, lifespan: 100 }), { ageMax: 41, lifespan: 42 });
-assert.deepEqual(schema.normalizeDependencies({ ageMax: 90 }, { ageMin: 18, ageMax: 80, lifespan: 85 }), { lifespan: 91 });
+assert.deepEqual(schema.normalizeDependencies({ ageMin: 40 }, { ageMin: 18, ageMax: 30, lifespan: 100 }), { ageMax: 45 });
+assert.deepEqual(schema.normalizeDependencies({ ageMax: 90 }, { ageMin: 18, ageMax: 80, lifespan: 85 }), { lifespan: 100 });
 assert.deepEqual(schema.normalizeDependencies({ lifespan: 120 }, { ageMin: 18, ageMax: 80, lifespan: 100 }), {});
 assert.deepEqual(schema.normalizeDependencies({ ageMin: 18 }, { ageMin: 18, ageMax: 30, lifespan: 100 }), {});
 assert.equal(schema.expressionTraits.find(item => item.key === 'speed').upper, 8);
