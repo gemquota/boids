@@ -16,6 +16,7 @@ No framework, bundler, package installation, or build step is required. The site
 - Full-screen, responsive simulation with touch and pointer interaction.
 - Dedicated simulation worker using typed arrays, spatial indexing, and OffscreenCanvas.
 - **181 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
+- Canonical creature genomes stored as versioned hexadecimal gene strings, with typed runtime decoding and schema-v9 snapshot support.
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
@@ -27,7 +28,7 @@ No framework, bundler, package installation, or build step is required. The site
 
 ## Control taxonomy
 
-All 182 numeric sliders are registered, persisted, and assigned to a tab and collapsible category.
+All 181 numeric sliders are registered, persisted, and assigned to a tab and collapsible category.
 
 | Tab | Categories |
 |---|---|
@@ -117,7 +118,7 @@ The configuration drawer is organised into tabs and collapsible accordion groups
 - **Reset slider limits** restores the original range boundaries.
 - **Reset defaults** restores the tuned ecological baseline and original slider limits.
 
-The 182-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
+The 181-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
 
 ### Presets and randomisation
 
@@ -142,6 +143,26 @@ Each of the ten inherited quantitative loci is stored as a bounded genotype valu
 - Heritability / inheritance fidelity.
 
 The ten loci share the same expression architecture but retain independent settings. Changing expression settings changes how existing genomes manifest; it does not rewrite their inherited alleles. The former global Cruising speed slider is replaced by the Speed locus's phenotype range. The default speed phenotype range is deliberately conservative (0.75–2.25 world units) to produce slower, more readable movement. Global mutation probability and magnitude now describe neural connection genes only.
+
+## Hexadecimal chromosome representation
+
+Every creature's persistent genome is now represented as an ordered array of uppercase hexadecimal strings, with one independently typed gene record per string. This is the canonical genetic representation used for snapshot export and restore. It is not a JSON array of floating-point triples or a text string containing symbolic DNA letters.
+
+The versioned format is documented in [docs/CHROMOSOME_FORMAT.md](docs/CHROMOSOME_FORMAT.md).
+
+| Gene record | Encoded fields | Bytes |
+|---|---|---:|
+| Trait | type (u8), stable trait ID (u8), value (float32) | 6 |
+| Neural connection | type (u8), innovation ID (u32), source neuron (u16), destination neuron (u16), weight (float32) | 13 |
+
+All multi-byte values use little-endian byte order. Gene type `01` identifies a trait record; type `02` identifies a neural connection. The ten trait IDs are stable semantic identifiers, so a trait's meaning does not depend on its position in the chromosome. Connection endpoints are stored as unsigned 16-bit integers, not floats. Innovation identifiers are unsigned 32-bit integers. Only trait values and connection weights use IEEE-754 float32 encoding.
+
+For example, a connection from neuron 3 to neuron 12 with innovation ID 42 and weight -0.742 is encoded as one 13-byte record, then rendered as a 26-character hexadecimal gene string. The exact final four bytes are the little-endian binary32 representation of the weight.
+
+The worker decodes chromosome strings into execution arrays: `Uint16Array` for source and destination endpoints, `Uint32Array` for innovation IDs, and `Float32Array` for weights and trait values. These typed arrays are derived runtime data, not the canonical persistent chromosome. JSON itself does not preserve JavaScript typed-array constructors, so restore explicitly reconstructs the required typed arrays from the encoded data.
+
+Chromosomes are refreshed when inheritance or lifetime plasticity changes the genome. New population members, offspring, snapshot export, and restore all use the codec. Schema-v9 snapshots include the chromosome format identifier, maternal chromosomes, and conception-time paternal chromosomes; schema-v8 snapshots remain supported through migration.
+
 
 ## The simulation model
 
@@ -179,7 +200,7 @@ Each agent has a compact neural controller with **eight sensory channels**, a co
 
 The outputs influence turning, acceleration, alignment, cohesion, separation, fleeing, mate seeking, and reproductive drive. Input and output channel masks can disable individual channels.
 
-Each connection gene stores a directed source neuron, destination neuron, and signed weight. Hidden-to-hidden connections can use recurrent state carried between neural evaluations. Connection and hidden-neuron counts are configurable; when topology settings change, overlapping genome and brain-state data is retained where possible and new connections are initialised.
+Each neural connection gene stores a directed source neuron, destination neuron, and signed weight. The persistent chromosome encodes that record as a typed hexadecimal gene; the worker decodes it into runtime typed arrays for fast neural evaluation. Source and destination indices are unsigned 16-bit integers, innovation IDs are unsigned 32-bit integers, and weights are float32. Hidden-to-hidden connections can use recurrent state carried between neural evaluations. Connection and hidden-neuron counts are configurable; when topology settings change, overlapping genome and brain-state data is retained where possible and new connections are initialised.
 
 Plasticity uses reward-modulated eligibility traces to update connection weights. The reward signal is a local heuristic based on recent energy change, feeding, and threat. It is an experimental learning mechanism, not a validated reinforcement-learning objective.
 
@@ -217,7 +238,7 @@ The model is intentionally qualitative. Parameter values are simulation controls
 
 ---
 
-## The 182-slider configuration
+## The 181-slider configuration
 
 The controls are distributed across the main simulation tabs and the advanced Dynamics tab. Accordion groups keep related parameters together.
 
@@ -315,7 +336,7 @@ The application requires browser support for Web Workers and OffscreenCanvas. Br
 
 The application is plain HTML and JavaScript. There is no compile step.
 
-At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 182-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
+At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 181-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
 
 A useful manual test pass includes:
 
@@ -339,14 +360,24 @@ Passing syntax and structural checks is not proof of complete runtime correctnes
 
 ~~~text
 boids/
-├── index.html                  # Full-screen UI, controls, drawers, charts
-├── boids-worker.js             # Simulation, ecology, genetics, neural brains
+├── index.html                  # Full-screen UI, drawers, controls and Observatory
+├── boids-worker.js             # Worker simulation, ecology, neural evaluation and snapshots
+├── chromosome.js               # Versioned hexadecimal chromosome encoder/decoder
+├── genetics.js                 # Shared genotype-to-phenotype expression functions
+├── config-schema.js            # Central slider definitions, ranges and field guide
+├── config-registry.js          # Runtime discovery, normalization and application of controls
 ├── docs/
-│   ├── CONFIGURATION.md        # Slider ranges, defaults, and effects
-│   └── ...                     # Additional project references
-└── .github/
-    └── workflows/
-        └── validate.yml        # Automated validation workflow
+│   ├── ARCHITECTURE.md          # Runtime architecture and data flow
+│   ├── CHROMOSOME_FORMAT.md     # Hexadecimal gene byte layout and snapshot contract
+│   ├── CONFIGURATION.md         # Slider ranges, defaults and effects
+│   ├── GENETICS.md              # Neural architecture and inheritance mechanics
+│   ├── GENETICS_ROADMAP.md      # Checkpointed DNA Update plan
+│   ├── MODEL-ROADMAP.md         # Eight-phase simulation correctness roadmap
+│   └── VALIDATION.md            # Test strategy and known limitations
+├── tests/                      # Codec, genetics, worker and regression tests
+├── research/                   # Supporting experiments and research notes
+└── .github/workflows/
+    └── validate.yml            # Automated structural and regression checks
 ~~~
 
 ## Contributing
