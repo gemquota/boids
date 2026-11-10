@@ -19,7 +19,7 @@ function makeWorld(seed) {
   };
   vm.createContext(sandbox);
   sandbox.importScripts = (...paths) => { for (const path of paths) { const filePath = path.split('?')[0]; vm.runInContext(fs.readFileSync(filePath, 'utf8'), sandbox, { filename: path }); } };
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get parentTraitRecords(){return parentTraitRecords}, get traitGenes(){return traitGenes}, get survivalHistory(){return survivalHistory}, get survivalEntryAgeById(){return survivalEntryAgeById}, get survivalHistoryTruncated(){return survivalHistoryTruncated}, recordSurvivalObservation, populationSurvivalMetrics, resizePopulation, populationGeneticsMetrics, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get parentTraitRecords(){return parentTraitRecords}, get traitGenes(){return traitGenes}, get survivalHistory(){return survivalHistory}, get survivalEntryAgeById(){return survivalEntryAgeById}, get survivalHistoryTruncated(){return survivalHistoryTruncated}, recordSurvivalObservation, populationSurvivalMetrics, resizePopulation, populationGeneticsMetrics, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get agentEligibility(){return agentEligibility}, installNeatGenome, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -57,6 +57,20 @@ const thresholdControl = makeWorld(998876).__boidsTest;
 thresholdControl.configure({speciesThreshold:1.5});
 assert.equal(thresholdControl.speciesThresholdCurrent,1.5,'the initial compatibility threshold control must update the live adaptive threshold');
 const plasticWorld = makeWorld(998877).__boidsTest;
+const originalGenome = plasticWorld.agentGenomes[0];
+const existingPairs = new Set(originalGenome.connections.map(gene => gene.source + ':' + gene.destination));
+let extraPair = null;
+for (let source = 0; source < 8 && !extraPair; source++) {
+  for (let destination = 8; destination < 8 + plasticWorld.cfg.hidden; destination++) {
+    if (!existingPairs.has(source + ':' + destination)) { extraPair = { source, destination }; break; }
+  }
+}
+assert.ok(extraPair, 'test fixture must have an unused input-to-hidden connection');
+const nextInnovation = Math.max(...originalGenome.connections.map(gene => gene.innovation)) + 1;
+const expandedGenome = { nodes: originalGenome.nodes, connections: [...originalGenome.connections, { innovation: nextInnovation, source: extraPair.source, destination: extraPair.destination, weight: .5, enabled: true, recurrent: false }] };
+plasticWorld.installNeatGenome(0, expandedGenome);
+const extraConnectionIndex = plasticWorld.agentGenomes[0].connections.findIndex(gene => gene.innovation === nextInnovation);
+assert.ok(plasticWorld.agentGenomes[0].connections.length > plasticWorld.cfg.connections, 'fixture must exceed the legacy fixed connection capacity');
 const plasticGene = plasticWorld.agentGenomes[0].connections.find(gene => gene.enabled && gene.source < 8);
 assert.ok(plasticGene, 'initial brain should contain an input connection');
 const plasticIndex = plasticWorld.agentGeneIndex[0].get(plasticGene.innovation);
@@ -69,10 +83,14 @@ plasticWorld.reward[0] = 1;
 plasticWorld.brain(0, [1,1,1,1,1,1,1,1]);
 assert.equal(plasticWorld.agentGenomes[0].connections[plasticIndex].weight, inheritedWeight, 'plasticity must not rewrite inherited connection genes');
 assert.notEqual(plasticWorld.agentLearnedWeights[0][plasticIndex], 0, 'plasticity must update a separate learned-weight overlay');
+assert.equal(plasticWorld.agentEligibility[0].length, expandedGenome.connections.length, 'plasticity traces must allocate to the full variable genome length');
+assert.notEqual(plasticWorld.agentEligibility[0][extraConnectionIndex], 0, 'plasticity must update connections beyond the legacy fixed-slot capacity');
+assert.notEqual(plasticWorld.agentLearnedWeights[0][extraConnectionIndex], 0, 'learned-weight overlays must cover every variable-length connection');
 const plasticSnapshot = plasticWorld.exportSnapshot();
 const plasticRestored = makeWorld(998877).__boidsTest;
 plasticRestored.restoreSnapshot(plasticSnapshot);
 assert.equal(plasticRestored.agentLearnedWeights[0][plasticIndex], plasticWorld.agentLearnedWeights[0][plasticIndex], 'learned weights must survive snapshot restore');
+assert.deepEqual(Array.from(plasticRestored.agentEligibility[0]), Array.from(plasticWorld.agentEligibility[0]), 'variable-length plasticity traces must survive snapshot restore');
 
 const inspectedWorld = a.__boidsTest;
 inspectedWorld.inspectBrain(inspectedWorld.x[0], inspectedWorld.y[0], 100);
@@ -240,7 +258,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 18);
+assert.equal(restoredSnapshot.schemaVersion, 19);
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
