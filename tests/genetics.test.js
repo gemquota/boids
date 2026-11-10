@@ -100,6 +100,7 @@ test('Observatory exposes live species and population-genetic metrics',()=>{
   assert.ok(html.includes('habitatSuitability'));
   assert.ok(html.includes('regulatoryDuplicationRate'));
   assert.ok(html.includes('regulatoryCopyMean'));
+  assert.ok(html.includes('regulatoryEnvironmentMutationRate'));
   assert.ok(html.includes('function drawNetwork(m)'));
   assert.match(html,/positions=new Map\(\)/);
 });
