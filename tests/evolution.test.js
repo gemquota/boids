@@ -184,9 +184,9 @@ test('allele statistics report richness, frequencies, and expected heterozygosit
 
 test('effective breeder estimate reflects realised unequal parental contributions',()=>{
   const balanced=evo.effectiveBreederSize({female:[1,1,1,1],male:[1,1,1,1]});
-  assert.equal(balanced.effectiveFemales,4);assert.equal(balanced.effectiveMales,4);assert.equal(balanced.effectiveBreeders,4);
+  assert.equal(balanced.effectiveFemales,4);assert.equal(balanced.effectiveMales,4);assert.equal(balanced.effectiveBreeders,8);
   const skewed=evo.effectiveBreederSize({female:[8,1,1,0],male:[1,1,1,1]});
-  assert.ok(skewed.effectiveFemales<4);assert.equal(skewed.effectiveMales,4);assert.ok(skewed.effectiveBreeders<4);
+  assert.ok(skewed.effectiveFemales<4);assert.equal(skewed.effectiveMales,4);assert.ok(skewed.effectiveBreeders<balanced.effectiveBreeders);
   assert.equal(evo.effectiveBreederSize({female:[1,2],male:[]}).effectiveBreeders,0);
 });
 
