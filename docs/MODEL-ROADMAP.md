@@ -10,7 +10,7 @@ This roadmap describes work remaining after the merged evolutionary-ecology foun
 - Variable-length NEAT-style neural genomes have historical innovations, structural mutation, recurrent execution, innovation-aligned crossover and separate learned-weight overlays.
 - Compatibility-based speciation includes adaptive thresholding, fitness sharing, stagnation tracking, integer offspring quotas and champion reproductive pressure.
 - Inherited cis-regulatory modifiers affect expression bias and environmental responsiveness.
-- Worker snapshot schema 13 preserves the current population/genetic/ecological state and deterministic RNG state.
+- Worker snapshot schema 17 preserves the current population/genetic/ecological state and deterministic RNG state.
 
 ## Remaining phases
 
