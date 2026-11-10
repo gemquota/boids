@@ -8,7 +8,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Persistent unique individual identity; generation counters are never used as kinship.
 - [x] Deterministic fixed-step updates and serialisable random state.
 - [x] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
-- [ ] Selection is based on realised survival and reproduction, not decorative fitness.
+- [x] Selection is based on realised survival and reproduction, not decorative fitness. (Mortality removes individuals, reproduction is gated by realised condition/drive and mate selection, species quotas alter reproductive pressure, and lifetime offspring contribution is tracked; scalar fitness is a crossover-parent comparison proxy, not the sole selection mechanism.)
 - [x] UI, worker, model documentation, snapshots, and exports describe the same implemented mechanics; incomplete mechanisms remain explicitly labelled as outstanding.
 - [ ] Existing plant-only ecology, terrain, drawers, controls, Observatory, presets, and saved worlds remain functional.
 
