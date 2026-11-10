@@ -5,32 +5,36 @@
 - [x] Inspected the existing worker, chromosome format, genetics primitives, test harness, and roadmap.
 - [x] Created isolated branch `feat/evolutionary-ecology-completion` and draft PR #44.
 - [x] Added the comprehensive implementation checklist in [IMPLEMENTATION-BACKLOG.md](IMPLEMENTATION-BACKLOG.md).
-- [x] Added `evolution.js` with variable-length genome validation, historical innovation/split registries, structural mutation, fitter-parent innovation-aligned crossover, compatibility distance, species assignment, compiled neural execution, regulatory expression, epistatic phenotypes, allele statistics, parent-offspring regression, and pedigree inbreeding calculations.
-- [x] Integrated variable-length genomes into the live worker. Initial legacy brains are migrated into node/connection genomes; the worker evaluates compiled variable topologies; offspring inherit through innovation-aligned crossover and structural mutation; fitter-parent selection uses parental fitness.
-- [x] Added per-agent recurrent neural state and reusable worker activation buffers to avoid allocating a new neural workspace for every boid on every tick.
-- [x] Persisted variable-length genomes, innovation registry state, parental genome/fitness state, and neural topology through schema-10 snapshots. Legacy snapshots still load through the fixed-slot migration path.
-- [x] Added tests for genome validation, structural mutation, crossover, compiled activation, species assignment, regulatory expression, population genetics, and pedigree calculations.
-- [x] Added a GitHub Actions workflow for evolutionary tests and syntax checks.
-- [x] Remote evolutionary test workflow passed on commit `593d12b`; the genetics regression workflow also passed on that commit. The full existing validation workflow is still running at the time of this update.
+- [x] Added `evolution.js`: variable-length genome validation; historical innovation/split registries; connection and split mutation; deletion and enable/disable mutation; weight and bias mutation; fitter-parent innovation-aligned crossover; compatibility distance; species assignment; sparse compiled neural execution; regulatory expression; epistatic phenotype primitives; allele statistics; parent-offspring regression; pedigree kinship/inbreeding; deterministic replicate summaries; permutation comparisons; and Cartesian parameter sweeps.
+- [x] Integrated variable-length genomes into the live worker. Legacy brains migrate into node/connection genomes; the worker evaluates compiled variable topologies; offspring inherit through innovation-aligned crossover and structural mutation; fitter-parent selection uses parental fitness.
+- [x] Added per-agent recurrent neural state and reusable activation buffers to avoid allocating a new neural workspace for every boid on every tick.
+- [x] Added live NEAT species assignment, species-diversity telemetry, and same-species mate preference with fallback when a species has no available mate.
+- [x] Added inherited cis-regulatory loci. Regulatory alleles alter expression bias and environmental responsiveness without overwriting the underlying trait genotype.
+- [x] Added live population metrics: per-trait binned allele richness, expected heterozygosity, parent-offspring heritability estimates with sample sizes, pedigree inbreeding, species entropy, and regulatory activity/variance.
+- [x] Persisted variable-length genomes, innovation registry, species representatives, parental genome/fitness state, regulatory loci, and neural topology through schema-11 snapshots. Legacy snapshots migrate with neutral regulatory defaults.
+- [x] Added deterministic tests for genome validation, mutation, crossover, activation, speciation, regulatory expression, population metrics, snapshot round-trips, replicate summaries, permutation tests, and parameter sweeps.
+- [x] Added GitHub Actions coverage for evolutionary tests, existing genetics checks, worker determinism, and project validation. The latest completed full validation on commit `1ab3cba` passed; the latest experiment-statistics tests on commit `15adc62` passed. A further worker optimisation commit is currently being validated.
 
 ## Still incomplete
 
-- Species assignment exists and is tested, but species membership is not yet integrated into live worker telemetry or species-aware selection/offspring allocation.
-- Regulatory expression and epistatic phenotype functions exist, but regulatory loci are not yet inherited and expressed through the live ten-trait pipeline.
-- Population statistics helpers are tested, but allele-frequency, heritability, and inbreeding outputs are not yet wired into the Observatory and experiment exports.
-- Ecological extensions, controlled experiment runner, parameter sweeps, platform profiling, and mobile/browser interaction tests remain outstanding.
-- This branch has not been merged or deployed. The PR remains draft until the remaining runtime integration and validation are complete.
+- Species-aware mating is live, but full NEAT fitness sharing, champion preservation, stagnation handling, adaptive compatibility thresholds, and species-specific offspring quotas are not implemented.
+- Regulatory loci are inherited and expressed, but stable copy identities, gene duplication/deletion/rearrangement, trans-regulatory networks, and live epistatic multi-locus trait equations remain incomplete.
+- Population metrics are in worker telemetry and experiment JSON exports, but the Observatory has not yet been updated to visualise the new fields. Effective population size, additive genetic variance, and uncertainty for every estimate remain outstanding.
+- The existing plant-only ecosystem already has plant biomass, spores, freshwater/moisture proximity, seasonal variation, shelter, and consumer energy feedback. The broader habitat-gradient, nutrient, fragmentation, disturbance, and niche-validation backlog remains.
+- Reproducible replicate/statistics and parameter-sweep primitives exist, but isolated experiment worlds, immutable manifests, pause/resume/cancellation, factorial/Latin-hypercube orchestration, and UI controls remain incomplete.
+- Android/browser profiling, performance baselines, mobile interaction tests, Pages smoke tests, and deployment verification remain outstanding.
+- This branch has not been merged or deployed. PR #44 remains draft until remaining integration and validation are complete.
 
 ## Next implementation sequence
 
-1. Run the new CI workflow and fix any failures.
-2. Integrate variable-length node/connection genes into worker birth, brain evaluation, mutation, crossover, and serialization.
-3. Add schema migration from legacy fixed-slot genomes and persist innovation/species registries.
-4. Wire species-aware reproduction and expose species telemetry.
-5. Integrate regulatory gene copies and multi-locus phenotype expression into the existing ten-trait expression pipeline.
-6. Wire allele, pedigree, inbreeding, diversity, and heritability metrics into telemetry and exports.
-7. Add habitat fields and resource-competition mechanics incrementally.
-8. Build isolated experiment execution, replicate management, sweeps, and statistical comparisons.
-9. Complete Observatory controls, device profiling, browser/touch tests, and Pages smoke testing.
+1. Complete CI and add regression coverage for the new live worker paths.
+2. Finish NEAT selection pressure: fitness sharing, champion preservation, stagnation, and adaptive species thresholds.
+3. Expand regulatory genetics with stable gene-copy identity, trans-regulatory edges, duplication/deletion, and epistatic trait equations.
+4. Add effective population size, genetic/phenotypic variance, uncertainty, and cohort survival estimates.
+5. Extend habitat/resource dynamics and controlled ecological disturbances without introducing artificial food patches.
+6. Build isolated experiment worlds, manifests, multi-seed execution, and pause/resume/cancellation.
+7. Add Observatory views for topology, species, regulatory expression, population genetics, and experiment comparisons.
+8. Benchmark worker, neural evaluation, statistics, snapshots, and rendering; run mobile/browser and Pages smoke tests.
+9. Update documentation and release notes, then merge and deploy only after the validation gate is green.
 
 A task is complete only when it is in the live execution path and has tests, persistence coverage, observable output, and documentation appropriate to the change.
