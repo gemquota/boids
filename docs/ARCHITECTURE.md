@@ -39,7 +39,7 @@ The current worker uses variable-length genomes as the neural source of truth wh
 
 ## Neural storage bounds and legacy projections
 
-The variable-length `agentGenomes`, compiled networks and per-agent recurrent state are authoritative. The fixed-size typed arrays (`genome`, `connectionSource`, `connectionDestination`, `innovation`, `brainState` and `eligibility`) remain bounded legacy projections for compatibility, snapshots and older execution paths; they must not be treated as the evolved genome's maximum topology.
+The variable-length `agentGenomes`, compiled networks, per-agent recurrent state, learned-weight overlays and per-gene `agentEligibility` traces are authoritative. The fixed-size typed arrays (`genome`, `connectionSource`, `connectionDestination`, `innovation`, `brainState` and legacy `eligibility`) remain bounded compatibility projections/fallbacks for older execution paths; they must not be treated as the evolved genome's maximum topology. Schema 19 persists variable-length eligibility traces and migrates available legacy traces into matching leading connection positions.
 
 Current bounds are aligned:
 - UI/configuration legacy connection slots: 4–64.
