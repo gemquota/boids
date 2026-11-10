@@ -18,7 +18,7 @@ function makeWorld(seed) {
   };
   vm.createContext(sandbox);
   sandbox.importScripts = (...paths) => { for (const path of paths) vm.runInContext(fs.readFileSync(path, 'utf8'), sandbox, { filename: path }); };
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get food(){return food}, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get foodClaims(){return foodClaims}, get foodConsumed(){return foodConsumed}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get food(){return food}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get foodClaims(){return foodClaims}, get foodConsumed(){return foodConsumed}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -88,13 +88,50 @@ assert.ok(experimentSample.selectionDifferentials.every(Number.isFinite), 'selec
 assert.ok(Number.isFinite(experimentSample.selectionAggression), 'per-locus selection series should be available to the Observatory');
 assert.ok(experimentSample.meanLifetimeOffspring >= 0, 'lifetime reproductive success should be measurable');
 const experimentData = api.exportExperimentData();
-assert.equal(experimentData.format, 'boids-experiment-v1');
+assert.equal(experimentData.format, 'boids-analysis-bundle-v2');
+assert.equal(experimentData.metadata.includesFullSnapshot, true);
+assert.ok(experimentData.snapshot.arrays.genome.length > 0, 'analysis bundle should include each living genome');
 assert.equal(experimentData.metadata.seed, 123456);
 assert.equal(experimentData.reproductiveSuccess.length, api.reproductiveSuccess.size);
 a.onmessage({ data: { type: 'exportData', requestId: 42 } });
 const exportResponse = a.__messages.at(-1);
 assert.equal(exportResponse.type, 'exportData', 'worker should answer export requests');
 assert.equal(exportResponse.requestId, 42, 'worker should preserve export request IDs');
+
+// Plant life cycle: clonal budding, mature adult offspring, spore germination, senescence and death.
+const plantWorld = makeWorld(404);
+const plantApi = plantWorld.__boidsTest;
+plantApi.plants.splice(0);
+plantApi.spores.splice(0);
+const mother = { id: 9001, parent: 0, root: 9001, x: 180, y: 180, angle: 0, size: 1.3, biomass: 1.3, age: 20, children: 0, grandmother: false, greatGrandmother: false, adultNode: false, offspring: 0, sporeClock: 0, depth: 0, lifespan: 100, senescent: false };
+plantApi.plants.push(mother);
+plantApi.growPlants(.01);
+assert.equal(mother.grandmother, true, 'a sufficiently large mature mother should become a grandmother');
+const adultClones = plantApi.plants.filter(p => p.parent === mother.id && p.adultNode);
+assert.equal(adultClones.length, 2, 'grandmother should produce two fully mature clonal offspring');
+assert.ok(adultClones.every(p => p.biomass >= .72 && p.age >= 9), 'adult clones should be branch-ready immediately');
+assert.ok(plantApi.plantCounters.asexualBuds >= 2, 'clonal budding should be counted');
+const beforeGermination = plantApi.plants.length;
+plantApi.spores.push({ x: 500, y: 300, vx: 0, vy: 0, life: 7.1, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
+plantApi.growPlants(.01);
+const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && p.x > 450);
+assert.ok(germinated, 'a viable dispersed asexual spore should germinate into a clonal seedling');
+assert.equal(plantApi.plants.length, beforeGermination + 1);
+assert.equal(plantApi.plantCounters.sporesGerminated, 1);
+const oldPlant = { id: 9002, parent: 0, root: 9002, x: 600, y: 300, angle: 0, size: .3, biomass: .2, age: 100, children: 0, lifespan: 100, senescent: false };
+plantApi.plants.push(oldPlant);
+plantApi.growPlants(.1);
+assert.equal(oldPlant.stage, 'senescent', 'plants should enter senescence at their lifespan');
+assert.ok(oldPlant.biomass < .2, 'senescent plants should lose biomass');
+oldPlant.age = 119.9;
+plantApi.growPlants(.2);
+assert.ok(!plantApi.plants.includes(oldPlant), 'senescent plants should eventually die');
+assert.equal(plantApi.plantCounters.plantDeaths, 1, 'plant deaths should be counted');
+const plantSnapshot = plantApi.exportSnapshot();
+assert.ok(plantSnapshot.plantCounters.asexualBuds >= 2, 'plant lifecycle counters should persist in snapshots');
+const restoredPlants = makeWorld(405);
+restoredPlants.__boidsTest.restoreSnapshot(plantSnapshot);
+assert.deepEqual(restoredPlants.__boidsTest.plantCounters, plantApi.plantCounters, 'plant lifecycle counters should survive snapshot restore');
 
 // Snapshot restore must preserve both the random stream and pedigree identifiers.
 const restored = makeWorld(999);
