@@ -119,9 +119,9 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## G. Experimental laboratory and statistics
 
-- [ ] Define immutable experiment manifests with model version, config, seed, and scenario.
+- [x] Define immutable experiment manifests with model version, config, seed, and scenario.
 - [ ] Implement isolated experiment worlds that cannot mutate the user's live world.
-- [ ] Implement independent multi-seed replicates.
+- [x] Implement deterministic independent replicate-seed derivation. (Execution in isolated worlds remains outstanding.)
 - [x] Implement one- and multi-parameter sweeps.
 - [ ] Implement factorial and Latin-hypercube designs for larger parameter spaces.
 - [ ] Implement bounded concurrency, pause/resume, cancellation, and progress reporting.
@@ -130,8 +130,8 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement effect sizes and bootstrap comparisons.
 - [x] Implement regression and correlation analysis with documented assumptions.
 - [x] Implement appropriate parametric/non-parametric group comparisons.
-- [ ] Implement survival analysis and multiple-comparison correction where applicable.
-- [ ] Treat independent runs as replicates, not individual boids.
+- [x] Implement Kaplan-Meier survival estimates and Benjamini-Hochberg / Holm multiple-comparison corrections.
+- [x] Treat independent runs as replicates, not individual boids in the statistical helper API.
 - [ ] Compare experiment configurations and overlay replicate trajectories.
 - [ ] Export JSON archives, CSV time series, population statistics, pedigree, genome/species summaries.
 - [ ] Verify archived experiments can be replayed from their manifest.
@@ -185,6 +185,7 @@ A task is not complete because a function exists. It must have:
 - [x] Added persistent species age, champion, best-fitness, stagnation, shared-fitness, and integer offspring-quota statistics; wired quota pressure into female reproductive drive and male mate selection, with a champion reproductive bonus.
 - [x] Added Observatory cards/chart series for species age, stagnation, and champion fitness; added a configurable stagnation limit.
 - [x] Added unit, worker, snapshot, UI, and CI coverage for species lifecycle and quota behaviour.
+- [x] Added immutable experiment manifest validation, deterministic replicate seed derivation, Kaplan-Meier survival curves, and BH/Holm multiple-comparison correction with tests.
 
 - [x] Inspected current model roadmap, chromosome format, genetics primitives, worker, and genetics tests.
 - [x] Created an isolated implementation branch for the completion programme.
