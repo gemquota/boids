@@ -29,16 +29,41 @@ function makeWorld(count) {
 }
 
 const results = [];
+const meanBudgetsMs = new Map([[100, 5], [250, 11], [500, 24], [1000, 40]]);
 for (const count of [100, 250, 500, 1000]) {
   const world = makeWorld(count);
   for (let tick = 0; tick < 12; tick++) world.update(1 / 60, tick * (1000 / 60));
-  const start = performance.now();
   const measuredTicks = 36;
-  for (let tick = 0; tick < measuredTicks; tick++) world.update(1 / 60, 1000 + tick * (1000 / 60));
-  const msPerTick = (performance.now() - start) / measuredTicks;
-  results.push({ requested: count, actual: world.N, msPerTick: Number(msPerTick.toFixed(3)) });
-  assert.ok(Number.isFinite(msPerTick), 'benchmark should produce a finite update time');
-  assert.ok(msPerTick < 250, '1000-agent reference workload exceeded 250ms per simulation tick');
+  const samples = [];
+  for (let tick = 0; tick < measuredTicks; tick++) {
+    const start = performance.now();
+    world.update(1 / 60, 1000 + tick * (1000 / 60));
+    samples.push(performance.now() - start);
+  }
+  const sorted = [...samples].sort((a, b) => a - b);
+  const meanMsPerTick = samples.reduce((sum, value) => sum + value, 0) / measuredTicks;
+  const medianMsPerTick = sorted[Math.floor((sorted.length - 1) * 0.5)];
+  const p95MsPerTick = sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)];
+  const budget = meanBudgetsMs.get(count);
+  results.push({
+    requested: count,
+    actual: world.N,
+    meanMsPerTick: Number(meanMsPerTick.toFixed(3)),
+    medianMsPerTick: Number(medianMsPerTick.toFixed(3)),
+    p95MsPerTick: Number(p95MsPerTick.toFixed(3)),
+    budgetMs: budget,
+  });
+  assert.ok(Number.isFinite(meanMsPerTick), 'benchmark should produce a finite update time');
+  assert.ok(meanMsPerTick < budget, 'N=' + count + ' mean update cost ' + meanMsPerTick.toFixed(2) + 'ms exceeded ' + budget + 'ms budget');
 }
-console.log('Worker CPU benchmark (dimensionless reference workload):');
-for (const result of results) console.log('N=' + result.requested + ' actual=' + result.actual + ' ms/tick=' + result.msPerTick);
+console.log('Worker CPU benchmark (dimensionless reference workload; simulation only):');
+for (const result of results) {
+  console.log(
+    'N=' + result.requested +
+    ' actual=' + result.actual +
+    ' mean=' + result.meanMsPerTick + 'ms' +
+    ' median=' + result.medianMsPerTick + 'ms' +
+    ' p95=' + result.p95MsPerTick + 'ms' +
+    ' budget=' + result.budgetMs + 'ms'
+  );
+}
