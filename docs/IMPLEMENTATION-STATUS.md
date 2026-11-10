@@ -10,9 +10,9 @@ This file describes the merged evolutionary-ecology foundation and the current c
 - Variable-length NEAT-style node/connection genomes, historical innovations, structural mutation, recurrent execution, innovation-aligned crossover and separate learned-weight overlays.
 - Compatibility-based species assignment, adaptive threshold, fitness sharing, age/stagnation tracking, species-specific integer quotas, champion reproductive pressure and same-species mate preference with fallback.
 - Inherited cis-regulatory modifiers that affect trait-expression bias and environmental responsiveness.
-- Population telemetry for binned allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary heritability, species entropy, regulatory activity and idealised sex-ratio effective size.
+- Population telemetry for binned allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary heritability using conception-time parental trait records, species entropy, regulatory activity and idealised sex-ratio effective size.
 - Observatory population/genetics/species/neural views and run-analysis export.
-- Worker snapshot schema 13 with legacy migration, full variable genomes, innovation/species state, regulatory modifiers, learned weights, recurrent state, pedigree and RNG/ecology state.
+- Worker snapshot schema 14 with legacy migration, full variable genomes, innovation/species state, regulatory modifiers, learned weights, recurrent state, pedigree and RNG/ecology state.
 
 ## Implemented as standalone/tested analysis primitives
 
