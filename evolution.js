@@ -238,6 +238,20 @@
     for(const [key,raw] of entries){const values=Array.isArray(raw)?raw:[raw];if(!values.length)throw new RangeError('Sweep parameter '+key+' has no values');if(combinations.length*values.length>limit)throw new RangeError('Parameter sweep exceeds '+limit+' combinations');const next=[];for(const base of combinations)for(const value of values)next.push({...base,[key]:value});combinations.splice(0,combinations.length,...next)}
     return combinations.map((config,index)=>({id:index+1,config}));
   }
+  function factorialDesign(dimensions={},limit=4096){
+    const entries=Object.entries(dimensions),count=2**entries.length;
+    if(count>limit)throw new RangeError('Factorial design exceeds '+limit+' runs');
+    const ranges=entries.map(([key,range])=>{const min=finite(Array.isArray(range)?range[0]:range.min,NaN),max=finite(Array.isArray(range)?range[1]:range.max,NaN);if(!Number.isFinite(min)||!Number.isFinite(max)||max<min)throw new RangeError('Invalid factorial range for '+key);return{key,min,max}});
+    return Array.from({length:count},(_,index)=>({id:index+1,config:Object.fromEntries(ranges.map((range,dimension)=>[range.key,(index&(1<<dimension))?range.max:range.min]))}));
+  }
+  function latinHypercubeDesign(dimensions={},samples=20,seed=1){
+    const entries=Object.entries(dimensions),n=Math.floor(finite(samples,0));
+    if(n<1||n>10000)throw new RangeError('Latin-hypercube samples must be between 1 and 10000');
+    const ranges=entries.map(([key,range])=>{const min=finite(Array.isArray(range)?range[0]:range.min,NaN),max=finite(Array.isArray(range)?range[1]:range.max,NaN);if(!Number.isFinite(min)||!Number.isFinite(max)||max<min)throw new RangeError('Invalid Latin-hypercube range for '+key);return{key,min,max}});
+    const rng=seededRandom(seed),columns=ranges.map(()=>{const order=Array.from({length:n},(_,i)=>i);for(let i=n-1;i>0;i--){const j=Math.floor(rng()*(i+1));[order[i],order[j]]=[order[j],order[i]]}return order.map((stratum)=> (stratum+rng())/n)});
+    return Array.from({length:n},(_,row)=>({id:row+1,config:Object.fromEntries(ranges.map((range,column)=>[range.key,range.min+columns[column][row]*(range.max-range.min)]))}));
+  }
+
   function replicateSeeds(baseSeed,count){
     const rng=seededRandom(baseSeed),n=Math.max(0,Math.min(10000,Math.floor(count)));return Array.from({length:n},()=>Math.max(1,Math.floor(rng()*0xffffffff)));
   }
@@ -253,5 +267,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,factorialDesign,latinHypercubeDesign,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
 });
