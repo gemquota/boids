@@ -103,6 +103,15 @@ test('experiment manifests are immutable and derive reproducible independent see
   assert.throws(()=>evo.createExperimentManifest({replicates:0}),/between 1 and 10000/);
 });
 
+test('factorial and Latin-hypercube designs cover parameter ranges reproducibly',()=>{
+  const factorial=evo.factorialDesign({mutation:[0,.2],drive:{min:.1,max:.9}});
+  assert.equal(factorial.length,4);assert.deepEqual(factorial[0].config,{mutation:0,drive:.1});assert.deepEqual(factorial[3].config,{mutation:.2,drive:.9});
+  assert.throws(()=>evo.factorialDesign({a:[0,1],b:[0,1],c:[0,1]},4),/exceeds/);
+  const a=evo.latinHypercubeDesign({mutation:[0,1],drive:[.2,.8]},12,99),b=evo.latinHypercubeDesign({mutation:[0,1],drive:[.2,.8]},12,99);
+  assert.deepEqual(a,b);assert.equal(a.length,12);
+  for(const key of ['mutation','drive']){const values=a.map(row=>row.config[key]).sort((x,y)=>x-y);assert.ok(values.every((value,index)=>value>= (key==='mutation'?0:.2)&&value<=(key==='mutation'?1:.8)));const strata=values.map(value=>Math.min(11,Math.floor((value-(key==='mutation'?0:.2))/((key==='mutation'?1:.8)-(key==='mutation'?0:.2))*12)));assert.equal(new Set(strata).size,12,'each dimension should occupy every stratum exactly once')}
+});
+
 test('Kaplan-Meier survival handles events, censoring and median survival',()=>{
   const result=evo.kaplanMeier([{time:1,event:true},{time:2,event:false},{time:3,event:true},{time:4,event:true}]);
   assert.equal(result.n,4);assert.equal(result.events,3);assert.equal(result.censored,1);
