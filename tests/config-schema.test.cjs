@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const schema = require('../config-schema.js');
 
 assert.equal(schema.coreSliderDefs.length, 64, 'all core controls must be schema-defined');
-assert.equal(schema.extraSliderDefs.length, 19, 'extra dynamics definitions must remain complete');
+assert.equal(schema.extraSliderDefs.length, 28, 'extra dynamics, regulatory and topology definitions must remain complete');
 assert.equal(schema.expressionTraits.length, 10, 'all ten inherited traits must be declared');
 assert.equal(schema.expressionFields.length, 6, 'each trait must expose six expression controls');
 assert.equal(schema.expressionMutationFields.length, 3, 'each trait must expose three inheritance controls');
@@ -14,7 +14,7 @@ const ids = [
   ...schema.expressionTraits.flatMap(trait => schema.expressionFields.map(field => `expr_${trait.key}_${field.key}`)),
   ...schema.expressionTraits.flatMap(trait => schema.expressionMutationFields.map(field => `trait_${trait.key}_${field.key}`))
 ];
-assert.equal(ids.length, 173, 'schema must define all 173 sliders');
+assert.equal(ids.length, 182, 'schema must define all 182 sliders');
 assert.equal(new Set(ids).size, ids.length, 'generated control IDs must be unique');
 assert.ok(!ids.includes('trail'), 'trail control must remain removed');
 assert.ok(schema.coreSliderDefs.every(item => item.id && item.label && Number.isFinite(item.min) && Number.isFinite(item.max) && item.min < item.max && item.step > 0 && ['motion','brain','genetics','reproduction','selection','world','dynamics'].includes(item.section)));
@@ -42,4 +42,13 @@ assert.deepEqual(schema.resolveWorkerMapping('expr_speed_curve'), { target: 'gen
 assert.deepEqual(schema.resolveWorkerMapping('expr_speed_min'), { target: 'geneExpression', trait: 'speed', field: 'min' });
 assert.deepEqual(schema.resolveWorkerMapping('trait_aggression_rate'), { target: 'traitMutation', trait: 'aggression', field: 'rate' });
 assert.deepEqual(schema.resolveWorkerMapping('expr_unknown_min'), { target: 'cfg', key: 'expr_unknown_min' });
-console.log('Shared configuration schema: 173 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'regulatoryMutationRate').value, .025);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'regulatoryMutationMagnitude').value, .12);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesTarget').value, 8);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesThreshold').value, 3);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesThresholdAdaptation').value, .001);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesStagnationLimit').value, 80);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'activationMutationRate').value, .01);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'nodeDeletionRate').value, .005);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'recurrentMutationRate').value, .01);
+console.log('Shared configuration schema: 180 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');

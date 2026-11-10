@@ -49,14 +49,14 @@
     if(curve==='plateau')return (1-Math.exp(-strength*x))/(1-Math.exp(-strength));
     return x;
   }
-  function express(geneValue,trait,settings={},environment=.5){
+  function express(geneValue,trait,settings={},environment=.5,regulator=.5){
     const t=typeof trait==='number'?TRAITS[trait]:TRAITS.find(x=>x.key===trait)||trait;
     if(!t)return Number(geneValue)||0;
-    const normalized=normalizeGene(geneValue,t);
-    const shaped=shapeExpression(normalized,settings);
+    const normalized=normalizeGene(geneValue,t),regulatoryActivity=clamp(Number(regulator??.5),0,1);
+    const shaped=shapeExpression(normalized+(regulatoryActivity-.5)*.35,settings);
     const min=Number.isFinite(+settings.min)?+settings.min:t.phenotypeMin;
     const max=Math.max(min+1e-6,Number.isFinite(+settings.max)?+settings.max:t.phenotypeMax);
-    const sensitivity=clamp(Number(settings.environmentSensitivity)||0,0,2);
+    const sensitivity=clamp((Number(settings.environmentSensitivity)||0)*(.5+regulatoryActivity),0,2);
     const env=clamp(Number(environment)||0,0,1);
     const modulated=clamp(shaped+(env-.5)*sensitivity,0,1);
     return min+modulated*(max-min);
