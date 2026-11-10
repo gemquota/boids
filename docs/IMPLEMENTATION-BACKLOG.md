@@ -16,7 +16,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 - [x] Record baseline deterministic runs at 100, 250, 500, and 1,000 agents. (GitHub Actions worker update baseline recorded in `docs/VALIDATION.md`; browser/device and render timing remain separate release gates.)
 - [x] Record baseline memory, update, draw, backlog, snapshot-size, and restore timings. (CI records process heap delta, update/draw timings, frame backlog, serialized snapshot size and restore time at 100/250/500/1,000 agents; browser/device profiling remains open.)
-- [ ] Audit every fixed-size neural array and connection-count assumption.
+- [x] Audit fixed-size neural arrays and connection-count assumptions; document legacy projections, runtime bounds and test coverage in [ARCHITECTURE.md](ARCHITECTURE.md).
 - [x] Inventory worker, IndexedDB-envelope and chromosome-codec schemas plus field-presence migration behaviour in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
 - [x] Inventory current Observatory telemetry and analysis-export fields in [TELEMETRY-EXPORTS.md](TELEMETRY-EXPORTS.md); isolated experiment execution and replayable archives remain outstanding.
 - [ ] Define stable public interfaces for genetics, neuroevolution, ecology, metrics, and experiments.
