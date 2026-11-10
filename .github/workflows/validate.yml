@@ -90,7 +90,7 @@ jobs:
               raise SystemExit('Plant spores must be faceted, never circular')
           if 'for(let ring=' in worker:
               raise SystemExit('Legacy layered plant growth rings must remain removed')
-          crystal = re.search(r'function drawCrystal\\(p\\)\\{([\\s\\S]*?)\\}\\nfunction drawWaterways', worker)
+          crystal = re.search(r'function drawCrystal\(p\)\{([\s\S]*?)\}\nfunction drawWaterways', worker)
           if not crystal or 'ctx.arc(' in crystal.group(1):
               raise SystemExit('Plant body renderer must contain no circular geometry')
           if 'function drawWaterways()' not in worker or 'drawWaterways();ctx.save()' not in worker:
