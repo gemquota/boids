@@ -24,7 +24,7 @@
   }
 
   function createInnovationRegistry(state={}){
-    let nextInnovation=Math.max(1000000,finite(state.nextInnovation,1000000));
+    let nextInnovation=state.nextInnovation===undefined?1000000:Math.max(1,finite(state.nextInnovation,1000000));
     let nextNode=Math.max(1,finite(state.nextNode,1));
     const connections=new Map(state.connections||[]);
     const splits=new Map(state.splits||[]);
