@@ -40,7 +40,7 @@
 
   function cloneGenome(genome){return clone(normalizeGenome(genome))}
   function mutateGenome(input,registry,random=Math.random,options={}){
-    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,deleteConnection:.01,toggleConnection:.01,recurrent:.01,bias:.08,...options.rates};
+    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,deleteConnection:.01,toggleConnection:.01,recurrent:0,bias:.08,...options.rates};
     const limits={maxNodes:128,maxConnections:512,weightStep:.25,...options.limits};
     for(const gene of genome.connections)if(random()<rates.weight)gene.weight=clamp(gene.weight+(random()*2-1)*limits.weightStep,-5,5);
     for(const node of genome.nodes)if(node.type!=='input'&&random()<rates.bias)node.bias=clamp(node.bias+(random()*2-1)*limits.weightStep,-5,5);
@@ -205,6 +205,34 @@
     boot.sort((x,y)=>x-y);
     return{nA:a.length,nB:b.length,difference:observed,cohensD,pValue:(extreme+1)/(iterations+1),confidenceInterval95:[quantile(boot,.025),quantile(boot,.975)],method:'two-sided permutation test with percentile bootstrap interval',permutations:iterations,bootstrapSamples:bootstrap};
   }
+  function createExperimentManifest(input={}){
+    const seed=Math.floor(finite(input.seed,1))>>>0,replicates=Math.floor(finite(input.replicates,1));
+    if(replicates<1||replicates>10000)throw new RangeError('Replicates must be between 1 and 10000');
+    const manifest={schemaVersion:1,modelVersion:String(input.modelVersion||'development'),seed,replicates,scenario:String(input.scenario||'baseline'),config:clone(input.config||{}),analysis:clone(input.analysis||{})};
+    const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.freeze(value);for(const child of Object.values(value))freeze(child)}return value};
+    return freeze(manifest);
+  }
+  function deriveReplicateSeeds(manifest){
+    const source=createExperimentManifest(manifest),seeds=[];
+    for(let i=0;i<source.replicates;i++){let hash=(source.seed^0x9e3779b9)>>>0;const text=source.modelVersion+'|'+source.scenario+'|'+i;for(let j=0;j<text.length;j++){hash^=text.charCodeAt(j);hash=Math.imul(hash,16777619)>>>0}hash^=hash>>>16;hash=Math.imul(hash,0x7feb352d)>>>0;hash^=hash>>>15;hash=Math.imul(hash,0x846ca68b)>>>0;hash^=hash>>>16;seeds.push(hash>>>0)}
+    return seeds;
+  }
+  function kaplanMeier(observations,confidenceZ=1.96){
+    const rows=observations.map(row=>({time:finite(row.time,NaN),event:!!row.event})).filter(row=>Number.isFinite(row.time)&&row.time>=0).sort((a,b)=>a.time-b.time),times=[...new Set(rows.filter(row=>row.event).map(row=>row.time))];
+    let survival=1,greenwood=0;const curve=[{time:0,atRisk:rows.length,events:0,censored:0,survival:1,standardError:0,lower:1,upper:1}];
+    for(const time of times){const atRisk=rows.filter(row=>row.time>=time).length,events=rows.filter(row=>row.time===time&&row.event).length,censored=rows.filter(row=>row.time===time&&!row.event).length;if(!atRisk||!events)continue;survival*=1-events/atRisk;if(atRisk>events)greenwood+=events/(atRisk*(atRisk-events));else greenwood=Infinity;
+      const se=survival===0?0:survival*Math.sqrt(greenwood),lower=clamp(survival-confidenceZ*se,0,1),upper=clamp(survival+confidenceZ*se,0,1);
+      curve.push({time,atRisk,events,censored,survival,standardError:se,lower,upper});
+    }
+    return{n:rows.length,events:rows.filter(row=>row.event).length,censored:rows.filter(row=>!row.event).length,curve,median:curve.find(point=>point.survival<=.5)?.time??null};
+  }
+  function correctPValues(values,method='BH'){
+    const rows=values.map((p,index)=>({index,p:clamp(finite(p,1),0,1)})).sort((a,b)=>a.p-b.p),n=rows.length,adjusted=new Array(n);
+    if(method==='holm'){let running=0;for(let i=0;i<n;i++){running=Math.max(running,(n-i)*rows[i].p);adjusted[rows[i].index]=Math.min(1,running)}}
+    else{let running=1;for(let i=n-1;i>=0;i--){running=Math.min(running,rows[i].p*n/(i+1));adjusted[rows[i].index]=Math.min(1,running)}}
+    return adjusted;
+  }
+
   function parameterSweep(parameters={},limit=10000){
     const entries=Object.entries(parameters),combinations=[{}];
     for(const [key,raw] of entries){const values=Array.isArray(raw)?raw:[raw];if(!values.length)throw new RangeError('Sweep parameter '+key+' has no values');if(combinations.length*values.length>limit)throw new RangeError('Parameter sweep exceeds '+limit+' combinations');const next=[];for(const base of combinations)for(const value of values)next.push({...base,[key]:value});combinations.splice(0,combinations.length,...next)}
@@ -225,5 +253,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
 });

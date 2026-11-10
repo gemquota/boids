@@ -20,7 +20,7 @@ test('innovation registry returns stable connection and split history',()=>{
 
 test('split mutation creates a hidden node and two historical connections',()=>{
   const registry=evo.createInnovationRegistry({nextNode:4});
-  const mutated=evo.mutateGenome(baseGenome(),registry,fixed(.0),{rates:{weight:0,addConnection:0,splitConnection:1,deleteConnection:0,toggleConnection:0,bias:0}});
+  const mutated=evo.mutateGenome(baseGenome(),registry,fixed(.0),{rates:{weight:0,addConnection:0,splitConnection:1,deleteConnection:0,toggleConnection:0,recurrent:0,deleteNode:0,activation:0,bias:0}});
   assert.equal(mutated.nodes.length,5);assert.equal(mutated.connections.length,4);
   assert.equal(mutated.connections.filter(g=>!g.enabled).length,1);
   assert.ok(mutated.connections.some(g=>g.source===0&&g.destination===4));
@@ -93,6 +93,30 @@ test('species statistics share fitness, allocate integer quotas, and track stagn
   const recovered=evo.updateSpeciesStatistics(groups,new Map([[10,9],[11,4],[12,2],[20,1],[21,1]]),{stagnationLimit:2});
   assert.equal(groups[0].stagnation,0);assert.equal(groups[0].bestFitness,9);
   assert.equal(recovered.totalMembers,5);
+});
+
+test('experiment manifests are immutable and derive reproducible independent seeds',()=>{
+  const manifest=evo.createExperimentManifest({modelVersion:'test-7',seed:42,replicates:4,scenario:'drought',config:{count:100,nested:{rate:.2}}});
+  assert.equal(Object.isFrozen(manifest),true);assert.equal(Object.isFrozen(manifest.config.nested),true);
+  const first=evo.deriveReplicateSeeds(manifest),second=evo.deriveReplicateSeeds(manifest);
+  assert.deepEqual(first,second);assert.equal(first.length,4);assert.equal(new Set(first).size,4);
+  assert.throws(()=>evo.createExperimentManifest({replicates:0}),/between 1 and 10000/);
+});
+
+test('Kaplan-Meier survival handles events, censoring and median survival',()=>{
+  const result=evo.kaplanMeier([{time:1,event:true},{time:2,event:false},{time:3,event:true},{time:4,event:true}]);
+  assert.equal(result.n,4);assert.equal(result.events,3);assert.equal(result.censored,1);
+  assert.equal(result.curve[1].survival,.75);assert.equal(result.median,3);
+  assert.ok(result.curve.every(point=>point.lower>=0&&point.upper<=1&&point.lower<=point.survival&&point.upper>=point.survival));
+});
+
+test('multiple-comparison corrections preserve order and control adjusted p-values',()=>{
+  const values=[.01,.04,.03,.2];
+  const bh=evo.correctPValues(values,'BH'),holm=evo.correctPValues(values,'holm');
+  assert.equal(bh.length,4);assert.equal(holm.length,4);
+  assert.ok(bh.every((value,index)=>value>=values[index]&&value<=1));
+  assert.ok(holm.every((value,index)=>value>=values[index]&&value<=1));
+  assert.ok(holm.every((value,index)=>value>=bh[index]-1e-12));
 });
 
 test('recurrent neural connections retain state across activations',()=>{

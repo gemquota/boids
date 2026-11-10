@@ -1,162 +1,66 @@
-# BOIDS model overhaul roadmap
+# Model roadmap
 
-This roadmap is the implementation contract for moving the project from a flocking demo with evolutionary features toward a reproducible artificial ecology. It deliberately separates completed mechanics from planned work. A passing static check is not evidence that an ecological outcome is scientifically valid.
+This roadmap describes work remaining after the merged evolutionary-ecology foundation. Historical phase notes are retained in Git history; they are not current implementation status.
 
-## Design invariants
+## Current model
 
-1. There is one evolving boid population. Hunting, scavenging, avoidance, cooperation, and social strategies are behavioural and heritable differences within that population, never a separate predator caste.
-2. Every agent has a persistent unique identity. Generation depth is not identity and must never be used as a proxy for kinship.
-3. Every simulation update reads a coherent state snapshot. Results must not depend on array order.
-4. Physical traits have interacting benefits and costs. No trait should be a free advantage across every environment.
-5. Energy and reproduction are accounted for through explicit flows. Feeding, attacks, gestation, birth, and death must have measurable costs and transfers.
-6. Evolution is evaluated through survival and realised reproduction, not a decorative fitness number.
-7. Randomness is seeded and captured in snapshots so experiments can be repeated.
-8. UI controls, documentation, model code, and validation checks must describe the same mechanics.
+- One evolving boid population; predation is conspecific.
+- Plant biomass is the renewable basal food source. The ecology includes clonal plants/spores, freshwater proximity, thirst, seasonality, reefs and shelter.
+- Ten quantitative trait loci feed configurable genotype-to-phenotype expression.
+- Variable-length NEAT-style neural genomes have historical innovations, structural mutation, recurrent execution, innovation-aligned crossover and separate learned-weight overlays.
+- Compatibility-based speciation includes adaptive thresholding, fitness sharing, stagnation tracking, integer offspring quotas and champion reproductive pressure.
+- Inherited cis-regulatory modifiers affect expression bias and environmental responsiveness.
+- Worker snapshot schema 13 preserves the current population/genetic/ecological state and deterministic RNG state.
 
-## Phase status
+## Remaining phases
 
-### Phase 1. Deterministic simulation core
+### 1. Correctness and selection hardening
+- Add explicit champion elitism and protection of newly introduced structural innovations.
+- Expand adversarial tests for cycles, recurrent edges, mutation combinations, crossover and species extinction.
+- Verify the overlapping-generation quota/reproductive-pressure interpretation against controlled synthetic populations.
+- Remove transitional legacy genome projections once every consumer reads the variable-length representation.
 
-**Status: foundational implementation committed on evolutionary-ecology-phase1; automated and browser regression testing still required.**
+### 2. Regulatory genome
+- Give gene copies stable identities independent of array position.
+- Implement duplication, deletion and rearrangement with mutation-history preservation.
+- Integrate trans-regulatory activation/repression networks into the live phenotype pipeline.
+- Add multi-locus and epistatic trait equations and stage-specific expression.
+- Persist, migrate, inspect and test all regulatory state.
 
-- Replace in-place movement with read/write position and velocity buffers. Agents sense the same pre-update positions and velocities.
-- Shuffle the agent evaluation order with a seeded PRNG so immediate resource claims do not systematically favour low array indices.
-- Use a fixed 1/60-second simulation step with a bounded catch-up loop.
-- Replace ambient Math.random calls with a serialisable xorshift PRNG.
-- Preserve the fixed-step accumulator when rendering falls behind, so the simulation slows rather than silently skipping simulation time.
-- Assign unique 32-bit individual IDs and store actual maternal and paternal IDs.
-- Upgrade ancestry buffers to 32-bit values and migrate old snapshots without pretending legacy generation counters are real parent identities.
-- Include RNG state and the next identity counter in schema-v8 world snapshots.
-- Preserve per-agent render caches during death compaction.
+### 3. Population genetics
+- Make allele/locus semantics explicit; add diploid pairs only if observed heterozygosity is a required model concept.
+- Improve heritability sampling by recording both parental genotypes at conception.
+- Report uncertainty and sample quality, including survivorship and pedigree-truncation limitations.
+- Add variance-based/temporal effective population size, additive genetic variance, phenotypic variance and trait covariance.
+- Validate estimators against synthetic populations with known pedigrees and inheritance parameters.
 
-Remaining Phase 1 work:
-- Add runtime tests that compare two runs from the same seed and state.
-- Verify pause/resume, restore, population resizing, and topology changes against the fixed-step clock.
+### 4. Ecological dynamics
+- Add spatial temperature, moisture, nutrient, shelter and habitat-suitability fields with deterministic interpolation.
+- Separate resource quality, productivity, local stock and regeneration.
+- Add fragmentation, refugia, bottlenecks and controlled disturbance scenarios.
+- Measure resource use, recovery, consumer pressure and niche persistence across independent seeds.
 
-### Phase 2. Interaction and energy accounting
+### 5. Experimental laboratory
+- Execute isolated worlds from immutable manifests and independent seeds.
+- Add bounded concurrency, progress, pause/resume and cancellation.
+- Implement factorial and Latin-hypercube designs.
+- Compare replicate trajectories and statistics without treating individuals in one run as independent replicates.
+- Export replayable manifests, world snapshots, time series, pedigree and genome/species summaries.
 
-**Status: first interaction-resolution slice implemented.** Food contact claims are collected from the same pre-movement positions and allocated proportionally when a patch is oversubscribed. Attack proposals are queued and resolved after agent decisions; one successful attacker receives the kill reward for a given target. These rules still need focused runtime tests and richer outcome telemetry.
+### 6. Observatory
+- Add detailed per-species innovation/topology inspection.
+- Add regulatory network and expression views.
+- Add uncertainty-aware population-genetic and cohort-survival views.
+- Add habitat/resource field visualization.
+- Add experiment orchestration, replicate comparisons and archive inspection.
 
-Remaining work:
-- Define and test energy transfer for feeding, predation, maintenance, movement, reproduction, and growth.
-- Make body mass affect maintenance, reserves, acceleration, turning, attack leverage, and reproductive cost.
-- Track food consumed, energy gained, energy spent, attack attempts, capture success, and failed pursuit.
-- Add unit tests for conservation/accounting invariants and edge cases.
+### 7. Performance and release
+- Benchmark movement, spatial queries, neural execution, mutation/crossover/speciation, regulation/statistics, rendering and snapshot I/O separately.
+- Profile 100, 250, 500, 1,000 and stress-test populations.
+- Validate Android Chrome/Firefox and desktop Chrome/Firefox/Safari; include mobile Safari where available.
+- Test touch controls, drawers, backgrounding, long-running memory stability and large-world restore.
+- Verify GitHub Pages deployment and production smoke tests.
 
-### Phase 3. Heritable phenotype and trade-offs
+## Completion gate
 
-**Status: first ten-locus phenotype implementation committed on evolutionary-ecology-phase2-phenotype; runtime migration and selection tests still required.**
-
-The inherited phenotype now includes aggression, body mass, speed, bite strength, kin affinity, sensory range, acceleration, agility, risk tolerance, and exploration. The added loci affect movement acceleration, neural turning, attack commitment, threat response, food attraction, and exploratory noise. Body mass now has a nonlinear maintenance cost and a modest maximum-speed trade-off. Schema-v4 snapshots preserve all ten loci and migrate schema-v3 six-locus snapshots with neutral starting values for the four new traits.
-
-Remaining work: add empirical or explicit dimensionless trait scaling, richer covariance and variance tracking, and selection tests showing that costs and benefits vary across environments.
-
-- Use bounded quantitative traits with mutation and recombination.
-- Avoid one-directional scaling where a larger value is always better.
-- Use explicit allometric or phenomenological relationships and document assumptions.
-- Keep visual size, collision size, energetic size, and hunting size derived from the same phenotype.
-- Track trait means, variance, covariance, and distributions by cohort and lineage.
-
-### Phase 4. Pedigree and population genetics
-
-**Status: first persistent pedigree and relatedness implementation committed on evolutionary-ecology-phase3-pedigree; population-genetic statistics remain outstanding.**
-
-- Persistent pedigree records now retain each individual's two parent IDs after those parents die, with a bounded 100,000-record history and an explicit truncation counter.
-- A depth-limited recursive kinship coefficient is converted to a relatedness estimate and used to reduce attack probability against relatives according to inherited kin affinity.
-- Schema-v5 snapshots preserve the pedigree graph; older snapshots reconstruct the pedigree records available from currently living agents' parent IDs.
-
-Remaining work:
-- Use persistent parent IDs to build a pedigree.
-- Calculate kinship from shared ancestors or a pedigree relationship matrix, with a documented depth/approximation policy.
-- Distinguish identity-by-descent from simple phenotype or genome similarity.
-- Track per-locus allele frequencies, heterozygosity, effective population size, inbreeding, and trait heritability.
-- Make mate choice operate on explicit genetic or phenotypic targets.
-- Preserve pedigree and genetic statistics through save/restore and export.
-
-### Phase 5. Neuroevolution and lifetime learning
-
-**Status: first innovation-tracked neural genome implementation committed on evolutionary-ecology-phase4-neuroevolution; topology and learning upgrades remain.**
-
-- Neural connections now carry stable innovation IDs derived from their directed endpoint pair.
-- Crossover aligns matching innovations and treats unmatched genes as disjoint candidates instead of assuming array slot g is homologous in both parents.
-- Neural distance for mate preference compares innovation sets and homologous weights rather than positional endpoints.
-- Innovation registries and per-agent maternal/paternal innovation arrays persist in schema-v8 snapshots; older genomes receive reconstructed endpoint-based IDs during restore.
-
-Remaining work:
-- Give connection genes stable historical/innovation IDs so crossover can align homologous genes.
-- Separate connection topology, weights, biases, and enabled state.
-- Decide whether to evolve topology (innovation-tracked NEAT-like approach) or use a fixed homologous topology. Do not claim topology evolution while crossing unrelated array slots.
-- Add interpretable sensory channels for relative prey size, prey speed, prey energy/condition, kinship, resource density, crowding, and environmental state.
-- Let the controller make decisions about pursuit, target choice, attack commitment, escape, foraging, cooperation, and mating.
-- Separate inherited starting weights from lifetime plasticity. Define a measurable reward/fitness signal and evaluate learning against non-learning controls.
-
-### Phase 6. Spatial ecology and changing environments
-
-**Status: first seasonal-resource and refuge-field implementation committed on evolutionary-ecology-phase5-habitat; richer spatial experiments remain.**
-
-- Food patches now have bounded quality and productivity, patch-specific seasonal phases, and seasonal regeneration.
-- Food energy yield depends on patch quality; productivity affects carrying stock and renewal.
-- Reef obstacles also create a local shelter-cover field that reduces threat intensity and hunting success for agents using cover.
-- A simple spatial/temporal temperature anomaly modifies maintenance costs, and movement/acceleration now incur explicit energetic costs.
-- Telemetry exposes food quality, productivity, seasonal resource factor, and sheltered population fraction.
-- Schema-v7 restore supplies neutral quality/productivity/phase values to older food patches.
-
-Remaining work:
-- Add resource renewal, patch depletion, spatial gradients, seasonal cycles, and resource quality.
-- Add shelters, bottlenecks, territories, refugia, and habitat gradients.
-- Add environmental variation such as currents and temperature as fields with explicit spatial and temporal scales.
-- Test whether different niches support distinct stable strategies.
-- Include perturbation experiments: resource collapse, habitat fragmentation, current shifts, and population bottlenecks.
-
-### Phase 7. Experimental design and observability
-
-**Status: first experiment accounting and export implementation committed on evolutionary-ecology-phase6-experiments; parameter sweeps and replicate analysis remain.**
-
-- Track lifetime reproductive success for both parents of each offspring, including parents that have died while their pedigree record remains retained.
-- Accumulate trait values of successful parents and report per-locus selection differentials against the current population mean.
-- Track attack attempts, food claims, food consumed, movement energy spent, and maintenance energy spent.
-- Add an experiment JSON export containing seed, run serial, configuration, telemetry, gene/lineage histories, reproductive success, pedigree, and counters.
-- Add a working Export experiment data control in the Observatory.
-- Add separate physical/behavioural selection-differential history charts to the Observatory.
-- Persist experiment counters, selection accumulators, and reproductive-success records in schema-v8 snapshots.
-
-Remaining work:
-- Add scenario definitions, parameter sweeps, replicates, and run metadata.
-- Track per-trait selection differentials and selection gradients.
-- Track lifetime reproductive success, age-specific survival, cohort survival, and lineage contribution.
-- Record attack attempts, target choices, capture success, energy profitability, and strategy frequencies.
-- Distinguish genome-wide diversity from colour signatures and neural topology summaries.
-- Export CSV/JSON time series and experiment metadata.
-- Add experiment comparison tools with confidence intervals across independent replicates.
-
-### Phase 8. Performance, calibration, and release quality
-
-**Status: automated release-quality foundation committed on evolutionary-ecology-phase7-release-quality; device/browser verification and calibration remain.**
-
-- Worker reports update time, draw time, fixed-step count, and simulation backlog to the Observatory.
-- CI parses the inline application script as well as the worker.
-- A CPU benchmark exercises 100, 250, 500, and 1,000 agents with fixed food/obstacle workloads and a generous regression ceiling.
-- Model assumptions, dimensionless units, calibration targets, and release gates are documented in docs/MODEL-CALIBRATION.md.
-
-Remaining work:
-- Profile the corrected model at 100, 250, 500, and 1,000 agents on representative desktop and mobile devices.
-- Optimise neighbour queries, collision/attack resolution, food lookup, telemetry aggregation, and rendering based on measurements.
-- Consider GPU compute only after the CPU reference model is correct and profiling demonstrates a bottleneck.
-- Calibrate qualitative parameters against explicit target behaviours or published empirical ranges where appropriate. Otherwise label them dimensionless and illustrative.
-- Maintain automated syntax, structural, deterministic replay, state migration, and model-invariant tests.
-- Test the deployed build on real browsers and touch devices.
-- Keep the Observatory focused on causal model outputs rather than decorative charts.
-
-## Validation gates
-
-A phase is not complete merely because its code exists. Each phase needs:
-- A documented mechanism and explicit assumptions.
-- Automated regression tests for its invariants.
-- A repeatable experiment demonstrating the intended behaviour.
-- Performance measurements where per-agent cost changes.
-- UI labels and help text that match the actual implementation.
-- Snapshot migration and export coverage where state or telemetry changes.
-
-## Current limitations
-
-The current model remains an exploratory artificial ecology, not a calibrated biological model. Phase 1 removes several sources of update-order bias, but feeding claims and attack proposals are now resolved in batches after collection, but the wider energy model remains simplified. Randomised agent order remains useful for any other immediate state changes. Parent IDs improve pedigree correctness, but the kinship estimate is depth-limited to eight pedigree generations and becomes a lower bound when the bounded pedigree store has discarded ancestors. The ten-locus phenotype is in place, but its selection gradients and heritability are not yet measured. Neural connections now use endpoint-derived innovation IDs for homology, but they do not yet have full historical innovation events, enabled-state genes, bias genes, or species-aware NEAT selection. The current fitness and learning reward remain heuristic.
+A task is complete only when its intended live path works, tests cover invariants and failure cases, persistent state migrates/restores correctly, user-facing results are observable, documentation matches the runtime, and recurring performance cost is measured.
