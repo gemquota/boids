@@ -73,9 +73,10 @@ test('recurrent neural connections retain state across activations',()=>{
     {innovation:2,source:1,destination:1,weight:.5,recurrent:true},
     {innovation:3,source:1,destination:2,weight:1}
   ]};
-  const compiled=evo.compileNetwork(genome),state=new Float32Array(compiled.nodes.length),workspace={values:new Float32Array(128),state:new Float32Array(128),outputs:new Float32Array(8)};
+  const compiled=evo.compileNetwork(genome),state=new Float32Array(compiled.nodes.length),workspace={values:new Float32Array(128),state:new Float32Array(128),outputs:new Float32Array(8),result:{}};
   const first=evo.activateNetwork(compiled,[1],state,workspace),saved=first.state.slice();
   const second=evo.activateNetwork(compiled,[0],saved,workspace);
+  assert.equal(first,second,'workspace should reuse the activation result object');
   assert.ok(second.outputs[0]>0);
   assert.ok(second.state[compiled.nodes.findIndex(n=>n.id===1)]>0);
 });
