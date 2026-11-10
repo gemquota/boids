@@ -214,6 +214,8 @@ test('trans-regulatory expression responds to upstream activation, repression an
   const cool=evo.evaluateRegulatoryGenome(base,{heat:0},5);
   assert.ok(activated.expression.aggression>repressed.expression.aggression);
   assert.ok(activated.expression.aggression>cool.expression.aggression);
+  const unthresholded=evo.evaluateRegulatoryGenome({nodes:[{id:3,locus:'growth',bias:1,effect:1,threshold:0}]},{},3),thresholded=evo.evaluateRegulatoryGenome({nodes:[{id:3,locus:'growth',bias:1,effect:1,threshold:1.5}]},{},3);
+  assert.ok(unthresholded.expression.growth>thresholded.expression.growth,'regulatory thresholds should gate activation');
   assert.equal(activated.nodeCount,2);assert.equal(activated.edgeCount,1);
 });
 
