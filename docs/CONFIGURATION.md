@@ -53,7 +53,7 @@ The global Cruising speed and Perception radius controls have been removed. Both
 |---|---:|---:|
 | Aggression | 0 | 1 |
 | Body size | 0.55 | 1.65 |
-| Speed | 1.375 | 4.125 |
+| Speed | 0.75 | 2.25 |
 | Bite strength | 0.55 | 1.65 |
 | Kin affinity | 0 | 1 |
 | Perception radius | 18 | 90 |
