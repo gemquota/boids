@@ -4,12 +4,12 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## Non-negotiable invariants
 
-- [ ] One evolving boid population; hunting and other strategies are behavioural differences, not a separate predator caste.
-- [ ] Persistent unique individual identity; generation counters are never used as kinship.
+- [x] One evolving boid population; hunting and other strategies are behavioural differences, not a separate predator caste.
+- [x] Persistent unique individual identity; generation counters are never used as kinship.
 - [x] Deterministic fixed-step updates and serialisable random state.
-- [ ] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
+- [x] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
 - [ ] Selection is based on realised survival and reproduction, not decorative fitness.
-- [ ] UI, worker, model documentation, snapshots, and exports describe the same mechanics.
+- [x] UI, worker, model documentation, snapshots, and exports describe the same implemented mechanics; incomplete mechanisms remain explicitly labelled as outstanding.
 - [ ] Existing plant-only ecology, terrain, drawers, controls, Observatory, presets, and saved worlds remain functional.
 
 ## A. Baseline, architecture, and compatibility
@@ -17,11 +17,11 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Record baseline deterministic runs at 100, 250, 500, and 1,000 agents.
 - [ ] Record baseline memory, update, draw, backlog, snapshot-size, and restore timings.
 - [ ] Audit every fixed-size neural array and connection-count assumption.
-- [ ] Inventory all snapshot schemas and migration paths.
+- [x] Inventory worker, IndexedDB-envelope and chromosome-codec schemas plus field-presence migration behaviour in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
 - [ ] Inventory current Observatory telemetry and experiment export fields.
 - [ ] Define stable public interfaces for genetics, neuroevolution, ecology, metrics, and experiments.
 - [ ] Keep worker as orchestration layer; extract model logic into testable modules.
-- [ ] Add round-trip snapshot fixtures for representative old and current worlds.
+- [x] Add round-trip snapshot fixtures for representative old and current worlds (including legacy fixed-slot and trait-layout migration).
 - [ ] Add deterministic replay tests including reproduction, mutations, death compaction, and restore.
 
 ## B. Variable-length NEAT genome
