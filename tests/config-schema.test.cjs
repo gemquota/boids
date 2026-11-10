@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const schema = require('../config-schema.js');
 
 assert.equal(schema.coreSliderDefs.length, 64, 'all core controls must be schema-defined');
-assert.equal(schema.extraSliderDefs.length, 32, 'extra dynamics, regulatory and topology definitions must remain complete');
+assert.equal(schema.extraSliderDefs.length, 33, 'extra dynamics, regulatory and topology definitions must remain complete');
 assert.equal(schema.expressionTraits.length, 10, 'all ten inherited traits must be declared');
 assert.equal(schema.expressionFields.length, 6, 'each trait must expose six expression controls');
 assert.equal(schema.expressionMutationFields.length, 3, 'each trait must expose three inheritance controls');
@@ -14,7 +14,7 @@ const ids = [
   ...schema.expressionTraits.flatMap(trait => schema.expressionFields.map(field => `expr_${trait.key}_${field.key}`)),
   ...schema.expressionTraits.flatMap(trait => schema.expressionMutationFields.map(field => `trait_${trait.key}_${field.key}`))
 ];
-assert.equal(ids.length, 186, 'schema must define all 186 sliders');
+assert.equal(ids.length, 187, 'schema must define all 187 sliders');
 assert.equal(new Set(ids).size, ids.length, 'generated control IDs must be unique');
 assert.ok(!ids.includes('trail'), 'trail control must remain removed');
 assert.ok(schema.coreSliderDefs.every(item => item.id && item.label && Number.isFinite(item.min) && Number.isFinite(item.max) && item.min < item.max && item.step > 0 && ['motion','brain','genetics','reproduction','selection','world','dynamics'].includes(item.section)));
@@ -48,6 +48,7 @@ assert.equal(schema.extraSliderDefs.find(item => item.id === 'regulatoryDuplicat
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'regulatoryDeletionRate').value, .001);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'regulatoryRewireRate').value, .005);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'regulatoryModeMutationRate').value, .005);
+assert.equal(schema.extraSliderDefs.find(item => item.id === 'regulatoryEnvironmentMutationRate').value, .005);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesTarget').value, 8);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesThreshold').value, 3);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesThresholdAdaptation').value, .001);
