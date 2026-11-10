@@ -90,8 +90,10 @@ jobs:
               raise SystemExit('Plant spores must be faceted, never circular')
           if 'for(let ring=' in worker:
               raise SystemExit('Legacy layered plant growth rings must remain removed')
-          if 'Math.max(10,Math.min(18,Math.round(W*H/65000)))' not in worker:
-              raise SystemExit('Visible mature plant colony seeding missing')
+          if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
+              raise SystemExit('Initial plant spore dispersal missing')
+          if 'plants.push(makePlantNode({x:rand(42' in worker:
+              raise SystemExit('Plants must begin as dispersed spores, not pre-grown nodes')
           if 'size:rand(.62,.92),biomass,age,adultNode:age>=9' not in worker:
               raise SystemExit('Mature initial plant nodes missing')
           if 'indexedDB.open' not in html or 'persistObservatory' not in html:
