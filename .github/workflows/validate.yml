@@ -95,6 +95,14 @@ jobs:
               raise SystemExit('Plant body renderer must contain no circular geometry')
           if 'function drawWaterways()' not in worker or 'drawWaterways();ctx.save()' not in worker:
               raise SystemExit('River and lake terrain must be rendered')
+          waterways = re.search(r'function drawWaterways\(\)\{([\s\S]*?)\nfunction draw\(', worker)
+          if not waterways or 'const fractal=' not in waterways.group(1) or 'const coast=' not in waterways.group(1):
+              raise SystemExit('Fractal coastline and deterministic river geometry missing')
+          for feature in ['const main=fractal(', 'const creekSpecs=', 'const lagoon=', 'strokeWater(creek']:
+              if feature not in waterways.group(1):
+                  raise SystemExit('Fractal drainage network missing: ' + feature)
+          if 'lake(W*.22' in waterways.group(1) or 'lake(W*.76' in waterways.group(1):
+              raise SystemExit('Legacy isolated lake geometry must remain removed')
 
           if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
               raise SystemExit('Initial plant spore dispersal missing')
