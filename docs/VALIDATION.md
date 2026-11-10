@@ -28,6 +28,20 @@ A passing workflow validates only the assertions it executes. It does not prove 
 
 ## Performance
 
+### Deterministic worker baseline
+
+Recorded on 2026-11-10 in GitHub Actions commit `8bcc68a49`, using the fixed benchmark seed `20261110`, 12 warm-up ticks and 36 measured simulation ticks per population. These are GitHub-hosted Ubuntu/Node measurements, not Android-device or browser-rendering guarantees.
+
+| Requested population | Initial | After warm-up | Final | Mean update | Median | p95 | CI budget |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 100 | 100 | 100 | 10.449 ms | 8.259 ms | 14.878 ms | 25 ms |
+| 250 | 250 | 250 | 250 | 27.651 ms | 25.606 ms | 44.451 ms | 50 ms |
+| 500 | 500 | 498 | 497 | 57.402 ms | 55.914 ms | 67.990 ms | 100 ms |
+| 1,000 | 1,000 | 996 | 994 | 169.346 ms | 168.350 ms | 170.196 ms | 220 ms |
+
+The benchmark includes simulation update work only. Population changes at 500/1,000 are retained as observed mortality during the benchmark window. Timing varies by runner load; use the values as a reproducible reference, not a cross-device performance claim.
+
+
 Measure movement/spatial queries, neural evaluation, mutation/crossover/speciation, regulation/statistics, rendering, telemetry, snapshot serialization/restore and experiment analysis separately. Profile representative population sizes (100, 250, 500, 1,000) and the intended Android device as well as desktop browsers. Avoid per-agent/per-tick allocations in hot paths.
 
 ## Known limitations
