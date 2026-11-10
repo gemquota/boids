@@ -20,7 +20,7 @@ test('innovation registry returns stable connection and split history',()=>{
 
 test('split mutation creates a hidden node and two historical connections',()=>{
   const registry=evo.createInnovationRegistry({nextNode:4});
-  const mutated=evo.mutateGenome(baseGenome(),registry,fixed(.0),{rates:{weight:0,addConnection:0,splitConnection:1,deleteConnection:0,toggleConnection:0,bias:0}});
+  const mutated=evo.mutateGenome(baseGenome(),registry,fixed(.0),{rates:{weight:0,addConnection:0,splitConnection:1,deleteConnection:0,toggleConnection:0,recurrent:0,deleteNode:0,activation:0,bias:0}});
   assert.equal(mutated.nodes.length,5);assert.equal(mutated.connections.length,4);
   assert.equal(mutated.connections.filter(g=>!g.enabled).length,1);
   assert.ok(mutated.connections.some(g=>g.source===0&&g.destination===4));
