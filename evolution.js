@@ -146,7 +146,7 @@
 
   function normalizeRegulatoryGenome(input){
     if(!input||!Array.isArray(input.copies))throw new TypeError('Regulatory genome requires a copies array');
-    const ids=new Set(),copies=input.copies.map(g=>({id:Number(g.id),source:Number(g.source),target:Number(g.target),threshold:clamp(finite(g.threshold,.5),0,1),strength:clamp(finite(g.strength,0),-2,2),mode:g.mode==='repress'?'repress':'activate',environment:g.environment?String(g.environment):null,environmentWeight:clamp(finite(g.environmentWeight,0),-2,2)}));
+    const ids=new Set(),copies=input.copies.map(g=>({id:Number(g.id),source:Number(g.source),target:Number(g.target),threshold:clamp(finite(g.threshold,.5),0,1),strength:clamp(finite(g.strength,0),-2,2),mode:['activate','repress','epistatic'].includes(g.mode)?g.mode:'activate',environment:g.environment?String(g.environment):null,environmentWeight:clamp(finite(g.environmentWeight,0),-2,2)}));
     for(const gene of copies){if(!Number.isInteger(gene.id)||gene.id<1||gene.id>0xffffffff)throw new RangeError('Regulatory copy ID must be uint32 and nonzero');if(ids.has(gene.id))throw new Error('Duplicate regulatory copy ID '+gene.id);ids.add(gene.id);if(!Number.isInteger(gene.source)||gene.source<0||gene.source>9||!Number.isInteger(gene.target)||gene.target<0||gene.target>9)throw new RangeError('Regulatory loci must be in the range 0..9')}
     return{version:1,copies};
   }
@@ -156,10 +156,11 @@
     return Object.freeze({allocate,snapshot:()=>({nextId})});
   }
   function mutateRegulatoryGenome(input,registry,random=Math.random,options={}){
-    const genome=normalizeRegulatoryGenome(input),rates={point:.08,duplicate:.01,delete:.005,rewire:.01,mode:.005,...options.rates},limits={maxCopies:64,strengthStep:.12,thresholdStep:.08,...options.limits};
+    const genome=normalizeRegulatoryGenome(input),rates={point:.08,duplicate:.01,delete:.005,rewire:.01,mode:.005,environment:.005,...options.rates},limits={maxCopies:64,strengthStep:.12,thresholdStep:.08,...options.limits};
     for(const gene of genome.copies){
       if(random()<rates.point){gene.strength=clamp(gene.strength+(random()*2-1)*limits.strengthStep,-2,2);gene.threshold=clamp(gene.threshold+(random()*2-1)*limits.thresholdStep,0,1);gene.environmentWeight=clamp(gene.environmentWeight+(random()*2-1)*limits.strengthStep,-2,2)}
-      if(random()<rates.mode)gene.mode=gene.mode==='activate'?'repress':'activate';
+      if(random()<rates.mode){const modes=['activate','repress','epistatic'].filter(mode=>mode!==gene.mode);gene.mode=modes[randomIndex(modes.length,random)]}
+      if(random()<rates.environment){const fields=[null,'temperature','moisture','nutrients','suitability','development','juvenile','shelter','harshness'];gene.environment=fields[randomIndex(fields.length,random)]}
       if(random()<rates.rewire){gene.source=randomIndex(10,random);gene.target=randomIndex(10,random)}
     }
     if(random()<rates.delete&&genome.copies.length>1)genome.copies.splice(randomIndex(genome.copies.length,random),1);
@@ -168,7 +169,7 @@
   }
   function expressRegulatoryNetwork(input,loci,environment={},passes=2,workspace){
     const genome=input?.version===1&&Array.isArray(input.copies)?input:normalizeRegulatoryGenome(input),a=workspace?.a||new Float32Array(10),b=workspace?.b||new Float32Array(10);for(let i=0;i<10;i++)a[i]=clamp(finite(loci?.[i],.5),0,1);let expression=a,next=b;
-    for(let pass=0;pass<Math.max(1,Math.min(8,Math.floor(finite(passes,2))));pass++){next.set(expression);for(const gene of genome.copies){const source=expression[gene.source],env=gene.environment?finite(environment[gene.environment],0):0,signal=source+env*gene.environmentWeight-gene.threshold,effect=gene.mode==='repress'?-1:1;next[gene.target]=clamp(next[gene.target]+effect*signal*gene.strength,0,1)}const swap=expression;expression=next;next=swap}
+    for(let pass=0;pass<Math.max(1,Math.min(8,Math.floor(finite(passes,2))));pass++){next.set(expression);for(const gene of genome.copies){const source=expression[gene.source],env=gene.environment?finite(environment[gene.environment],0):0,signal=gene.mode==='epistatic'?(source-gene.threshold)*(expression[gene.target]-gene.threshold):source+env*gene.environmentWeight-gene.threshold,effect=gene.mode==='repress'?-1:1;next[gene.target]=clamp(next[gene.target]+effect*signal*gene.strength,0,1)}const swap=expression;expression=next;next=swap}
     if(workspace?.output){workspace.output.set(expression);return workspace.output}return Array.from(expression);
   }
 
