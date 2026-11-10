@@ -205,7 +205,7 @@ A task is not complete because a function exists. It must have:
 
 - [x] Added per-trait expressed phenotypic variance, preliminary additive variance (h² × Vp), residual variance, and 10×10 phenotypic/genotypic trait covariance matrices to live population telemetry. Exposed mean variance summaries in the Observatory and added regression tests; uncertainty and living-offspring sampling bias remain explicit limitations.
 
-- [x] Added lifetime sex-specific reproductive contribution tracking and an inverse-Simpson effective breeder estimator, combining effective female and male contributions with a harmonic sex-structured estimate. Persisted parental sex identities through schema-20 snapshots and exposed the estimate in the Observatory. This is explicitly not presented as temporal/cohort Ne.
+- [x] Added lifetime sex-specific reproductive contribution tracking and an inverse-Simpson effective breeder estimator, combining effective female and male contributions with a harmonic sex-structured estimate. Persisted parental sex identities through schema-21 snapshots and exposed the estimate in the Observatory. This is explicitly not presented as temporal/cohort Ne.
 
 - [x] Added per-species topology summaries to live telemetry: member count, mean node/connection counts, enabled connections, unique innovation count, age, stagnation, champion fitness and offspring quota. Added Observatory summary cards and trend series with worker regression tests.
 
