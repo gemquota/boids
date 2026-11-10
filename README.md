@@ -15,11 +15,11 @@ No framework, bundler, package installation, or build step is required. The site
 
 - Full-screen, responsive simulation with touch and pointer interaction.
 - Dedicated simulation worker using typed arrays, spatial indexing, and OffscreenCanvas.
-- **183 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
+- **182 adjustable sliders** across movement, neural, genetic, reproductive, ecological, and advanced dynamics settings.
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
-- Food patches with finite renewable stock, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body mass, speed, bite strength, sensory range, kin affinity, acceleration, agility, risk tolerance, and exploration.
+- Food patches with finite renewable stock, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body mass, speed, bite strength, perception radius, kin affinity, acceleration, agility, risk tolerance, and exploration.
 - Hunting traits are inherited and mutated independently from neural connection genes; successful predation, energy costs, size trade-offs, and kin protection create selection pressure within one shared population.
 - Observatory panels can be opened together; charts support pinch zoom, double-tap reset, numeric axes and increments, and optional grid lines.
 - Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
@@ -27,7 +27,7 @@ No framework, bundler, package installation, or build step is required. The site
 
 ## Control taxonomy
 
-All 183 numeric sliders are registered, persisted, and assigned to a tab and collapsible category.
+All 182 numeric sliders are registered, persisted, and assigned to a tab and collapsible category.
 
 | Tab | Categories |
 |---|---|
@@ -50,7 +50,7 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Seeded xorshift randomness, with the generator state persisted in world snapshots.
 - Randomised agent evaluation order to remove fixed low-index priority from sequential resource claims.
 - Persistent 32-bit individual IDs and actual parent IDs. Generation depth is retained separately and is no longer used as an identity surrogate for kin checks.
-- Ten inherited quantitative traits: aggression, body mass, speed, bite strength, kin affinity, sensory range, acceleration, agility, risk tolerance, and exploration. The new traits influence acceleration, turning, attack commitment, escape response, food attraction, and exploratory noise.
+- Ten inherited quantitative traits: aggression, body mass, speed, bite strength, kin affinity, perception radius, acceleration, agility, risk tolerance, and exploration. The new traits influence acceleration, turning, attack commitment, escape response, food attraction, and exploratory noise.
 - Persistent pedigree records and depth-limited relatedness estimates. Kin affinity now reduces attack probability against relatives, rather than relying on generation numbers as a crude proxy.
 - Innovation-aligned neural connection genes. Crossover and mate-preference distance now match homologous connections by stable endpoint-derived innovation IDs instead of assuming that matching array positions represent the same gene.
 - Seasonal food patches with varying quality/productivity, obstacle-associated shelter cover, spatial thermal stress, and explicit movement energy costs.
@@ -117,7 +117,7 @@ The configuration drawer is organised into tabs and collapsible accordion groups
 - **Reset slider limits** restores the original range boundaries.
 - **Reset defaults** restores the tuned ecological baseline and original slider limits.
 
-The 183-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
+The 182-slider set is intended to expose meaningful interacting parameters without making every control a separate screen. The detailed field guide explains each dynamics and gene-expression parameter, including what the worker currently does with it.
 
 ### Presets and randomisation
 
@@ -203,7 +203,7 @@ This is a simplified two-sex mating and gestation model, not a complete biologic
 
 Food patches contain finite stock and regenerate over time. Feeding removes stock and transfers energy to agents. Food attraction, consumption, energy yield, and regeneration can be adjusted independently.
 
-Predation is conspecific: agents within the same evolving population can hunt smaller agents when inherited aggression, relative body size, sensory range, bite strength, and kin-protection traits make an attack viable. There is no separate predator caste or independently spawned predator species. Juvenile vulnerability modifies the risk faced by younger agents. Attack proposals are resolved after the agent decision pass so one prey target cannot generate multiple kill rewards in the same tick.
+Predation is conspecific: agents within the same evolving population can hunt smaller agents when inherited aggression, relative body size, perception radius, bite strength, and kin-protection traits make an attack viable. There is no separate predator caste or independently spawned predator species. Juvenile vulnerability modifies the risk faced by younger agents. Attack proposals are resolved after the agent decision pass so one prey target cannot generate multiple kill rewards in the same tick.
 
 Survival and population dynamics also respond to:
 - Metabolic and adult maintenance costs.
@@ -217,7 +217,7 @@ The model is intentionally qualitative. Parameter values are simulation controls
 
 ---
 
-## The 183-slider configuration
+## The 182-slider configuration
 
 The controls are distributed across the main simulation tabs and the advanced Dynamics tab. Accordion groups keep related parameters together.
 
@@ -315,7 +315,7 @@ The application requires browser support for Web Workers and OffscreenCanvas. Br
 
 The application is plain HTML and JavaScript. There is no compile step.
 
-At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 183-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
+At minimum, check the inline page script and worker syntax, then exercise the application in a real browser. The repository's GitHub Actions workflow also checks structural wiring and selected regression-sensitive features, including the 182-slider inventory, worker parameter references, slider quantisation, steering symmetry, help descriptions, and snapshot safeguards.
 
 A useful manual test pass includes:
 
