@@ -49,6 +49,7 @@ for (const key of ['x', 'y', 'vx', 'vy', 'energy', 'age', 'individualId', 'paren
   assert.deepEqual(Array.from(sa.arrays[key]), Array.from(sb.arrays[key]), 'same seed must reproduce ' + key);
 }
 assert.equal(sa.rngState, sb.rngState, 'same seed must reproduce RNG state');
+assert.deepEqual(sa.neatGenomes, sb.neatGenomes, 'same seed must reproduce variable-length neural genomes');
 assert.equal(new Set(Array.from(sa.arrays.individualId)).size, sa.N, 'individual IDs must be unique');
 a.__boidsTest.obstacles = [{ x: a.__boidsTest.x[0], y: a.__boidsTest.y[0], r: 60 }];
 a.__boidsTest.update(1 / 60, 5000);
@@ -143,7 +144,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.par
 assert.equal(restoredSnapshot.rngState, api.rngState);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.innovation.subarray(0, api.N * api.cfg.connections)));
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
-assert.equal(restoredSnapshot.schemaVersion, 9);
+assert.equal(restoredSnapshot.schemaVersion, 10);
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.chromosomes.length, api.N);
 assert.ok(restoredSnapshot.chromosomes.every(chromosome => chromosome.every(gene => /^[0-9A-F]+$/.test(gene))));
