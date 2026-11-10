@@ -203,6 +203,17 @@ test('trans-regulatory expression supports activation, repression and environmen
   assert.ok(environment.every(value=>value>=0&&value<=1));
 });
 
+test('regulatory genomes evolve environmental channels and nonlinear epistatic edges',()=>{
+  const registry=evo.createRegulatoryInnovationRegistry({nextId:30});
+  const source={copies:[{id:1,source:0,target:1,strength:.5,threshold:.5,mode:'activate'}]};
+  const mutated=evo.mutateRegulatoryGenome(source,registry,()=>.3,{rates:{point:0,duplicate:0,delete:0,rewire:0,mode:0,environment:1}});
+  assert.ok(mutated.copies[0].environment,'environmental input channel should mutate independently');
+  const loci=[.8,.8,.5,.5,.5,.5,.5,.5,.5,.5];
+  const additive=evo.expressRegulatoryNetwork({copies:[{id:2,source:0,target:1,strength:.5,threshold:.5,mode:'activate'}]},loci);
+  const epistatic=evo.expressRegulatoryNetwork({copies:[{id:3,source:0,target:1,strength:.5,threshold:.5,mode:'epistatic'}]},loci);
+  assert.ok(additive[1]>.8);assert.ok(epistatic[1]>.8);assert.notEqual(epistatic[1],additive[1],'epistatic regulatory edges must use a nonlinear interaction term');
+});
+
 test('allele statistics report richness, frequencies, and expected heterozygosity',()=>{
   const stats=evo.alleleStatistics([0,0,1,1]);assert.equal(stats.sampleSize,4);assert.equal(stats.alleleRichness,2);assert.equal(stats.expectedHeterozygosity,.5);
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
