@@ -55,11 +55,11 @@ Current worker metrics include:
 - pedigree-derived individual/population inbreeding;
 - preliminary mid-parent/offspring regression estimates using parental trait values recorded at conception, with sample sizes and t-based 95% slope intervals;
 - species entropy and regulatory activity/variance;
-- a reproductive-skew-adjusted effective-breeder index: inverse-Simpson parental contribution counts within each sex combined by their harmonic mean.
+- a reproductive-skew-adjusted effective-breeder index: inverse-Simpson parental contribution counts within each sex combined by their harmonic mean; provisional additive-genetic and phenotypic variance/covariance summaries are also exposed with explicit assumptions.
 
 Important caveats:
 - Hₑ is not observed diploid heterozygosity because paired diploid alleles are not represented.
-- Heritability estimates are preliminary and use offspring with available living-parent records. This introduces survivorship/sample-selection bias.
+- Heritability estimates are preliminary and use parental trait values captured at conception, so they do not require parents to remain alive at measurement time. Offspring sampling, pedigree truncation and selection can still introduce bias.
 - The effective-breeder estimate uses realised recorded offspring contributions among identified parents, calculates an inverse-Simpson effective number of breeders separately for each sex, then combines the two sex-specific effective counts using their harmonic mean. This is an effective-breeder index, not the classical sex-ratio Ne equation. It still omits non-breeders from the contribution sample and is not a temporal/cohort effective-population-size estimator for an overlapping-generation population.
 - Pedigree estimates are bounded by retained pedigree depth and truncation policy.
 
