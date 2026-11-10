@@ -187,6 +187,19 @@ test('regulatory gene copies retain stable identities through duplication and de
   assert.equal(deleted.nodes.length,2);assert.ok(deleted.edges.every(edge=>deleted.nodes.some(node=>node.id===edge.source)&&deleted.nodes.some(node=>node.id===edge.target)));
 });
 
+test('regulatory gene insertion and rearrangement preserve stable identities',()=>{
+  const base={nodes:[{id:1,locus:'aggression',bias:.2,effect:1},{id:2,locus:'size',bias:0,effect:.5}],edges:[{id:1,source:1,target:2,weight:.8}]};
+  const inserted=evo.mutateRegulatoryGenome(base,{nextGene:3,nextEdge:2},()=>0,{rates:{duplicate:0,delete:0,insert:1,rearrange:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.equal(inserted.nodes.length,3);
+  assert.deepEqual(inserted.nodes.slice(0,2).map(node=>node.id),[1,2]);
+  assert.equal(inserted.nodes[2].id,3);
+  assert.ok(inserted.edges.some(edge=>edge.source===1&&edge.target===3),'inserted gene should be linked without changing existing identities');
+  const rearranged=evo.mutateRegulatoryGenome(base,{nextGene:3,nextEdge:2},()=>0,{rates:{duplicate:0,delete:0,insert:0,rearrange:1,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.deepEqual(new Set(rearranged.nodes.map(node=>node.id)),new Set([1,2]));
+  assert.deepEqual(rearranged.edges.map(edge=>[edge.id,edge.source,edge.target]),[[1,1,2]]);
+  assert.deepEqual(rearranged.nodes.map(node=>node.id),[2,1],'rearrangement should move records without reassigning stable IDs');
+});
+
 test('regulatory crossover combines homologous and inherited gene copies by identity',()=>{
   const a={nodes:[{id:1,locus:'aggression',bias:.2,effect:1}],edges:[]},b={nodes:[{id:1,locus:'aggression',bias:.6,effect:1},{id:2,locus:'aggression',bias:.1,effect:.4}],edges:[]};
   const child=evo.crossoverRegulatoryGenome(a,b,()=>0);
