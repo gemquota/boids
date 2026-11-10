@@ -28,7 +28,7 @@ These utilities are not equivalent to an isolated experiment runner. The live wo
 
 1. Explicit champion elitism and structural-innovation protection beyond reproductive pressure.
 2. Stable gene-copy identities, duplication/deletion/rearrangement, live trans-regulatory networks and stage-specific expression.
-3. Stronger population-genetic estimation: variance-based/effective population size, additive genetic variance, trait covariance, uncertainty and survivorship-bias-resistant heritability.
+3. Stronger population-genetic estimation: temporal/cohort effective population size, additive genetic variance, trait covariance, uncertainty and survivorship-bias-resistant heritability.
 4. Broader spatial habitat, nutrient, temperature, fragmentation, refugia and disturbance dynamics.
 5. Isolated multi-replicate experiment execution, factorial/Latin-hypercube orchestration, progress/cancellation, comparison UI and replayable archives.
 6. Additional per-species innovation/topology inspection and deeper regulatory-network visualisation.
