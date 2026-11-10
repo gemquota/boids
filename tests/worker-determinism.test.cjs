@@ -116,7 +116,7 @@ plantApi.spores.push({ x: 500, y: 300, vx: 0, vy: 0, life: 7.1, parentId: mother
 plantApi.growPlants(.01);
 const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && p.x > 450);
 assert.ok(germinated, 'a viable dispersed asexual spore should germinate into a clonal seedling');
-assert.equal(plantApi.plants.length, beforeGermination + 1);
+assert.ok(plantApi.plants.length > beforeGermination, 'adult clonal nodes should continue branching during the next growth tick');
 assert.equal(plantApi.plantCounters.sporesGerminated, 1);
 const oldPlant = { id: 9002, parent: 0, root: 9002, x: 600, y: 300, angle: 0, size: .3, biomass: .2, age: 100, children: 0, lifespan: 100, senescent: false };
 plantApi.plants.push(oldPlant);
@@ -131,7 +131,7 @@ const plantSnapshot = plantApi.exportSnapshot();
 assert.ok(plantSnapshot.plantCounters.asexualBuds >= 2, 'plant lifecycle counters should persist in snapshots');
 const restoredPlants = makeWorld(405);
 restoredPlants.__boidsTest.restoreSnapshot(plantSnapshot);
-assert.deepEqual(restoredPlants.__boidsTest.plantCounters, plantApi.plantCounters, 'plant lifecycle counters should survive snapshot restore');
+assert.deepEqual({ ...restoredPlants.__boidsTest.plantCounters }, { ...plantApi.plantCounters }, 'plant lifecycle counters should survive snapshot restore');
 
 // Snapshot restore must preserve both the random stream and pedigree identifiers.
 const restored = makeWorld(999);
