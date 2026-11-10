@@ -150,12 +150,12 @@
 
   function linearRegression(x,y){
     const pairs=x.map((v,i)=>[Number(v),Number(y[i])]).filter(([a,b])=>Number.isFinite(a)&&Number.isFinite(b)),n=pairs.length;
-    if(n<3)return{n,slope:null,intercept:null,rSquared:null};
+    if(n<3)return{n,slope:null,intercept:null,rSquared:null,correlation:null};
     const mx=pairs.reduce((s,p)=>s+p[0],0)/n,my=pairs.reduce((s,p)=>s+p[1],0)/n;
     const xx=pairs.reduce((s,p)=>s+(p[0]-mx)**2,0),xy=pairs.reduce((s,p)=>s+(p[0]-mx)*(p[1]-my),0),yy=pairs.reduce((s,p)=>s+(p[1]-my)**2,0);
-    if(xx===0)return{n,slope:null,intercept:null,rSquared:null};
-    const slope=xy/xx,intercept=my-slope*mx,rSquared=yy?clamp(xy*xy/(xx*yy),0,1):null;
-    return{n,slope,intercept,rSquared};
+    if(xx===0)return{n,slope:null,intercept:null,rSquared:null,correlation:null};
+    const slope=xy/xx,intercept=my-slope*mx,correlation=xx>0&&yy>0?clamp(xy/Math.sqrt(xx*yy),-1,1):null,rSquared=correlation===null?null:correlation*correlation;
+    return{n,slope,intercept,rSquared,correlation};
   }
   function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'mid-parent offspring regression'}}
 
