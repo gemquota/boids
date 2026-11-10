@@ -108,7 +108,7 @@ jobs:
           waterways = re.search(r'function drawWaterways\(\)\{([\s\S]*?)\nfunction draw\(', worker)
           if not waterways or 'buildRiverNetwork()' not in waterways.group(1) or 'organicPath(' not in worker:
               raise SystemExit('Organic river network renderer missing')
-          for feature in ['function buildRiverNetwork()', 'function organicPath(', 'tributaries.push(creek)', 'feeders.push(organicPath', 'testPath(network.main)']:
+          for feature in ['function buildRiverNetwork()', 'function organicPath(', 'tributaries.push(creek)', 'feeders.push(organicPath', 'function buildFreshwaterField(network)']:
               if feature not in worker:
                   raise SystemExit('Curved drainage network missing: ' + feature)
           if 'function lagoon(' in worker or 'lagoon(end.x' in worker:
