@@ -31,7 +31,7 @@ jobs:
           node tests/worker-determinism.test.cjs
           node tests/html-script-syntax.test.cjs
           node tests/worker-benchmark.test.cjs
-      - name: Verify 182 registered sliders and expression wiring
+      - name: Verify 181 registered sliders and expression wiring
         run: |
           python3 - <<'PY'
           import re
@@ -75,8 +75,8 @@ jobs:
           expression_ids = [f'expr_{trait}_{field}' for trait in traits for field in fields]
           mutation_ids = [f'trait_{trait}_{field}' for trait in traits for field in mutation_fields]
           ids = core_ids + extra_ids + expression_ids + mutation_ids
-          if len(ids) != 182 or len(set(ids)) != 182:
-              raise SystemExit(f'Expected 182 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
+          if len(ids) != 181 or len(set(ids)) != 181:
+              raise SystemExit(f'Expected 181 unique sliders, found {len(ids)} ({len(set(ids))} unique)')
           if "curveSelect.id='expr_'+trait.key+'_curve'" not in html or 'expressionCurves' not in html:
               raise SystemExit('Per-locus curve selectors missing')
           missing = [key for key in extra_ids if f'cfg.{key}' not in worker]
@@ -110,13 +110,17 @@ jobs:
           if not crystal or 'ctx.arc(' in crystal.group(1):
               raise SystemExit('Plant body renderer must contain no circular geometry')
           if 'function drawWaterways()' not in worker or 'drawWaterways();ctx.save()' not in worker:
-              raise SystemExit('River and lake terrain must be rendered')
+              raise SystemExit('River and creek terrain must be rendered')
+          if "ctx.fillStyle='#040911';ctx.fillRect(0,0,W,H)" not in worker or "ctx.fillStyle='rgba(4,9,17,'+cfg.trail+')'" in worker:
+              raise SystemExit('Canvas must be fully cleared every frame; permanent trails are forbidden')
           waterways = re.search(r'function drawWaterways\(\)\{([\s\S]*?)\nfunction draw\(', worker)
-          if not waterways or 'const fractal=' not in waterways.group(1) or 'const northWest=fractal(' not in waterways.group(1) or 'const southEast=fractal(' not in waterways.group(1):
-              raise SystemExit('Fractal coastline and deterministic river geometry missing')
-          for feature in ['const main=fractal(', 'const creekSpecs=', 'const lagoon=', 'strokeWater(creek']:
-              if feature not in waterways.group(1):
-                  raise SystemExit('Fractal drainage network missing: ' + feature)
+          if not waterways or 'buildRiverNetwork()' not in waterways.group(1) or 'organicPath(' not in worker:
+              raise SystemExit('Organic river network renderer missing')
+          for feature in ['function buildRiverNetwork()', 'function organicPath(', 'tributaries.push(creek)', 'feeders.push(organicPath', 'testPath(network.main)']:
+              if feature not in worker:
+                  raise SystemExit('Curved drainage network missing: ' + feature)
+          if 'function lagoon(' in worker or 'lagoon(end.x' in worker:
+              raise SystemExit('Oversized tributary-end lagoons must remain removed')
           if 'lake(W*.22' in waterways.group(1) or 'lake(W*.76' in waterways.group(1):
               raise SystemExit('Legacy isolated lake geometry must remain removed')
 
@@ -126,8 +130,10 @@ jobs:
               raise SystemExit('Boid hydration and water-seeking behaviour are missing')
           if 'thirst:thirst.slice(0,N)' not in worker or 'meanThirst,dehydratedCount' not in worker:
               raise SystemExit('Hydration persistence and telemetry are missing')
-          if 'waterProximity=clamp(1-waterDistance/260,0,1),germinationChance=.12+.88*waterProximity' not in worker:
-              raise SystemExit('Freshwater-biased spore germination is missing')
+          if 'waterProximity=clamp(1-waterDistance/230,0,1),germinationChance=.08+.84*waterProximity' not in worker or 'sp.landed&&sp.settleClock>=1.8' not in worker:
+              raise SystemExit('Settled, freshwater-biased spore germination is missing')
+          if 'settleAfter:rand(5,10),landed:false' not in worker or 'settleAfter:rand(4,8),landed:false' not in worker:
+              raise SystemExit('Initial and released spores must begin airborne')
           if 'initialSporeCount=Math.max(30,Math.min(54,Math.round(W*H/26000)))' not in worker or "kind:'initial-dispersal-spore'" not in worker:
               raise SystemExit('Initial plant spore dispersal missing')
           if 'plants.push(makePlantNode({x:rand(42' in worker:
