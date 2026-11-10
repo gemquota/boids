@@ -220,18 +220,18 @@
     return seeds;
   }
   function kaplanMeier(observations,confidenceZ=1.96){
-    const rows=observations.map(row=>({time:finite(row.time,NaN),event:!!row.event})).filter(row=>Number.isFinite(row.time)&&row.time>=0).sort((a,b)=>a.time-b.time);
-    const totalEvents=rows.reduce((sum,row)=>sum+(row.event?1:0),0),totalCensored=rows.length-totalEvents;
-    let survival=1,greenwood=0,atRisk=rows.length,index=0;const curve=[{time:0,atRisk,events:0,censored:0,survival:1,standardError:0,lower:1,upper:1}];
-    while(index<rows.length){const time=rows[index].time;let events=0,censored=0,next=index;
-      while(next<rows.length&&rows[next].time===time){if(rows[next].event)events++;else censored++;next++}
+    const rows=observations.map(row=>({time:finite(row.time,NaN),entry:finite(row.entry,0),event:!!row.event})).filter(row=>Number.isFinite(row.time)&&row.time>=0&&row.entry>=0&&row.entry<=row.time);
+    const byEntry=rows.slice().sort((a,b)=>a.entry-b.entry),byExit=rows.slice().sort((a,b)=>a.time-b.time),totalEvents=rows.reduce((sum,row)=>sum+(row.event?1:0),0),totalCensored=rows.length-totalEvents,leftTruncated=rows.reduce((sum,row)=>sum+(row.entry>0?1:0),0);
+    let survival=1,greenwood=0,atRisk=0,entryIndex=0,index=0;const initialAtRisk=rows.reduce((sum,row)=>sum+(row.entry===0?1:0),0),curve=[{time:0,atRisk:initialAtRisk,events:0,censored:0,survival:1,standardError:0,lower:1,upper:1}];
+    while(index<byExit.length){const time=byExit[index].time;while(entryIndex<byEntry.length&&byEntry[entryIndex].entry<=time){atRisk++;entryIndex++}let events=0,censored=0,next=index;
+      while(next<byExit.length&&byExit[next].time===time){if(byExit[next].event)events++;else censored++;next++}
       if(events&&atRisk){survival*=1-events/atRisk;if(atRisk>events)greenwood+=events/(atRisk*(atRisk-events));else greenwood=Infinity;
         const se=survival===0?0:survival*Math.sqrt(greenwood),lower=clamp(survival-confidenceZ*se,0,1),upper=clamp(survival+confidenceZ*se,0,1);
         curve.push({time,atRisk,events,censored,survival,standardError:se,lower,upper});
       }
       atRisk-=events+censored;index=next;
     }
-    return{n:rows.length,events:totalEvents,censored:totalCensored,curve,median:curve.find(point=>point.survival<=.5+1e-12)?.time??null};
+    return{n:rows.length,events:totalEvents,censored:totalCensored,leftTruncated,curve,median:curve.find(point=>point.survival<=.5+1e-12)?.time??null};
   }
   function correctPValues(values,method='BH'){
     const rows=values.map((p,index)=>({index,p:clamp(finite(p,1),0,1)})).sort((a,b)=>a.p-b.p),n=rows.length,adjusted=new Array(n);
