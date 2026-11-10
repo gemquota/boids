@@ -19,7 +19,7 @@ function makeWorld(seed) {
   };
   vm.createContext(sandbox);
   sandbox.importScripts = (...paths) => { for (const path of paths) { const filePath = path.split('?')[0]; vm.runInContext(fs.readFileSync(filePath, 'utf8'), sandbox, { filename: path }); } };
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get agentGenomes(){return agentGenomes}, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get reward(){return reward}, brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -53,6 +53,24 @@ assert.equal(JSON.stringify(sa.neatGenomes), JSON.stringify(sb.neatGenomes), 'sa
 assert.equal(JSON.stringify(sa.agentLearnedWeights), JSON.stringify(sb.agentLearnedWeights), 'same seed must reproduce lifetime learned weights');
 assert.equal(JSON.stringify(sa.agentNeuralStates), JSON.stringify(sb.agentNeuralStates), 'same seed must reproduce recurrent neural state');
 assert.equal(new Set(Array.from(sa.arrays.individualId)).size, sa.N, 'individual IDs must be unique');
+const plasticWorld = makeWorld(998877).__boidsTest;
+const plasticGene = plasticWorld.agentGenomes[0].connections.find(gene => gene.enabled && gene.source < 8);
+assert.ok(plasticGene, 'initial brain should contain an input connection');
+const plasticIndex = plasticWorld.agentGeneIndex[0].get(plasticGene.innovation);
+const inheritedWeight = plasticGene.weight;
+plasticWorld.cfg.plasticity = .5;
+plasticWorld.cfg.rewardScale = 1;
+plasticWorld.cfg.learningMomentum = 1;
+plasticWorld.cfg.traceDecay = 0;
+plasticWorld.reward[0] = 1;
+plasticWorld.brain(0, [1,1,1,1,1,1,1,1]);
+assert.equal(plasticWorld.agentGenomes[0].connections[plasticIndex].weight, inheritedWeight, 'plasticity must not rewrite inherited connection genes');
+assert.notEqual(plasticWorld.agentLearnedWeights[0][plasticIndex], 0, 'plasticity must update a separate learned-weight overlay');
+const plasticSnapshot = plasticWorld.exportSnapshot();
+const plasticRestored = makeWorld(998877).__boidsTest;
+plasticRestored.restoreSnapshot(plasticSnapshot);
+assert.equal(plasticRestored.agentLearnedWeights[0][plasticIndex], plasticWorld.agentLearnedWeights[0][plasticIndex], 'learned weights must survive snapshot restore');
+
 const inspectedWorld = a.__boidsTest;
 inspectedWorld.inspectBrain(inspectedWorld.x[0], inspectedWorld.y[0], 100);
 const brainMessage = a.__messages.filter(message => message.type === 'brain').at(-1);
