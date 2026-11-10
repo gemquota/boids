@@ -182,6 +182,14 @@ test('allele statistics report richness, frequencies, and expected heterozygosit
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
 });
 
+test('effective breeder estimate reflects realised unequal parental contributions',()=>{
+  const balanced=evo.effectiveBreederSize({female:[1,1,1,1],male:[1,1,1,1]});
+  assert.equal(balanced.effectiveFemales,4);assert.equal(balanced.effectiveMales,4);assert.equal(balanced.effectiveBreeders,4);
+  const skewed=evo.effectiveBreederSize({female:[8,1,1,0],male:[1,1,1,1]});
+  assert.ok(skewed.effectiveFemales<4);assert.equal(skewed.effectiveMales,4);assert.ok(skewed.effectiveBreeders<4);
+  assert.equal(evo.effectiveBreederSize({female:[1,2],male:[]}).effectiveBreeders,0);
+});
+
 test('parent-offspring regression reports slope uncertainty and refuses undersized samples',()=>{
   const h=evo.parentOffspringHeritability([1,2,3,4,5],[2.1,3.9,6.2,7.8,10.1]);
   assert.equal(h.n,5);assert.equal(h.rawSlope,h.slope);assert.ok(h.slopeStandardError>0);
