@@ -117,6 +117,8 @@ assert.ok(api.speciesQuotaFactor(0)>=.5&&api.speciesQuotaFactor(0)<=2, 'species 
 assert.equal(experimentSample.traitAlleleRichness.length, 10, 'allele richness should be reported for every trait');
 assert.equal(experimentSample.traitHeritability.length, 10, 'parent-offspring heritability should be reported for every trait');
 assert.ok(Number.isFinite(experimentSample.meanInbreeding), 'population inbreeding should be measurable');
+assert.equal(experimentSample.maleCount + experimentSample.femaleCount, experimentSample.count, 'sex counts must sum to population size');
+assert.equal(experimentSample.sexRatioEffectiveSize, 4 * experimentSample.maleCount * experimentSample.femaleCount / Math.max(1, experimentSample.maleCount + experimentSample.femaleCount), 'sex-ratio Ne must use the documented formula');
 assert.ok(Number.isFinite(experimentSample.regulatoryActivity), 'regulatory expression activity should be measurable');
 assert.ok(experimentSample.selectionDifferentials.every(Number.isFinite), 'selection differentials must be finite');
 assert.ok(Number.isFinite(experimentSample.selectionAggression), 'per-locus selection series should be available to the Observatory');
