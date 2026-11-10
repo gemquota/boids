@@ -8,7 +8,6 @@ on:
       - 'boids-worker.js'
       - 'chromosome.js'
       - 'genetics.js'
-      - 'chromosome.js'
       - 'tests/**'
       - '.github/workflows/genetics-tests.yml'
 jobs:
