@@ -20,7 +20,7 @@ No framework, bundler, package installation, or build step is required. The site
 - Collapsible control groups, contextual field-guide descriptions, editable slider limits, and named presets.
 - Randomised ecological configurations and a tuned baseline reset.
 - Evolving sparse neural brains with recurrent hidden state, inherited connection genes, mutation, crossover, and reward-modulated plasticity.
-- Food patches with finite renewable stock, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body mass, speed, bite strength, perception radius, kin affinity, acceleration, agility, risk tolerance, and exploration.
+- Plant biomass as the sole renewable basal food source, reef obstacles, currents, ageing, starvation, density pressure, and conspecific predation driven by inherited aggression, body mass, speed, bite strength, perception radius, kin affinity, acceleration, agility, risk tolerance, and exploration.
 - Hunting traits are inherited and mutated independently from neural connection genes; successful predation, energy costs, size trade-offs, and kin protection create selection pressure within one shared population.
 - Observatory panels can be opened together; charts support pinch zoom, double-tap reset, numeric axes and increments, and optional grid lines.
 - Evolutionary Observatory with live population, reproduction, mortality, fitness, diversity, gene-distribution, and neural inspection views.
@@ -51,10 +51,10 @@ The current development branch begins an eight-phase model overhaul. The first f
 - Seeded xorshift randomness, with the generator state persisted in world snapshots.
 - Randomised agent evaluation order to remove fixed low-index priority from sequential resource claims.
 - Persistent 32-bit individual IDs and actual parent IDs. Generation depth is retained separately and is no longer used as an identity surrogate for kin checks.
-- Ten inherited quantitative traits: aggression, body mass, speed, bite strength, kin affinity, perception radius, acceleration, agility, risk tolerance, and exploration. The new traits influence acceleration, turning, attack commitment, escape response, food attraction, and exploratory noise.
+- Ten inherited quantitative traits: aggression, body mass, speed, bite strength, kin affinity, perception radius, acceleration, agility, risk tolerance, and exploration. The new traits influence acceleration, turning, attack commitment, escape response, plant attraction, and exploratory noise.
 - Persistent pedigree records and depth-limited relatedness estimates. Kin affinity now reduces attack probability against relatives, rather than relying on generation numbers as a crude proxy.
 - Innovation-aligned neural connection genes. Crossover and mate-preference distance now match homologous connections by stable endpoint-derived innovation IDs instead of assuming that matching array positions represent the same gene.
-- Seasonal food patches with varying quality/productivity, obstacle-associated shelter cover, spatial thermal stress, and explicit movement energy costs.
+- Plant-only herbivory, conspecific predation, obstacle-associated shelter cover, spatial thermal stress, and explicit movement energy costs.
 - Lifetime reproductive success, per-trait selection differentials with dedicated Observatory charts, attack/feeding/energy-flow counters, and a working JSON experiment export from the Observatory.
 - Live worker update/draw/backlog timings, inline UI syntax checks, and a CPU benchmark at 100, 250, 500, and 1,000 agents.
 - Body mass now has a nonlinear maintenance cost and a speed trade-off, rather than being only a visual and attack-size multiplier.
@@ -222,7 +222,7 @@ This is a simplified two-sex mating and gestation model, not a complete biologic
 
 ### Food, predators, and selection
 
-Food patches contain finite stock and regenerate over time. Boids brake to a stop while feeding. A procedural fractal plant ecology has a complete clonal life cycle: dispersed asexual spores drift, germinate into seedling colonies, grow through juvenile nodes, and mature into reproductive nodes. Mature nodes produce attached clonal buds; a sufficiently large mother becomes a grandmother and produces two fully grown adult daughter nodes that can branch immediately. Recursive budding builds the fractal colony. Mature nodes also release asexual spores that establish independent daughter colonies. Old nodes enter senescence, reduce growth and biomass, then die; surviving attached daughters detach and continue as independent clonal colonies when a parent dies. Grazing removes biomass and can delay maturation, suppress budding and prevent spore production. The Observatory records plant stage counts, total biomass, spore counts, budding, germination and deaths. Food attraction, consumption, energy yield, and regeneration can be adjusted independently.
+Plants are the only renewable basal food source; herbivorous boids consume plant biomass, while predatory boids gain energy by killing smaller boids. There are no independent food patches or hidden renewable food stocks. Boids brake to a stop while grazing. A procedural fractal plant ecology has a complete clonal life cycle: dispersed asexual spores drift, germinate into seedling colonies, grow through juvenile nodes, and mature into reproductive nodes. Mature nodes produce attached clonal buds; a sufficiently large mother becomes a grandmother and produces two fully grown adult daughter nodes that can branch immediately. Recursive budding builds the fractal colony. Mature nodes also release asexual spores that establish independent daughter colonies. Old nodes enter senescence, reduce growth and biomass, then die; surviving attached daughters detach and continue as independent clonal colonies when a parent dies. Grazing removes biomass and can delay maturation, suppress budding and prevent spore production. The Observatory records plant stage counts, total biomass, spore counts, budding, germination and deaths. Plant preference and sensing range control foraging. Plant biomass regrows through the plant life cycle and is not supplemented by a separate patch system.
 
 Predation is conspecific: agents within the same evolving population can hunt smaller agents when inherited aggression, relative body size, perception radius, bite strength, and kin-protection traits make an attack viable. There is no separate predator caste or independently spawned predator species. Juvenile vulnerability modifies the risk faced by younger agents. Attack proposals are resolved after the agent decision pass so one prey target cannot generate multiple kill rewards in the same tick.
 
@@ -249,8 +249,8 @@ The controls are distributed across the main simulation tabs and the advanced Dy
 | **Genetics** | Mutation probability and magnitude, crossover, parental weight blending, mutation drift, rewiring, and lineage variation. |
 | **Reproduction** | Reproductive drive, age windows, lifespan, mate preference, fertility, gestation, energy threshold, mate radius, candidate sampling, and mate-drive variation. |
 | **Selection** | Predation, starvation, competition, environmental harshness, ageing, and selection intensity. |
-| **Environment** | Predator population, reefs, food patches, food regeneration, food attraction, metabolic rate, juvenile vulnerability, currents. |
-| **Dynamics** | Flocking noise, alignment persistence, cohesion bias, separation falloff, density sensitivity, current drift, eddy frequency, food depletion and yield, neural output dynamics, sensory noise, life-history costs, and predator ecology. |
+| **Environment** | Predator population, reefs, plant preference and sensing, metabolic rate, juvenile vulnerability, currents. |
+| **Dynamics** | Flocking noise, alignment persistence, cohesion bias, separation falloff, density sensitivity, current drift, eddy frequency, plant growth and grazing, neural output dynamics, sensory noise, life-history costs, and predator ecology. |
 
 The Dynamics controls are grouped into Movement, Water dynamics, Reproduction, Genetic variation, Neural dynamics, Life history, and Predator ecology.
 
@@ -347,7 +347,7 @@ A useful manual test pass includes:
 5. Change connection and hidden-neuron counts while the simulation is running.
 6. Randomise settings, apply a saved preset, and reset the ecological baseline.
 7. Verify integer sliders remain on valid step values after randomisation and restore.
-8. Observe feeding, food regeneration, predator pursuit, deaths, conception, gestation, birth, and mutation.
+8. Observe feeding, plant regrowth, predator pursuit, deaths, conception, gestation, birth, and mutation.
 9. Inspect an individual brain and confirm the Observatory updates.
 10. Reload the page and verify the world and historical data restore from the local snapshot.
 11. Run a sustained mobile performance test at several population levels.

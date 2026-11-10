@@ -17,20 +17,20 @@ A worker frame follows this broad order:
 
 1. Resize/rebuild the spatial grid if its cell dimensions changed.
 2. Insert each living boid into the uniform grid.
-3. Regenerate available food-patch stock.
+3. Grow plant biomass and update airborne/settled spores.
 4. For each boid:
    - collect local neighbours;
    - accumulate separation, alignment and cohesion data;
    - identify a nearby eligible mate;
-   - sense nearby predator threat and available food;
+   - sense nearby predator threat and edible plant biomass;
    - evaluate the neural network when that boid's staggered brain-update slot is due;
-   - combine flocking, neural outputs, currents, turbulence, obstacle avoidance, pointer forces and food attraction;
+   - combine flocking, neural outputs, currents, turbulence, obstacle avoidance, pointer forces and plant attraction;
    - integrate velocity and position;
-   - update food intake, energy, age, fitness, reward and gestation;
+   - update plant grazing, predation rewards, energy, age, fitness and gestation;
    - conceive or deliver offspring when the relevant conditions are met.
 5. Move predators using nearby grid cells and apply attacks.
 6. compact dead agents out of the active arrays.
-7. Draw obstacles, food patches, genome-coloured agents and predators.
+7. Draw reefs, plants, spores, genome-coloured boids and predation indicators.
 8. Periodically calculate population and genetic telemetry, append a bounded demographic/genetic history sample, and post it to the UI.
 
 The worker uses a timer-based scheduler at approximately 16 ms intervals. Actual frame cadence is device- and workload-dependent.
@@ -64,7 +64,7 @@ The grid is rebuilt from the positions at the start of each frame. Predator quer
 
 Boid hue is derived from a hash of every connection's endpoints and weight. A per-agent hue cache avoids hashing the entire genome on every render frame. Genome mutations, plasticity updates and topology changes invalidate the relevant cache entries.
 
-Agents are grouped into 24 hue buckets and drawn as batched line paths. The field uses Canvas2D trails, not GPU instancing or a shader pipeline.
+Agents are grouped into 24 hue buckets and drawn as batched line paths. The field is redrawn opaquely each frame with Canvas2D, not GPU instancing or a shader pipeline.
 
 ## Population resizing and adaptive quality
 
