@@ -8,9 +8,9 @@ test('ten stable loci have ordered indices and valid gene bounds',()=>{
   assert.deepEqual(genetics.TRAITS.map(g=>g.index),[0,1,2,3,4,5,6,7,8,9]);
   for(const gene of genetics.TRAITS) assert.ok(gene.min<gene.max,gene.key);
 });
-test('legacy sensory, kin and exploration helpers remain bounded',()=>{
-  assert.ok(Math.abs(genetics.perceptionRadius(100,.55)-55)<1e-12);
-  assert.ok(Math.abs(genetics.perceptionRadius(100,1.65)-165)<1e-12);
+test('perception radius helpers use expressed world-unit values',()=>{
+  assert.ok(Math.abs(genetics.perceptionRadius(42)-42)<1e-12);
+  assert.ok(Math.abs(genetics.perceptionRadius(0)-1)<1e-12);
   assert.equal(genetics.kinProtection(.8,0),0);
   assert.ok(Math.abs(genetics.kinProtection(.8,.5)-.4)<1e-12);
   assert.ok(Math.abs(genetics.explorationNoise(.08,1)-.12)<1e-12);
