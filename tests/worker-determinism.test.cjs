@@ -161,6 +161,13 @@ assert.ok(Number.isFinite(experimentSample.speciesMeanConnections)&&experimentSa
 assert.ok(Number.isFinite(experimentSample.speciesInnovationDiversity)&&experimentSample.speciesInnovationDiversity>0,'species innovation diversity should be measured');
 assert.ok(Number.isFinite(experimentSample.effectiveBreeders)&&experimentSample.effectiveBreeders>=0,'realised effective breeders should be measured');
 assert.ok(Number.isFinite(experimentSample.effectiveFemales)&&Number.isFinite(experimentSample.effectiveMales),'sex-specific effective breeders should be measured');
+assert.ok(Number.isFinite(experimentSample.meanPhenotypicVariance)&&experimentSample.meanPhenotypicVariance>=0,'expressed trait variance should be measured');
+assert.ok(experimentSample.meanAdditiveVariance===null||Number.isFinite(experimentSample.meanAdditiveVariance),'additive variance should be estimated only when heritability is estimable');
+assert.equal(experimentSample.traitPhenotypicVariance.length,10);
+assert.equal(experimentSample.traitAdditiveVariance.length,10);
+assert.equal(experimentSample.phenotypicTraitCovariance.length,10);
+assert.equal(experimentSample.geneticTraitCovariance.length,10);
+assert.ok(experimentSample.phenotypicTraitCovariance.every(row=>row.length===10)&&experimentSample.geneticTraitCovariance.every(row=>row.length===10),'trait covariance matrices should be square');
 assert.equal(experimentSample.speciesTopology.length,experimentSample.speciesCount,'topology summaries should be available per species');
 assert.ok(experimentSample.speciesTopology.every(group=>group.members>=0&&group.innovationCount>=0&&group.meanNodes>=0&&group.meanConnections>=0),'per-species topology summaries should be well formed');
 const championSpecies=api.speciesState.find(group=>group.members.length>1&&group.championId!==null);
