@@ -97,9 +97,15 @@
     for(const trait of expressionTraits){
       const minKey='expr_'+trait.key+'_min',maxKey='expr_'+trait.key+'_max',min=Number(next[minKey]),max=Number(next[maxKey]);
       if(!Number.isFinite(min)||!Number.isFinite(max)||max>min)continue;
-      if(values[minKey]!==undefined&&values[maxKey]===undefined)patch[maxKey]=roundField(trait,'max',min+.01,'up');
-      else if(values[maxKey]!==undefined&&values[minKey]===undefined)patch[minKey]=roundField(trait,'min',max-.01,'down');
-      else patch[maxKey]=roundField(trait,'max',min+.01,'up');
+      const lower=()=>roundField(trait,'min',max-.01,'down');
+      const upper=()=>roundField(trait,'max',min+.01,'up');
+      if(values[minKey]!==undefined&&values[maxKey]===undefined){
+        const candidate=upper();if(candidate>min)patch[maxKey]=candidate;else patch[minKey]=lower();
+      }else if(values[maxKey]!==undefined&&values[minKey]===undefined){
+        const candidate=lower();if(candidate<max)patch[minKey]=candidate;else patch[maxKey]=upper();
+      }else{
+        const candidate=upper();if(candidate>min)patch[maxKey]=candidate;else patch[minKey]=lower();
+      }
     }
     return Object.freeze(patch);
   }
