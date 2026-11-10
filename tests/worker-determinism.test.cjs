@@ -83,6 +83,11 @@ assert.equal(api.reproductiveSuccess.get(api.individualId[1]), 2, 'paternal life
 assert.equal(api.selectedParentEvents, 4, 'each birth should contribute two successful parent events');
 const experimentSample = api.evaluatePopulation();
 assert.equal(experimentSample.selectionDifferentials.length, 10, 'selection differentials should be reported for all inherited loci');
+assert.ok(experimentSample.speciesCount >= 1, 'NEAT species should be measured in live population telemetry');
+assert.equal(experimentSample.traitAlleleRichness.length, 10, 'allele richness should be reported for every trait');
+assert.equal(experimentSample.traitHeritability.length, 10, 'parent-offspring heritability should be reported for every trait');
+assert.ok(Number.isFinite(experimentSample.meanInbreeding), 'population inbreeding should be measurable');
+assert.ok(Number.isFinite(experimentSample.regulatoryActivity), 'regulatory expression activity should be measurable');
 assert.ok(experimentSample.selectionDifferentials.every(Number.isFinite), 'selection differentials must be finite');
 assert.ok(Number.isFinite(experimentSample.selectionAggression), 'per-locus selection series should be available to the Observatory');
 assert.ok(Number.isFinite(experimentSample.aggressionMin) && experimentSample.aggressionMin <= experimentSample.aggression, 'population aggression range should be reported');
