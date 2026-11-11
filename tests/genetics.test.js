@@ -130,6 +130,7 @@ test('Observatory exposes live species and population-genetic metrics',()=>{
   for(const id of ['mSpecies','mSpeciesThreshold','mSpeciesQuota','mSpeciesAge','mSpeciesStagnant','mSpeciesChampion','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mPhenotypicVariance','mAdditiveVariance','mInbreeding','mNe','mEffectiveBreeders','mEffectiveFemales','mEffectiveMales','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
   for(const id of ['mNeuralArchitectureDiversity','mNeuralArchitectureRichness','mNeuralMeanNodes','mNeuralMeanConnections','mRegulatoryArchitectureRichness','mRegulatoryPositiveEdges','mRegulatoryNegativeEdges'])assert.ok(html.includes('id=\"'+id+'\"'),'missing architecture metric '+id);
   for(const id of ['mBirthCohorts','mLatestBirthCohort','mLatestCohortSize','mLatestCohortMedian','mMeanCohortMedian','mLatestCohortLineage'])assert.ok(html.includes('id=\"'+id+'\"'),'missing cohort metric '+id);
+  for(const id of ['mTemperature','mMoisture','mNutrients','mSuitability'])assert.ok(html.includes('id=\"'+id+'\"'),'missing habitat field metric '+id);
   assert.ok(html.includes('geneticsHistoryChart'));
   assert.ok(html.includes('meanPhenotypicVariance'));
   assert.ok(html.includes('meanAdditiveVariance'));
