@@ -24,7 +24,8 @@ function makeWorld(count) {
   sandbox.__bench.cfg.foodPatches = 14;
   sandbox.__bench.cfg.obstacles = 10;
   sandbox.__bench.cfg.drive = 0;
-  const gradient = { addColorStop() {} };\n  const ctx = new Proxy({}, { get: (target, key) => target[key] || ((key === 'createLinearGradient' || key === 'createRadialGradient') ? (() => gradient) : (() => {})), set: (target, key, value) => (target[key] = value, true) });
+  const gradient = { addColorStop() {} };
+  const ctx = new Proxy({}, { get: (target, key) => target[key] || ((key === 'createLinearGradient' || key === 'createRadialGradient') ? (() => gradient) : (() => {})), set: (target, key, value) => (target[key] = value, true) });
   sandbox.__bench.init({ width: 1, height: 1, getContext: () => ctx }, 960, 640, 1);
   return sandbox.__bench;
 }
