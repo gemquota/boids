@@ -11,6 +11,7 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 
 - Full-screen Canvas2D simulation in an OffscreenCanvas-capable Web Worker.
 - Fixed-step updates, seeded randomness, double-buffered movement state, spatial indexing, and deterministic snapshot continuation.
+- Plant foraging uses a spatial cell index; regulatory/environmental phenotype expression is cached across alternating fixed ticks and invalidated after offspring delivery or population changes.
 - **190 configurable numeric controls**, generated from the shared configuration schema.
 - Ten inherited quantitative trait loci with configurable genotype-to-phenotype expression, environmental sensitivity, and mutation.
 - Variable-length NEAT-style node and connection genomes with historical innovations, add/split/delete mutations, enabled and recurrent edges, activation/bias mutation, homologous crossover, and separate lifetime learned-weight overlays and variable-length plasticity traces.
