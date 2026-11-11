@@ -11,25 +11,27 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 
 - Full-screen Canvas2D simulation in an OffscreenCanvas-capable Web Worker.
 - Fixed-step updates, seeded randomness, double-buffered movement state, spatial indexing, and deterministic snapshot continuation.
-- **185 configurable numeric controls**, generated from the shared configuration schema.
+- **190 configurable numeric controls**, generated from the shared configuration schema.
 - Ten inherited quantitative trait loci with configurable genotype-to-phenotype expression, environmental sensitivity, and mutation.
 - Variable-length NEAT-style node and connection genomes with historical innovations, add/split/delete mutations, enabled and recurrent edges, activation/bias mutation, homologous crossover, and separate lifetime learned-weight overlays and variable-length plasticity traces.
 - Live compatibility-based speciation, adaptive thresholding, fitness sharing, species age/stagnation statistics, integer offspring quotas, configurable champion reproductive preservation, temporary structural-innovation grace windows, and same-species mate preference with fallback.
 - Inherited cis-regulatory modifiers that affect trait-expression bias and environmental responsiveness.
+- Live multi-locus additive and epistatic phenotype equations, five adjustable interaction strengths, and separate neural/regulatory architecture-diversity telemetry.
+- Birth-cohort-specific delayed-entry survival and lineage-turnover summaries, plus persisted regulatory expression and mutation history.
 - Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception with sample sizes and t-based regression-slope intervals, delayed-entry Kaplan–Meier all-cause survival, provisional additive/phenotypic variance and covariance summaries, species entropy, and a reproductive-skew-adjusted effective-breeder index from inverse-Simpson parental contributions by sex, with persisted lifetime contribution and parent-sex state.
 - Plant-only basal renewable resources, clonal plant growth/spores, freshwater networks, thirst, seasonal variation, reefs/shelter, and conspecific predation.
 - Observatory panels for population, reproduction, genetics, species, neural topology, and run history.
-- Browser-local IndexedDB world snapshots. Worker snapshot schema is **21**; the browser storage envelope has its own schema version.
+- Browser-local IndexedDB world snapshots. Worker snapshot schema is **22**; the browser storage envelope has its own schema version.
 
 ## Configuration
 
 All controls are declared in `config-schema.js` and registered by `config-registry.js`. The current count is derived from:
 - 64 core controls;
-- 31 advanced controls;
+- 36 advanced controls;
 - 10 trait loci × 6 expression controls;
 - 10 trait loci × 3 mutation controls.
 
-That is 185 unique numeric controls. Do not hand-maintain a separate count in UI documentation.
+That is 190 unique numeric controls. Do not hand-maintain a separate count in UI documentation.
 
 ## Architecture
 
@@ -48,7 +50,7 @@ That is 185 unique numeric controls. Do not hand-maintain a separate count in UI
 This is an exploratory agent-based artificial ecology, **not a biologically calibrated model**.
 
 - Trait alleles are quantitative loci, not paired diploid Mendelian chromosomes.
-- The live worker combines inherited cis-regulatory modifiers with variable-length trans-regulatory gene networks. Stable gene-copy/edge identities, duplication/deletion, signed activation/repression, environmental/stage inputs and bounded expression are integrated into offspring inheritance and phenotype calculation; broader configurable multi-locus epistasis and controlled-environment validation remain incomplete.
+- The live worker combines inherited cis-regulatory modifiers with variable-length trans-regulatory gene networks. Stable gene-copy/edge identities, duplication/deletion, signed activation/repression, environmental/stage inputs and bounded expression are integrated into offspring inheritance and phenotype calculation; five bounded default polygenic/epistatic interactions are integrated into live phenotype expression, with adjustable coefficients; broader controlled-environment validation remains incomplete.
 - Expected gene diversity from binned trait values is not observed diploid heterozygosity.
 - The current heritability estimate is preliminary and uses conception-time parental trait records; sample-size, pedigree-truncation and selection-related limitations still apply.
 - The effective-breeder index uses realised lifetime parental offspring contributions, inverse-Simpson effective counts within each sex and their harmonic mean. It is not classical or temporal/cohort Ne for this overlapping-generation population.
