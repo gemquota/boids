@@ -101,7 +101,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Track phenotypic and genotypic trait covariance matrices. (Environmental decomposition and causal genetic/environmental covariance remain unidentified.)
 - [x] Track realised lifetime reproductive success and lineage contribution.
 - [x] Track all-cause age-at-death and right-censored living-agent observations with bounded, delayed-entry Kaplan–Meier telemetry.
-- [ ] Track cohort-specific survival and generational turnover across independently identified birth cohorts.
+- [x] Track cohort-specific survival and generational turnover using persisted birth-cohort IDs, delayed-entry/censoring-aware Kaplan–Meier summaries, and cohort lineage-depth summaries. Cohort IDs use deterministic 24-simulation-time-unit birth windows; only the most recent 16 cohorts are surfaced, and event-history truncation remains explicit.
 - [x] Add synthetic known-pedigree and known-inheritance regression fixtures for parent/offspring and sibling relatedness plus conception-time mid-parent inheritance.
 - [x] Persist and export bounded survival-event history and truncation metadata in worker snapshots/analysis bundles.
 - [x] Persist and export sampled per-locus allele, heritability, variance and covariance metrics through snapshot telemetry history and analysis bundles.
