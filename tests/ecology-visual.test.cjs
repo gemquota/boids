@@ -16,7 +16,7 @@ test('river network uses curved, shared geometry for drawing and freshwater dist
   vm.runInNewContext(worker.slice(start, end) + ';this.network=buildRiverNetwork();this.nearest=nearestFreshwater;', context);
   const network = context.network;
   assert.equal(network.tributaries.length, 5);
-  assert.equal(network.feeders.length, 10);
+  assert.equal(network.feeders.length, 15);
   const sinuosity = path => {
     const chord = Math.hypot(path.at(-1).x - path[0].x, path.at(-1).y - path[0].y);
     let length = 0;
