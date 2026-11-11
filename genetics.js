@@ -67,8 +67,8 @@
     const key=typeof trait==='number'?TRAITS[trait]?.key:trait;
     if(!key||!normalizedLoci)return 0;
     let value=0,limit=.25;
-    for(const equation of equations){if(equation.trait!==key)continue;limit=Math.min(limit,clamp(Number(equation.maxMagnitude??.25),0,1));value+=finite(equation.intercept,0);
-      for(const term of equation.terms||[]){let product=1;for(const locus of term.loci){const index=TRAITS.findIndex(t=>t.key===locus);if(index<0){product=0;break}product*=2*clamp(Number(normalizedLoci[index])||0,0,1)-1}value+=product*finite(term.coefficient,0)}
+    for(const equation of equations){if(equation.trait!==key)continue;limit=Math.min(limit,clamp(Number(equation.maxMagnitude??.25),0,1));value+=(Number.isFinite(Number(equation.intercept))?Number(equation.intercept):0);
+      for(const term of equation.terms||[]){let product=1;for(const locus of term.loci){const index=TRAITS.findIndex(t=>t.key===locus);if(index<0){product=0;break}product*=2*clamp(Number(normalizedLoci[index])||0,0,1)-1}value+=product*(Number.isFinite(Number(term.coefficient))?Number(term.coefficient):0)}
     }
     return clamp(value,-limit,limit);
   }
