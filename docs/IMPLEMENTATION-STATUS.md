@@ -15,9 +15,8 @@ This file describes the merged evolutionary-ecology foundation and the current c
 - Observatory population/genetics/species/neural, architecture-diversity and birth-cohort survival/turnover views, plus run-analysis export.
 - Worker snapshot schema 22 with legacy migration and a distinct IndexedDB `storageSchemaVersion: 2` envelope, full variable genomes, innovation/species state, cis-regulatory modifiers and variable-length trans-regulatory networks, learned weights, recurrent state, pedigree, bounded survival-event history/truncation metadata, persisted birth-cohort IDs/lineage events and stable-ID delayed-entry ages, regulatory expression state/mutation history, lifetime reproductive-success records and parent-sex identity state, per-agent variable-length plasticity traces, structural-innovation protection ages, and RNG/ecology state.
 
-## Implemented as standalone/tested analysis primitives
+## Additional tested analysis primitives
 
-- Regulatory activation/repression and multi-locus/epistatic expression helpers are integrated into the live worker and independently unit-tested.
 - Replicate summaries, bootstrap intervals, permutation comparisons and effect sizes.
 - Regression/correlation, deterministic replicate seed derivation and parameter-sweep generation.
 - Kaplan-Meier survival summaries and multiple-comparison p-value correction.
@@ -25,16 +24,13 @@ This file describes the merged evolutionary-ecology foundation and the current c
 
 Per-trait phenotypic and preliminary additive variance, plus genotype/phenotype covariance matrices, are also computed in the live worker and exposed in the Observatory. Additive variance inherits the sampling and model assumptions of the preliminary heritability estimate. These utilities are not equivalent to an isolated experiment runner. The live worker/UI does not yet orchestrate independent experiment worlds with pause/resume/cancellation and full replay.
 
-The variable-length regulatory-genome API is used by live reproduction, mutation, phenotype calculation and snapshot persistence. Stable gene-copy/edge identities, duplication/deletion/insertion, identity-preserving rearrangement, identity-aligned crossover, signed trans-regulatory edges, environmental inputs and iterative expression are covered by worker and model tests.
-
 ## Still incomplete
 
-1. Explicit champion elitism and structural-innovation protection beyond reproductive pressure.
-2. Stable gene-copy identities, duplication/deletion/rearrangement, live trans-regulatory networks and stage-specific expression.
+1. Unified typed hexadecimal chromosome records for structural, regulatory, modifier and neural gene families, with complete round-trip integration of the live variable-length genomes.
 3. Stronger population-genetic estimation: temporal/cohort effective population size, uncertainty for additive-variance and covariance estimates, environmental covariance under controlled contrasts, and survivorship-bias-resistant heritability.
 4. Broader spatial habitat, nutrient, temperature, fragmentation, refugia and disturbance dynamics.
 5. Isolated multi-replicate experiment execution, factorial/Latin-hypercube orchestration, progress/cancellation, comparison UI and replayable archives.
-6. Additional per-species innovation/topology inspection and deeper regulatory-network visualisation.
+6. Deeper regulatory-network/expression inspection, pedigree and inbreeding visualisation, and ecological-field views.
 7. Android and cross-browser interaction/performance profiling, long-duration memory checks and deployed Pages smoke tests.
 
 ## Validation note
