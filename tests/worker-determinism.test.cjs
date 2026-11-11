@@ -19,7 +19,7 @@ function makeWorld(seed) {
   };
   vm.createContext(sandbox);
   sandbox.importScripts = (...paths) => { for (const path of paths) { const filePath = path.split('?')[0]; vm.runInContext(fs.readFileSync(filePath, 'utf8'), sandbox, { filename: path }); } };
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get pregnant(){return pregnant}, get energy(){return energy}, get fitness(){return fitness}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get parentTraitRecords(){return parentTraitRecords}, get traitGenes(){return traitGenes}, get survivalHistory(){return survivalHistory}, get survivalEntryAgeById(){return survivalEntryAgeById}, get survivalHistoryTruncated(){return survivalHistoryTruncated}, recordSurvivalObservation, populationSurvivalMetrics, resizePopulation, populationGeneticsMetrics, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get innovationBirthTime(){return innovationBirthTime}, get simTime(){return simTime}, set simTime(value){simTime=value}, innovationProtectionFactor, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get agentEligibility(){return agentEligibility}, get agentRegulatoryGenomes(){return agentRegulatoryGenomes}, get paternalRegulatoryGenomes(){return paternalRegulatoryGenomes}, get regulatoryRegistry(){return regulatoryRegistry}, updateRegulatoryExpression, inheritRegulatoryGenome, calculatePhenotype, refreshPhenotypes, phenotype, installNeatGenome, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get birthCohort(){return birthCohort}, get pregnant(){return pregnant}, get energy(){return energy}, get fitness(){return fitness}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get parentTraitRecords(){return parentTraitRecords}, get traitGenes(){return traitGenes}, get survivalHistory(){return survivalHistory}, get survivalEntryAgeById(){return survivalEntryAgeById}, get survivalHistoryTruncated(){return survivalHistoryTruncated}, recordSurvivalObservation, populationSurvivalMetrics, resizePopulation, populationGeneticsMetrics, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get innovationBirthTime(){return innovationBirthTime}, get simTime(){return simTime}, set simTime(value){simTime=value}, innovationProtectionFactor, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get agentEligibility(){return agentEligibility}, get agentRegulatoryGenomes(){return agentRegulatoryGenomes}, get paternalRegulatoryGenomes(){return paternalRegulatoryGenomes}, get regulatoryRegistry(){return regulatoryRegistry}, updateRegulatoryExpression, inheritRegulatoryGenome, calculatePhenotype, refreshPhenotypes, phenotype, installNeatGenome, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -163,16 +163,20 @@ const deathIndex=Math.min(10,api.N-1),deathId=api.individualId[deathIndex],initi
 api.age[deathIndex]=api.cfg.lifespan+1;
 api.update(1/60,12000);
 assert.ok(api.survivalHistory.some(row=>row.event&&row.time>api.cfg.lifespan&&row.entry===initialEntryAge),'natural mortality must append a delayed-entry survival event');
-const survivalMetrics=api.populationSurvivalMetrics();
+api.birthCohort[0]=0;api.birthCohort[1]=1;
+ const survivalMetrics=api.populationSurvivalMetrics();
 assert.ok(survivalMetrics.survivalEvents>=1,'Kaplan-Meier telemetry must count recorded deaths');
 assert.ok(survivalMetrics.survivalCensored>=api.N,'living agents must enter the survival estimate as right-censored observations');
 assert.ok(survivalMetrics.survivalLeftTruncated>0,'initial agents with nonzero ages must enter the risk set only after delayed entry');
+ assert.ok(survivalMetrics.birthCohortCount>=2,'survival metrics must retain independently identified birth cohorts');
+ assert.ok(survivalMetrics.birthCohortSurvival.some(row=>row.cohort===1),'cohort-specific survival estimates must be reported');
 const survivalSnapshot=api.exportSnapshot();
 const survivalRestored=makeWorld(123456).__boidsTest;
 survivalRestored.restoreSnapshot(survivalSnapshot);
 assert.equal(JSON.stringify(survivalRestored.survivalHistory),JSON.stringify(api.survivalHistory),'survival events must survive snapshot restoration');
 assert.equal(JSON.stringify([...survivalRestored.survivalEntryAgeById.entries()]),JSON.stringify([...api.survivalEntryAgeById.entries()]),'delayed-entry ages must survive snapshot restoration');
 assert.equal(survivalRestored.survivalHistoryTruncated,api.survivalHistoryTruncated,'survival truncation count must survive snapshot restoration');
+ assert.deepEqual(Array.from(survivalRestored.birthCohort.slice(0,survivalRestored.N)),Array.from(api.birthCohort.slice(0,api.N)),'birth cohort identities must survive snapshot restoration');
 const manualRemovalWorld=makeWorld(4321).__boidsTest;
 const populationBeforeShrink=manualRemovalWorld.N;
 manualRemovalWorld.resizePopulation(populationBeforeShrink-1);
@@ -280,7 +284,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationBirthTime.entries()),'structural innovation protection ages must survive snapshot restoration');
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
-assert.equal(restoredSnapshot.schemaVersion, 21);
+assert.equal(restoredSnapshot.schemaVersion, 22);
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
@@ -303,6 +307,7 @@ assert.ok(restoredSnapshot.arrays.traitGenes[before * 10 + 6] >= .55, 'offspring
 // Schema-v3 snapshots used six packed traits; migration must preserve those and initialise four new loci.
 const legacy = api.exportSnapshot();
 legacy.schemaVersion = 3;
+delete legacy.arrays.birthCohort;
 // A schema-v3 export predates the trans-regulatory network and its identity registry.
 delete legacy.agentRegulatoryGenomes;
 delete legacy.paternalRegulatoryGenomes;
