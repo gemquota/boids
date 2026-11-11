@@ -25,7 +25,7 @@ Each locus has stable index/bounds in `genetics.js`. Inheritance uses a maternal
 
 The expression pipeline normalizes inherited values, applies a selectable expression curve, applies expression bias and environmental sensitivity, then maps into phenotype bounds. Expression controls do not rewrite inherited allele values. The live worker uses the expressed phenotype for physical and behavioural decisions.
 
-The ten-locus model is polygenic only in the broad sense that multiple loci contribute to population-level traits; it does not yet implement a general gene-copy regulatory architecture for every phenotype.
+The ten-locus model now supports explicit per-trait multi-locus equations. Each equation combines an intercept with one- to four-locus terms over centred normalized locus values; pairwise and higher-order products provide epistatic effects. Outputs are clamped to a declared per-equation magnitude before they enter the expressed phenotype, and inherited gene values remain unchanged. Five live, adjustable interaction controls currently model risk/aggression, body-size/speed trade-off, body-size/bite scaling, speed/agility/acceleration synergy, and risk/perception/exploration coupling. The generic equation API supports additional interactions; these five defaults are modelling hypotheses, not universal biological laws.
 
 ## Regulatory inheritance
 
