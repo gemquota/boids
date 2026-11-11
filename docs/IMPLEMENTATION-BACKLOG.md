@@ -68,18 +68,18 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 ## D. Regulatory genetics and gene expression
 
 - [ ] Define typed structural, regulatory, modifier, and neural gene records. (A pure variable-length regulatory-genome API now defines stable regulatory gene/edge identities; runtime integration and unified typed records remain.)
-- [ ] Give every gene copy a stable identity independent of chromosome position. (Implemented for the standalone regulatory-genome API; not yet wired into live offspring inheritance or snapshots.)
-- [ ] Implement gene duplication with independent copy identity. (Implemented and tested in the standalone regulatory-genome API; live worker integration remains.)
-- [ ] Implement gene deletion and chromosome-length changes. (Regulatory copy deletion is implemented and tested in the standalone API; live worker integration remains.)
-- [ ] Implement gene insertion/rearrangement without invalidating stable identities. (The standalone regulatory-genome API now supports insertion and identity-preserving node/edge reordering with tests; live worker inheritance, snapshots and expression integration remain.)
-- [ ] Implement regulatory edges with activation and repression. (Standalone variable regulatory networks now support signed trans-regulatory edges and iterative expression; live worker integration remains.)
-- [ ] Implement regulatory thresholds, strengths, and environmental input channels.
+- [x] Give every regulatory gene copy a stable identity independent of chromosome position. (Live worker offspring inheritance, stable node/edge IDs and snapshot persistence are covered by worker tests.)
+- [x] Implement gene duplication with independent copy identity. (The live worker mutation path calls the stable-ID regulatory mutation engine; standalone operator tests cover identity and incident-edge duplication.)
+- [x] Implement gene deletion and regulatory-network length changes. (Live worker mutation uses the tested stable-ID regulatory mutation engine.)
+- [x] Implement gene insertion/rearrangement without invalidating stable identities. (Stable IDs and registry state are inherited/persisted; insertion and rearrangement operators are tested.)
+- [x] Implement regulatory edges with activation and repression. (Signed live trans-regulatory edges feed bounded iterative expression; operator tests cover activation and repression.)
+- [x] Implement regulatory thresholds, strengths, and environmental input channels. (Live expression consumes energy, hydration, shelter, harshness, season and life-stage inputs.)
 - [ ] Implement multi-locus phenotype equations.
 - [ ] Implement epistatic interaction terms and bounded expression.
-- [ ] Implement stage-dependent expression.
+- [x] Implement stage-dependent expression. (The live regulatory evaluator receives a juvenile/adult/senescent stage input; richer developmental schedules remain possible.)
 - [x] Implement environment-dependent plasticity without rewriting inherited genotype.
-- [ ] Keep inherited genotype, expressed phenotype, and lifetime learning separate.
-- [ ] Cache expression safely and invalidate on relevant state changes.
+- [x] Keep inherited genotype, expressed phenotype, and lifetime learning separate. (Trait loci and regulatory genomes are inherited; regulatory expression is recomputed into a phenotype modifier; learned neural weights remain a separate overlay.)
+- [x] Cache expression safely and invalidate on relevant state changes. (Phenotype refresh recomputes the regulatory expression before the phenotype cache is marked ready; snapshot restore invalidates the cache.)
 - [ ] Persist regulatory genes, expression state, and mutation history.
 - [ ] Test duplicate divergence, deletion, activation, repression, epistasis, and environmental response.
 
