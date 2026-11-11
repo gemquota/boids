@@ -27,11 +27,10 @@ Per-trait phenotypic and preliminary additive variance, plus genotype/phenotype 
 ## Still incomplete
 
 1. Stronger population-genetic estimation: temporal/cohort effective population size, uncertainty for additive-variance/covariance estimates, pedigree-truncation uncertainty, controlled environmental decomposition and survivorship-bias-resistant heritability.
-3. Broader spatial habitat/resource gradients, temperature/nutrients, fragmentation, refugia, carrying capacity and controlled disturbances.
-4. Broader spatial habitat, nutrient, temperature, fragmentation, refugia and disturbance dynamics.
-5. Isolated multi-replicate experiment execution, factorial/Latin-hypercube orchestration, progress/cancellation, comparison UI and replayable archives.
-6. Deeper regulatory-network/expression inspection, pedigree and inbreeding visualisation, and ecological-field views.
-7. Android and cross-browser interaction/performance profiling, long-duration memory checks and deployed Pages smoke tests.
+2. Broader spatial habitat/resource gradients, temperature/nutrients, fragmentation, refugia, carrying capacity and controlled disturbances.
+3. Isolated multi-replicate experiment execution, factorial/Latin-hypercube orchestration, progress/cancellation, comparison UI and replayable archives.
+4. Deeper regulatory-network/expression inspection, pedigree and inbreeding visualisation, and ecological-field views.
+5. Android and cross-browser interaction/performance profiling, long-duration memory checks and deployed Pages smoke tests.
 
 ## Validation note
 
