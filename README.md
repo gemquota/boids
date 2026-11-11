@@ -11,7 +11,7 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 
 - Full-screen Canvas2D simulation in an OffscreenCanvas-capable Web Worker.
 - Fixed-step updates, seeded randomness, double-buffered movement state, spatial indexing, and deterministic snapshot continuation.
-- **190 configurable numeric controls**, generated from the shared configuration schema.
+- **191 configurable numeric controls**, generated from the shared configuration schema.
 - Ten inherited quantitative trait loci with configurable genotype-to-phenotype expression, environmental sensitivity, and mutation.
 - Variable-length NEAT-style node and connection genomes with historical innovations, add/split/delete mutations, enabled and recurrent edges, activation/bias mutation, homologous crossover, and separate lifetime learned-weight overlays and variable-length plasticity traces.
 - Live compatibility-based speciation, adaptive thresholding, fitness sharing, species age/stagnation statistics, integer offspring quotas, configurable champion reproductive preservation, temporary structural-innovation grace windows, and same-species mate preference with fallback.
@@ -27,11 +27,11 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 
 All controls are declared in `config-schema.js` and registered by `config-registry.js`. The current count is derived from:
 - 64 core controls;
-- 36 advanced controls;
+- 37 advanced controls;
 - 10 trait loci × 6 expression controls;
 - 10 trait loci × 3 mutation controls.
 
-That is 190 unique numeric controls. Do not hand-maintain a separate count in UI documentation.
+That is 191 unique numeric controls. Do not hand-maintain a separate count in UI documentation.
 
 ## Architecture
 
