@@ -24,6 +24,13 @@
   const DEFAULT_MUTATION=Object.freeze(Object.fromEntries(TRAITS.map(t=>[t.key,Object.freeze({
     rate:.016,magnitude:.075,heritability:.98
   })])));
+  const DEFAULT_INTERACTIONS=Object.freeze([
+    Object.freeze({id:'aggression-risk',trait:'aggression',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['riskTolerance']),coefficient:.06})])}),
+    Object.freeze({id:'speed-size-tradeoff',trait:'speed',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['bodySize']),coefficient:-.08})])}),
+    Object.freeze({id:'bite-size-scaling',trait:'biteStrength',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['bodySize']),coefficient:.08})])}),
+    Object.freeze({id:'acceleration-agility-synergy',trait:'acceleration',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['speed','agility']),coefficient:.05})])}),
+    Object.freeze({id:'exploration-risk-sensory',trait:'exploration',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['riskTolerance','sensoryRange']),coefficient:.04})])})
+  ]);
   function normalizeGene(value,trait){
     const t=typeof trait==='number'?TRAITS[trait]:trait;
     if(!t)return .5;
@@ -49,11 +56,34 @@
     if(curve==='plateau')return (1-Math.exp(-strength*x))/(1-Math.exp(-strength));
     return x;
   }
-  function express(geneValue,trait,settings={},environment=.5,regulator=.5){
+  function normalizeInteractionEquations(equations=[]){
+    if(!Array.isArray(equations))throw new TypeError('Gene interaction equations must be an array');
+    return equations.map((equation,index)=>{
+      if(!equation||!TRAITS.some(t=>t.key===equation.trait))throw new TypeError('Unknown interaction target at equation '+index);
+      const terms=Array.isArray(equation.terms)?equation.terms:[];
+      return Object.freeze({id:String(equation.id??('interaction-'+index)),trait:equation.trait,intercept:clamp(Number(equation.intercept)||0,-1,1),maxMagnitude:clamp(Number(equation.maxMagnitude??.25),0,1),terms:Object.freeze(terms.map((term,termIndex)=>{
+        const loci=Array.isArray(term.loci)?term.loci:[];
+        if(!loci.length||loci.length>4||new Set(loci).size!==loci.length||loci.some(key=>!TRAITS.some(t=>t.key===key)))throw new TypeError('Invalid interaction loci at equation '+index+', term '+termIndex);
+        const coefficient=Number(term.coefficient);
+        if(!Number.isFinite(coefficient))throw new TypeError('Interaction coefficient must be finite');
+        return Object.freeze({loci:Object.freeze(loci.slice()),coefficient:clamp(coefficient,-1,1)});
+      }))});
+    });
+  }
+  function evaluateMultiLocusModifier(trait,normalizedLoci,equations=[]){
+    const key=typeof trait==='number'?TRAITS[trait]?.key:trait;
+    if(!key||!normalizedLoci)return 0;
+    let value=0,limit=.25;
+    for(const equation of equations){if(equation.trait!==key)continue;limit=Math.min(limit,clamp(Number(equation.maxMagnitude??.25),0,1));value+=(Number.isFinite(Number(equation.intercept))?Number(equation.intercept):0);
+      for(const term of equation.terms||[]){let product=1;for(const locus of term.loci){const index=TRAITS.findIndex(t=>t.key===locus);if(index<0){product=0;break}product*=2*clamp(Number(normalizedLoci[index])||0,0,1)-1}value+=product*(Number.isFinite(Number(term.coefficient))?Number(term.coefficient):0)}
+    }
+    return clamp(value,-limit,limit);
+  }
+  function express(geneValue,trait,settings={},environment=.5,regulator=.5,multiLocusModifier=0){
     const t=typeof trait==='number'?TRAITS[trait]:TRAITS.find(x=>x.key===trait)||trait;
     if(!t)return Number(geneValue)||0;
     const normalized=normalizeGene(geneValue,t),regulatoryActivity=clamp(Number(regulator??.5),0,1);
-    const shaped=shapeExpression(normalized+(regulatoryActivity-.5)*.35,settings);
+    const shaped=clamp(shapeExpression(normalized+(regulatoryActivity-.5)*.35,settings)+clamp(Number(multiLocusModifier)||0,-1,1),0,1);
     const min=Number.isFinite(+settings.min)?+settings.min:t.phenotypeMin;
     const max=Math.max(min+1e-6,Number.isFinite(+settings.max)?+settings.max:t.phenotypeMax);
     const sensitivity=clamp((Number(settings.environmentSensitivity)||0)*(.5+regulatoryActivity),0,2);
@@ -78,5 +108,5 @@
     if(random()<rate)value+=(random()*2-1)*span*magnitude;
     return clamp(value,t.geneMin,t.geneMax);
   }
-  return Object.freeze({TRAITS,DEFAULT_EXPRESSION,DEFAULT_MUTATION,normalizeGene,shapeExpression,express,inheritTrait,perceptionRadius,foodSenseRange,kinProtection,explorationNoise,foodSteering});
+  return Object.freeze({TRAITS,DEFAULT_EXPRESSION,DEFAULT_MUTATION,DEFAULT_INTERACTIONS,normalizeGene,shapeExpression,normalizeInteractionEquations,evaluateMultiLocusModifier,express,inheritTrait,perceptionRadius,foodSenseRange,kinProtection,explorationNoise,foodSteering});
 });

@@ -8,9 +8,9 @@ This roadmap describes work remaining after the merged evolutionary-ecology foun
 - Plant biomass is the renewable basal food source. The ecology includes clonal plants/spores, freshwater proximity, thirst, seasonality, reefs and shelter.
 - Ten quantitative trait loci feed configurable genotype-to-phenotype expression.
 - Variable-length NEAT-style neural genomes have historical innovations, structural mutation, recurrent execution, innovation-aligned crossover and separate learned-weight overlays.
-- Compatibility-based speciation includes adaptive thresholding, fitness sharing, stagnation tracking, integer offspring quotas and champion reproductive pressure.
-- Inherited cis-regulatory modifiers affect expression bias and environmental responsiveness.
-- Worker snapshot schema 13 preserves the current population/genetic/ecological state and deterministic RNG state.
+- Compatibility-based speciation includes adaptive thresholding, fitness sharing, stagnation tracking, integer offspring quotas and configurable champion reproductive pressure and temporary structural-innovation protection. Delayed-entry all-cause survival and realised-contribution effective-breeder telemetry are also persisted; the latter is not temporal/cohort Ne.
+- Inherited cis modifiers and variable-length trans-regulatory networks affect expression bias and environmental/stage responsiveness.
+- Worker snapshot schema 21 preserves the current population/genetic/ecological state and deterministic RNG state.
 
 ## Remaining phases
 
@@ -31,7 +31,7 @@ This roadmap describes work remaining after the merged evolutionary-ecology foun
 - Make allele/locus semantics explicit; add diploid pairs only if observed heterozygosity is a required model concept.
 - Improve heritability sampling by recording both parental genotypes at conception.
 - Report uncertainty and sample quality, including survivorship and pedigree-truncation limitations.
-- Add variance-based/temporal effective population size, additive genetic variance, phenotypic variance and trait covariance.
+- Add temporal/cohort effective population size, stronger uncertainty for provisional additive/phenotypic variance and trait covariance, and environmental covariance decomposition.
 - Validate estimators against synthetic populations with known pedigrees and inheritance parameters.
 
 ### 4. Ecological dynamics

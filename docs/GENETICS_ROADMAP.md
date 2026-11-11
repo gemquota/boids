@@ -2,16 +2,16 @@
 
 ## Current baseline
 
-The live runtime now includes ten quantitative trait loci, variable-length NEAT-style neural genomes, compatibility-based species selection, cis-regulatory modifiers, pedigree metrics and schema-13 snapshots. The project is an exploratory artificial ecology, not a calibrated biological model.
+The live runtime now includes ten quantitative trait loci, variable-length NEAT-style neural genomes, compatibility-based species selection, cis-regulatory modifiers and variable-length trans-regulatory networks, pedigree metrics and schema-21 snapshots. The project is an exploratory artificial ecology, not a calibrated biological model.
 
 | Area | Current status | Remaining work |
 |---|---|---|
 | Trait expression | Live and configurable | Validate selection/heritability under controlled experiments |
 | Neural topology | Variable-length, recurrent, innovation-tracked | Explicit elitism and innovation protection; further adversarial tests |
 | Speciation | Adaptive threshold, fitness sharing, stagnation and quotas | Stronger generation/overlapping-population validation and richer species telemetry |
-| Regulation | Inherited cis-regulatory modifiers; standalone trans/epistasis primitives | Stable gene-copy identity, duplication/deletion, live trans-regulatory networks and stage-specific expression |
-| Population genetics | Allele bins, Hₑ, pedigree inbreeding, preliminary h² and idealised sex-ratio Ne | Diploid representation if observed heterozygosity is desired; variance-based Ne, additive variance, covariance and uncertainty |
-| Persistence | Worker schema 13 and migration tests | User-facing import/export and broader corruption/large-world testing |
+| Regulation | Inherited cis-regulatory modifiers; standalone trans/epistasis primitives | broader configurable multi-locus/epistatic equations, stage-specific regulatory validation and uncertainty |
+| Population genetics | Allele bins, Hₑ, pedigree inbreeding, preliminary h² and realised-contribution effective-breeder index (not temporal/cohort Ne) | Diploid representation for observed heterozygosity; temporal/cohort Ne, stronger uncertainty for provisional additive/phenotypic variance and covariance, and environmental covariance decomposition |
+| Persistence | Worker schema 21 and migration tests | User-facing import/export and broader corruption/large-world testing |
 | Experiments | Manifests, seed derivation, sweeps and statistical helpers | Isolated replicate worlds, orchestration, pause/resume/cancel, comparison UI and replay archives |
 
 ## Completion criteria

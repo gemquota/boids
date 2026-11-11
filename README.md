@@ -11,25 +11,27 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 
 - Full-screen Canvas2D simulation in an OffscreenCanvas-capable Web Worker.
 - Fixed-step updates, seeded randomness, double-buffered movement state, spatial indexing, and deterministic snapshot continuation.
-- **182 configurable numeric controls**, generated from the shared configuration schema.
+- **190 configurable numeric controls**, generated from the shared configuration schema.
 - Ten inherited quantitative trait loci with configurable genotype-to-phenotype expression, environmental sensitivity, and mutation.
-- Variable-length NEAT-style node and connection genomes with historical innovations, add/split/delete mutations, enabled and recurrent edges, activation/bias mutation, homologous crossover, and separate lifetime learned-weight overlays.
-- Live compatibility-based speciation, adaptive thresholding, fitness sharing, species age/stagnation statistics, integer offspring quotas, champion reproductive pressure, and same-species mate preference with fallback.
+- Variable-length NEAT-style node and connection genomes with historical innovations, add/split/delete mutations, enabled and recurrent edges, activation/bias mutation, homologous crossover, and separate lifetime learned-weight overlays and variable-length plasticity traces.
+- Live compatibility-based speciation, adaptive thresholding, fitness sharing, species age/stagnation statistics, integer offspring quotas, configurable champion reproductive preservation, temporary structural-innovation grace windows, and same-species mate preference with fallback.
 - Inherited cis-regulatory modifiers that affect trait-expression bias and environmental responsiveness.
-- Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception, with sample sizes and t-based regression-slope intervals, species entropy, and an idealised sex-ratio effective-size estimate.
+- Live multi-locus additive and epistatic phenotype equations, five adjustable interaction strengths, and separate neural/regulatory architecture-diversity telemetry.
+- Birth-cohort-specific delayed-entry survival and lineage-turnover summaries, plus persisted regulatory expression and mutation history.
+- Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception with sample sizes and t-based regression-slope intervals, delayed-entry Kaplan–Meier all-cause survival, provisional additive/phenotypic variance and covariance summaries, species entropy, and a reproductive-skew-adjusted effective-breeder index from inverse-Simpson parental contributions by sex, with persisted lifetime contribution and parent-sex state.
 - Plant-only basal renewable resources, clonal plant growth/spores, freshwater networks, thirst, seasonal variation, reefs/shelter, and conspecific predation.
 - Observatory panels for population, reproduction, genetics, species, neural topology, and run history.
-- Browser-local IndexedDB world snapshots. Worker snapshot schema is **13**; the browser storage envelope has its own schema version.
+- Browser-local IndexedDB world snapshots. Worker snapshot schema is **22**; the browser storage envelope has its own schema version.
 
 ## Configuration
 
 All controls are declared in `config-schema.js` and registered by `config-registry.js`. The current count is derived from:
 - 64 core controls;
-- 28 advanced controls;
+- 36 advanced controls;
 - 10 trait loci × 6 expression controls;
 - 10 trait loci × 3 mutation controls.
 
-That is 182 unique numeric controls. Do not hand-maintain a separate count in UI documentation.
+That is 190 unique numeric controls. Do not hand-maintain a separate count in UI documentation.
 
 ## Architecture
 
@@ -48,15 +50,15 @@ That is 182 unique numeric controls. Do not hand-maintain a separate count in UI
 This is an exploratory agent-based artificial ecology, **not a biologically calibrated model**.
 
 - Trait alleles are quantitative loci, not paired diploid Mendelian chromosomes.
-- The live worker's regulatory inheritance is currently cis-regulatory. The more general trans-regulatory and epistatic functions in `evolution.js` are analysis/model primitives, not a fully integrated gene-copy regulatory network.
+- The live worker combines inherited cis-regulatory modifiers with variable-length trans-regulatory gene networks. Stable gene-copy/edge identities, duplication/deletion, signed activation/repression, environmental/stage inputs and bounded expression are integrated into offspring inheritance and phenotype calculation; five bounded default polygenic/epistatic interactions are integrated into live phenotype expression, with adjustable coefficients; broader controlled-environment validation remains incomplete.
 - Expected gene diversity from binned trait values is not observed diploid heterozygosity.
-- The current heritability estimate is preliminary and uses available living-parent records; survivorship and sample-selection limitations apply.
-- The sex-ratio effective population-size estimate assumes idealised reproductive conditions and is not a variance-based estimate for this overlapping-generation population.
+- The current heritability estimate is preliminary and uses conception-time parental trait records; sample-size, pedigree-truncation and selection-related limitations still apply.
+- The effective-breeder index uses realised lifetime parental offspring contributions, inverse-Simpson effective counts within each sex and their harmonic mean. It is not classical or temporal/cohort Ne for this overlapping-generation population.
 - Fitness remains a model-specific proxy, not a calibrated biological objective.
 - Experiment statistics and deterministic sweep helpers exist, but isolated multi-replicate experiment-world orchestration, full replay archives, and experiment UI are not complete.
 - Habitat gradients, nutrients, fragmentation, and controlled disturbance scenarios remain limited compared with the plant/freshwater baseline.
 
-See [implementation status](docs/IMPLEMENTATION-STATUS.md), [master backlog](docs/IMPLEMENTATION-BACKLOG.md), [architecture](docs/ARCHITECTURE.md), [genetics](docs/GENETICS.md), [configuration](docs/CONFIGURATION.md), and [validation](docs/VALIDATION.md).
+See [implementation status](docs/IMPLEMENTATION-STATUS.md), [master backlog](docs/IMPLEMENTATION-BACKLOG.md), [architecture](docs/ARCHITECTURE.md), [snapshot migration contract](docs/SNAPSHOT-MIGRATION.md), [telemetry and exports](docs/TELEMETRY-EXPORTS.md), [performance baseline](docs/PERFORMANCE-BASELINE.md), [genetics](docs/GENETICS.md), [configuration](docs/CONFIGURATION.md), and [validation](docs/VALIDATION.md).
 
 ## Development and validation
 

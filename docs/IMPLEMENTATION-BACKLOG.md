@@ -4,25 +4,25 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## Non-negotiable invariants
 
-- [ ] One evolving boid population; hunting and other strategies are behavioural differences, not a separate predator caste.
-- [ ] Persistent unique individual identity; generation counters are never used as kinship.
+- [x] One evolving boid population; hunting and other strategies are behavioural differences, not a separate predator caste.
+- [x] Persistent unique individual identity; generation counters are never used as kinship.
 - [x] Deterministic fixed-step updates and serialisable random state.
-- [ ] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
-- [ ] Selection is based on realised survival and reproduction, not decorative fitness.
-- [ ] UI, worker, model documentation, snapshots, and exports describe the same mechanics.
-- [ ] Existing plant-only ecology, terrain, drawers, controls, Observatory, presets, and saved worlds remain functional.
+- [x] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
+- [x] Selection is based on realised survival and reproduction, not decorative fitness. Mortality removes individuals; selection fitness now incorporates survival duration, energy condition and lifetime offspring contribution, while mate choice and species quotas alter reproductive pressure. It remains a model-specific proxy, not a biological measurement.
+- [x] UI, worker, model documentation, snapshots, and exports describe the same implemented mechanics; incomplete mechanisms remain explicitly labelled as outstanding.
+- [x] Existing plant-only ecology, terrain, drawers, controls, Observatory, presets and saved worlds remain functional under the current regression suite, schema migration fixtures and CI control inventory.
 
 ## A. Baseline, architecture, and compatibility
 
-- [ ] Record baseline deterministic runs at 100, 250, 500, and 1,000 agents.
-- [ ] Record baseline memory, update, draw, backlog, snapshot-size, and restore timings.
-- [ ] Audit every fixed-size neural array and connection-count assumption.
-- [ ] Inventory all snapshot schemas and migration paths.
-- [ ] Inventory current Observatory telemetry and experiment export fields.
+- [x] Record baseline deterministic runs at 100, 250, 500, and 1,000 agents. (GitHub Actions worker update baseline recorded in `docs/VALIDATION.md`; browser/device and render timing remain separate release gates.)
+- [x] Record baseline memory, update, draw, backlog, snapshot-size, and restore timings. (CI records process heap delta, update/draw timings, frame backlog, serialized snapshot size and restore time at 100/250/500/1,000 agents; browser/device profiling remains open.)
+- [x] Audit fixed-size neural arrays and connection-count assumptions; document legacy projections, runtime bounds and test coverage in [ARCHITECTURE.md](ARCHITECTURE.md).
+- [x] Inventory worker, IndexedDB-envelope and chromosome-codec schemas plus field-presence migration behaviour in [SNAPSHOT-MIGRATION.md](SNAPSHOT-MIGRATION.md).
+- [x] Inventory current Observatory telemetry and analysis-export fields in [TELEMETRY-EXPORTS.md](TELEMETRY-EXPORTS.md); isolated experiment execution and replayable archives remain outstanding.
 - [ ] Define stable public interfaces for genetics, neuroevolution, ecology, metrics, and experiments.
 - [ ] Keep worker as orchestration layer; extract model logic into testable modules.
-- [ ] Add round-trip snapshot fixtures for representative old and current worlds.
-- [ ] Add deterministic replay tests including reproduction, mutations, death compaction, and restore.
+- [x] Add round-trip snapshot fixtures for representative old and current worlds (including legacy fixed-slot and trait-layout migration).
+- [x] Add deterministic replay tests including reproduction, mutation, death/removal, stable identity and snapshot restore.
 
 ## B. Variable-length NEAT genome
 
@@ -55,52 +55,57 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Adapt compatibility threshold toward a configurable target species count.
 - [x] Track species identity, age, size, representative, best fitness, and stagnation.
 - [x] Apply fitness sharing within species.
-- [ ] Preserve champions / configurable elitism.
-- [ ] Protect new structural innovations from immediate elimination.
+- [x] Preserve species champions with configurable reproductive-pressure elitism (`speciesChampionBonus`); this overlapping sexual population protects champion contribution rather than copying a clone into a discrete next generation.
+- [x] Protect newly introduced NEAT structural innovations with configurable grace duration/bonus, stable innovation IDs and schema-20 persistence; protection expires deterministically.
+- [x] Protect new structural innovations with persisted introduction times and a configurable grace window/selection bonus; the bonus expires after the configured simulation-time window.
+- [x] Reweight selection fitness using realised survival time and lifetime offspring contribution; deterministic tests compare matched worlds differing only in survival or reproduction records.
 - [x] Implement species-aware parent selection and species-specific offspring allocation. (Integer quota targets are allocated from shared fitness and converted to reproductive pressure in the overlapping-generation model; same-species mating is preferred with fallback.)
 - [x] Handle extinct species and representative replacement.
 - [x] Persist species state across save/restore.
-- [ ] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory. (Counts, sizes, age, stagnation, champion fitness and quota pressure are visible; per-species innovation/topology detail remains outstanding.)
+- [x] Expose species counts, sizes, age, innovation count, and topology complexity in Observatory. (Includes per-species member count, mean nodes/connections, enabled connections, innovation count, age, stagnation, champion fitness and quota allocation, plus population-level complexity trends.)
 - [x] Test speciation under controlled synthetic genomes and selection pressure.
 
 ## D. Regulatory genetics and gene expression
 
-- [ ] Define typed structural, regulatory, modifier, and neural gene records.
-- [ ] Give every gene copy a stable identity independent of chromosome position.
-- [ ] Implement gene duplication with independent copy identity.
-- [ ] Implement gene deletion and chromosome-length changes.
-- [ ] Implement gene insertion/rearrangement without invalidating stable identities.
-- [ ] Implement regulatory edges with activation and repression.
-- [ ] Implement regulatory thresholds, strengths, and environmental input channels.
-- [ ] Implement multi-locus phenotype equations.
-- [ ] Implement epistatic interaction terms and bounded expression.
-- [ ] Implement stage-dependent expression.
+- [x] Define typed hexadecimal structural, regulatory-node, regulatory-edge, modifier, neural-node and neural-connection gene records. The live chromosome projection serializes and restores these alongside quantitative trait and legacy connection records, with integer source/destination indices and typed round-trip/migration tests.
+- [x] Give every regulatory gene copy a stable identity independent of chromosome position. (Live worker offspring inheritance, stable node/edge IDs and snapshot persistence are covered by worker tests.)
+- [x] Implement gene duplication with independent copy identity. (The live worker mutation path calls the stable-ID regulatory mutation engine; standalone operator tests cover identity and incident-edge duplication.)
+- [x] Implement gene deletion and regulatory-network length changes. (Live worker mutation uses the tested stable-ID regulatory mutation engine.)
+- [x] Implement gene insertion/rearrangement without invalidating stable identities. (Stable IDs and registry state are inherited/persisted; insertion and rearrangement operators are tested.)
+- [x] Implement regulatory edges with activation and repression. (Signed live trans-regulatory edges feed bounded iterative expression; operator tests cover activation and repression.)
+- [x] Implement regulatory thresholds, strengths, and environmental input channels. (Live expression consumes energy, hydration, shelter, harshness, season and life-stage inputs.)
+- [x] Implement bounded multi-locus phenotype equations in the live genotype-to-phenotype refresh path, with validated per-trait additive terms and reusable equation records.
+- [x] Implement one- to four-locus interaction terms, including pairwise and higher-order epistasis, with centred inputs and per-equation output bounds.
+- [x] Implement stage-dependent expression. (The live regulatory evaluator receives a juvenile/adult/senescent stage input; richer developmental schedules remain possible.)
 - [x] Implement environment-dependent plasticity without rewriting inherited genotype.
-- [ ] Keep inherited genotype, expressed phenotype, and lifetime learning separate.
-- [ ] Cache expression safely and invalidate on relevant state changes.
-- [ ] Persist regulatory genes, expression state, and mutation history.
-- [ ] Test duplicate divergence, deletion, activation, repression, epistasis, and environmental response.
+- [x] Keep inherited genotype, expressed phenotype, and lifetime learning separate. (Trait loci and regulatory genomes are inherited; regulatory expression is recomputed into a phenotype modifier; learned neural weights remain a separate overlay.)
+- [x] Cache expression safely and invalidate on relevant state changes. (Phenotype refresh recomputes the regulatory expression before the phenotype cache is marked ready; snapshot restore invalidates the cache.)
+- [x] Persist per-agent regulatory gene networks, derived expression state, stable identity allocator, and a bounded 5,000-event regulatory mutation history in worker snapshots, with backward-compatible neutral migration.
+- [x] Test duplicate identity/divergence operators, deletion, activation, repression, epistasis, bounded multi-locus expression, and environmental response.
 
 ## E. Population genetics and pedigree
 
-- [ ] Define allele/locus semantics for every supported gene type.
+- [x] Define allele/locus semantics for quantitative traits, neural node/structural/weight genes, regulatory gene copies/edges and cis/multi-locus modifier records in the genetics and chromosome contracts.
 - [x] Track per-locus allele frequencies and allele richness.
 - [ ] Track observed and expected heterozygosity where diploid allele representation supports it.
-- [ ] Track genome-wide and locus-specific diversity without using colour as a proxy.
-- [ ] Track neural topology and regulatory architecture diversity separately.
+- [x] Track genome-wide and locus-specific diversity using normalized inherited trait loci and 16-bin per-locus frequency summaries; colour is not used as the diversity estimator.
+- [x] Track neural topology and regulatory architecture diversity separately, including unique architecture frequency, innovation richness, node/edge counts, recurrent-edge fraction and regulatory edge sign composition.
 - [x] Calculate pedigree kinship with documented founder and missing-ancestor policy.
 - [x] Calculate individual and population inbreeding coefficients.
-- [ ] Track pedigree truncation and uncertainty explicitly.
-- [ ] Estimate effective population size using appropriate temporal/cohort methods.
-- [ ] Estimate additive genetic variance and phenotypic variance.
+- [x] Track pedigree truncation counts explicitly in worker telemetry and exports.
+- [ ] Quantify uncertainty introduced by pedigree truncation and missing ancestors.
+- [ ] Estimate effective population size using temporal/cohort methods. (A preliminary lifetime, sex-structured realised-contribution estimate is implemented; temporal/cohort Ne remains outstanding.)
+- [x] Estimate preliminary additive genetic variance and expressed phenotypic variance. (Additive variance uses h² × expressed phenotypic variance and is explicitly provisional.)
 - [x] Estimate preliminary mid-parent/offspring regression from conception-time parental trait records (living-offspring sample).
 - [x] Report per-trait heritability sample sizes and t-based 95% regression-slope intervals in worker telemetry/export.
-- [ ] Report uncertainty and assumptions for every population-genetic estimate; variance-based Ne and additive-variance uncertainty remain outstanding.
-- [ ] Track trait covariance and genetic/environmental covariance where identifiable.
+- [ ] Report uncertainty and assumptions for every population-genetic estimate; variance-based Ne and additive-variance uncertainty remain outstanding. (The lifetime effective-breeder estimate is explicitly labelled as a realised-contribution approximation, not temporal Ne.)
+- [x] Track phenotypic and genotypic trait covariance matrices. (Environmental decomposition and causal genetic/environmental covariance remain unidentified.)
 - [x] Track realised lifetime reproductive success and lineage contribution.
-- [ ] Track age-specific survival, cohort survival, and generational turnover.
-- [ ] Add synthetic known-pedigree and known-inheritance validation datasets.
-- [ ] Persist and export population-genetic histories.
+- [x] Track all-cause age-at-death and right-censored living-agent observations with bounded, delayed-entry Kaplan–Meier telemetry.
+- [x] Track cohort-specific survival and generational turnover using persisted birth-cohort IDs, delayed-entry/censoring-aware Kaplan–Meier summaries, and cohort lineage-depth summaries. Cohort IDs use deterministic 24-simulation-time-unit birth windows; only the most recent 16 cohorts are surfaced, and event-history truncation remains explicit.
+- [x] Add synthetic known-pedigree and known-inheritance regression fixtures for parent/offspring and sibling relatedness plus conception-time mid-parent inheritance.
+- [x] Persist and export bounded survival-event history and truncation metadata in worker snapshots/analysis bundles.
+- [x] Persist and export sampled per-locus allele, heritability, variance and covariance metrics through snapshot telemetry history and analysis bundles.
 
 ## F. Ecological dynamics
 
@@ -126,7 +131,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement one- and multi-parameter sweeps.
 - [ ] Implement factorial and Latin-hypercube designs for larger parameter spaces.
 - [ ] Implement bounded concurrency, pause/resume, cancellation, and progress reporting.
-- [ ] Stream telemetry rather than retaining unbounded per-tick history.
+- [x] Stream sampled telemetry with bounded rolling histories; survival events and all trend histories have explicit caps.
 - [x] Calculate mean, SD, median, IQR, and confidence intervals across replicate outcomes.
 - [x] Implement effect sizes and bootstrap comparisons.
 - [x] Implement regression and correlation analysis with documented assumptions.
@@ -139,16 +144,16 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## H. Observatory and controls
 
-- [ ] Add neural topology/species views.
+- [x] Add evolved-brain topology inspection and per-species topology/innovation summaries in the Observatory.
 - [ ] Add innovation history and structural mutation rates.
 - [ ] Add regulatory network and expression views.
-- [ ] Add allele frequency, heterozygosity, diversity, and effective population size views.
+- [x] Add allele richness/frequency, expected gene diversity, inbreeding, effective-breeder and sex-ratio Ne summaries plus sampled genetics trends; temporal/cohort Ne remains outstanding.
 - [ ] Add pedigree and inbreeding views.
-- [ ] Add heritability estimates with sample size and uncertainty.
+- [x] Add per-trait mid-parent heritability estimates, sample sizes and t-based 95% slope intervals.
 - [ ] Add ecological gradient/resource field views.
 - [ ] Add experiment design and parameter sweep controls.
 - [ ] Add replicate comparison and statistical output views.
-- [ ] Ensure charts consume sampled telemetry, not render-loop internals.
+- [x] Ensure Observatory history charts consume sampled worker telemetry rather than render-loop state.
 - [ ] Ensure every control is functional, persisted appropriately, and documented.
 - [ ] Keep UI responsive while worker and experiment jobs are busy.
 
@@ -157,8 +162,10 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Benchmark neural evaluation separately from movement and ecology.
 - [ ] Benchmark genetic mutation, crossover, and speciation separately.
 - [ ] Benchmark regulatory expression and population-statistics aggregation.
-- [ ] Benchmark rendering, snapshot serialization, restore, and experiment throughput.
-- [ ] Profile 100, 250, 500, 1,000, and stress-test populations.
+- [x] Benchmark draw traversal, JSON snapshot serialization and restore separately in the seeded CI baseline.
+- [ ] Benchmark isolated experiment throughput once the experiment runner exists.
+- [x] Profile seeded 100, 250, 500 and 1,000-agent workloads in CI.
+- [ ] Stress-test populations above 1,000 agents.
 - [ ] Profile representative Android hardware and desktop browsers.
 - [ ] Optimise allocation, sparse neural evaluation, spatial queries, and telemetry from measured bottlenecks.
 - [ ] Test Android Chrome and Firefox.
@@ -168,7 +175,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Test long-running memory stability and large-world save/restore.
 - [x] Run syntax, unit, integration, deterministic replay, migration, and performance regression tests in CI.
 - [ ] Verify GitHub Pages deployment and production smoke tests.
-- [ ] Update model documentation and release notes only for implemented behaviour.
+- [x] Reconcile model documentation and release notes with implemented behaviour; incomplete mechanisms remain labelled as gaps.
 
 ## Completion policy
 
@@ -181,6 +188,29 @@ A task is not complete because a function exists. It must have:
 6. Performance evidence where it adds recurring computation.
 
 ## Work log
+
+- [x] Added deterministic regulatory gene insertion and identity-preserving node/edge rearrangement mutations to the standalone regulatory-genome API, with tests proving existing gene and edge identities survive the operation. Live-worker integration remains open.
+
+
+
+- [x] Replaced the live NEAT plasticity loop's fixed `cfg.connections` cap with per-agent variable-length eligibility traces aligned to the full evolved genome. Schema 19 persists them and migrates available legacy traces; regression tests prove connections beyond the legacy slot limit continue learning and restore correctly.
+
+
+
+- [x] Recorded fixed-seed process-heap, update/draw, frame-backlog, snapshot-size and restore baselines at four population sizes; see `docs/PERFORMANCE-BASELINE.md`. Process heap delta is explicitly labelled as coarse, not isolated browser memory.
+
+
+
+- [x] Recorded fixed-seed worker update baselines at 100/250/500/1,000 agents with initial, warm-up and final population counts plus mean/median/p95 timing. The run is a CI-hosted simulation-only reference, not an Android/browser-rendering benchmark.
+
+
+- [x] Added and tested standalone variable-length regulatory genomes with stable gene-copy and edge identities, gene duplication/deletion, incident-edge duplication/removal, identity-aligned crossover, regulatory activation/repression, environmental inputs and bounded iterative expression. This is a tested foundation, not yet connected to live offspring inheritance, phenotype calculation or snapshots.
+
+- [x] Added per-trait expressed phenotypic variance, preliminary additive variance (h² × Vp), residual variance, and 10×10 phenotypic/genotypic trait covariance matrices to live population telemetry. Exposed mean variance summaries in the Observatory and added regression tests; uncertainty and living-offspring sampling bias remain explicit limitations.
+
+- [x] Added lifetime sex-specific reproductive contribution tracking and an inverse-Simpson effective breeder estimator, combining effective female and male contributions with a harmonic sex-structured estimate. Persisted parental sex identities through schema-21 snapshots and exposed the estimate in the Observatory. This is explicitly not presented as temporal/cohort Ne.
+
+- [x] Added per-species topology summaries to live telemetry: member count, mean node/connection counts, enabled connections, unique innovation count, age, stagnation, champion fitness and offspring quota. Added Observatory summary cards and trend series with worker regression tests.
 
 - [x] Added explicit recurrent-edge mutation to the live NEAT mutation path and exposed its rate as a control.
 - [x] Added persistent species age, champion, best-fitness, stagnation, shared-fitness, and integer offspring-quota statistics; wired quota pressure into female reproductive drive and male mate selection, with a champion reproductive bonus.

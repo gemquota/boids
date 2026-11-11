@@ -2,6 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const genetics=require('../genetics.js');
+const configSchema=require('../config-schema.js');
 
 test('ten stable loci have ordered indices and valid gene bounds',()=>{
   assert.equal(genetics.TRAITS.length,10);
@@ -60,6 +61,41 @@ test('cis-regulatory alleles shift trait expression and environmental responsive
   assert.ok(quietStress>quiet);
 });
 
+test('default polygenic interactions are bounded, explicit and user-adjustable',()=>{
+  assert.equal(genetics.DEFAULT_INTERACTIONS.length,5);
+  for(const equation of genetics.DEFAULT_INTERACTIONS){
+    assert.ok(equation.maxMagnitude>0&&equation.maxMagnitude<=1);
+    assert.ok(equation.terms.length>0);
+  }
+  const ids=configSchema.extraSliderDefs.map(def=>def.id);
+  for(const id of ['interactionAggressionRisk','interactionSpeedSize','interactionBiteSize','interactionAccelerationSynergy','interactionExplorationRisk'])assert.ok(ids.includes(id),id);
+});
+test('multi-locus additive equations modify only their declared phenotype target',()=>{
+  const equations=genetics.normalizeInteractionEquations([{id:'speed-from-size',trait:'speed',terms:[{loci:['bodySize'],coefficient:.2}]}]);
+  const loci=genetics.TRAITS.map(t=>.5);loci[1]=1;
+  assert.ok(Math.abs(genetics.evaluateMultiLocusModifier('speed',loci,equations)-.2)<1e-12);
+  assert.equal(genetics.evaluateMultiLocusModifier('aggression',loci,equations),0);
+});
+test('epistatic terms multiply centred locus states and remain bounded',()=>{
+  const equations=genetics.normalizeInteractionEquations([{trait:'aggression',maxMagnitude:.12,terms:[{loci:['bodySize','speed'],coefficient:.8}]}]);
+  const loci=genetics.TRAITS.map(t=>.5);loci[1]=1;loci[2]=1;
+  assert.equal(genetics.evaluateMultiLocusModifier('aggression',loci,equations),.12);
+  loci[2]=0;
+  assert.equal(genetics.evaluateMultiLocusModifier('aggression',loci,equations),-.12);
+});
+test('interaction equation validation rejects unknown loci, duplicate inputs and invalid coefficients',()=>{
+  assert.throws(()=>genetics.normalizeInteractionEquations([{trait:'speed',terms:[{loci:['not-a-locus'],coefficient:.1}]}]),/Invalid interaction loci/);
+  assert.throws(()=>genetics.normalizeInteractionEquations([{trait:'speed',terms:[{loci:['speed','speed'],coefficient:.1}]}]),/Invalid interaction loci/);
+  assert.throws(()=>genetics.normalizeInteractionEquations([{trait:'speed',terms:[{loci:['speed'],coefficient:NaN}]}]),/coefficient must be finite/);
+});
+test('multi-locus modifiers enter bounded phenotype expression without rewriting inherited genes',()=>{
+  const trait=genetics.TRAITS[0],settings={min:0,max:1,curve:'linear',environmentSensitivity:0};
+  const loci=genetics.TRAITS.map(t=>.5),equations=genetics.normalizeInteractionEquations([{trait:'aggression',terms:[{loci:['bodySize','speed'],coefficient:.2}]}]);
+  loci[1]=1;loci[2]=1;
+  const modifier=genetics.evaluateMultiLocusModifier('aggression',loci,equations);
+  assert.equal(genetics.express(.5,trait,settings,.5,.5,modifier),.7);
+  assert.equal(loci[0],.5);
+});
 test('inheritance fidelity and locus mutation are independently configurable',()=>{
   const t=genetics.TRAITS[2],mid=(t.geneMin+t.geneMax)/2;
   assert.equal(genetics.inheritTrait(mid,mid,2,{rate:0,magnitude:.5,heritability:1},()=>.99),mid);
@@ -76,6 +112,8 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
   assert.match(worker,/function phenotype\(i,k\)/);
   assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);
   assert.match(worker,/regulatoryGenes\[i\*10\+k\]/);
+  assert.match(worker,/BoidsGenetics\.evaluateMultiLocusModifier\(k,normalizedLoci,cfg\.geneInteractions/);
+  assert.match(worker,/cfg\.geneInteractions=BoidsGenetics\.normalizeInteractionEquations/);
   assert.match(worker,/cloneRegulatoryGenes\(child,mother\)/);
   for(const index of [0,1,2,3,4,5,6,7,8,9])assert.ok(worker.includes('phenotype(i,'+index+')'),'missing expressed locus '+index);
   assert.match(worker,/BoidsGenetics\.inheritTrait/);
@@ -89,8 +127,14 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
 
 
 test('Observatory exposes live species and population-genetic metrics',()=>{
-  for(const id of ['mSpecies','mSpeciesThreshold','mSpeciesQuota','mSpeciesAge','mSpeciesStagnant','mSpeciesChampion','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mInbreeding','mNe','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
+  for(const id of ['mSpecies','mSpeciesThreshold','mSpeciesQuota','mSpeciesAge','mSpeciesStagnant','mSpeciesChampion','mLargestSpecies','mRegulatory','mHeterozygosity','mHeritability','mPhenotypicVariance','mAdditiveVariance','mInbreeding','mNe','mEffectiveBreeders','mEffectiveFemales','mEffectiveMales','mAlleleRichness'])assert.ok(html.includes('id="'+id+'"'),'missing Observatory metric '+id);
+  for(const id of ['mNeuralArchitectureDiversity','mNeuralArchitectureRichness','mNeuralMeanNodes','mNeuralMeanConnections','mRegulatoryArchitectureRichness','mRegulatoryPositiveEdges','mRegulatoryNegativeEdges'])assert.ok(html.includes('id=\"'+id+'\"'),'missing architecture metric '+id);
+  for(const id of ['mBirthCohorts','mLatestBirthCohort','mLatestCohortSize','mLatestCohortMedian','mMeanCohortMedian','mLatestCohortLineage'])assert.ok(html.includes('id=\"'+id+'\"'),'missing cohort metric '+id);
+  for(const id of ['mTemperature','mMoisture','mNutrients','mSuitability'])assert.ok(html.includes('id=\"'+id+'\"'),'missing habitat field metric '+id);
   assert.ok(html.includes('geneticsHistoryChart'));
+  assert.ok(html.includes('meanPhenotypicVariance'));
+  assert.ok(html.includes('meanAdditiveVariance'));
+  assert.ok(html.includes('effectiveBreeders'));
   assert.ok(html.includes('speciesCount'));
   assert.ok(html.includes('speciesStagnationLimit'));
   assert.ok(html.includes('speciesStagnantCount'));

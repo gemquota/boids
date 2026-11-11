@@ -10,7 +10,7 @@ BOIDS is a static browser application. `index.html` owns presentation, browser s
 | `boids-worker.js` | Fixed-step orchestration, movement, spatial queries, plant/freshwater ecology, reproduction, selection, live telemetry, snapshot migration |
 | `evolution.js` | Pure genome validation/mutation/crossover/compilation, speciation, regulation/statistics, experiment-analysis primitives |
 | `genetics.js` | Ten quantitative loci, expression curves, environmental modulation, inheritance helpers |
-| `chromosome.js` | Typed hexadecimal gene-record encoding/decoding |
+| `chromosome.js` | Versioned typed hexadecimal quantitative, structural, neural, regulatory and modifier gene-record encoding/decoding |
 | `config-schema.js` | Authoritative control schema, field-guide content and dependency rules |
 | `config-registry.js` | DOM range-control registry and value normalization |
 
@@ -35,7 +35,20 @@ Keep these layers distinct:
 - **Lifetime learning:** per-agent learned-weight overlays and recurrent activation state. Learning must not silently rewrite inherited connection genes.
 - **Environment:** plant biomass, water/moisture proximity, season, shelter, currents, and world geometry.
 
-The current worker uses variable-length genomes as the neural source of truth while retaining compatibility/projection arrays for legacy runtime consumers. Those projections are transitional and must not become a second independently mutable genome.
+The current worker uses variable-length genomes as the neural source of truth while retaining compatibility/projection arrays for legacy runtime consumers. Those projections are transitional and must not become a second independently mutable genome. The genotype-to-phenotype path also evaluates validated additive and epistatic multi-locus equations over normalized inherited loci before applying bounded environmental and regulatory modifiers.
+
+## Neural storage bounds and legacy projections
+
+The variable-length `agentGenomes`, compiled networks, per-agent recurrent state, learned-weight overlays and per-gene `agentEligibility` traces are authoritative. The fixed-size typed arrays (`genome`, `connectionSource`, `connectionDestination`, `innovation`, `brainState` and legacy `eligibility`) remain bounded compatibility projections/fallbacks for older execution paths; they must not be treated as the evolved genome's maximum topology. Schema 19 persists variable-length eligibility traces and migrates available legacy traces into matching leading connection positions.
+
+Current bounds are aligned:
+- UI/configuration legacy connection slots: 4–64.
+- Legacy hidden-neuron count: 2–24; the legacy scratch buffer has 40 entries for the 8 inputs, up to 24 hidden neurons and 8 outputs.
+- Live NEAT mutation limits: 128 nodes and 512 connections.
+- Compiled neural workspace: 128 values/state slots, matching the live node ceiling.
+- The live per-agent genome, innovation map and recurrent state are variable-length structures.
+
+Configuration schema tests enforce the legacy control bounds; evolution tests cover variable-length genes, graph validation, recurrent execution and structural mutation. Any increase to the node ceiling must update the compiled workspace and its tests in the same change.
 
 ## NEAT execution
 
@@ -49,7 +62,7 @@ There is one boid population. Predation is conspecific. Plants are the basal ren
 
 ## Persistence
 
-The worker's world snapshot schema is **13**. It includes configuration, agent and ecological state, variable-length genomes, learned-weight overlays, recurrent state, regulatory loci, pedigree, innovation/species state, RNG and sampled histories where supported. The browser stores the worker snapshot with a separate `storageSchemaVersion: 2` field. The worker's `schemaVersion: 14` is never overwritten by the IndexedDB envelope version. Legacy records whose worker version was previously overwritten to 2 remain readable through worker migration defaults.
+The worker's world snapshot schema is **22**. It includes configuration, agent and ecological state, variable-length neural and regulatory genomes, learned-weight overlays, recurrent state, derived regulatory expression arrays and bounded regulatory mutation history, pedigree, innovation/species state, delayed-entry all-cause and birth-cohort survival history, persisted birth-cohort IDs/lineage records, stable-ID entry ages, lifetime reproductive-success and parent-sex identity state, per-gene eligibility traces, structural-innovation protection ages, RNG and sampled histories where supported. The browser stores the worker snapshot with a separate `storageSchemaVersion: 2` field. The worker's `schemaVersion: 22` is never overwritten by the IndexedDB envelope version. Legacy records whose worker version was previously overwritten to 2 remain readable through worker migration defaults.
 
 When adding persistent state:
 1. add it to snapshot export;
@@ -61,3 +74,8 @@ When adding persistent state:
 ## Performance constraints
 
 The hot path must avoid per-agent/per-tick object allocation where practical. Use typed arrays, sparse compiled edges, reusable activation workspaces, throttled telemetry and spatial indexing. Benchmark changes at several population sizes. A passing syntax test says nothing about runtime cost.
+
+
+See [snapshot schemas and migration behaviour](SNAPSHOT-MIGRATION.md) for the field-presence migration contract and the independent worker, IndexedDB and chromosome version domains.
+
+See [Observatory telemetry and analysis exports](TELEMETRY-EXPORTS.md) for sampled metrics, retention limits and bundle contents.

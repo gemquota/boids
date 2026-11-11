@@ -167,6 +167,88 @@
     return {expression:regulated,phenotype:out};
   }
 
+  function normalizeRegulatoryGenome(input={}){
+    const nodes=[],nodeIds=new Set(),edgeIds=new Set(),edges=[];
+    for(const raw of input.nodes||[]){const id=Math.floor(finite(raw.id,0));if(id<=0||nodeIds.has(id))continue;nodeIds.add(id);nodes.push({id,locus:String(raw.locus||'trait'),bias:clamp(finite(raw.bias,0),-8,8),threshold:clamp(finite(raw.threshold,0),-8,8),effect:clamp(finite(raw.effect,1),-4,4),environment:String(raw.environment||''),environmentSensitivity:clamp(finite(raw.environmentSensitivity,0),-4,4),activation:['tanh','sigmoid','relu','linear'].includes(raw.activation)?raw.activation:'tanh',enabled:raw.enabled!==false})}
+    for(const raw of input.edges||[]){const id=Math.floor(finite(raw.id,0)),source=Math.floor(finite(raw.source,0)),target=Math.floor(finite(raw.target,0));if(id<=0||edgeIds.has(id)||!nodeIds.has(source)||!nodeIds.has(target)||source===target)continue;edgeIds.add(id);edges.push({id,source,target,weight:clamp(finite(raw.weight,0),-4,4),enabled:raw.enabled!==false})}
+    return{schemaVersion:1,nodes,edges};
+  }
+  function mutateRegulatoryGenome(input,registry,random=Math.random,options={}){
+    const genome=normalizeRegulatoryGenome(input),rates={duplicate:.02,delete:.005,insert:.01,rearrange:.005,addEdge:.02,deleteEdge:.005,weight:.08,bias:.05,threshold:.05,effect:.05,...options.rates},limits={maxNodes:64,maxEdges:256,...options.limits};
+    let nextGene=Math.max(1,Math.floor(finite(registry?.nextGene,1))),nextEdge=Math.max(1,Math.floor(finite(registry?.nextEdge,1)));
+    const pick=items=>items.length?items[randomIndex(items.length,random)]:null;
+    for(const node of genome.nodes){nextGene=Math.max(nextGene,node.id+1)}
+    for(const edge of genome.edges){nextEdge=Math.max(nextEdge,edge.id+1)}
+    if(random()<rates.duplicate&&genome.nodes.length<limits.maxNodes){const original=pick(genome.nodes);if(original){const copy={...original,id:nextGene++};copy.bias=clamp(copy.bias+(random()-.5)*.2,-8,8);copy.effect=clamp(copy.effect+(random()-.5)*.2,-4,4);genome.nodes.push(copy);const incident=genome.edges.filter(edge=>edge.enabled&&(edge.source===original.id||edge.target===original.id));for(const edge of incident){if(genome.edges.length>=limits.maxEdges)break;genome.edges.push({...edge,id:nextEdge++,source:edge.source===original.id?copy.id:edge.source,target:edge.target===original.id?copy.id:edge.target,weight:clamp(edge.weight+(random()-.5)*.1,-4,4)})}}}
+    if(random()<rates.delete&&genome.nodes.length>1){const node=pick(genome.nodes);if(node){genome.nodes=genome.nodes.filter(value=>value.id!==node.id);genome.edges=genome.edges.filter(edge=>edge.source!==node.id&&edge.target!==node.id)}}
+    if(random()<rates.insert&&genome.nodes.length<limits.maxNodes){const template=pick(genome.nodes);if(template){const inserted={...template,id:nextGene++,bias:clamp(template.bias+(random()-.5)*.4,-8,8),effect:clamp(template.effect+(random()-.5)*.4,-4,4)};genome.nodes.push(inserted);if(genome.edges.length<limits.maxEdges)genome.edges.push({id:nextEdge++,source:template.id,target:inserted.id,weight:(random()-.5)*.4,enabled:true})}}
+    if(random()<rates.addEdge&&genome.nodes.length>1&&genome.edges.length<limits.maxEdges){const source=pick(genome.nodes),target=pick(genome.nodes);if(source&&target&&source.id!==target.id&&!genome.edges.some(edge=>edge.source===source.id&&edge.target===target.id))genome.edges.push({id:nextEdge++,source:source.id,target:target.id,weight:(random()-.5)*2,enabled:true})}
+    if(random()<rates.deleteEdge&&genome.edges.length)genome.edges.splice(randomIndex(genome.edges.length,random),1);
+    if(random()<rates.rearrange){for(let i=genome.nodes.length-1;i>0;i--){const j=randomIndex(i+1,random);[genome.nodes[i],genome.nodes[j]]=[genome.nodes[j],genome.nodes[i]]}for(let i=genome.edges.length-1;i>0;i--){const j=randomIndex(i+1,random);[genome.edges[i],genome.edges[j]]=[genome.edges[j],genome.edges[i]]}}
+    for(const node of genome.nodes){if(random()<rates.bias)node.bias=clamp(node.bias+(random()-.5)*.5,-8,8);if(random()<rates.threshold)node.threshold=clamp(node.threshold+(random()-.5)*.5,-8,8);if(random()<rates.effect)node.effect=clamp(node.effect+(random()-.5)*.5,-4,4)}
+    for(const edge of genome.edges)if(random()<rates.weight)edge.weight=clamp(edge.weight+(random()-.5)*.5,-4,4);
+    if(registry){registry.nextGene=nextGene;registry.nextEdge=nextEdge}
+    return normalizeRegulatoryGenome(genome);
+  }
+  function crossoverRegulatoryGenome(a,b,random=Math.random){
+    const left=normalizeRegulatoryGenome(a),right=normalizeRegulatoryGenome(b),nodes=new Map(left.nodes.map(node=>[node.id,{...node}])),edges=new Map(left.edges.map(edge=>[edge.id,{...edge}]));
+    for(const node of right.nodes){const existing=nodes.get(node.id);if(existing){existing.bias=(existing.bias+node.bias)*.5;existing.threshold=(existing.threshold+node.threshold)*.5;existing.effect=(existing.effect+node.effect)*.5;existing.environmentSensitivity=(existing.environmentSensitivity+node.environmentSensitivity)*.5;if(random()<.5)existing.activation=node.activation}else if(random()<.5)nodes.set(node.id,{...node})}
+    for(const edge of right.edges){const existing=edges.get(edge.id);if(existing){existing.weight=(existing.weight+edge.weight)*.5;existing.enabled=existing.enabled&&edge.enabled}else if(random()<.5)edges.set(edge.id,{...edge})}
+    const valid=new Set(nodes.keys());return normalizeRegulatoryGenome({nodes:[...nodes.values()],edges:[...edges.values()].filter(edge=>valid.has(edge.source)&&valid.has(edge.target))});
+  }
+  function evaluateRegulatoryGenome(input,environment={},passes=4){
+    const genome=normalizeRegulatoryGenome(input),incoming=new Map(genome.nodes.map(node=>[node.id,[]]));
+    for(const edge of genome.edges)if(edge.enabled&&incoming.has(edge.target))incoming.get(edge.target).push(edge);
+    const values=new Map(genome.nodes.map(node=>[node.id,0])),activate=(value,kind)=>kind==='sigmoid'?1/(1+Math.exp(-clamp(value,-20,20))):kind==='relu'?Math.max(0,value):kind==='linear'?clamp(value,-8,8):Math.tanh(value);
+    for(let pass=0;pass<Math.max(1,Math.min(16,Math.floor(passes)));pass++){const next=new Map(values);for(const node of genome.nodes){if(!node.enabled){next.set(node.id,0);continue}let sum=node.bias-node.threshold+finite(environment[node.environment],0)*node.environmentSensitivity;for(const edge of incoming.get(node.id)||[])sum+=values.get(edge.source)*edge.weight;next.set(node.id,activate(sum,node.activation))}for(const [id,value]of next)values.set(id,value)}
+    const expression={};for(const node of genome.nodes)if(node.enabled)expression[node.locus]=(expression[node.locus]||0)+values.get(node.id)*node.effect;
+    for(const key of Object.keys(expression))expression[key]=clamp(expression[key],-8,8);
+    return{expression,activity:Object.fromEntries(values),nodeCount:genome.nodes.length,edgeCount:genome.edges.length,enabledEdges:genome.edges.filter(edge=>edge.enabled).length};
+  }
+
+  function compileRegulatoryGenome(input,locusKeys=[]){
+    const genome=normalizeRegulatoryGenome(input),index=new Map(genome.nodes.map((node,i)=>[node.id,i]));
+    const incoming=genome.nodes.map(()=>[]);
+    for(const edge of genome.edges)if(edge.enabled){const source=index.get(edge.source),target=index.get(edge.target);if(source!==undefined&&target!==undefined)incoming[target].push([source,edge.weight])}
+    const loci=new Map(locusKeys.map((key,i)=>[String(key),i]));
+    return{nodes:genome.nodes,incoming,locusIndex:genome.nodes.map(node=>loci.has(node.locus)?loci.get(node.locus):-1),values:new Float64Array(genome.nodes.length),next:new Float64Array(genome.nodes.length)};
+  }
+  function evaluateCompiledRegulatoryGenome(compiled,environment={},passes=4,output=new Float32Array(0)){
+    const nodes=compiled.nodes,values=compiled.values,next=compiled.next;
+    values.fill(0);next.fill(0);output.fill(0);
+    const count=Math.max(1,Math.min(16,Math.floor(passes)||4));
+    for(let pass=0;pass<count;pass++){
+      for(let i=0;i<nodes.length;i++){
+        const node=nodes[i];if(!node.enabled){next[i]=0;continue}
+        let sum=node.bias-node.threshold+finite(environment[node.environment],0)*node.environmentSensitivity;
+        const edges=compiled.incoming[i];for(let e=0;e<edges.length;e++)sum+=values[edges[e][0]]*edges[e][1];
+        next[i]=node.activation==='sigmoid'?1/(1+Math.exp(-clamp(sum,-20,20))):node.activation==='relu'?Math.max(0,sum):node.activation==='linear'?clamp(sum,-8,8):Math.tanh(sum);
+      }
+      values.set(next);
+    }
+    for(let i=0;i<nodes.length;i++){const k=compiled.locusIndex[i];if(k>=0&&nodes[i].enabled)output[k]+=values[i]*nodes[i].effect}
+    for(let i=0;i<output.length;i++)output[i]=clamp(output[i],-8,8);
+    return output;
+  }
+
+  function architectureStatistics(genomes,kind='neural'){
+    const entries=(Array.isArray(genomes)?genomes:[]).filter(Boolean),signatures=new Map(),innovations=new Set(),locusCopies=new Map();
+    let nodeTotal=0,edgeTotal=0,enabledTotal=0,recurrentTotal=0,positiveEdges=0,negativeEdges=0,activationKinds=new Set();
+    for(const genome of entries){
+      const nodes=Array.isArray(genome.nodes)?genome.nodes:[],edges=kind==='regulatory'?(Array.isArray(genome.edges)?genome.edges:[]):(Array.isArray(genome.connections)?genome.connections:[]);
+      nodeTotal+=nodes.length;edgeTotal+=edges.length;
+      for(const node of nodes){if(node.activation)activationKinds.add(node.activation);if(node.locus)locusCopies.set(node.locus,(locusCopies.get(node.locus)||0)+1)}
+      for(const edge of edges){if(edge.enabled!==false)enabledTotal++;if(edge.recurrent)recurrentTotal++;const weight=finite(edge.weight,0);if(weight>0)positiveEdges++;else if(weight<0)negativeEdges++;if(edge.innovation!==undefined)innovations.add(edge.innovation);else if(edge.id!==undefined)innovations.add(edge.id)}
+      const nodeShape=nodes.map(node=>kind==='regulatory'?[node.locus||'',node.enabled!==false]:[node.type||'',node.activation||'']).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+      const edgeShape=edges.map(edge=>[edge.source,kind==='regulatory'?edge.target:edge.destination,edge.enabled!==false,!!edge.recurrent,Math.sign(finite(edge.weight,0))]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+      const signature=JSON.stringify([nodeShape,edgeShape]);signatures.set(signature,(signatures.get(signature)||0)+1);
+    }
+    const n=entries.length,frequencies=[...signatures.values()].map(count=>count/Math.max(1,n)),architectureDiversity=n?1-frequencies.reduce((sum,p)=>sum+p*p,0):null;
+    return{sampleSize:n,uniqueArchitectures:signatures.size,architectureDiversity,meanNodes:n?nodeTotal/n:0,meanEdges:n?edgeTotal/n:0,meanEnabledEdges:n?enabledTotal/n:0,recurrentEdgeFraction:edgeTotal?recurrentTotal/edgeTotal:0,positiveEdgeFraction:edgeTotal?positiveEdges/edgeTotal:0,negativeEdgeFraction:edgeTotal?negativeEdges/edgeTotal:0,innovationRichness:innovations.size,activationDiversity:activationKinds.size,regulatoryLocusCopyCounts:kind==='regulatory'?Object.fromEntries(locusCopies):undefined};
+  }
+  function neuralArchitectureStatistics(genomes){return architectureStatistics(genomes,'neural')}
+  function regulatoryArchitectureStatistics(genomes){return architectureStatistics(genomes,'regulatory')}
+
   function alleleStatistics(values){
     const finiteValues=values.map(Number).filter(Number.isFinite),counts=new Map();for(const v of finiteValues)counts.set(v,(counts.get(v)||0)+1);
     const n=finiteValues.length,frequencies=[...counts.values()].map(c=>c/Math.max(1,n));
@@ -184,6 +266,12 @@
     const t95=[0,12.706,4.303,3.182,2.776,2.571,2.447,2.365,2.306,2.262,2.228,2.201,2.179,2.160,2.145,2.131,2.120,2.110,2.101,2.093,2.086,2.080,2.074,2.069,2.064,2.060,2.056,2.052,2.048,2.045,2.042],critical=t95[n-2]||1.96;
     return{n,slope,intercept,rSquared,correlation,slopeStandardError,slopeConfidenceInterval95:[slope-critical*slopeStandardError,slope+critical*slopeStandardError]};
   }
+  function effectiveBreederSize(contributions={}){
+    const effective=values=>{const clean=(Array.isArray(values)?values:[]).map(value=>Math.max(0,finite(value,0))),total=clean.reduce((sum,value)=>sum+value,0),squares=clean.reduce((sum,value)=>sum+value*value,0);return squares>0?total*total/squares:0};
+    const female=effective(contributions.female||[]),male=effective(contributions.male||[]),combined=female>0&&male>0?2*female*male/(female+male):0;
+    return{effectiveFemales:female,effectiveMales:male,effectiveBreeders:combined,femaleContributors:(contributions.female||[]).filter(value=>value>0).length,maleContributors:(contributions.male||[]).filter(value=>value>0).length};
+  }
+
   function parentOffspringHeritability(parentTrait,offspringTrait){const regression=linearRegression(parentTrait,offspringTrait);return{...regression,rawSlope:regression.slope,heritability:regression.slope===null?null:clamp(regression.slope,0,1),method:'mid-parent offspring regression; t-based slope interval'}}
 
   function seededRandom(seed=1){
@@ -220,13 +308,18 @@
     return seeds;
   }
   function kaplanMeier(observations,confidenceZ=1.96){
-    const rows=observations.map(row=>({time:finite(row.time,NaN),event:!!row.event})).filter(row=>Number.isFinite(row.time)&&row.time>=0).sort((a,b)=>a.time-b.time),times=[...new Set(rows.filter(row=>row.event).map(row=>row.time))];
-    let survival=1,greenwood=0;const curve=[{time:0,atRisk:rows.length,events:0,censored:0,survival:1,standardError:0,lower:1,upper:1}];
-    for(const time of times){const atRisk=rows.filter(row=>row.time>=time).length,events=rows.filter(row=>row.time===time&&row.event).length,censored=rows.filter(row=>row.time===time&&!row.event).length;if(!atRisk||!events)continue;survival*=1-events/atRisk;if(atRisk>events)greenwood+=events/(atRisk*(atRisk-events));else greenwood=Infinity;
-      const se=survival===0?0:survival*Math.sqrt(greenwood),lower=clamp(survival-confidenceZ*se,0,1),upper=clamp(survival+confidenceZ*se,0,1);
-      curve.push({time,atRisk,events,censored,survival,standardError:se,lower,upper});
+    const rows=observations.map(row=>({time:finite(row.time,NaN),entry:finite(row.entry,0),event:!!row.event})).filter(row=>Number.isFinite(row.time)&&row.time>=0&&row.entry>=0&&row.entry<=row.time);
+    const byEntry=rows.slice().sort((a,b)=>a.entry-b.entry),byExit=rows.slice().sort((a,b)=>a.time-b.time),totalEvents=rows.reduce((sum,row)=>sum+(row.event?1:0),0),totalCensored=rows.length-totalEvents,leftTruncated=rows.reduce((sum,row)=>sum+(row.entry>0?1:0),0);
+    let survival=1,greenwood=0,atRisk=0,entryIndex=0,index=0;const initialAtRisk=rows.reduce((sum,row)=>sum+(row.entry===0?1:0),0),curve=[{time:0,atRisk:initialAtRisk,events:0,censored:0,survival:1,standardError:0,lower:1,upper:1}];
+    while(index<byExit.length){const time=byExit[index].time;while(entryIndex<byEntry.length&&byEntry[entryIndex].entry<=time){atRisk++;entryIndex++}let events=0,censored=0,next=index;
+      while(next<byExit.length&&byExit[next].time===time){if(byExit[next].event)events++;else censored++;next++}
+      if(events&&atRisk){survival*=1-events/atRisk;if(atRisk>events)greenwood+=events/(atRisk*(atRisk-events));else greenwood=Infinity;
+        const se=survival===0?0:survival*Math.sqrt(greenwood),lower=clamp(survival-confidenceZ*se,0,1),upper=clamp(survival+confidenceZ*se,0,1);
+        curve.push({time,atRisk,events,censored,survival,standardError:se,lower,upper});
+      }
+      atRisk-=events+censored;index=next;
     }
-    return{n:rows.length,events:rows.filter(row=>row.event).length,censored:rows.filter(row=>!row.event).length,curve,median:curve.find(point=>point.survival<=.5)?.time??null};
+    return{n:rows.length,events:totalEvents,censored:totalCensored,leftTruncated,curve,median:curve.find(point=>point.survival<=.5+1e-12)?.time??null};
   }
   function correctPValues(values,method='BH'){
     const rows=values.map((p,index)=>({index,p:clamp(finite(p,1),0,1)})).sort((a,b)=>a.p-b.p),n=rows.length,adjusted=new Array(n);
@@ -255,5 +348,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,normalizeRegulatoryGenome,mutateRegulatoryGenome,crossoverRegulatoryGenome,evaluateRegulatoryGenome,compileRegulatoryGenome,evaluateCompiledRegulatoryGenome,architectureStatistics,neuralArchitectureStatistics,regulatoryArchitectureStatistics,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient,effectiveBreederSize});
 });

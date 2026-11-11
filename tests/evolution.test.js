@@ -108,6 +108,10 @@ test('Kaplan-Meier survival handles events, censoring and median survival',()=>{
   assert.equal(result.n,4);assert.equal(result.events,3);assert.equal(result.censored,1);
   assert.equal(result.curve[1].survival,.75);assert.equal(result.median,3);
   assert.ok(result.curve.every(point=>point.lower>=0&&point.upper<=1&&point.lower<=point.survival&&point.upper>=point.survival));
+  const large=evo.kaplanMeier(Array.from({length:5000},(_,i)=>({time:i+1,event:true})));
+  assert.equal(large.events,5000);assert.equal(large.curve.length,5001);assert.equal(large.median,2500);
+  const delayed=evo.kaplanMeier([{time:1,entry:0,event:true},{time:3,entry:2,event:true},{time:4,entry:0,event:false}]);
+  assert.equal(delayed.leftTruncated,1);assert.equal(delayed.curve[1].atRisk,2);assert.equal(delayed.curve[2].atRisk,2);assert.equal(delayed.median,1);
 });
 
 test('multiple-comparison corrections preserve order and control adjusted p-values',()=>{
@@ -173,9 +177,86 @@ test('regulatory activation, repression, and epistatic phenotype expression are 
   assert.ok(repressed.b<1);
 });
 
+test('regulatory gene copies retain stable identities through duplication and deletion',()=>{
+  const base={nodes:[{id:1,locus:'aggression',bias:.2,effect:1},{id:2,locus:'size',bias:0,effect:.5}],edges:[{id:1,source:1,target:2,weight:.8}]};
+  const registry={nextGene:3,nextEdge:2};
+  const duplicated=evo.mutateRegulatoryGenome(base,registry,()=>0,{rates:{duplicate:1,delete:0,insert:0,rearrange:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.equal(duplicated.nodes.length,3);assert.equal(new Set(duplicated.nodes.map(node=>node.id)).size,3);
+  assert.equal(duplicated.nodes[2].id,3);assert.ok(duplicated.edges.some(edge=>edge.source===3||edge.target===3),'duplicated locus should retain regulatory connections');
+  const deleted=evo.mutateRegulatoryGenome(duplicated,registry,()=>0,{rates:{duplicate:0,delete:1,insert:0,rearrange:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.equal(deleted.nodes.length,2);assert.ok(deleted.edges.every(edge=>deleted.nodes.some(node=>node.id===edge.source)&&deleted.nodes.some(node=>node.id===edge.target)));
+});
+
+test('regulatory gene insertion and rearrangement preserve stable identities',()=>{
+  const base={nodes:[{id:1,locus:'aggression',bias:.2,effect:1},{id:2,locus:'size',bias:0,effect:.5}],edges:[{id:1,source:1,target:2,weight:.8}]};
+  const inserted=evo.mutateRegulatoryGenome(base,{nextGene:3,nextEdge:2},()=>0,{rates:{duplicate:0,delete:0,insert:1,rearrange:0,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.equal(inserted.nodes.length,3);
+  assert.deepEqual(inserted.nodes.slice(0,2).map(node=>node.id),[1,2]);
+  assert.equal(inserted.nodes[2].id,3);
+  assert.ok(inserted.edges.some(edge=>edge.source===1&&edge.target===3),'inserted gene should be linked without changing existing identities');
+  const rearranged=evo.mutateRegulatoryGenome(base,{nextGene:3,nextEdge:2},()=>0,{rates:{duplicate:0,delete:0,insert:0,rearrange:1,addEdge:0,deleteEdge:0,weight:0,bias:0,effect:0}});
+  assert.deepEqual(new Set(rearranged.nodes.map(node=>node.id)),new Set([1,2]));
+  assert.deepEqual(rearranged.edges.map(edge=>[edge.id,edge.source,edge.target]),[[1,1,2]]);
+  assert.deepEqual(rearranged.nodes.map(node=>node.id),[2,1],'rearrangement should move records without reassigning stable IDs');
+});
+
+test('regulatory crossover combines homologous and inherited gene copies by identity',()=>{
+  const a={nodes:[{id:1,locus:'aggression',bias:.2,effect:1}],edges:[]},b={nodes:[{id:1,locus:'aggression',bias:.6,effect:1},{id:2,locus:'aggression',bias:.1,effect:.4}],edges:[]};
+  const child=evo.crossoverRegulatoryGenome(a,b,()=>0);
+  assert.equal(child.nodes.find(node=>node.id===1).bias,.4);
+  assert.ok(child.nodes.some(node=>node.id===2),'unmatched regulatory copies can be inherited');
+});
+
+test('trans-regulatory expression responds to upstream activation, repression and environment',()=>{
+  const base={nodes:[{id:1,locus:'regA',bias:1,effect:1},{id:2,locus:'aggression',bias:0,effect:1,environment:'heat',environmentSensitivity:1}],edges:[{id:1,source:1,target:2,weight:1}]};
+  const activated=evo.evaluateRegulatoryGenome(base,{heat:1},5);
+  const repressed=evo.evaluateRegulatoryGenome({...base,edges:[{id:1,source:1,target:2,weight:-1}]},{heat:1},5);
+  const cool=evo.evaluateRegulatoryGenome(base,{heat:0},5);
+  assert.ok(activated.expression.aggression>repressed.expression.aggression);
+  assert.ok(activated.expression.aggression>cool.expression.aggression);
+  const unthresholded=evo.evaluateRegulatoryGenome({nodes:[{id:3,locus:'growth',bias:1,effect:1,threshold:0}]},{},3),thresholded=evo.evaluateRegulatoryGenome({nodes:[{id:3,locus:'growth',bias:1,effect:1,threshold:1.5}]},{},3);
+  assert.ok(unthresholded.expression.growth>thresholded.expression.growth,'regulatory thresholds should gate activation');
+  assert.equal(activated.nodeCount,2);assert.equal(activated.edgeCount,1);
+});
+
+test('compiled regulatory evaluation matches the reference evaluator without rebuilding graph maps',()=>{
+  const genome={nodes:[{id:1,locus:'growth',bias:.3,effect:.8,environment:'heat',environmentSensitivity:.2},{id:2,locus:'risk',bias:-.1,effect:.6},{id:3,locus:'growth',bias:.2,effect:.3}],edges:[{id:1,source:1,target:2,weight:-.7},{id:2,source:2,target:3,weight:.4}]};
+  const environment={heat:.75},reference=evo.evaluateRegulatoryGenome(genome,environment,4),compiled=evo.compileRegulatoryGenome(genome,['growth','risk']),output=new Float32Array(2);
+  evo.evaluateCompiledRegulatoryGenome(compiled,environment,4,output);
+  assert.ok(Math.abs(output[0]-reference.expression.growth)<1e-6);
+  assert.ok(Math.abs(output[1]-reference.expression.risk)<1e-6);
+  const second=evo.evaluateCompiledRegulatoryGenome(compiled,{heat:0},4,output);
+  assert.equal(second,output,'compiled evaluation should reuse caller-owned output storage');
+  assert.notEqual(output[0],reference.expression.growth,'environment changes should be evaluated against the compiled topology');
+});
+
+test('neural and regulatory architecture diversity are measured independently',()=>{
+  const neural=[
+    {nodes:[{id:1,type:'input',activation:'tanh'},{id:2,type:'output',activation:'sigmoid'}],connections:[{innovation:1,source:1,destination:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,type:'input',activation:'tanh'},{id:2,type:'output',activation:'sigmoid'}],connections:[{innovation:1,source:1,destination:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,type:'input',activation:'tanh'},{id:2,type:'hidden',activation:'relu'},{id:3,type:'output',activation:'sigmoid'}],connections:[{innovation:2,source:1,destination:2,weight:-.5,enabled:true},{innovation:3,source:2,destination:3,weight:.4,enabled:true,recurrent:true}]}
+  ];
+  const neuralStats=evo.neuralArchitectureStatistics(neural);
+  assert.equal(neuralStats.sampleSize,3);assert.equal(neuralStats.uniqueArchitectures,2);assert.ok(neuralStats.architectureDiversity>0);assert.equal(neuralStats.innovationRichness,3);assert.ok(neuralStats.recurrentEdgeFraction>0);
+  const regulatory=[
+    {nodes:[{id:1,locus:'growth'},{id:2,locus:'risk'}],edges:[{id:1,source:1,target:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,locus:'growth'},{id:2,locus:'risk'}],edges:[{id:1,source:1,target:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,locus:'growth'},{id:3,locus:'risk'},{id:4,locus:'risk'}],edges:[{id:2,source:1,target:3,weight:-.5,enabled:true}]}
+  ];
+  const regulatoryStats=evo.regulatoryArchitectureStatistics(regulatory);
+  assert.equal(regulatoryStats.uniqueArchitectures,2);assert.equal(regulatoryStats.innovationRichness,2);assert.equal(regulatoryStats.regulatoryLocusCopyCounts.risk,4);assert.ok(regulatoryStats.negativeEdgeFraction>0);
+});
 test('allele statistics report richness, frequencies, and expected heterozygosity',()=>{
   const stats=evo.alleleStatistics([0,0,1,1]);assert.equal(stats.sampleSize,4);assert.equal(stats.alleleRichness,2);assert.equal(stats.expectedHeterozygosity,.5);
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
+});
+
+test('effective breeder estimate reflects realised unequal parental contributions',()=>{
+  const balanced=evo.effectiveBreederSize({female:[1,1,1,1],male:[1,1,1,1]});
+  assert.equal(balanced.effectiveFemales,4);assert.equal(balanced.effectiveMales,4);assert.equal(balanced.effectiveBreeders,4);
+  const skewed=evo.effectiveBreederSize({female:[8,1,1,0],male:[1,1,1,1]});
+  assert.ok(skewed.effectiveFemales<4);assert.equal(skewed.effectiveMales,4);assert.ok(skewed.effectiveBreeders<balanced.effectiveBreeders);
+  assert.equal(evo.effectiveBreederSize({female:[1,2],male:[]}).effectiveBreeders,0);
 });
 
 test('parent-offspring regression reports slope uncertainty and refuses undersized samples',()=>{
