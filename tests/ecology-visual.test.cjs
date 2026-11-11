@@ -34,7 +34,7 @@ test('river network uses curved, shared geometry for drawing and freshwater dist
 });
 
 test('canvas is fully cleared every frame and trail controls are absent', () => {
-  assert.match(worker, /function draw\(\)\{ctx\.globalAlpha=1;ctx\.fillStyle='#040911';ctx\.fillRect\(0,0,W,H\)/);
+  assert.match(worker, /function drawAtmosphere\(\)\{[\s\S]*?ctx\.fillRect\(0,0,W,H\)/);\n  assert.match(worker, /function draw\(\)\{\s*drawAtmosphere\(\)/);
   assert.doesNotMatch(worker, /rgba\(4,9,17,'\+cfg\.trail\+'\)/);
   assert.ok(!schema.coreSliderDefs.some(item => item.id === 'trail'));
 });
