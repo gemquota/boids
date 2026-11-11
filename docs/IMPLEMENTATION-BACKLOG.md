@@ -88,8 +88,8 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Define allele/locus semantics for every supported gene type.
 - [x] Track per-locus allele frequencies and allele richness.
 - [ ] Track observed and expected heterozygosity where diploid allele representation supports it.
-- [ ] Track genome-wide and locus-specific diversity without using colour as a proxy.
-- [ ] Track neural topology and regulatory architecture diversity separately.
+- [x] Track genome-wide and locus-specific diversity using normalized inherited trait loci and 16-bin per-locus frequency summaries; colour is not used as the diversity estimator.
+- [x] Track neural topology and regulatory architecture diversity separately, including unique architecture frequency, innovation richness, node/edge counts, recurrent-edge fraction and regulatory edge sign composition.
 - [x] Calculate pedigree kinship with documented founder and missing-ancestor policy.
 - [x] Calculate individual and population inbreeding coefficients.
 - [x] Track pedigree truncation counts explicitly in worker telemetry and exports.\n- [ ] Quantify uncertainty introduced by pedigree truncation and missing ancestors.
