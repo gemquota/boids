@@ -10,7 +10,7 @@ BOIDS is a static browser application. `index.html` owns presentation, browser s
 | `boids-worker.js` | Fixed-step orchestration, movement, spatial queries, plant/freshwater ecology, reproduction, selection, live telemetry, snapshot migration |
 | `evolution.js` | Pure genome validation/mutation/crossover/compilation, speciation, regulation/statistics, experiment-analysis primitives |
 | `genetics.js` | Ten quantitative loci, expression curves, environmental modulation, inheritance helpers |
-| `chromosome.js` | Typed hexadecimal gene-record encoding/decoding |
+| `chromosome.js` | Versioned typed hexadecimal quantitative, structural, neural, regulatory and modifier gene-record encoding/decoding |
 | `config-schema.js` | Authoritative control schema, field-guide content and dependency rules |
 | `config-registry.js` | DOM range-control registry and value normalization |
 
