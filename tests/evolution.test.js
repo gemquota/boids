@@ -219,6 +219,17 @@ test('trans-regulatory expression responds to upstream activation, repression an
   assert.equal(activated.nodeCount,2);assert.equal(activated.edgeCount,1);
 });
 
+test('compiled regulatory evaluation matches the reference evaluator without rebuilding graph maps',()=>{
+  const genome={nodes:[{id:1,locus:'growth',bias:.3,effect:.8,environment:'heat',environmentSensitivity:.2},{id:2,locus:'risk',bias:-.1,effect:.6},{id:3,locus:'growth',bias:.2,effect:.3}],edges:[{id:1,source:1,target:2,weight:-.7},{id:2,source:2,target:3,weight:.4}]};
+  const environment={heat:.75},reference=evo.evaluateRegulatoryGenome(genome,environment,4),compiled=evo.compileRegulatoryGenome(genome,['growth','risk']),output=new Float32Array(2);
+  evo.evaluateCompiledRegulatoryGenome(compiled,environment,4,output);
+  assert.ok(Math.abs(output[0]-reference.expression.growth)<1e-6);
+  assert.ok(Math.abs(output[1]-reference.expression.risk)<1e-6);
+  const second=evo.evaluateCompiledRegulatoryGenome(compiled,{heat:0},4,output);
+  assert.equal(second,output,'compiled evaluation should reuse caller-owned output storage');
+  assert.notEqual(output[0],reference.expression.growth,'environment changes should be evaluated against the compiled topology');
+});
+
 test('allele statistics report richness, frequencies, and expected heterozygosity',()=>{
   const stats=evo.alleleStatistics([0,0,1,1]);assert.equal(stats.sampleSize,4);assert.equal(stats.alleleRichness,2);assert.equal(stats.expectedHeterozygosity,.5);
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
