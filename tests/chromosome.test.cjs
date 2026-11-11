@@ -12,7 +12,7 @@ test('round-trips typed structural neural regulatory and modifier gene families'
   assert.deepEqual(decoded.neuralConnections,[{innovation:91,weight:.75}]);
   assert.equal(decoded.regulatoryNodes[0].locusId,DNA.TRAIT_IDS[0]);assert.equal(decoded.regulatoryNodes[0].environmentId,1);assert.ok(Math.abs(decoded.regulatoryNodes[0].effect-.4)<1e-6);
   assert.ok(Math.abs(decoded.regulatoryEdges[0].weight+.6)<1e-6);assert.equal(decoded.regulatoryEdges[0].enabled,true);
-  assert.deepEqual(decoded.modifiers[0],{id:12,targetTrait:0,loci:[0,1,2],coefficient:.15,mode:1});
+  assert.deepEqual({id:decoded.modifiers[0].id,targetTrait:decoded.modifiers[0].targetTrait,loci:decoded.modifiers[0].loci,mode:decoded.modifiers[0].mode},{id:12,targetTrait:0,loci:[0,1,2],mode:1});assert.ok(Math.abs(decoded.modifiers[0].coefficient-.15)<1e-6);
 });
 test('typed chromosome records retain integer node indices and reject invalid references',()=>{
   assert.throws(()=>DNA.structuralGene(1,1.5,2),/unsigned integer/);
