@@ -56,6 +56,7 @@ Current worker metrics include:
 - preliminary mid-parent/offspring regression estimates using parental trait values recorded at conception, with sample sizes and t-based 95% slope intervals;
 - species entropy and regulatory activity/variance;
 - separate neural and regulatory architecture summaries: unique architecture frequency/diversity, innovation richness, mean node/edge counts, recurrent-edge fraction, and positive/negative regulatory edge composition;
+- delayed-entry Kaplan–Meier all-cause survival and birth-cohort-specific survival/turnover summaries, including persisted cohort IDs, right-censoring, history truncation, and cohort mean/maximum lineage depth. Cohorts are deterministic 24-simulation-time-unit birth windows; only the latest 16 are displayed;
 - a reproductive-skew-adjusted effective-breeder index: inverse-Simpson parental contribution counts within each sex combined by their harmonic mean; provisional additive-genetic and phenotypic variance/covariance summaries are also exposed with explicit assumptions.
 
 Important caveats:
