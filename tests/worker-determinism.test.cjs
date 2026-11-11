@@ -287,7 +287,7 @@ assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationB
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
 assert.equal(restoredSnapshot.schemaVersion, 22);
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
-assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v2');
+assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v3');
 const typedChromosome=BoidsChromosome.decode(restoredSnapshot.chromosomes[0]);
 assert.ok(typedChromosome.structural.length>0&&typedChromosome.neuralNodes.length>0&&typedChromosome.neuralConnections.length>0,'chromosomes must contain typed neural structure and connection records');
 assert.equal(typedChromosome.regulatoryNodes.length,10,'chromosomes must contain the per-agent regulatory node records');
