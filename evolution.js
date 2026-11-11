@@ -231,6 +231,24 @@
     return output;
   }
 
+  function architectureStatistics(genomes,kind='neural'){
+    const entries=(Array.isArray(genomes)?genomes:[]).filter(Boolean),signatures=new Map(),innovations=new Set(),locusCopies=new Map();
+    let nodeTotal=0,edgeTotal=0,enabledTotal=0,recurrentTotal=0,positiveEdges=0,negativeEdges=0,activationKinds=new Set();
+    for(const genome of entries){
+      const nodes=Array.isArray(genome.nodes)?genome.nodes:[],edges=kind==='regulatory'?(Array.isArray(genome.edges)?genome.edges:[]):(Array.isArray(genome.connections)?genome.connections:[]);
+      nodeTotal+=nodes.length;edgeTotal+=edges.length;
+      for(const node of nodes){if(node.activation)activationKinds.add(node.activation);if(node.locus)locusCopies.set(node.locus,(locusCopies.get(node.locus)||0)+1)}
+      for(const edge of edges){if(edge.enabled!==false)enabledTotal++;if(edge.recurrent)recurrentTotal++;const weight=finite(edge.weight,0);if(weight>0)positiveEdges++;else if(weight<0)negativeEdges++;if(edge.innovation!==undefined)innovations.add(edge.innovation);else if(edge.id!==undefined)innovations.add(edge.id)}
+      const nodeShape=nodes.map(node=>kind==='regulatory'?[node.locus||'',node.enabled!==false]:[node.type||'',node.activation||'']).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+      const edgeShape=edges.map(edge=>[edge.source,kind==='regulatory'?edge.target:edge.destination,edge.enabled!==false,!!edge.recurrent,Math.sign(finite(edge.weight,0))]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+      const signature=JSON.stringify([nodeShape,edgeShape]);signatures.set(signature,(signatures.get(signature)||0)+1);
+    }
+    const n=entries.length,frequencies=[...signatures.values()].map(count=>count/Math.max(1,n)),architectureDiversity=n?1-frequencies.reduce((sum,p)=>sum+p*p,0):null;
+    return{sampleSize:n,uniqueArchitectures:signatures.size,architectureDiversity,meanNodes:n?nodeTotal/n:0,meanEdges:n?edgeTotal/n:0,meanEnabledEdges:n?enabledTotal/n:0,recurrentEdgeFraction:edgeTotal?recurrentTotal/edgeTotal:0,positiveEdgeFraction:edgeTotal?positiveEdges/edgeTotal:0,negativeEdgeFraction:edgeTotal?negativeEdges/edgeTotal:0,innovationRichness:innovations.size,activationDiversity:activationKinds.size,regulatoryLocusCopyCounts:kind==='regulatory'?Object.fromEntries(locusCopies):undefined};
+  }
+  function neuralArchitectureStatistics(genomes){return architectureStatistics(genomes,'neural')}
+  function regulatoryArchitectureStatistics(genomes){return architectureStatistics(genomes,'regulatory')}
+
   function alleleStatistics(values){
     const finiteValues=values.map(Number).filter(Number.isFinite),counts=new Map();for(const v of finiteValues)counts.set(v,(counts.get(v)||0)+1);
     const n=finiteValues.length,frequencies=[...counts.values()].map(c=>c/Math.max(1,n));
@@ -330,5 +348,5 @@
   }
   function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
 
-  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,normalizeRegulatoryGenome,mutateRegulatoryGenome,crossoverRegulatoryGenome,evaluateRegulatoryGenome,compileRegulatoryGenome,evaluateCompiledRegulatoryGenome,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient,effectiveBreederSize});
+  return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,normalizeRegulatoryGenome,mutateRegulatoryGenome,crossoverRegulatoryGenome,evaluateRegulatoryGenome,compileRegulatoryGenome,evaluateCompiledRegulatoryGenome,architectureStatistics,neuralArchitectureStatistics,regulatoryArchitectureStatistics,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient,effectiveBreederSize});
 });
