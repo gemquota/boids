@@ -357,9 +357,10 @@
     if(founderA&&founderB)return 0;
     const parents=founderA?pb:pa,other=founderA?a:b;
     const result=.5*(pedigreeKinship(other,parents[0],pedigree,depth-1,memo)+pedigreeKinship(other,parents[1],pedigree,depth-1,memo));
+    if(memo.size>=100000){let remove=20000;for(const cachedKey of memo.keys()){memo.delete(cachedKey);if(--remove<=0)break}}
     memo.set(key,result);return result;
   }
-  function inbreedingCoefficient(id,pedigree,depth=12){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth)}
+  function inbreedingCoefficient(id,pedigree,depth=12,memo=new Map()){const parents=pedigree.get(id);if(!parents||!parents[0]||!parents[1])return 0;return pedigreeKinship(parents[0],parents[1],pedigree,depth,memo)}
 
   return Object.freeze({normalizeGenome,createInnovationRegistry,mutateGenome,crossover,compileNetwork,activateNetwork,compatibilityDistance,assignSpecies,updateSpeciesStatistics,evaluateRegulation,expressPhenotypes,normalizeRegulatoryGenome,mutateRegulatoryGenome,crossoverRegulatoryGenome,evaluateRegulatoryGenome,compileRegulatoryGenome,evaluateCompiledRegulatoryGenome,architectureStatistics,neuralArchitectureStatistics,regulatoryArchitectureStatistics,alleleStatistics,linearRegression,parentOffspringHeritability,seededRandom,summarizeReplicates,compareReplicates,createExperimentManifest,deriveReplicateSeeds,kaplanMeier,correctPValues,parameterSweep,replicateSeeds,pedigreeKinship,inbreedingCoefficient,effectiveBreederSize});
 });

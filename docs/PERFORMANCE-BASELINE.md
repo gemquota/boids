@@ -31,3 +31,19 @@ Population decreases after warm-up are model mortality, not benchmark truncation
 - The 15 ms residual accumulator and four-step catch-up ceiling are bounded by the frame scheduler; this is not a queued-job backlog.
 - These results are a reproducible CI reference, not an Android or desktop-browser performance certification. Browser rasterisation, real Canvas calls, touch handling, compositor overhead, memory pressure and long-running stability still require device testing.
 - Re-run on the same runner/runtime and compare commit, seed, population, warm-up and sample counts before interpreting changes as regressions or improvements.
+
+
+## Follow-up after worker hot-path and rendering changes (2026-11-11)
+
+- Workflow: [Validate Boids run 43033822940](https://github.com/gemquota/boids/actions/runs/43033822940)
+- Merged commit: `b0eda8e0fa04098781a42da8437963ee768421a0`
+- Same seeded CI benchmark and no-op Canvas context; this is a later worker version, so treat it as a follow-up measurement rather than a perfectly isolated A/B comparison.
+
+| Initial N | Update mean | Update p95 | Draw mean | Draw p95 | Snapshot JSON | Restore | Heap delta |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 13.375 ms | 27.856 ms | 1.451 ms | 2.163 ms | 1,905,054 B | 129.037 ms | 26.53 MiB |
+| 250 | 30.043 ms | 47.471 ms | 1.455 ms | 2.341 ms | 4,592,292 B | 222.347 ms | 7.85 MiB |
+| 500 | 66.402 ms | 89.557 ms | 1.921 ms | 2.287 ms | 9,071,463 B | 401.183 ms | 49.27 MiB |
+| 1,000 | 183.581 ms | 238.176 ms | 3.175 ms | 3.857 ms | 18,055,939 B | 767.178 ms | 110.81 MiB |
+
+All four existing mean-update budgets passed. The 1,000-agent p95 remains above the 220 ms mean budget, so this is not a claim of smooth 60 Hz operation at that population. Device/browser profiling and long-duration memory checks remain release gates.
