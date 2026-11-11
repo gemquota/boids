@@ -55,6 +55,7 @@ plantIndexProbe.update(1/60,1000);
 
 const expressionCadence=makeWorld(76543).__boidsTest;
 expressionCadence.cfg.drive=0;
+expressionCadence.traitGenes[0]=.01;
 expressionCadence.update(1/60,1000);
 const firstExpression=expressionCadence.phenotypeCache[0];
 expressionCadence.traitGenes[0]=.99;
