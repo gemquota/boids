@@ -41,7 +41,16 @@ let riverNetworkCache=null;
 function organicPath(start,end,seed,amplitude,cycles=2.2,samples=112){
  const dx=end.x-start.x,dy=end.y-start.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,phase=seed*2.399963229728653;
  const points=new Array(samples+1);
- for(let i=0;i<=samples;i++){const t=i/samples,envelope=Math.pow(Math.sin(Math.PI*t),.82),wave=Math.sin(TAU*cycles*t+phase)*.66+Math.sin(TAU*cycles*1.83*t+phase*1.71)*.24+Math.cos(TAU*cycles*.57*t-phase*.63)*.1,bend=amplitude*envelope*wave;points[i]={x:start.x+dx*t+nx*bend,y:start.y+dy*t+ny*bend}}
+ for(let i=0;i<=samples;i++){
+  const t=i/samples,envelope=Math.pow(Math.sin(Math.PI*t),.82),
+   wave=Math.sin(TAU*cycles*t+phase)*.52+
+    Math.sin(TAU*cycles*1.83*t+phase*1.71)*.22+
+    Math.cos(TAU*cycles*.57*t-phase*.63)*.10+
+    Math.sin(TAU*cycles*2.71*t+phase*.39)*.10+
+    Math.cos(TAU*cycles*.29*t+phase*1.37)*.06,
+   bend=amplitude*envelope*wave;
+  points[i]={x:start.x+dx*t+nx*bend,y:start.y+dy*t+ny*bend};
+ }
  return points;
 }
 function pointOnPath(path,t){const index=clamp(t,0,1)*(path.length-1),i=Math.floor(index),f=index-i,a=path[i],b=path[Math.min(path.length-1,i+1)];return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f}}
@@ -58,11 +67,15 @@ function buildRiverNetwork(){
    start={x:center.x+outX*bankOffset,y:center.y+outY*bankOffset},
    end={x:clamp(start.x+outX*H*dy+tx/len*W*horizontal*dx,W*.025,W*.975),
         y:clamp(start.y+outY*H*dy+ty/len*W*horizontal*dx,H*.025,H*.975)},
-   creek=organicPath(start,end,51+i,scale*(.042+(i%2)*.006),2.15+(i%3)*.37,100);
+   creek=organicPath(start,end,51+i,scale*(.048+(i%2)*.009),2.55+(i%3)*.52,148);
   tributaries.push(creek);
-  for(let j=0;j<2;j++){
-   const at=pointOnPath(creek,.36+j*.31),before=pointOnPath(creek,Math.max(0,.36+j*.31-.025)),after=pointOnPath(creek,Math.min(1,.36+j*.31+.025)),fx=after.x-before.x,fy=after.y-before.y,fl=Math.hypot(fx,fy)||1,normalX=-fy/fl,normalY=fx/fl,sign=(i+j)%2?1:-1,tip={x:clamp(at.x+normalX*sign*scale*(.065+j*.018),W*.02,W*.98),y:clamp(at.y+normalY*sign*scale*(.065+j*.018),H*.02,H*.98)};
-   feeders.push(organicPath(at,tip,91+i*3+j,scale*.018,1.7,64));
+  for(let j=0;j<3;j++){
+   const branchT=[.24,.53,.79][j],at=pointOnPath(creek,branchT),
+    before=pointOnPath(creek,Math.max(0,branchT-.018)),after=pointOnPath(creek,Math.min(1,branchT+.018)),
+    fx=after.x-before.x,fy=after.y-before.y,fl=Math.hypot(fx,fy)||1,
+    normalX=-fy/fl,normalY=fx/fl,sign=(i+j)%2?1:-1,distance=scale*(.052+j*.014),
+    tip={x:clamp(at.x+normalX*sign*distance,W*.02,W*.98),y:clamp(at.y+normalY*sign*distance,H*.02,H*.98)};
+   feeders.push(organicPath(at,tip,91+i*3+j,scale*(.012+j*.002),2.05+j*.38,84));
   }
  }
  riverNetworkCache={width:W,height:H,main,tributaries,feeders};return riverNetworkCache;
