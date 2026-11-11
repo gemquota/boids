@@ -80,7 +80,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement environment-dependent plasticity without rewriting inherited genotype.
 - [x] Keep inherited genotype, expressed phenotype, and lifetime learning separate. (Trait loci and regulatory genomes are inherited; regulatory expression is recomputed into a phenotype modifier; learned neural weights remain a separate overlay.)
 - [x] Cache expression safely and invalidate on relevant state changes. (Phenotype refresh recomputes the regulatory expression before the phenotype cache is marked ready; snapshot restore invalidates the cache.)
-- [ ] Persist regulatory genes, expression state, and mutation history.
+- [x] Persist per-agent regulatory gene networks, derived expression state, stable identity allocator, and a bounded 5,000-event regulatory mutation history in worker snapshots, with backward-compatible neutral migration.
 - [x] Test duplicate identity/divergence operators, deletion, activation, repression, epistasis, bounded multi-locus expression, and environmental response.
 
 ## E. Population genetics and pedigree
