@@ -146,8 +146,8 @@ test('Observatory exposes live species and population-genetic metrics',()=>{
 test('NEAT species assignment enforces its cap when every genome is incompatible',()=>{
   const individuals=Array.from({length:80},(_,i)=>({
     id:i+1,
-    genome:{nodes:[],connections:Array.from({length:24},(_,j)=>({
-      innovation:i*24+j+1,from:0,to:1,weight:.1,enabled:true
+    genome:{nodes:[{id:0,type:'input'},{id:1,type:'output'}],connections:Array.from({length:24},(_,j)=>({
+      innovation:i*24+j+1,source:0,destination:1,weight:.1,enabled:true
     }))}
   }));
   const species=evolution.assignSpecies(individuals,[],{
