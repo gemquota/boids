@@ -285,7 +285,7 @@ assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v1');
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
 assert.equal(JSON.stringify(restoredSnapshot.agentRegulatoryGenomes),JSON.stringify(api.exportSnapshot().agentRegulatoryGenomes),'trans-regulatory gene copies and edges must persist');
-assert.deepEqual(restoredSnapshot.regulatoryRegistry,api.regulatoryRegistry,'regulatory innovation identities must persist');
+assert.equal(JSON.stringify(restoredSnapshot.regulatoryRegistry),JSON.stringify(api.regulatoryRegistry),'regulatory innovation identities must persist');
 assert.equal(JSON.stringify(restoredSnapshot.agentLearnedWeights), JSON.stringify(api.exportSnapshot().agentLearnedWeights), 'learned weight overlays must survive snapshot restore');
 assert.equal(JSON.stringify(restoredSnapshot.agentNeuralStates), JSON.stringify(api.exportSnapshot().agentNeuralStates), 'recurrent neural state must survive snapshot restore');
 assert.equal(restoredSnapshot.chromosomes.length, api.N);
