@@ -230,6 +230,22 @@ test('compiled regulatory evaluation matches the reference evaluator without reb
   assert.notEqual(output[0],reference.expression.growth,'environment changes should be evaluated against the compiled topology');
 });
 
+test('neural and regulatory architecture diversity are measured independently',()=>{
+  const neural=[
+    {nodes:[{id:1,type:'input',activation:'tanh'},{id:2,type:'output',activation:'sigmoid'}],connections:[{innovation:1,source:1,destination:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,type:'input',activation:'tanh'},{id:2,type:'output',activation:'sigmoid'}],connections:[{innovation:1,source:1,destination:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,type:'input',activation:'tanh'},{id:2,type:'hidden',activation:'relu'},{id:3,type:'output',activation:'sigmoid'}],connections:[{innovation:2,source:1,destination:2,weight:-.5,enabled:true},{innovation:3,source:2,destination:3,weight:.4,enabled:true,recurrent:true}]}
+  ];
+  const neuralStats=evo.neuralArchitectureStatistics(neural);
+  assert.equal(neuralStats.sampleSize,3);assert.equal(neuralStats.uniqueArchitectures,2);assert.ok(neuralStats.architectureDiversity>0);assert.equal(neuralStats.innovationRichness,3);assert.ok(neuralStats.recurrentEdgeFraction>0);
+  const regulatory=[
+    {nodes:[{id:1,locus:'growth'},{id:2,locus:'risk'}],edges:[{id:1,source:1,target:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,locus:'growth'},{id:2,locus:'risk'}],edges:[{id:1,source:1,target:2,weight:.5,enabled:true}]},
+    {nodes:[{id:1,locus:'growth'},{id:3,locus:'risk'},{id:4,locus:'risk'}],edges:[{id:2,source:1,target:3,weight:-.5,enabled:true}]}
+  ];
+  const regulatoryStats=evo.regulatoryArchitectureStatistics(regulatory);
+  assert.equal(regulatoryStats.uniqueArchitectures,2);assert.equal(regulatoryStats.innovationRichness,2);assert.equal(regulatoryStats.regulatoryLocusCopyCounts.risk,4);assert.ok(regulatoryStats.negativeEdgeFraction>0);
+});
 test('allele statistics report richness, frequencies, and expected heterozygosity',()=>{
   const stats=evo.alleleStatistics([0,0,1,1]);assert.equal(stats.sampleSize,4);assert.equal(stats.alleleRichness,2);assert.equal(stats.expectedHeterozygosity,.5);
   assert.equal(evo.alleleStatistics([]).expectedHeterozygosity,null);
