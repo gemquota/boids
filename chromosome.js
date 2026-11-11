@@ -1,7 +1,7 @@
 /* Canonical hexadecimal chromosome codec. Every chromosome is an ordered sequence of independently typed hex gene records. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BoidsChromosome=api;})(typeof self!=='undefined'?self:globalThis,function(){
 'use strict';
-const VERSION=2,TRAIT=1,CONNECTION=2,STRUCTURAL=3,NEURAL_NODE=4,NEURAL_CONNECTION=5,REGULATORY_NODE=6,REGULATORY_EDGE=7,MODIFIER=8;
+const VERSION=3,TRAIT=1,CONNECTION=2,STRUCTURAL=3,NEURAL_NODE=4,NEURAL_CONNECTION=5,REGULATORY_NODE=6,REGULATORY_EDGE=7,MODIFIER=8;
 const TRAIT_BYTES=6,CONNECTION_BYTES=13,STRUCTURAL_BYTES=14,NEURAL_NODE_BYTES=11,NEURAL_CONNECTION_BYTES=9,REGULATORY_NODE_BYTES=25,REGULATORY_EDGE_BYTES=18,MODIFIER_BYTES=16;
 const TRAIT_IDS=Object.freeze([0x11,0x23,0x37,0x41,0x52,0x68,0x73,0x84,0x96,0xA7]),TRAIT_KEYS=Object.freeze(['aggression','bodySize','speed','biteStrength','kinAffinity','sensoryRange','acceleration','agility','riskTolerance','exploration']),TRAIT_INDEX=new Map(TRAIT_IDS.map((id,index)=>[id,index])),TRAIT_KEY_IDS=new Map(TRAIT_KEYS.map((key,index)=>[key,TRAIT_IDS[index]]));
 const NODE_TYPES=Object.freeze({input:0,hidden:1,output:2}),NODE_TYPE_NAMES=['input','hidden','output'];
