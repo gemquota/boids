@@ -289,3 +289,16 @@ test('pedigree kinship and offspring inbreeding use parent identities',()=>{
   assert.equal(evo.pedigreeKinship(3,4,pedigree),.25);
   assert.equal(evo.inbreedingCoefficient(5,pedigree),.25);
 });
+
+
+test('inbreeding estimator reuses the supplied shared pedigree cache',()=>{
+  const pedigree=new Map([[3,[1,2]],[4,[1,2]],[5,[3,4]]]);
+  const memo=new Map();
+  const first=evo.inbreedingCoefficient(5,pedigree,12,memo);
+  const entriesAfterFirst=memo.size;
+  const second=evo.inbreedingCoefficient(5,pedigree,12,memo);
+  assert.equal(first,.25,'offspring of full siblings should have an inbreeding coefficient of 0.25');
+  assert.equal(second,first);
+  assert.ok(entriesAfterFirst>0,'the estimator should populate the caller-provided memo');
+  assert.equal(memo.size,entriesAfterFirst,'repeated estimates should reuse cached pedigree relationships');
+});
