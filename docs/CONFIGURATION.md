@@ -4,9 +4,9 @@
 
 `config-schema.js` defines numeric controls, defaults, ranges, steps, grouping, field-guide text and dependency normalization. `config-registry.js` binds those definitions to the UI range inputs. Do not maintain a second manually counted list.
 
-Current configuration inventory: **185 unique numeric controls**:
+Current configuration inventory: **190 unique numeric controls**:
 - 64 core controls;
-- 31 advanced controls;
+- 36 advanced controls;
 - 60 expression controls (10 loci × 6);
 - 30 mutation/inheritance controls (10 loci × 3).
 
@@ -18,7 +18,7 @@ The total is verified by CI. If the schema changes, update the count assertion a
 |---|---|
 | Motion | Population, simulation time, steering, spacing, flow and movement noise |
 | Neural brain | Network density/size, neural update interval, sensor/output masks and lifetime plasticity |
-| Genetics | Connection mutation, mutation magnitude, crossover, learned-weight inheritance, speciation and regulatory mutation |
+| Genetics | Connection mutation, mutation magnitude, crossover, learned-weight inheritance, speciation, regulatory mutation and five adjustable polygenic/epistatic interaction strengths |
 | Reproduction | Drive, mate search/preference, reproductive age, fertility, gestation and energetic thresholds |
 | Selection | Predation, competition, survival, attack and energy trade-offs |
 | Environment | World geometry, plant ecology, freshwater/hydration, shelter and seasonal effects |
@@ -36,8 +36,8 @@ Exact IDs, ranges, increments, defaults and dependencies are defined in `config-
 - Reset restores declared defaults and clears custom endpoint overrides.
 - Settings persistence and world snapshot persistence are separate systems.
 - Every exposed control must have a worker-side effect or be explicitly documented as a presentation/analysis-only setting.
-- Adding/removing a control requires updating tests and the 185-control inventory assertion.
+- Adding/removing a control requires updating tests and the 190-control inventory assertion.
 
 ## Simulation and persistence versions
 
-The worker world snapshot schema is **20**. The IndexedDB storage envelope uses a separate `storageSchemaVersion: 2`; the hexadecimal gene codec has its own version (1). Do not confuse either with the hexadecimal gene codec version (1).
+The worker world snapshot schema is **22**. The IndexedDB storage envelope uses a separate `storageSchemaVersion: 2`; the hexadecimal gene codec has its own version (1). Do not confuse either with the hexadecimal gene codec version (1).
