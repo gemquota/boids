@@ -206,6 +206,31 @@
     return{expression,activity:Object.fromEntries(values),nodeCount:genome.nodes.length,edgeCount:genome.edges.length,enabledEdges:genome.edges.filter(edge=>edge.enabled).length};
   }
 
+  function compileRegulatoryGenome(input,locusKeys=[]){
+    const genome=normalizeRegulatoryGenome(input),index=new Map(genome.nodes.map((node,i)=>[node.id,i]));
+    const incoming=genome.nodes.map(()=>[]);
+    for(const edge of genome.edges)if(edge.enabled){const source=index.get(edge.source),target=index.get(edge.target);if(source!==undefined&&target!==undefined)incoming[target].push([source,edge.weight])}
+    const loci=new Map(locusKeys.map((key,i)=>[String(key),i]));
+    return{nodes:genome.nodes,incoming,locusIndex:genome.nodes.map(node=>loci.has(node.locus)?loci.get(node.locus):-1),values:new Float64Array(genome.nodes.length),next:new Float64Array(genome.nodes.length)};
+  }
+  function evaluateCompiledRegulatoryGenome(compiled,environment={},passes=4,output=new Float32Array(0)){
+    const nodes=compiled.nodes,values=compiled.values,next=compiled.next;
+    values.fill(0);next.fill(0);output.fill(0);
+    const count=Math.max(1,Math.min(16,Math.floor(passes)||4));
+    for(let pass=0;pass<count;pass++){
+      for(let i=0;i<nodes.length;i++){
+        const node=nodes[i];if(!node.enabled){next[i]=0;continue}
+        let sum=node.bias-node.threshold+finite(environment[node.environment],0)*node.environmentSensitivity;
+        const edges=compiled.incoming[i];for(let e=0;e<edges.length;e++)sum+=values[edges[e][0]]*edges[e][1];
+        next[i]=node.activation==='sigmoid'?1/(1+Math.exp(-clamp(sum,-20,20))):node.activation==='relu'?Math.max(0,sum):node.activation==='linear'?clamp(sum,-8,8):Math.tanh(sum);
+      }
+      values.set(next);
+    }
+    for(let i=0;i<nodes.length;i++){const k=compiled.locusIndex[i];if(k>=0&&nodes[i].enabled)output[k]+=values[i]*nodes[i].effect}
+    for(let i=0;i<output.length;i++)output[i]=clamp(output[i],-8,8);
+    return output;
+  }
+
   function alleleStatistics(values){
     const finiteValues=values.map(Number).filter(Number.isFinite),counts=new Map();for(const v of finiteValues)counts.set(v,(counts.get(v)||0)+1);
     const n=finiteValues.length,frequencies=[...counts.values()].map(c=>c/Math.max(1,n));
