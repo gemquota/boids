@@ -6,7 +6,7 @@
 |---|---:|---|
 | Worker world snapshot | `schemaVersion: 22` | Simulation state and deterministic continuation |
 | Browser IndexedDB envelope | `storageSchemaVersion: 2` | Browser storage wrapper and latest/previous snapshot slots |
-| Hexadecimal chromosome codec | `boids-hex-gene-v1` | Compact typed chromosome projection; not a complete NEAT genome |
+| Hexadecimal chromosome codec | `boids-hex-gene-v2` | Typed hexadecimal records for quantitative traits, structural topology, neural nodes/connections, regulatory nodes/edges and cis modifiers; full variable-length objects remain the runtime authority |
 
 These versions are independent. Never overwrite the worker's `schemaVersion` with the IndexedDB envelope version, and do not treat the chromosome codec version as a world snapshot version.
 
@@ -20,7 +20,7 @@ The worker accepts snapshots with no version marker or a `schemaVersion` no newe
 | Variable-length trans-regulatory genomes and expression state (schemas 21–22) | Persist per-agent regulatory nodes/edges, stable copy/edge IDs, paternal network state, the global identity allocator and derived expression arrays. Persist a bounded 5,000-event mutation history. Older worlds receive a neutral ten-node network with zero effect and no edges, empty mutation history and recomputed expression, avoiding invented historical regulatory activity |
 |---|---|
 | Birth-cohort identity and lineage records (schema 22) | Persist per-agent deterministic 24-time-unit birth-cohort IDs and cohort-tagged survival events/lineage depth. Older snapshots default living agents to cohort zero; unavailable historical cohort membership is not reconstructed.\n| Legacy `foodPreference`, `foodRangeScale`, `foodMinRange`, `foodSteering` config | Map to the corresponding plant-resource controls when the new plant field is absent |
-| Legacy compact chromosome / fixed-slot genome data | Decode the typed chromosome projection and rebuild the runtime connection representation; full modern NEAT objects remain the authoritative representation when present |
+| Legacy compact chromosome / fixed-slot genome data | Decode legacy trait/connection records, or the v2 typed projection to reconstruct neural nodes/connections, regulatory nodes/edges and cis modifiers; modern object snapshots remain authoritative when present |
 | Six-locus trait arrays | Expand to the ten-locus layout; new acceleration, agility, risk and exploration loci receive documented neutral defaults |
 | Missing trait arrays | Seed trait values; this does not recreate historical genotypes |
 | Missing regulatory arrays | Fill cis-regulatory modifiers with neutral 0.5 values; pregnant paternal modifiers are copied from the available maternal state |
