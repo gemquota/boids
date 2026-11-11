@@ -74,14 +74,14 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Implement gene insertion/rearrangement without invalidating stable identities. (Stable IDs and registry state are inherited/persisted; insertion and rearrangement operators are tested.)
 - [x] Implement regulatory edges with activation and repression. (Signed live trans-regulatory edges feed bounded iterative expression; operator tests cover activation and repression.)
 - [x] Implement regulatory thresholds, strengths, and environmental input channels. (Live expression consumes energy, hydration, shelter, harshness, season and life-stage inputs.)
-- [ ] Implement multi-locus phenotype equations.
-- [ ] Implement epistatic interaction terms and bounded expression.
+- [x] Implement bounded multi-locus phenotype equations in the live genotype-to-phenotype refresh path, with validated per-trait additive terms and reusable equation records.
+- [x] Implement one- to four-locus interaction terms, including pairwise and higher-order epistasis, with centred inputs and per-equation output bounds.
 - [x] Implement stage-dependent expression. (The live regulatory evaluator receives a juvenile/adult/senescent stage input; richer developmental schedules remain possible.)
 - [x] Implement environment-dependent plasticity without rewriting inherited genotype.
 - [x] Keep inherited genotype, expressed phenotype, and lifetime learning separate. (Trait loci and regulatory genomes are inherited; regulatory expression is recomputed into a phenotype modifier; learned neural weights remain a separate overlay.)
 - [x] Cache expression safely and invalidate on relevant state changes. (Phenotype refresh recomputes the regulatory expression before the phenotype cache is marked ready; snapshot restore invalidates the cache.)
 - [ ] Persist regulatory genes, expression state, and mutation history.
-- [ ] Test duplicate divergence, deletion, activation, repression, epistasis, and environmental response.
+- [x] Test duplicate identity/divergence operators, deletion, activation, repression, epistasis, bounded multi-locus expression, and environmental response.
 
 ## E. Population genetics and pedigree
 
