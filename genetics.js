@@ -24,6 +24,13 @@
   const DEFAULT_MUTATION=Object.freeze(Object.fromEntries(TRAITS.map(t=>[t.key,Object.freeze({
     rate:.016,magnitude:.075,heritability:.98
   })])));
+  const DEFAULT_INTERACTIONS=Object.freeze([
+    Object.freeze({id:'aggression-risk',trait:'aggression',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['riskTolerance']),coefficient:.06})])}),
+    Object.freeze({id:'speed-size-tradeoff',trait:'speed',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['bodySize']),coefficient:-.08})])}),
+    Object.freeze({id:'bite-size-scaling',trait:'biteStrength',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['bodySize']),coefficient:.08})])}),
+    Object.freeze({id:'acceleration-agility-synergy',trait:'acceleration',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['speed','agility']),coefficient:.05})])}),
+    Object.freeze({id:'exploration-risk-sensory',trait:'exploration',maxMagnitude:.12,terms:Object.freeze([Object.freeze({loci:Object.freeze(['riskTolerance','sensoryRange']),coefficient:.04})])})
+  ]);
   function normalizeGene(value,trait){
     const t=typeof trait==='number'?TRAITS[trait]:trait;
     if(!t)return .5;
@@ -101,5 +108,5 @@
     if(random()<rate)value+=(random()*2-1)*span*magnitude;
     return clamp(value,t.geneMin,t.geneMax);
   }
-  return Object.freeze({TRAITS,DEFAULT_EXPRESSION,DEFAULT_MUTATION,normalizeGene,shapeExpression,normalizeInteractionEquations,evaluateMultiLocusModifier,express,inheritTrait,perceptionRadius,foodSenseRange,kinProtection,explorationNoise,foodSteering});
+  return Object.freeze({TRAITS,DEFAULT_EXPRESSION,DEFAULT_MUTATION,DEFAULT_INTERACTIONS,normalizeGene,shapeExpression,normalizeInteractionEquations,evaluateMultiLocusModifier,express,inheritTrait,perceptionRadius,foodSenseRange,kinProtection,explorationNoise,foodSteering});
 });
