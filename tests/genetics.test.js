@@ -2,6 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const genetics=require('../genetics.js');
+const configSchema=require('../config-schema.js');
 
 test('ten stable loci have ordered indices and valid gene bounds',()=>{
   assert.equal(genetics.TRAITS.length,10);
@@ -60,6 +61,15 @@ test('cis-regulatory alleles shift trait expression and environmental responsive
   assert.ok(quietStress>quiet);
 });
 
+test('default polygenic interactions are bounded, explicit and user-adjustable',()=>{
+  assert.equal(genetics.DEFAULT_INTERACTIONS.length,5);
+  for(const equation of genetics.DEFAULT_INTERACTIONS){
+    assert.ok(equation.maxMagnitude>0&&equation.maxMagnitude<=1);
+    assert.ok(equation.terms.length>0);
+  }
+  const ids=configSchema.extraSliderDefs.map(def=>def.id);
+  for(const id of ['interactionAggressionRisk','interactionSpeedSize','interactionBiteSize','interactionAccelerationSynergy','interactionExplorationRisk'])assert.ok(ids.includes(id),id);
+});
 test('multi-locus additive equations modify only their declared phenotype target',()=>{
   const equations=genetics.normalizeInteractionEquations([{id:'speed-from-size',trait:'speed',terms:[{loci:['bodySize'],coefficient:.2}]}]);
   const loci=genetics.TRAITS.map(t=>.5);loci[1]=1;
