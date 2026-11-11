@@ -116,8 +116,8 @@
     const threshold=Math.max(.01,finite(options.threshold,3)),coefficients=options.coefficients||{},
       maxSpecies=Math.max(4,Math.floor(finite(options.maxSpecies,32))),
       retained=previous.length>maxSpecies?previous.slice().sort((a,b)=>(b.members?.length||0)-(a.members?.length||0)||a.id-b.id).slice(0,maxSpecies):previous,
-      species=retained.map(s=>({...s,representative:cloneGenome(s.representative),members:[]})),
-      nextId=Math.max(0,...previous.map(s=>s.id))+1;
+      species=retained.map(s=>({...s,representative:cloneGenome(s.representative),members:[]}));
+    let nextId=Math.max(0,...previous.map(s=>s.id))+1;
     for(const individual of individuals){
       let best=null,bestDistance=Infinity,nearest=null,nearestDistance=Infinity;
       for(const s of species){
