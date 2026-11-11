@@ -60,6 +60,32 @@ test('cis-regulatory alleles shift trait expression and environmental responsive
   assert.ok(quietStress>quiet);
 });
 
+test('multi-locus additive equations modify only their declared phenotype target',()=>{
+  const equations=genetics.normalizeInteractionEquations([{id:'speed-from-size',trait:'speed',terms:[{loci:['bodySize'],coefficient:.2}]}]);
+  const loci=genetics.TRAITS.map(t=>.5);loci[1]=1;
+  assert.ok(Math.abs(genetics.evaluateMultiLocusModifier('speed',loci,equations)-.2)<1e-12);
+  assert.equal(genetics.evaluateMultiLocusModifier('aggression',loci,equations),0);
+});
+test('epistatic terms multiply centred locus states and remain bounded',()=>{
+  const equations=genetics.normalizeInteractionEquations([{trait:'aggression',maxMagnitude:.12,terms:[{loci:['bodySize','speed'],coefficient:.8}]}]);
+  const loci=genetics.TRAITS.map(t=>.5);loci[1]=1;loci[2]=1;
+  assert.equal(genetics.evaluateMultiLocusModifier('aggression',loci,equations),.12);
+  loci[2]=0;
+  assert.equal(genetics.evaluateMultiLocusModifier('aggression',loci,equations),-.12);
+});
+test('interaction equation validation rejects unknown loci, duplicate inputs and invalid coefficients',()=>{
+  assert.throws(()=>genetics.normalizeInteractionEquations([{trait:'speed',terms:[{loci:['not-a-locus'],coefficient:.1}]}]),/Invalid interaction loci/);
+  assert.throws(()=>genetics.normalizeInteractionEquations([{trait:'speed',terms:[{loci:['speed','speed'],coefficient:.1}]}]),/Invalid interaction loci/);
+  assert.throws(()=>genetics.normalizeInteractionEquations([{trait:'speed',terms:[{loci:['speed'],coefficient:NaN}]}]),/coefficient must be finite/);
+});
+test('multi-locus modifiers enter bounded phenotype expression without rewriting inherited genes',()=>{
+  const trait=genetics.TRAITS[0],settings={min:0,max:1,curve:'linear',environmentSensitivity:0};
+  const loci=genetics.TRAITS.map(t=>.5),equations=genetics.normalizeInteractionEquations([{trait:'aggression',terms:[{loci:['bodySize','speed'],coefficient:.2}]}]);
+  loci[1]=1;loci[2]=1;
+  const modifier=genetics.evaluateMultiLocusModifier('aggression',loci,equations);
+  assert.equal(genetics.express(.5,trait,settings,.5,.5,modifier),.7);
+  assert.equal(loci[0],.5);
+});
 test('inheritance fidelity and locus mutation are independently configurable',()=>{
   const t=genetics.TRAITS[2],mid=(t.geneMin+t.geneMax)/2;
   assert.equal(genetics.inheritTrait(mid,mid,2,{rate:0,magnitude:.5,heritability:1},()=>.99),mid);
@@ -76,6 +102,8 @@ test('worker uses expression output, not raw genes, for physical behaviour',()=>
   assert.match(worker,/function phenotype\(i,k\)/);
   assert.match(worker,/BoidsGenetics\.express\(traitGenes\[i\*10\+k\]/);
   assert.match(worker,/regulatoryGenes\[i\*10\+k\]/);
+  assert.match(worker,/BoidsGenetics\.evaluateMultiLocusModifier\(k,normalizedLoci,cfg\.geneInteractions/);
+  assert.match(worker,/cfg\.geneInteractions=BoidsGenetics\.normalizeInteractionEquations/);
   assert.match(worker,/cloneRegulatoryGenes\(child,mother\)/);
   for(const index of [0,1,2,3,4,5,6,7,8,9])assert.ok(worker.includes('phenotype(i,'+index+')'),'missing expressed locus '+index);
   assert.match(worker,/BoidsGenetics\.inheritTrait/);
