@@ -253,7 +253,7 @@ function drawBoids(){
  ctx.globalAlpha=1;
 }
 function draw(){
- drawAtmosphere();ctx.save();ctx.translate(W/2+cameraPanX,H/2+cameraPanY);ctx.scale(cameraZoom,cameraZoom);ctx.translate(-W/2,-H/2);drawWaterways();
+ ctx.save();ctx.translate(W/2+cameraPanX,H/2+cameraPanY);ctx.scale(cameraZoom,cameraZoom);ctx.translate(-W/2,-H/2);drawAtmosphere();drawWaterways();
  ctx.save();ctx.globalAlpha=.13;ctx.strokeStyle='#527d91';for(let oi=0;oi<obstacles.length;oi++){let o=obstacles[oi];ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,TAU);ctx.stroke()}ctx.restore();
  ctx.save();ctx.lineCap='round';let plantById=new Map();for(const p of plants)plantById.set(p.id,p);for(const p of plants){if(p.parent){let q=plantById.get(p.parent);if(q){ctx.save();const palette=plantPalette(p);ctx.shadowBlur=7;ctx.shadowColor=palette.glow;ctx.strokeStyle=palette.arm;ctx.lineWidth=Math.max(1,Math.min(3,1+p.size*1.1));ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore()}}}for(const p of plants)drawPlantNode(p);for(const sp of spores){ctx.save();ctx.fillStyle=sp.landed?'#86b6a4':'#c7f5ff';ctx.globalAlpha=sp.landed?.48:.86;hexPath(sp.x,sp.y,sp.landed?1.15:1.8,Math.PI/6);ctx.fill();ctx.restore()}ctx.restore();
  drawBoids();
