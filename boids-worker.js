@@ -235,13 +235,17 @@ function drawBoids(){
   ctx.beginPath();
   for(let j=0;j<a.length;j+=7){
    const px=a[j],py=a[j+1],c=a[j+2],sn=a[j+3],len=a[j+4],w=a[j+5],tail=a[j+6],
-    point=(u,v)=>[px+c*u-sn*v,py+sn*u+c*v],
-    nose=point(len*.64,0),bodyA=point(-len*.34,-w*.78),bodyB=point(-len*.34,w*.78),controlA=point(len*.36,-w*1.18),controlB=point(len*.36,w*1.18),back=point(-len*.56,0);
-   ctx.moveTo(nose[0],nose[1]);ctx.quadraticCurveTo(controlA[0],controlA[1],bodyA[0],bodyA[1]);ctx.quadraticCurveTo(back[0],back[1],bodyB[0],bodyB[1]);ctx.quadraticCurveTo(controlB[0],controlB[1],nose[0],nose[1]);ctx.closePath();
-   const tailRoot=point(-len*.34,0),tailTipA=point(-len*.88,tail),tailMid=point(-len*.58,0),tailTipB=point(-len*.88,-tail);
-   ctx.moveTo(tailRoot[0],tailRoot[1]);ctx.lineTo(tailTipA[0],tailTipA[1]);ctx.lineTo(tailMid[0],tailMid[1]);ctx.lineTo(tailTipB[0],tailTipB[1]);ctx.closePath();
-   const finRoot=point(-len*.08,-w*.68),finTip=point(len*.35,-w*.9),finControl=point(len*.12,-w*1.55),finBase=point(len*.14,-w*.45);
-   ctx.moveTo(finRoot[0],finRoot[1]);ctx.quadraticCurveTo(finControl[0],finControl[1],finTip[0],finTip[1]);ctx.lineTo(finBase[0],finBase[1]);ctx.closePath();
+    nx=px+c*len*.64,ny=py+sn*len*.64,
+    ax=px-c*len*.34+sn*w*.78,ay=py-sn*len*.34-c*w*.78,
+    bx=px-c*len*.34-sn*w*.78,by=py-sn*len*.34+c*w*.78,
+    cax=px+c*len*.36+sn*w*1.18,cay=py+sn*len*.36-c*w*1.18,
+    cbx=px+c*len*.36-sn*w*1.18,cby=py+sn*len*.36+c*w*1.18,
+    backX=px-c*len*.56,backY=py-sn*len*.56;
+   ctx.moveTo(nx,ny);ctx.quadraticCurveTo(cax,cay,ax,ay);ctx.quadraticCurveTo(backX,backY,bx,by);ctx.quadraticCurveTo(cbx,cby,nx,ny);ctx.closePath();
+   const rootX=px-c*len*.34,rootY=py-sn*len*.34,tipAX=px-c*len*.88-sn*tail,tipAY=py-sn*len*.88+c*tail,midX=px-c*len*.58,midY=py-sn*len*.58,tipBX=px-c*len*.88+sn*tail,tipBY=py-sn*len*.88-c*tail;
+   ctx.moveTo(rootX,rootY);ctx.lineTo(tipAX,tipAY);ctx.lineTo(midX,midY);ctx.lineTo(tipBX,tipBY);ctx.closePath();
+   const finRootX=px-c*len*.08+sn*w*.68,finRootY=py-sn*len*.08-c*w*.68,finTipX=px+c*len*.35+sn*w*.9,finTipY=py+sn*len*.35-c*w*.9,finControlX=px+c*len*.12+sn*w*1.55,finControlY=py+sn*len*.12-c*w*1.55,finBaseX=px+c*len*.14+sn*w*.45,finBaseY=py+sn*len*.14-c*w*.45;
+   ctx.moveTo(finRootX,finRootY);ctx.quadraticCurveTo(finControlX,finControlY,finTipX,finTipY);ctx.lineTo(finBaseX,finBaseY);ctx.closePath();
   }
   ctx.globalAlpha=.17;ctx.fillStyle='hsl('+(bin*15)+' 86% 66%)';ctx.fill();
   ctx.globalAlpha=.88;ctx.fillStyle='hsl('+(bin*15)+' 78% 62%)';ctx.strokeStyle='hsla('+(bin*15)+',88%,88%,.72)';ctx.lineWidth=.48;ctx.fill();ctx.stroke();
