@@ -16,7 +16,7 @@ test('round-trips typed structural neural regulatory and modifier gene families'
 });
 test('typed chromosome records retain integer node indices and reject invalid references',()=>{
   assert.throws(()=>DNA.structuralGene(1,1.5,2),/unsigned integer/);
-  assert.throws(()=>DNA.neuralNodeGene(65536,'hidden','tanh',0),/unsigned integer/);
+  assert.throws(()=>DNA.neuralNodeGene(4294967296,'hidden','tanh',0),/unsigned integer/);
   assert.throws(()=>DNA.modifierGene(1,0,[0,0],.2),/distinct trait indices/);
 });
 test('allows variable length and reordered genes',()=>{const g=DNA.encode({traits:[.2,.8],connections:[1,9,.4],innovations:[9]}),d=DNA.decode([g[2],g[1],g[0]]);assert.equal(d.source.length,1);assert.equal(d.traits.length,2);assert.equal(d.source[0],1)});
