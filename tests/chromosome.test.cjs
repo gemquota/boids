@@ -14,6 +14,11 @@ test('round-trips typed structural neural regulatory and modifier gene families'
   assert.ok(Math.abs(decoded.regulatoryEdges[0].weight+.6)<1e-6);assert.equal(decoded.regulatoryEdges[0].enabled,true);
   assert.deepEqual({id:decoded.modifiers[0].id,targetTrait:decoded.modifiers[0].targetTrait,loci:decoded.modifiers[0].loci,mode:decoded.modifiers[0].mode},{id:12,targetTrait:0,loci:[0,1,2],mode:1});assert.ok(Math.abs(decoded.modifiers[0].coefficient-.15)<1e-6);
 });
+test('compact typed projections synthesize compatibility arrays without duplicate legacy connection records',()=>{
+  const genes=DNA.encode({traits:[.5],connections:[1,2,.25],innovations:[44],includeLegacyConnections:false,structural:[{innovation:44,source:1,destination:2,enabled:true}],neuralNodes:[{id:1,type:'input',activation:'tanh',bias:0},{id:2,type:'output',activation:'sigmoid',bias:0}],neuralConnections:[{innovation:44,weight:.25}]});
+  assert.equal(genes.filter(gene=>gene.startsWith('02')).length,0,'compact projections must not duplicate legacy connection records');
+  const decoded=DNA.decode(genes);assert.deepEqual(Array.from(decoded.source),[1]);assert.deepEqual(Array.from(decoded.destination),[2]);assert.equal(decoded.innovation[0],44);assert.equal(decoded.weight[0],.25);
+});
 test('typed chromosome records retain integer node indices and reject invalid references',()=>{
   assert.throws(()=>DNA.structuralGene(1,1.5,2),/unsigned integer/);
   assert.throws(()=>DNA.neuralNodeGene(4294967296,'hidden','tanh',0),/unsigned integer/);
