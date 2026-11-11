@@ -89,7 +89,7 @@ jobs:
               raise SystemExit('Large Observatory histories must be throttled')
           if "panel==='analysis'&&Date.now()-lastChartRender>3500" not in html:
               raise SystemExit('Charts must not redraw while the Observatory drawer is closed')
-          if "new Worker('./boids-worker.js?v=20261111-regulatory-history-v29')" not in html:
+          if "new Worker('./boids-worker.js?v=20261111-typed-chromosomes-v30')" not in html:
               raise SystemExit('Updated worker cache-bust missing')
           if 'r=2.8+Math.min(3.4,p.size*2.7)' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
               raise SystemExit('Faceted hexagonal plant crowns must remain visibly sized')
