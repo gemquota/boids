@@ -33,6 +33,20 @@ The live worker carries inherited cis-regulatory modifiers and variable-length t
 
 The same variable-length regulatory-genome operators are used by the live worker: offspring receive identity-aligned maternal/paternal crossover, stable gene-copy and edge IDs, and mutation of copy number, edges, weights, thresholds, biases and effects. The worker persists per-agent networks, paternal state, identity allocator, derived expression arrays and a bounded 5,000-event mutation history in snapshots. It evaluates networks with bounded iterative activation/repression, supplies environmental and life-stage inputs, and applies per-locus expression modifiers in the live phenotype path. `evolution.js` also exposes the operators as standalone testable primitives. The separate multi-locus equation engine is likewise integrated into live phenotype refresh.
 
+## Typed gene-record semantics
+
+The v3 hexadecimal chromosome projection uses one uppercase hexadecimal string per typed record. Record tags distinguish:
+
+- **Quantitative trait loci:** stable trait ID plus a float32 inherited value. These are ten haploid quantitative values in the current model, not paired diploid alleles.
+- **Neural node genes:** 32-bit stable node ID, input/hidden/output type, activation enum and float32 bias.
+- **Neural structural genes:** historical innovation ID, 32-bit integer source/destination node IDs, enabled flag and recurrent flag. Endpoints are integers, never float-encoded indices.
+- **Neural connection genes:** historical innovation ID plus float32 weight, joined to structural topology by innovation ID.
+- **Regulatory node genes:** stable copy ID, quantitative-locus ID, environmental-input ID, activation, enabled state, bias, threshold, effect and environmental sensitivity.
+- **Regulatory edge genes:** stable edge ID, integer source/target copy IDs, signed float32 weight and enabled state.
+- **Modifier genes:** stable modifier ID, target trait, one to four source-locus indices, coefficient and mode. Mode zero represents inherited cis modifiers; other modes support multi-locus/epistatic modifiers.
+
+Legacy trait/connection records remain decodable. The compact v3 projection avoids duplicating legacy connection records: compatibility arrays are reconstructed from typed structural and neural-weight records. Full variable-length object genomes remain authoritative when present in snapshots.
+
 ## Neural genomes and NEAT
 
 Each agent carries a variable-length neural genome:
