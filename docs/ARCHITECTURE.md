@@ -35,7 +35,7 @@ Keep these layers distinct:
 - **Lifetime learning:** per-agent learned-weight overlays and recurrent activation state. Learning must not silently rewrite inherited connection genes.
 - **Environment:** plant biomass, water/moisture proximity, season, shelter, currents, and world geometry.
 
-The current worker uses variable-length genomes as the neural source of truth while retaining compatibility/projection arrays for legacy runtime consumers. Those projections are transitional and must not become a second independently mutable genome.
+The current worker uses variable-length genomes as the neural source of truth while retaining compatibility/projection arrays for legacy runtime consumers. Those projections are transitional and must not become a second independently mutable genome. The genotype-to-phenotype path also evaluates validated additive and epistatic multi-locus equations over normalized inherited loci before applying bounded environmental and regulatory modifiers.
 
 ## Neural storage bounds and legacy projections
 
@@ -62,7 +62,7 @@ There is one boid population. Predation is conspecific. Plants are the basal ren
 
 ## Persistence
 
-The worker's world snapshot schema is **21**. It includes configuration, agent and ecological state, variable-length genomes, learned-weight overlays, recurrent state, cis-regulatory modifiers and variable-length trans-regulatory networks/registry, pedigree, innovation/species state, delayed-entry survival history, stable-ID entry ages, lifetime reproductive-success and parent-sex identity state, per-gene eligibility traces, structural-innovation protection ages, RNG and sampled histories where supported. The browser stores the worker snapshot with a separate `storageSchemaVersion: 2` field. The worker's `schemaVersion: 21` is never overwritten by the IndexedDB envelope version. Legacy records whose worker version was previously overwritten to 2 remain readable through worker migration defaults.
+The worker's world snapshot schema is **22**. It includes configuration, agent and ecological state, variable-length neural and regulatory genomes, learned-weight overlays, recurrent state, derived regulatory expression arrays and bounded regulatory mutation history, pedigree, innovation/species state, delayed-entry all-cause and birth-cohort survival history, persisted birth-cohort IDs/lineage records, stable-ID entry ages, lifetime reproductive-success and parent-sex identity state, per-gene eligibility traces, structural-innovation protection ages, RNG and sampled histories where supported. The browser stores the worker snapshot with a separate `storageSchemaVersion: 2` field. The worker's `schemaVersion: 22` is never overwritten by the IndexedDB envelope version. Legacy records whose worker version was previously overwritten to 2 remain readable through worker migration defaults.
 
 When adding persistent state:
 1. add it to snapshot export;
