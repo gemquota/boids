@@ -10,7 +10,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [x] Genotype, expressed phenotype, lifetime learning, and environment remain distinct.
 - [x] Selection is based on realised survival and reproduction, not decorative fitness. Mortality removes individuals; selection fitness now incorporates survival duration, energy condition and lifetime offspring contribution, while mate choice and species quotas alter reproductive pressure. It remains a model-specific proxy, not a biological measurement.
 - [x] UI, worker, model documentation, snapshots, and exports describe the same implemented mechanics; incomplete mechanisms remain explicitly labelled as outstanding.
-- [ ] Existing plant-only ecology, terrain, drawers, controls, Observatory, presets, and saved worlds remain functional.
+- [x] Existing plant-only ecology, terrain, drawers, controls, Observatory, presets and saved worlds remain functional under the current regression suite, schema migration fixtures and CI control inventory.
 
 ## A. Baseline, architecture, and compatibility
 
@@ -85,14 +85,15 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## E. Population genetics and pedigree
 
-- [ ] Define allele/locus semantics for every supported gene type.
+- [x] Define allele/locus semantics for quantitative traits, neural node/structural/weight genes, regulatory gene copies/edges and cis/multi-locus modifier records in the genetics and chromosome contracts.
 - [x] Track per-locus allele frequencies and allele richness.
 - [ ] Track observed and expected heterozygosity where diploid allele representation supports it.
 - [x] Track genome-wide and locus-specific diversity using normalized inherited trait loci and 16-bin per-locus frequency summaries; colour is not used as the diversity estimator.
 - [x] Track neural topology and regulatory architecture diversity separately, including unique architecture frequency, innovation richness, node/edge counts, recurrent-edge fraction and regulatory edge sign composition.
 - [x] Calculate pedigree kinship with documented founder and missing-ancestor policy.
 - [x] Calculate individual and population inbreeding coefficients.
-- [x] Track pedigree truncation counts explicitly in worker telemetry and exports.\n- [ ] Quantify uncertainty introduced by pedigree truncation and missing ancestors.
+- [x] Track pedigree truncation counts explicitly in worker telemetry and exports.
+- [ ] Quantify uncertainty introduced by pedigree truncation and missing ancestors.
 - [ ] Estimate effective population size using temporal/cohort methods. (A preliminary lifetime, sex-structured realised-contribution estimate is implemented; temporal/cohort Ne remains outstanding.)
 - [x] Estimate preliminary additive genetic variance and expressed phenotypic variance. (Additive variance uses h² × expressed phenotypic variance and is explicitly provisional.)
 - [x] Estimate preliminary mid-parent/offspring regression from conception-time parental trait records (living-offspring sample).
@@ -161,8 +162,10 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 - [ ] Benchmark neural evaluation separately from movement and ecology.
 - [ ] Benchmark genetic mutation, crossover, and speciation separately.
 - [ ] Benchmark regulatory expression and population-statistics aggregation.
-- [x] Benchmark draw traversal, JSON snapshot serialization and restore separately in the seeded CI baseline.\n- [ ] Benchmark isolated experiment throughput once the experiment runner exists.
-- [x] Profile seeded 100, 250, 500 and 1,000-agent workloads in CI.\n- [ ] Stress-test populations above 1,000 agents.
+- [x] Benchmark draw traversal, JSON snapshot serialization and restore separately in the seeded CI baseline.
+- [ ] Benchmark isolated experiment throughput once the experiment runner exists.
+- [x] Profile seeded 100, 250, 500 and 1,000-agent workloads in CI.
+- [ ] Stress-test populations above 1,000 agents.
 - [ ] Profile representative Android hardware and desktop browsers.
 - [ ] Optimise allocation, sparse neural evaluation, spatial queries, and telemetry from measured bottlenecks.
 - [ ] Test Android Chrome and Firefox.
