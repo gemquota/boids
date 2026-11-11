@@ -303,6 +303,12 @@ assert.ok(restoredSnapshot.arrays.traitGenes[before * 10 + 6] >= .55, 'offspring
 // Schema-v3 snapshots used six packed traits; migration must preserve those and initialise four new loci.
 const legacy = api.exportSnapshot();
 legacy.schemaVersion = 3;
+// A schema-v3 export predates the trans-regulatory network and its identity registry.
+delete legacy.agentRegulatoryGenomes;
+delete legacy.paternalRegulatoryGenomes;
+delete legacy.regulatoryRegistry;
+delete legacy.arrays.regulatoryGenes;
+delete legacy.arrays.paternalRegulatoryGenes;
 delete legacy.innovationRegistry;
 delete legacy.nextInnovationId;
 delete legacy.arrays.innovation;
