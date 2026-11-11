@@ -67,7 +67,7 @@ This is the master implementation checklist for BOIDS. A checkbox is complete on
 
 ## D. Regulatory genetics and gene expression
 
-- [ ] Define typed structural, regulatory, modifier, and neural gene records. (A pure variable-length regulatory-genome API now defines stable regulatory gene/edge identities; runtime integration and unified typed records remain.)
+- [x] Define typed hexadecimal structural, regulatory-node, regulatory-edge, modifier, neural-node and neural-connection gene records. The live chromosome projection serializes and restores these alongside quantitative trait and legacy connection records, with integer source/destination indices and typed round-trip/migration tests.
 - [x] Give every regulatory gene copy a stable identity independent of chromosome position. (Live worker offspring inheritance, stable node/edge IDs and snapshot persistence are covered by worker tests.)
 - [x] Implement gene duplication with independent copy identity. (The live worker mutation path calls the stable-ID regulatory mutation engine; standalone operator tests cover identity and incident-edge duplication.)
 - [x] Implement gene deletion and regulatory-network length changes. (Live worker mutation uses the tested stable-ID regulatory mutation engine.)
