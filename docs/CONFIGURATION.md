@@ -40,4 +40,4 @@ Exact IDs, ranges, increments, defaults and dependencies are defined in `config-
 
 ## Simulation and persistence versions
 
-The worker world snapshot schema is **22**. The IndexedDB storage envelope uses a separate `storageSchemaVersion: 2`; the hexadecimal gene codec has its own version (2). Do not confuse either with the hexadecimal gene codec version (1).
+The worker world snapshot schema is **22**. The IndexedDB storage envelope uses a separate `storageSchemaVersion: 2`; the hexadecimal gene codec has its own version (3). Do not confuse either with the hexadecimal gene codec version (1).
