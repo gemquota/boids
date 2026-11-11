@@ -296,8 +296,8 @@ assert.equal(typedChromosome.modifiers.length,10,'chromosomes must contain inher
 assert.equal(restoredSnapshot.arrays.regulatoryGenes.length, api.N * 10, 'regulatory loci must persist for every agent');
 assert.equal(JSON.stringify(restoredSnapshot.agentRegulatoryGenomes),JSON.stringify(api.exportSnapshot().agentRegulatoryGenomes),'trans-regulatory gene copies and edges must persist');
 assert.equal(JSON.stringify(restoredSnapshot.regulatoryRegistry),JSON.stringify(api.regulatoryRegistry),'regulatory innovation identities must persist');
-assert.deepEqual(restoredSnapshot.regulatoryMutationHistory,api.regulatoryMutationHistory,'regulatory mutation history must survive snapshots');
-assert.deepEqual(restoredSnapshot.regulatoryExpressionByAgent,api.regulatoryExpressionByAgent.slice(0,api.N).map(v=>Array.from(v||[])),'regulatory expression state must survive snapshots');
+assert.equal(JSON.stringify(restoredSnapshot.regulatoryMutationHistory),JSON.stringify(api.regulatoryMutationHistory),'regulatory mutation history must survive snapshots');
+assert.equal(JSON.stringify(restoredSnapshot.regulatoryExpressionByAgent),JSON.stringify(api.regulatoryExpressionByAgent.slice(0,api.N).map(v=>Array.from(v||[]))),'regulatory expression state must survive snapshots');
 assert.equal(JSON.stringify(restoredSnapshot.agentLearnedWeights), JSON.stringify(api.exportSnapshot().agentLearnedWeights), 'learned weight overlays must survive snapshot restore');
 assert.equal(JSON.stringify(restoredSnapshot.agentNeuralStates), JSON.stringify(api.exportSnapshot().agentNeuralStates), 'recurrent neural state must survive snapshot restore');
 assert.equal(restoredSnapshot.chromosomes.length, api.N);
