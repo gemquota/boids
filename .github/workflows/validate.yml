@@ -72,7 +72,7 @@ jobs:
               raise SystemExit('Legacy food-patch controls must be removed')
           if 'BoidsConfigSchema.fieldGuide' not in html or 'BoidsConfigSchema.normalizeDependencies' not in html:
               raise SystemExit('Shared field guide/dependency schema is not consumed by the UI')
-          if 'BoidsChromosome.fromRuntime' not in worker or 'BoidsChromosome.decode' not in worker or 'chromosome.js?v=20261110-hex-dna-v1' not in worker:
+          if 'BoidsChromosome.fromRuntime' not in worker or 'BoidsChromosome.decode' not in worker or not re.search(r"chromosome\.js\?v=[^']+", worker):
               raise SystemExit('Hexadecimal chromosome runtime wiring is missing')
           if any(x in worker for x in ['function seedFood','food=[]','food.length','foodDemandByPatch','foodStock:']):
               raise SystemExit('Food patches or their hidden stock must not exist in the worker')
