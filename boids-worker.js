@@ -17,7 +17,7 @@ function bondRoll(a,b,phase=0){const v=Math.sin(a*12.9898+b*78.233+Math.floor(si
 function bondDegree(id){let n=0;for(const b of bonds)if(b.a===id||b.b===id)n++;return n}
 function pruneBonds(){const alive=new Set(Array.from(individualId.subarray(0,N)));bonds=bonds.filter(b=>alive.has(b.a)&&(b.kind==='plant'||alive.has(b.b)))}
 function updateBonds(dt){
- if(frameNo%30===0){
+ if(frameNo%60===0){
   rebuildGrid();
   const pairKeys=new Set(),degrees=new Map();
   for(const bond of bonds){if(bond.kind==='pair'){const key=bond.a<bond.b?bond.a+':'+bond.b:bond.b+':'+bond.a;pairKeys.add(key)}degrees.set(bond.a,(degrees.get(bond.a)||0)+1);if(bond.kind==='pair')degrees.set(bond.b,(degrees.get(bond.b)||0)+1)}
@@ -29,7 +29,9 @@ function updateBonds(dt){
   }
   if(bonds.length>Math.max(1000,N*5))bonds=bonds.slice(-Math.max(1000,N*5));
  }
+ if(!bonds.length)return;
  pruneBonds();
+ if(!bonds.length)return;
  const indexById=new Map(),degrees=new Map();for(let i=0;i<N;i++)indexById.set(individualId[i],i);
  for(const b of bonds){degrees.set(b.a,(degrees.get(b.a)||0)+1);if(b.kind==='pair')degrees.set(b.b,(degrees.get(b.b)||0)+1)}
  for(const b of bonds){const i=indexById.get(b.a);if(i===undefined)continue;const upkeep=.0000015*(degrees.get(b.a)||1)*dt*60;energy[i]=Math.max(0,energy[i]-upkeep);bondEnergySpent+=upkeep;if(b.kind==='pair'){const j=indexById.get(b.b);if(j!==undefined){const otherCost=.0000015*(degrees.get(b.b)||1)*dt*60;energy[j]=Math.max(0,energy[j]-otherCost);bondEnergySpent+=otherCost;const transfer=Math.min(.000004*dt*60,Math.max(0,energy[i]-.25));energy[j]=clamp(energy[j]+transfer,0,1.2);energy[i]-=transfer}}else{const p=plants.find(v=>v.id===b.plant);if(p){const gain=.000006*dt*60;energy[i]=clamp(energy[i]+gain,0,1.2);p.size=Math.min(2.5,(p.size||.5)+gain*.12)}}}
