@@ -93,10 +93,18 @@ test('observatory charts do not redraw while the drawer is closed', () => {
 });
 
 test('DNA and observatory use distinct icon tabs and reset lives in Field Operations', () => {
-  assert.ok(html.includes('class="drawerToggle dnaTab" id="openDNA"'));
-  assert.ok(html.includes('class="drawerToggle observatoryTab" id="openObservatory"'));
-  assert.ok(html.includes('id="openDNA" aria-expanded="false" aria-label="Open DNA and neural genome" title="DNA & genetics"><svg'));
-  assert.ok(html.includes('id="openObservatory" aria-expanded="false" aria-label="Open evolutionary observatory" title="Evolutionary observatory"><svg'));
+  assert.ok(html.includes('class="drawerToggle dnaTab iconTab" id="openDNA"'));
+  assert.ok(html.includes('class="drawerToggle observatoryTab iconTab" id="openObservatory"'));
+  assert.ok(html.includes('id="openDNA" aria-expanded="false" aria-label="DNA and neural genome"><svg'));
+  assert.ok(html.includes('id="openObservatory" aria-expanded="false" aria-label="Evolutionary observatory"><svg'));
+  assert.ok(html.includes('id="openControls" aria-expanded="false" aria-label="Configuration"><svg'));
+  assert.ok(html.includes('id="openInfo" type="button"'));
+  assert.ok(html.includes('id="infoOverlay"'));
+  assert.ok(html.includes('right:33.333%;top:0'));
+  assert.ok(html.includes('top:33.333%'));
+  assert.ok(html.includes('left:33.333%'));
+  assert.ok(html.includes('resize:both'));
+  assert.ok(html.includes('<details class="leftOperations" open>'));
   assert.ok(!html.includes('id="topReset"'));
   assert.ok(html.includes('id="reset" title="Replace the entire ecosystem and population">↻ Reset simulation'));
   assert.ok(html.includes("$('reset').onclick=resetSimulation"));
