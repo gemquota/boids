@@ -41,6 +41,7 @@ class Element {
     this.id = id; this.children = []; this.style = { setProperty() {} };
     this.listeners = {}; this.value = id === 'overlayOpacity' ? '72' : '';
     this.checked = false; this.textContent = ''; this.className = '';
+    this._classes = new Set(); this.classList = { add: (...names) => names.forEach(name => this._classes.add(name)), remove: (...names) => names.forEach(name => this._classes.delete(name)), contains: name => this._classes.has(name), toggle: (name, force) => { const enabled = force === undefined ? !this._classes.has(name) : !!force; if (enabled) this._classes.add(name); else this._classes.delete(name); return enabled; } };
     this.dataset = {}; this.width = 0; this.height = 0; this.hidden = false;
   }
   append(...nodes) { this.children.push(...nodes); }
