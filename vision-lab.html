@@ -371,7 +371,7 @@ function applySavedSliderLimits(){
 }
 const limitDialog=document.createElement('dialog');limitDialog.id='sliderLimitEditor';limitDialog.style.cssText='max-width:min(350px,calc(100vw - 28px));width:100%;border:1px solid #ffffff30;border-radius:12px;background:#0c1a29;color:#e8f2f5;padding:16px;box-shadow:0 18px 60px #0009';
 limitDialog.innerHTML='<form method="dialog" style="display:grid;gap:10px"><strong id="limitTitle">Slider limits</strong><label style="display:grid;gap:4px;font-size:11px">Minimum<input id="limitMin" type="number" step="any" style="padding:8px;background:#07111d;color:inherit;border:1px solid #ffffff30;border-radius:6px"></label><label style="display:grid;gap:4px;font-size:11px">Maximum<input id="limitMax" type="number" step="any" style="padding:8px;background:#07111d;color:inherit;border:1px solid #ffffff30;border-radius:6px"></label><div style="display:flex;gap:7px;justify-content:flex-end"><button value="cancel" class="button">Cancel</button><button id="saveLimits" value="save" class="button primary">Save limits + file</button></div><small style="color:#91a7b3">Saved in this browser and exported as a JSON file for backup.</small></form>';
-document.body.append(limitDialog);let editingLimit=null;
+$('parameterGroups').append(limitDialog);let editingLimit=null;
 function downloadSliderLimits(){const blob=new Blob([JSON.stringify({schema:'boids-vision-lab-slider-limits-v1',limits:savedLimits},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='boids-vision-lab-slider-limits.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1200)}
 function openSliderLimitEditor(key,label){
  const item=groups.flatMap(g=>g.items).find(x=>x[0]===key),input=$('p-'+key);if(!item||!input)return;
@@ -386,7 +386,7 @@ function installLongPressLimitEditor(key,label,anchor){
  anchor.addEventListener('contextmenu',e=>{e.preventDefault();longPressed=true;openSliderLimitEditor(key,label)});
  anchor.addEventListener('click',e=>{if(longPressed){e.preventDefault();e.stopImmediatePropagation();longPressed=false}},true);
 }
-for(const group of groups)for(const item of group.items){const key=item[0],label=document.querySelector('#p-'+key)?.closest('.control')?.querySelector('.parameterName');if(label)installLongPressLimitEditor(key,item[1],label)}
+for(const group of groups)for(const item of group.items){const key=item[0],input=$('p-'+key),label=input?.closest?.('.control')?.querySelector?.('.parameterName');if(label)installLongPressLimitEditor(key,item[1],label)}
 limitDialog.querySelector('form').addEventListener('submit',e=>{
  if(e.submitter?.id!=='saveLimits')return;e.preventDefault();if(!editingLimit)return;
  const min=Number($('limitMin').value),max=Number($('limitMax').value);if(!Number.isFinite(min)||!Number.isFinite(max)||min>=max){$('limitMin').focus();return}
