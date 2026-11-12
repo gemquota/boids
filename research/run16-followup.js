@@ -9,7 +9,7 @@ const scenarios=[
   {id:'plant-recruitment-fast',patch:{sporeInterval:4},purpose:'Test whether faster spore turnover prevents late plant recruitment collapse'},
   {id:'plant-recruitment-moderate',patch:{sporeInterval:7},purpose:'Measure the new default spore interval'},
   {id:'mate-diversity-strong',patch:{matePreference:0.7},purpose:'Test stronger genetic similarity preference under the new kinship penalty'},
-  {id:'mate-distance-priority',patch:{matePreference:0.15},purpose:'Test whether broader mate search plus kinship avoidance improves breeder diversity'}
+  {id:'mate-distance-priority',patch:{mateDistanceBias:1.5},purpose:'Test whether broader mate search plus kinship avoidance improves breeder diversity'}
 ];
 const runs=[];
 for(const scenario of scenarios){
