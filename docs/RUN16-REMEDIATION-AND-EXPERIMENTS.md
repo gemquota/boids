@@ -11,7 +11,7 @@ The worker also reduced bond strength whenever linked organisms were separated. 
 ## Changes in this branch
 
 - **Population accounting:** initial population, births, deaths, and population-control additions/removals now reconcile explicitly. A bounded event log records initialization, resize events, births, deaths, colony bond creation/breakage, and severe collisions.
-- **Bond persistence:** distance no longer weakens bonds. Agent bonds are removed when a member dies. This matches the intended rare-breakage rule.
+- **Bond persistence and mechanics:** distance no longer weakens bonds. Agent bonds are removed when a member dies. Each agent-agent bond also carries a rest length, stiffness, and damping term and is solved as a mass-weighted physical spring. This keeps colony members physically coupled without merging their identities.
 - **Plant recruitment:** spore release begins earlier, runs more frequently, and permits a larger airborne/settling spore pool. Telemetry distinguishes release, germination, crowding failure, dry-site failure, expiry, and plant death.
 - **Neural interface evolution:** four additional sensory channels are available: water proximity, thirst, bond tension, and contact pressure. Four corresponding behavior outputs are available: forage drive, water drive, colony cohesion, and exploration drive. New input/output neurons are rare structural mutations, inherit through crossover, and retain named channel identities.
 - **Collision response:** positional correction and normal impulses are mass-weighted. Contacts now include tangential friction, contact-pressure feedback, and aggregate penetration/impulse telemetry.
