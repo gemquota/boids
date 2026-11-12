@@ -45,6 +45,30 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 @media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr) 340px}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.canvasWrap{height:min(62vh,650px)}}
 @media(max-width:700px){.topbar{padding:9px 11px}.layout{display:flex;flex-direction:column;padding:8px;gap:8px}.stageColumn{gap:7px}.canvasWrap{height:47vh;min-height:260px;max-height:520px}.sidePanel{position:static;max-height:none;min-height:500px}.panelScroll{overflow:visible}.metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.metric{padding:7px}.metric strong{font-size:14px}.metric span{font-size:7px}.telemetry{grid-template-columns:1fr}.topActions .button{padding:7px 8px;font-size:9px}.brand p{font-size:7px}.hint{display:none}}
 @media(max-width:390px){.brand h1{font-size:11px}.brandMark{width:29px;height:29px}.topActions{gap:4px}.topActions .button{padding:6px}.canvasWrap{height:43vh}.networkReadout{grid-template-columns:repeat(5,minmax(0,1fr))}.barRow{grid-template-columns:72px minmax(0,1fr) 30px}}
+
+.parameterMap{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px;box-shadow:0 8px 24px #0002}
+.parameterMapHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.parameterMapHead h3{margin:0;color:var(--text);font-size:10px;letter-spacing:.13em;text-transform:uppercase}
+.parameterMapHead span{font-size:8px;color:var(--muted)}
+.parameterMapGroups{display:grid;gap:8px}
+.mapGroup{border-left:3px solid var(--group-color);padding:2px 0 3px 9px;min-width:0}
+.mapGroupTitle{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--group-color);margin-bottom:5px}
+.mapChips{display:flex;flex-wrap:wrap;gap:5px}
+.parameterChip{border:1px solid color-mix(in srgb,var(--group-color) 55%,transparent);background:color-mix(in srgb,var(--group-color) 10%,transparent);color:#e6f1f3;border-radius:6px;padding:5px 7px;font-size:8px;line-height:1.2;text-align:left}
+.parameterChip:active,.parameterChip:focus-visible,.parameterName:focus-visible{outline:2px solid var(--group-color);outline-offset:2px}
+.parameterChip:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--group-color);margin:0 5px 1px 0}
+.parameterHelp{position:fixed;z-index:1000;width:min(310px,calc(100vw - 24px));padding:11px 12px;background:#102235;border:1px solid var(--help-color,var(--mint));border-radius:10px;box-shadow:0 14px 40px #0009;color:var(--text)}
+.parameterHelp[hidden]{display:none}
+.parameterHelpHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:5px}
+.parameterHelpTitle{font-size:10px;font-weight:700;color:var(--help-color,var(--mint))}
+.parameterHelpCategory{font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--help-color,var(--mint));margin-top:2px}
+.parameterHelp p{font-size:9px;line-height:1.55;color:#c4d6dc;margin:0}
+.parameterHelpClose{border:1px solid #ffffff25;background:#ffffff0b;border-radius:5px;padding:2px 6px;font-size:11px;line-height:1.3}
+.parameterName{border:0;background:none;color:var(--group-color,var(--text));padding:0;text-align:left;font-size:9px;cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--group-color,var(--mint)) 45%,transparent);text-underline-offset:3px}
+.control input[type=range]{accent-color:var(--group-color,var(--mint))}
+.control output{color:var(--group-color,var(--mint))}
+@media(max-width:700px){.parameterMap{padding:10px}.parameterChip{padding:6px 7px;font-size:8px}.parameterMapHead{align-items:flex-start;flex-direction:column;gap:3px}}
+
 </style>
 </head>
 <body>
@@ -66,6 +90,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     </div>
     <div class="hint">Drag a target · drag empty space to rotate the body</div>
    </div>
+  </section>
+  <section class="parameterMap" id="parameterMap" aria-label="Interactive vision parameter map">
+   <div class="parameterMapHead"><h3>Interactive parameter map</h3><span>Tap any coloured parameter to see what it controls</span></div>
+   <div class="parameterMapGroups" id="parameterMapGroups"></div>
   </section>
   <div class="metrics">
    <div class="metric"><strong id="metricRays">0 / 24</strong><span>Rays sampled</span></div>
@@ -105,6 +133,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   </div>
  </aside>
 </main>
+<div class="parameterHelp" id="parameterHelp" role="dialog" aria-live="polite" aria-label="Parameter explanation" hidden>
+ <div class="parameterHelpHead"><div><div class="parameterHelpTitle" id="parameterHelpTitle"></div><div class="parameterHelpCategory" id="parameterHelpCategory"></div></div><button class="parameterHelpClose" id="parameterHelpClose" type="button" aria-label="Close explanation">×</button></div>
+ <p id="parameterHelpText"></p>
+</div>
 <script>
 (function(){
 'use strict';
@@ -161,6 +193,44 @@ function displayValue(item,value){
  if(key==='energyPerRay'||key==='processingCost')return fmt(value,3);
  return (Number.isInteger(value)?String(value):fmt(value,2))+(suffix?' '+suffix:'');
 }
+
+const groupColors=['#55c9f2','#ff8b72','#ffbf69','#9fe28a','#f17ddd','#a4a9ff','#79d8c4'];
+const parameterDescriptions={"fov":"Sets the horizontal angular field each eye can inspect. Wider fields cover more of the surroundings but spread a fixed ray budget more thinly.","coneScale":"Scales the effective perceptual cone independently of the nominal field of view.","verticalFov":"Sets the vertical elevation band in which targets can be detected, relative to the eye's height.","eyeCount":"Controls how many visual organs are distributed around the body. Each eye contributes its own origin and viewing direction.","eyeAngle":"Offsets the optic axes relative to the creature's normal gaze direction.","eyeHeight":"Sets eye elevation above the ground plane. Target height and distance determine whether it falls inside the vertical field.","rayCount":"Defines the total number of possible ray directions across the visual array, not how many are cast at once.","rayBudget":"Caps how many rays can be evaluated during one sampling update. Energy and adaptive allocation can reduce the actual count further.","rayWidth":"Gives rays a physical width, allowing near-misses to register as intersections.","originCycle":"Controls whether rays originate from fixed eye positions or cycle between origins over time.","distribution":"Changes how ray directions are spaced across the field, from evenly spaced to centre- or edge-weighted patterns.","maxRange":"Sets the farthest distance a ray can inspect.","minRange":"Creates a near-field blind zone. Intersections closer than this distance are ignored.","curvature":"Bends peripheral ray directions away from a perfectly straight angular fan.","turnSpeed":"Sets the maximum baseline angular speed of body rotation. Actual turning is modulated by behaviour and variance.","turnVariance":"Controls how strongly body-turn speed fluctuates around its baseline.","behaviorVariance":"Changes the timing and irregularity of scanning-versus-turning behaviour.","turnBias":"Shifts the behavioural balance between sustained body turning and visual scanning.","turnLockThreshold":"Angular velocity at which vision locks its eye geometry and ray directions in world space during a rapid turn.","gazeWander":"Controls how far idle gaze is allowed to wander when no target is being tracked.","samplingHz":"Sets how often the sensor schedules a new batch of ray observations.","scanMode":"Chooses the order in which unsampled ray positions are visited, including sequential, ping-pong, centre-out and jittered patterns.","scanDirection":"Sets the preferred direction of progression through the ray array.","scanSpeed":"Scales how quickly the sampling cursor advances through available ray positions.","adaptive":"Allows the controller and sensory state to shift more of the available ray budget toward useful regions.","priorityBoost":"Adds extra sampling priority to directions associated with the currently attended target.","persistence":"Controls how long old ray observations remain visible before fading from the diagnostic display.","stagger":"Offsets sampling phases so different ray positions do not all update in the same temporal pattern.","contrast":"Sets sensitivity to contrast between an object and its surroundings.","luminance":"Sets the minimum illumination-weighted signal required for visual detection.","minTarget":"Sets the minimum apparent target size needed for reliable detection.","classification":"Controls how far processing goes beyond a raw hit: motion signal, detection, broad category or object identity.","colourSensitivity":"Controls how strongly colour information contributes to classification.","motionSensitivity":"Controls sensitivity to movement cues, which can reveal targets even when other visual signals are weak.","depthResolution":"Sets the number of distance steps used when quantising measured range. More steps provide finer distance estimates.","transparency":"Controls how much light and visual signal is attenuated while rays pass through partially transparent objects.","fog":"Adds distance-dependent environmental attenuation, reducing the strength of distant observations.","ambient":"Sets the baseline illumination available to the visual transduction stage.","confidenceMin":"Sets the minimum confidence an observation must reach before it is accepted by the processor.","gazeOffset":"Applies a persistent angular offset to gaze relative to the body and eye axes.","gazeSpeed":"Caps how quickly the eyes can rotate toward a new gaze target.","attentionSpan":"Controls the time scale over which attention remains committed to a target or region.","fixation":"Sets the preferred duration of a fixation before attention is free to move elsewhere.","saccade":"Sets the maximum angular size of rapid gaze shifts.","attentionThreshold":"Sets how much stronger a new candidate must be before it can displace the current focus.","threatBias":"Weights predator or threat observations more strongly during target selection.","foodBias":"Weights food observations more strongly during target selection.","idleScan":"Sets the angular amplitude of scanning when no target is currently attended.","tracking":"Controls how strongly estimated target motion is used to stabilise tracking.","prediction":"Sets how far ahead target motion is projected when estimating its future position.","reacquisition":"Sets how long a lost target can remain eligible for reacquisition.","memory":"Sets the maximum retention time for remembered visual tracks.","shortTerm":"Controls the short-lived visual buffer used to compare recent observations.","temporalSmooth":"Blends new measurements with previous estimates to reduce jitter. Higher values produce smoother but slower responses.","noiseTolerance":"Reduces the effect of visual measurement noise on whether a signal is trusted.","habituation":"Controls how strongly confidence in repeatedly observed, unchanged targets decays over time.","occlusionMemory":"Controls how strongly a target's remembered position is retained while it is hidden.","predictionHorizon":"Sets the maximum time span used by the memory system when projecting a target's position forward.","visualNoise":"Adds measurement uncertainty to visual signals, testing how robust detection and tracking are.","learningRate":"Sets the size of each neural teaching update to class-association weights.","plasticity":"Scales how readily controller connections adapt in response to feedback.","energyPerRay":"Sets the metabolic energy cost of evaluating each ray.","processingCost":"Sets the energy cost of processing each visible object after ray intersections.","energyReserve":"Sets the sensor's energy capacity and influences how much energy is available for sampling.","mutationRate":"Sets the typical magnitude of inherited parameter changes during genome mutation.","developmentalVariance":"Adds extra spread to mutation effects, allowing more varied expressed phenotypes.","tradeoff":"Controls the bias toward lower-energy sensing versus higher-resolution, more expensive perception.","overlayOpacity":"Sets the opacity of diagnostic drawings over the simulation without changing the underlying sensing calculations."};
+const help=$('parameterHelp');
+function showParameterHelp(key,anchor){
+ const item=groups.flatMap(g=>g.items).find(x=>x[0]===key);
+ const groupIndex=groups.findIndex(g=>g.items.some(x=>x[0]===key));
+ const color=groupColors[groupIndex]||'#79f2d0';
+ $('parameterHelpTitle').textContent=item?item[1]:'Overlay opacity';
+ $('parameterHelpCategory').textContent=groups[groupIndex]?.name||'Diagnostic overlays';
+ $('parameterHelpText').textContent=parameterDescriptions[key]||'This parameter adjusts the corresponding part of the vision system.';
+ help.style.setProperty('--help-color',color);
+ help.hidden=false;
+ const r=anchor.getBoundingClientRect(),w=Math.min(310,window.innerWidth-24),h=help.offsetHeight;
+ const left=Math.max(12,Math.min(window.innerWidth-w-12,r.left));
+ const top=r.bottom+h+12<window.innerHeight?r.bottom+6:Math.max(12,r.top-h-6);
+ help.style.left=left+'px';help.style.top=top+'px';
+}
+function buildParameterMap(){
+ const root=$('parameterMapGroups');
+ groups.forEach((group,index)=>{
+  const section=document.createElement('div');section.className='mapGroup';section.style.setProperty('--group-color',groupColors[index]);
+  const title=document.createElement('div');title.className='mapGroupTitle';title.textContent=group.name;section.append(title);
+  const chips=document.createElement('div');chips.className='mapChips';
+  group.items.forEach(item=>{
+   const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent=item[1];chip.style.setProperty('--group-color',groupColors[index]);chip.addEventListener('click',()=>showParameterHelp(item[0],chip));chips.append(chip);
+  });
+  section.append(chips);root.append(section);
+ });
+ const overlay=document.createElement('div');overlay.className='mapGroup';overlay.style.setProperty('--group-color','#aab8c5');
+ const title=document.createElement('div');title.className='mapGroupTitle';title.textContent='Diagnostic overlays';overlay.append(title);
+ const chips=document.createElement('div');chips.className='mapChips';const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent='Overlay opacity';chip.style.setProperty('--group-color','#aab8c5');chip.addEventListener('click',()=>showParameterHelp('overlayOpacity',chip));chips.append(chip);overlay.append(chips);root.append(overlay);
+}
+$('parameterHelpClose').addEventListener('click',()=>help.hidden=true);
+document.addEventListener('pointerdown',e=>{if(!help.hidden&&!help.contains(e.target)&&!e.target.closest('.parameterName,.parameterChip'))help.hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')help.hidden=true});
+window.addEventListener('resize',()=>help.hidden=true);
+
 function makeControls(){
  const root=$('parameterGroups');
  for(const group of groups){
@@ -168,9 +238,10 @@ function makeControls(){
   const summary=document.createElement('summary');summary.textContent=group.name;details.append(summary);
   const note=document.createElement('div');note.className='groupNote';note.textContent=group.note;details.append(note);
   const holder=document.createElement('div');holder.className='controls';
+  const groupIndex=groups.indexOf(group);
   for(const item of group.items){
-   const key=item[0],row=document.createElement('div');row.className='control';
-   const label=document.createElement('label');label.htmlFor='p-'+key;label.textContent=item[1];
+   const key=item[0],row=document.createElement('div');row.className='control';row.style.setProperty('--group-color',groupColors[groupIndex]);
+   const label=document.createElement('button');label.type='button';label.className='parameterName';label.style.setProperty('--group-color',groupColors[groupIndex]);label.textContent=item[1];label.addEventListener('click',()=>showParameterHelp(key,label));
    const output=document.createElement('output');output.id='v-'+key;output.textContent=displayValue(item,params[key]);
    const input=document.createElement('input');input.type='range';input.id='p-'+key;input.min=item[2];input.max=item[3];input.step=item[4];input.value=params[key];input.setAttribute('aria-label',item[1]);
    input.addEventListener('input',()=>{
@@ -199,7 +270,7 @@ function buildOverlays(){
  for(const [key,label] of overlayLabels){const l=document.createElement('label');l.className='toggle';l.innerHTML='<span>'+label+'</span><input type="checkbox" data-overlay="'+key+'" checked>';const input=l.querySelector('input');input.addEventListener('change',()=>{overlays[key]=input.checked;$('ov-all').checked=Object.values(overlays).every(Boolean)});root.append(l)}
 }
 $('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textContent=$('overlayOpacity').value+'%'});
-makeControls();buildOverlays();
+makeControls();buildParameterMap();buildOverlays();
 const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:false});
 let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,sampleAccumulator=0,simTime=0,sampleCount=0,totalCandidateChecks=0,energy=100,energySpent=0,frames=0,fpsTime=0,fps=0,scanCursor=0,scanDir=1,jitterSeed=713,cycle=0;
 let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),bodyTurnVelocity=0,visionLocked=false,lockedRaySpecs=[],lockedEyeGeometry=[],scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null,targetSelectedAt=0,neuralOutputs=[0,.5,.5,0,.5];
