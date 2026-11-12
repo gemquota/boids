@@ -14,7 +14,7 @@ function create(width,height,seed=1,options={}){
   const highA=gaussian(nx,ny,.29,.19,.19,.18),highB=gaussian(nx,ny,.73,.73,.2,.19),ridge=gaussian(nx,ny,.54,.42,.28,.12);
   const coastA=Math.exp(-((nx/.22)**2+(ny/.2)**2)*.5),coastB=Math.exp(-(((1-nx)/.22)**2+((1-ny)/.2)**2)*.5);
   const river=ny-(.52+.14*Math.sin(nx*Math.PI*1.6)+.06*Math.sin(nx*Math.PI*4.2+.8));
-  let elev=.23+highA*.48+highB*.43+ridge*.12-Math.max(coastA,coastB)*.22-Math.exp(-(river/.13)**2)*.09+noise*.025;
+  let elev=.23+highA*.48+highB*.43+ridge*.12-Math.max(coastA,coastB)*.22-Math.exp(-((river/.13)**2))*.09+noise*.025;
   elev=clamp(elev,.035,.92);s.elevation[i]=elev;
   const coastDist=Math.min(Math.hypot(nx,ny),Math.hypot(1-nx,1-ny));s.coastDistance[i]=coastDist;
   s.soil[i]=.24+hash(s.seed,x,y,1)*.08;s.groundwater[i]=clamp(.16+(1-elev)*.18);s.salinity[i]=0;
