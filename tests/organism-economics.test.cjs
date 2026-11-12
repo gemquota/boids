@@ -23,6 +23,9 @@ test('bond helpers count capacity, strength and clean up dead endpoints',()=>{
   assert.equal(eco.countBonds(links,1),2);
   assert.ok(Math.abs(eco.bondLoad(links,1)-1.2)<1e-12);
   assert.equal(eco.hasBond(links,2,1),true);
+  const normalized=eco.normalizeBond({a:1,b:2,targetType:'agent',sideA:'right',sideB:'left'});
+  assert.equal(normalized.sideA,'right');assert.equal(normalized.sideB,'left');
+  assert.equal(eco.pruneBonds([{a:1,b:2,targetType:'agent',sideA:'right',sideB:'left',strength:.5}],new Set([1,2]),new Set()).at(0).sideA,'right');
   assert.equal(eco.hasBond(links,1,7,'plant'),true);
   assert.equal(eco.pairKey(9,2),eco.pairKey(2,9));
   assert.equal(eco.pruneBonds(links,new Set([1,2]),new Set([7])).length,2);
