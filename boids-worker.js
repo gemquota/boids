@@ -137,7 +137,7 @@ function growPlants(dt){
   if(canReproduce&&!p.grandmother&&p.biomass>=1.24){p.grandmother=true;p.flowerCount=3+Math.floor(random()*3);p.flowerGrowth=0}
   if(p.grandmother)p.flowerGrowth=Math.min(1,(p.flowerGrowth||0)+dt*.12);
   if(!p.senescent&&p.grandmother&&!p.greatGrandmother&&p.biomass>=1.48)p.greatGrandmother=true;
-  if(canReproduce&&p.age>12&&p.biomass>=.78){p.sporeClock=(p.sporeClock||0)+dt;const interval=cfg.sporeInterval*(p.depth?1.2:1);if(p.sporeClock>interval&&spores.length<90){p.sporeClock=0;let a=rand(0,TAU),v=rand(5,13);spores.push({x:p.x,y:p.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:0,settleAfter:rand(4,8),landed:false,settleClock:0,parentId:p.id,root:p.root,kind:'asexual-spore'});plantCounters.sporeAttempts++;plantCounters.sporesReleased++}}
+  if(canReproduce&&p.age>12&&p.biomass>=.78){p.sporeClock=(p.sporeClock||0)+dt;const interval=cfg.sporeInterval*(p.depth?1.2:1);if(p.sporeClock>interval&&spores.length<90){p.sporeClock=0;let a=rand(0,TAU),v=rand(5,13);spores.push({x:p.x,y:p.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:0,settleAfter:rand(4,8),landed:false,settleClock:0,parentId:p.id,root:p.root,kind:'asexual-spore'});plantCounters.sporeAttempts++;plantCounters.sporesReleased++;recordPopulationEvent('spore_released',{plantId:p.id,x:p.x,y:p.y,root:p.root})}}
   p.stage=plantStage(p);
  }
  for(const sp of spores){
@@ -149,13 +149,13 @@ function growPlants(dt){
   const sp=spores[i];let remove=sp.life>24||sp.x<0||sp.x>W||sp.y<0||sp.y>H;if(remove)plantCounters.sporeExpired++;
   if(!remove&&sp.landed&&sp.settleClock>=1.8){
    const crowded=!plantPositionClear(sp.x,sp.y,.2),waterDistance=nearestFreshwater(sp.x,sp.y).distance,waterProximity=clamp(1-waterDistance/230,0,1),germinationChance=.08+.84*waterProximity;
-   if(!crowded&&plants.length<90&&random()<germinationChance){const id=nextPlantId++;plants.push(makePlantNode({id,x:sp.x,y:sp.y,age:0,biomass:.2,size:.2,cloneParent:sp.parentId||0,asexual:true}));plantCounters.sporesGerminated++;remove=true}
+   if(!crowded&&plants.length<90&&random()<germinationChance){const id=nextPlantId++;plants.push(makePlantNode({id,x:sp.x,y:sp.y,age:0,biomass:.2,size:.2,cloneParent:sp.parentId||0,asexual:true}));plantCounters.sporesGerminated++;recordPopulationEvent('spore_germinated',{parentId:sp.parentId||0,root:sp.root||0,x:sp.x,y:sp.y});remove=true}
    else if(crowded||waterProximity<.08||sp.settleClock>8){if(crowded)plantCounters.sporeFailedCrowded++;else plantCounters.sporeFailedDry++;remove=true}
    else sp.settleClock=0;
   }
   if(remove)spores.splice(i,1);
  }
- for(let i=plants.length-1;i>=0;i--){const p=plants[i];if(p.biomass<=.035||p.age>p.lifespan+18){for(const child of plants)if(child.parent===p.id){child.parent=0;child.root=child.id;child.depth=0;child.asexual=true;child.cloneParent=child.cloneParent||p.id}plants.splice(i,1);plantCounters.plantDeaths++}}
+ for(let i=plants.length-1;i>=0;i--){const p=plants[i];if(p.biomass<=.035||p.age>p.lifespan+18){for(const child of plants)if(child.parent===p.id){child.parent=0;child.root=child.id;child.depth=0;child.asexual=true;child.cloneParent=child.cloneParent||p.id}recordPopulationEvent('plant_death',{id:p.id,age:p.age,biomass:p.biomass});plants.splice(i,1);plantCounters.plantDeaths++}}
  for(const p of plants)p.stage=plantStage(p);
 }function seedObstacles(){obstacles=[];for(let i=0;i<cfg.obstacles;i++)obstacles.push({x:rand(W*.12,W*.88),y:rand(H*.12,H*.88),r:rand(18,52)})}function seedPredators(){predators=[]}function seedEnvironment(){seedObstacles();seedPlants()}
 function rebuildGrid(){if(!cellHead||!x)return;cellHead.fill(-1);for(let i=0;i<N;i++){let cx=clamp((x[i]/cellSize)|0,0,cols-1),cy=clamp((y[i]/cellSize)|0,0,rows-1),c=cy*cols+cx;link[i]=cellHead[c];cellHead[c]=i}}
