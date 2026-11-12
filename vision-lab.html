@@ -33,6 +33,27 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .groupNote{font-size:8px;color:var(--muted);padding:0 11px 7px;border-bottom:1px solid #ffffff0b}
 .controls{padding:4px 11px 10px}.control{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:center;padding:7px 0;border-bottom:1px solid #ffffff0a}.control:last-child{border-bottom:0}
 .control label{font-size:9px;color:#d7e6e9;min-width:0}.control output{font-size:9px;color:var(--mint);font-variant-numeric:tabular-nums;text-align:right}
+.apparatusModule{border:1px solid #ffffff22;border-radius:11px;background:#ffffff04;margin:0 0 9px;overflow:hidden}
+.apparatusSummary,.overlaySummary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px;color:#d9edf0;font-size:9px;letter-spacing:.13em;text-transform:uppercase}
+.apparatusSummary::-webkit-details-marker,.overlaySummary::-webkit-details-marker{display:none}
+.apparatusSummary:after,.overlaySummary:after{content:"＋";color:var(--mint);font-size:13px}
+.apparatusModule[open]>.apparatusSummary:after,.overlayDisclosure[open]>.overlaySummary:after{content:"−"}
+.apparatusSummary span{font-size:7px;letter-spacing:.04em;text-transform:none;color:var(--muted);font-weight:400}
+.apparatusContent{padding:0 8px 8px}
+.overlayDisclosure{padding:0;margin-bottom:9px}
+.overlayDisclosure>.toggleGrid{padding:0 11px 11px}
+.overlayDisclosure>.overlaySummary{padding:10px 11px}
+.overlayOpacityControl{padding:8px 3px 10px}
+.sliderAccordion{border-top:1px solid #ffffff12;margin-top:5px}
+.sliderAccordion>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 2px 7px;color:var(--group-color);font-size:8px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
+.sliderAccordion>summary::-webkit-details-marker{display:none}
+.sliderAccordion>summary:after{content:"＋";font-size:11px;color:var(--group-color)}
+.sliderAccordion[open]>summary:after{content:"−"}
+.sliderAccordion .groupNote{padding:0 2px 7px}
+.sliderAccordion .controls{padding:0 3px 7px}
+.parameterName{max-width:100%}
+.parameterName[data-help]{text-decoration-style:dotted}
+.overlayTitle[data-help]{cursor:help;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
 .control input[type=range]{grid-column:1/-1;width:100%;height:17px;margin:0;accent-color:var(--mint);touch-action:pan-y}
 .control small{grid-column:1/-1;color:#718b98;font-size:7px;margin-top:-2px}
 .overlayBox{padding:11px;border:1px solid var(--line);border-radius:10px;margin-bottom:9px;background:#ffffff04}.overlayTitle{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:var(--mint);margin:0 0 8px}
@@ -122,24 +143,29 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
  <aside class="panel sidePanel">
   <div class="panelHead"><h2>Vision apparatus</h2><p>One compact, colour-coded control block for the full sensor, processor and controller.</p></div>
   <div class="panelScroll">
-   <section class="overlayBox">
-    <div class="overlayTitle">Diagnostic overlays · default on</div>
+   <details class="overlayBox overlayDisclosure" open>
+    <summary class="overlaySummary">Diagnostic overlays · default on</summary>
     <div class="toggleGrid" id="overlayToggles"></div>
-    <div class="control" style="margin-top:7px"><label for="overlayOpacity">Overlay opacity</label><output id="overlayOpacityValue">72%</output><input id="overlayOpacity" type="range" min="10" max="100" value="72" step="1"></div>
-   </section>
-   <div id="parameterGroups"></div>
-   <section class="overlayBox">
-    <div class="overlayTitle">Online neural teaching</div>
+   </details>
+   <details class="apparatusModule" id="apparatusModule" open>
+    <summary class="apparatusSummary">Vision controls &amp; genetics <span>tap to collapse the whole module</span></summary>
+    <div class="apparatusContent">
+     <div class="control overlayOpacityControl" style="margin-top:7px"><label for="overlayOpacity" class="parameterName" data-help="overlayOpacity">Overlay opacity</label><output id="overlayOpacityValue">72%</output><input id="overlayOpacity" type="range" min="10" max="100" value="72" step="1"></div>
+     <div id="parameterGroups"></div>
+     <section class="overlayBox">
+    <div class="overlayTitle" data-help="teaching">Online neural teaching</div>
     <div class="readout" id="targetReadout">No attended target yet. The controller is receiving only current ray-derived observations.</div>
     <div class="feedback"><button class="button primary" id="rewardBtn">Reward attention +</button><button class="button danger" id="punishBtn">Discourage −</button></div>
     <div class="footnote">Feedback updates the small controller's class-association weights. It does not invent a sensory observation or label unseen objects.</div>
    </section>
    <section class="overlayBox">
-    <div class="overlayTitle">Expressed genetic loci</div>
+    <div class="overlayTitle" data-help="genetics">Expressed genetic loci</div>
     <div class="readout">The numeric controls are the creature's current heritable parameter values. Mutation changes those loci; the displayed phenotype is what the raycaster actually uses.</div>
     <div class="genome" id="genomeReadout"></div>
     <div class="actionGrid" style="margin-top:8px"><button class="button" id="exportGenomeBtn">Export genome JSON</button><button class="button" id="restoreGenomeBtn">Restore baseline</button></div>
    </section>
+    </div>
+   </details>
    <p class="footnote">This is a standalone sensory-system laboratory. It demonstrates the physical sensing → perception → neural control separation with a single organism; population inheritance and the production worker are not modified by this page.</p>
   </div>
  </aside>
@@ -225,10 +251,20 @@ const help=$('parameterHelp');
 function showParameterHelp(key,anchor){
  const item=groups.flatMap(g=>g.items).find(x=>x[0]===key);
  const group=groups.find(g=>g.items.some(x=>x[0]===key));
- const color=item&&group?itemColor(group,item):'#aab8c5';
- $('parameterHelpTitle').textContent=item?item[1]:'Overlay opacity';
- $('parameterHelpCategory').textContent=group?(group.name+' · '+item[7]):'Diagnostic overlays';
- $('parameterHelpText').textContent=parameterDescriptions[key]||'This parameter adjusts the corresponding part of the vision system.';
+ const extraHelp={
+  overlayOpacity:{title:'Overlay opacity',category:'Diagnostic overlays',text:parameterDescriptions.overlayOpacity,color:'#aab8c5'},
+  teaching:{title:'Online neural teaching',category:'Controller feedback',text:'Reward or discourage the currently attended real observation. This adjusts class-association weights only; it does not create sensory evidence or label unseen objects.',color:'#25867d'},
+  genetics:{title:'Expressed genetic loci',category:'Heritable phenotype',text:'These values are the current expressed genome. Mutation changes heritable parameter values; restoring baseline resets the phenotype and controller state.',color:'#1b7068'},
+  reward:{title:'Reward attention',category:'Controller feedback',text:'Strengthens the association between the currently attended object class and the controller response.',color:'#25867d'},
+  punish:{title:'Discourage attention',category:'Controller feedback',text:'Weakens the association between the currently attended object class and the controller response.',color:'#bd5365'},
+  exportGenome:{title:'Export genome JSON',category:'Genome tools',text:'Downloads the current parameter values and neural controller weights as a JSON genome snapshot.',color:'#1b7068'},
+  restoreGenome:{title:'Restore baseline',category:'Genome tools',text:'Restores the baseline parameter values and resets the simulation and controller state.',color:'#1b7068'}
+ };
+ const extra=extraHelp[key];
+ const color=item&&group?itemColor(group,item):extra?.color||'#aab8c5';
+ $('parameterHelpTitle').textContent=item?item[1]:extra?.title||'Diagnostic control';
+ $('parameterHelpCategory').textContent=group?(group.name+' · '+item[7]):extra?.category||'Diagnostic overlays';
+ $('parameterHelpText').textContent=parameterDescriptions[key]||extra?.text||'This control adjusts the corresponding part of the vision system.';
  help.style.setProperty('--help-color',color);
  help.hidden=false;
  const r=anchor.getBoundingClientRect(),w=Math.min(310,window.innerWidth-24),h=help.offsetHeight;
@@ -255,11 +291,10 @@ window.addEventListener('resize',()=>help.hidden=true);
 
 function makeControls(){
  const root=$('parameterGroups');
- const details=document.createElement('details');details.className='panelSection';details.open=true;
- const summary=document.createElement('summary');summary.textContent='All vision parameters';details.append(summary);
- const holder=document.createElement('div');holder.className='controls';
  for(const group of groups){
-  const groupTitle=document.createElement('div');groupTitle.className='controlGroupTitle';groupTitle.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);groupTitle.textContent=group.name;holder.append(groupTitle);
+  const details=document.createElement('details');details.className='sliderAccordion';details.open=false;details.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);
+  const summary=document.createElement('summary');summary.textContent=group.name;details.append(summary);
+  const holder=document.createElement('div');holder.className='controls';
   const note=document.createElement('div');note.className='groupNote';note.textContent=group.note;holder.append(note);
   let lastSubgroup=null;
   for(const item of group.items){
@@ -278,8 +313,8 @@ function makeControls(){
    });
    row.append(label,output,input);holder.append(row);
   }
+  details.append(holder);root.append(details);
  }
- details.append(holder);root.append(details);
 }
 function syncControl(key){
  const input=$('p-'+key);if(!input)return;input.value=params[key];
@@ -295,6 +330,11 @@ function buildOverlays(){
  for(const [key,label] of overlayLabels){const l=document.createElement('label');l.className='toggle';l.innerHTML='<span>'+label+'</span><input type="checkbox" data-overlay="'+key+'" checked>';const input=l.querySelector('input');input.addEventListener('change',()=>{overlays[key]=input.checked;$('ov-all').checked=Object.values(overlays).every(Boolean)});root.append(l)}
 }
 $('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textContent=$('overlayOpacity').value+'%'});
+document.addEventListener('click',e=>{
+ const trigger=e.target.closest('[data-help]');
+ if(trigger){e.preventDefault();e.stopPropagation();showParameterHelp(trigger.dataset.help,trigger)}
+});
+$('rewardBtn').dataset.help='reward';$('punishBtn').dataset.help='punish';$('exportGenomeBtn').dataset.help='exportGenome';$('restoreGenomeBtn').dataset.help='restoreGenome';
 makeControls();buildParameterMap();buildOverlays();
 const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:true});
 let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,sampleAccumulator=0,simTime=0,sampleCount=0,totalCandidateChecks=0,energy=100,energySpent=0,frames=0,fpsTime=0,fps=0,scanCursor=0,scanDir=1,jitterSeed=713,cycle=0;
