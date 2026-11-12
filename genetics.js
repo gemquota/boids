@@ -14,7 +14,7 @@
     {index:4,key:'kinAffinity',label:'Kin affinity',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
     {index:5,key:'sensoryRange',label:'Perception radius',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:18,phenotypeMax:90},
     {index:6,key:'acceleration',label:'Acceleration',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
-    {index:7,key:'agility',label:'Agility',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
+    {index:7,key:'agility',label:'Agility / turn speed',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65},
     {index:8,key:'riskTolerance',label:'Risk tolerance',min:0,max:1,geneMin:0,geneMax:1,phenotypeMin:0,phenotypeMax:1},
     {index:9,key:'exploration',label:'Exploration',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65}
   ]);
