@@ -1,6 +1,6 @@
 # Organism economics and bonding
 
-This model uses the simulation's normalized energy pool (0–1.2). Recurring costs are charged once per fixed worker update, not once per rendered frame. The current worker advances at 60 fixed updates per simulation second.
+This model uses the simulation's normalized energy pool (0–1.2). Movement costs are charged every fixed worker update, not once per rendered frame. The current worker advances at 60 fixed updates per simulation second. The slower-changing maintenance breakdown is refreshed at 10 Hz and amortized across intervening updates; the cached breakdown and its invalidation state are included in snapshots so restore remains deterministic.
 
 ## Recurring energy costs
 
