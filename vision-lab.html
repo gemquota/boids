@@ -57,8 +57,6 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .parameterMap.is-collapsed{padding-top:9px;padding-bottom:9px}
 .parameterMap.is-collapsed .parameterMapHead{margin:0}
 .parameterMap.is-collapsed .parameterMapHead span:after{content:" · collapsed"}
-.mapGroup{border-left:3px solid var(--group-color);padding:2px 0 3px 9px;min-width:0}
-.mapGroupTitle{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--group-color);margin-bottom:5px}
 .mapChips{display:flex;flex-wrap:wrap;gap:5px}
 .parameterChip{border:1px solid color-mix(in srgb,var(--group-color) 55%,transparent);background:color-mix(in srgb,var(--group-color) 10%,transparent);color:#e6f1f3;border-radius:6px;padding:5px 7px;font-size:8px;line-height:1.2;text-align:left}
 .parameterChip:active,.parameterChip:focus-visible,.parameterName:focus-visible{outline:2px solid var(--group-color);outline-offset:2px}
@@ -75,8 +73,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 @media(max-width:700px){.parameterMap{padding:10px}.parameterChip{padding:6px 7px;font-size:8px}.parameterMapHead{align-items:flex-start;flex-direction:column;gap:3px}}
 
 
-.mapSubgroup{padding:5px 0 4px 8px;margin:4px 0 0 3px;border-left:2px solid color-mix(in srgb,var(--sub-color) 60%,transparent)}
-.mapSubgroupTitle,.controlSubgroup{font-size:7px;letter-spacing:.11em;text-transform:uppercase;color:var(--sub-color);font-weight:700;margin:0 0 5px}
+.controlSubgroup{font-size:7px;letter-spacing:.11em;text-transform:uppercase;color:var(--sub-color);font-weight:700;margin:0 0 5px}
 .controlSubgroup{padding:8px 0 2px;border-bottom:1px solid color-mix(in srgb,var(--sub-color) 35%,transparent)}
 .controlGroupTitle{font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--group-color);padding:11px 0 3px;border-bottom:1px solid color-mix(in srgb,var(--group-color) 35%,transparent);margin-top:5px}
 .controlGroupTitle:first-child{margin-top:0}
@@ -93,7 +90,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 <main class="layout">
  <section class="stageColumn">
   <section class="stageCard">
-   <div class="stageHead"><div><div class="stageTitle">Single-creature sensory field</div><div class="stageSub">Top-down 2D · live ray intersections · spatially indexed scene</div></div><div class="stageState"><i class="dot"></i><span id="stateText">SENSING</span></div></div>
+   <div class="stageHead"><div><div class="stageTitle">Single-creature sensory field</div><div class="stageSub">Pure XY plane · 2D ray intersections · spatially indexed scene</div></div><div class="stageState"><i class="dot"></i><span id="stateText">SENSING</span></div></div>
    <div class="canvasWrap" id="canvasWrap">
     <canvas id="world" aria-label="Top-down creature vision simulation"></canvas>
     <div class="canvasLegend">
@@ -106,7 +103,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
    </div>
   </section>
   <section class="parameterMap" id="parameterMap" aria-label="Interactive vision parameter map">
-   <div class="parameterMapHead"><h3>Interactive parameter map</h3><span>Tap a coloured parameter for details · tap the panel background to collapse</span></div>
+   <div class="parameterMapHead"><h3>Interactive parameter map</h3><span>One colour-coded tag cloud · tap a tag for details · tap the background to collapse</span></div>
    <div class="parameterMapGroups" id="parameterMapGroups"></div>
   </section>
   <div class="metrics">
@@ -161,7 +158,7 @@ const deg=r=>r*180/Math.PI;
 const sigmoid=x=>1/(1+Math.exp(-clamp(x,-12,12)));
 const fmt=(v,d=0)=>Number(v).toFixed(d);
 const params={
- fov:224,coneScale:112,verticalFov:118,eyeCount:3,eyeAngle:0,eyeHeight:18,
+ fov:224,coneScale:112,eyeCount:3,eyeAngle:0,
  rayCount:96,rayBudget:52,rayWidth:2.75,originCycle:2,distribution:1,maxRange:520,minRange:5,curvature:8,
  samplingHz:26,scanMode:2,scanDirection:1,scanSpeed:2.1,adaptive:84,priorityBoost:88,persistence:2.1,stagger:1,
  contrast:42,luminance:18,minTarget:1,classification:3,colourSensitivity:88,motionSensitivity:86,depthResolution:76,transparency:58,fog:9,ambient:91,confidenceMin:.12,
@@ -171,9 +168,9 @@ const params={
 };
 const baseline=JSON.parse(JSON.stringify(params));
 const groups=[
- {name:'Eye anatomy & optics',note:'Eye placement and optical field shape: where the sensors sit, what they can see, and how wide their field extends.',shadeColors:{'Eye placement':'#287fa5','Visual field':'#55b9df'},items:[
-  ['eyeCount','Visual organs',1,8,1,'eyes',null,'Eye placement'],['eyeAngle','Optic-axis offset',-90,90,1,'°',null,'Eye placement'],['eyeHeight','Eye height above ground',0,60,1,'u',null,'Eye placement'],
-  ['fov','Horizontal FOV',30,340,1,'°',null,'Visual field'],['coneScale','Perceptual cone width',35,150,1,'%',null,'Visual field'],['verticalFov','Vertical FOV / depth band',10,180,1,'°',null,'Visual field']
+ {name:'Eye anatomy & optics',note:'Eye arrangement and angular optics: where sensors sit around the creature and which directions they inspect.',shadeColors:{'Eye placement':'#287fa5','Visual field':'#55b9df'},items:[
+  ['eyeCount','Visual organs',1,8,1,'eyes',null,'Eye arrangement'],['eyeAngle','Optic-axis offset',-90,90,1,'°',null,'Eye arrangement'],
+   ['fov','Angular field of view',30,340,1,'°',null,'Visual field'],['coneScale','Perceptual cone width',35,150,1,'%',null,'Visual field']
  ]},
  {name:'Ray geometry & spatial reach',note:'The physical shape of each ray and the region it can traverse. These define the sensor geometry, not how often rays are evaluated.',shadeColors:{'Beam geometry':'#526fd0','Spatial reach':'#8299ec'},items:[
   ['rayWidth','Physical ray width',0,16,.25,'px',null,'Beam geometry'],['curvature','Peripheral curvature',-45,45,1,'°',null,'Beam geometry'],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered'],'Beam geometry'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral'],'Beam geometry'],
@@ -223,7 +220,7 @@ function displayValue(item,value){
 
 const groupColors=groups.map(g=>Object.values(g.shadeColors)[0]);
 function itemColor(group,item){return group.shadeColors[item[7]]||groupColors[groups.indexOf(group)]||'#79f2d0';}
-const parameterDescriptions={"fov":"Sets the horizontal angular field each eye can inspect. Wider fields cover more of the surroundings but spread a fixed ray budget more thinly.","coneScale":"Scales the effective perceptual cone independently of the nominal field of view.","verticalFov":"Sets the vertical elevation band in which targets can be detected, relative to the eye's height.","eyeCount":"Controls how many visual organs are distributed around the body. Each eye contributes its own origin and viewing direction.","eyeAngle":"Offsets the optic axes relative to the creature's normal gaze direction.","eyeHeight":"Sets eye elevation above the ground plane. Target height and distance determine whether it falls inside the vertical field.","rayCount":"Defines the total number of possible ray directions across the visual array, not how many are cast at once.","rayBudget":"Caps how many rays can be evaluated during one sampling update. Energy and adaptive allocation can reduce the actual count further.","rayWidth":"Gives rays a physical width, allowing near-misses to register as intersections.","originCycle":"Controls whether rays originate from fixed eye positions or cycle between origins over time.","distribution":"Changes how ray directions are spaced across the field, from evenly spaced to centre- or edge-weighted patterns.","maxRange":"Sets the farthest distance a ray can inspect.","minRange":"Creates a near-field blind zone. Intersections closer than this distance are ignored.","curvature":"Bends peripheral ray directions away from a perfectly straight angular fan.","turnSpeed":"Sets the maximum baseline angular speed of body rotation. Actual turning is modulated by behaviour and variance.","turnVariance":"Controls how strongly body-turn speed fluctuates around its baseline.","behaviorVariance":"Changes the timing and irregularity of scanning-versus-turning behaviour.","turnBias":"Shifts the behavioural balance between sustained body turning and visual scanning.","turnLockThreshold":"Angular velocity at which vision locks its eye geometry and ray directions in world space during a rapid turn.","gazeWander":"Controls how far idle gaze is allowed to wander when no target is being tracked.","samplingHz":"Sets how often the sensor schedules a new batch of ray observations.","scanMode":"Chooses the order in which unsampled ray positions are visited, including sequential, ping-pong, centre-out and jittered patterns.","scanDirection":"Sets the preferred direction of progression through the ray array.","scanSpeed":"Scales how quickly the sampling cursor advances through available ray positions.","adaptive":"Allows the controller and sensory state to shift more of the available ray budget toward useful regions.","priorityBoost":"Adds extra sampling priority to directions associated with the currently attended target.","persistence":"Controls how long old ray observations remain visible before fading from the diagnostic display.","stagger":"Offsets sampling phases so different ray positions do not all update in the same temporal pattern.","contrast":"Sets sensitivity to contrast between an object and its surroundings.","luminance":"Sets the minimum illumination-weighted signal required for visual detection.","minTarget":"Sets the minimum apparent target size needed for reliable detection.","classification":"Controls how far processing goes beyond a raw hit: motion signal, detection, broad category or object identity.","colourSensitivity":"Controls how strongly colour information contributes to classification.","motionSensitivity":"Controls sensitivity to movement cues, which can reveal targets even when other visual signals are weak.","depthResolution":"Sets the number of distance steps used when quantising measured range. More steps provide finer distance estimates.","transparency":"Controls how much light and visual signal is attenuated while rays pass through partially transparent objects.","fog":"Adds distance-dependent environmental attenuation, reducing the strength of distant observations.","ambient":"Sets the baseline illumination available to the visual transduction stage.","confidenceMin":"Sets the minimum confidence an observation must reach before it is accepted by the processor.","gazeOffset":"Applies a persistent angular offset to gaze relative to the body and eye axes.","gazeSpeed":"Caps how quickly the eyes can rotate toward a new gaze target.","attentionSpan":"Controls the time scale over which attention remains committed to a target or region.","fixation":"Sets the preferred duration of a fixation before attention is free to move elsewhere.","saccade":"Sets the maximum angular size of rapid gaze shifts.","attentionThreshold":"Sets how much stronger a new candidate must be before it can displace the current focus.","threatBias":"Weights predator or threat observations more strongly during target selection.","foodBias":"Weights food observations more strongly during target selection.","idleScan":"Sets the angular amplitude of scanning when no target is currently attended.","tracking":"Controls how strongly estimated target motion is used to stabilise tracking.","prediction":"Sets how far ahead target motion is projected when estimating its future position.","reacquisition":"Sets how long a lost target can remain eligible for reacquisition.","memory":"Sets the maximum retention time for remembered visual tracks.","shortTerm":"Controls the short-lived visual buffer used to compare recent observations.","temporalSmooth":"Blends new measurements with previous estimates to reduce jitter. Higher values produce smoother but slower responses.","noiseTolerance":"Reduces the effect of visual measurement noise on whether a signal is trusted.","habituation":"Controls how strongly confidence in repeatedly observed, unchanged targets decays over time.","occlusionMemory":"Controls how strongly a target's remembered position is retained while it is hidden.","predictionHorizon":"Sets the maximum time span used by the memory system when projecting a target's position forward.","visualNoise":"Adds measurement uncertainty to visual signals, testing how robust detection and tracking are.","learningRate":"Sets the size of each neural teaching update to class-association weights.","plasticity":"Scales how readily controller connections adapt in response to feedback.","energyPerRay":"Sets the metabolic energy cost of evaluating each ray.","processingCost":"Sets the energy cost of processing each visible object after ray intersections.","energyReserve":"Sets the sensor's energy capacity and influences how much energy is available for sampling.","mutationRate":"Sets the typical magnitude of inherited parameter changes during genome mutation.","developmentalVariance":"Adds extra spread to mutation effects, allowing more varied expressed phenotypes.","tradeoff":"Controls the bias toward lower-energy sensing versus higher-resolution, more expensive perception.","overlayOpacity":"Sets the opacity of diagnostic drawings over the simulation without changing the underlying sensing calculations."};
+const parameterDescriptions={"fov":"Sets the horizontal angular field each eye can inspect. Wider fields cover more of the surroundings but spread a fixed ray budget more thinly.","coneScale":"Scales the effective perceptual cone independently of the nominal field of view.","eyeCount":"Controls how many visual organs are distributed around the body. Each eye contributes its own origin and viewing direction.","eyeAngle":"Offsets the optic axes relative to the creature's normal gaze direction.","rayCount":"Defines the total number of possible ray directions across the visual array, not how many are cast at once.","rayBudget":"Caps how many rays can be evaluated during one sampling update. Energy and adaptive allocation can reduce the actual count further.","rayWidth":"Gives rays a physical width, allowing near-misses to register as intersections.","originCycle":"Controls whether rays originate from fixed eye positions or cycle between origins over time.","distribution":"Changes how ray directions are spaced across the field, from evenly spaced to centre- or edge-weighted patterns.","maxRange":"Sets the farthest distance a ray can inspect.","minRange":"Creates a near-field blind zone. Intersections closer than this distance are ignored.","curvature":"Bends peripheral ray directions away from a perfectly straight angular fan.","turnSpeed":"Sets the maximum baseline angular speed of body rotation. Actual turning is modulated by behaviour and variance.","turnVariance":"Controls how strongly body-turn speed fluctuates around its baseline.","behaviorVariance":"Changes the timing and irregularity of scanning-versus-turning behaviour.","turnBias":"Shifts the behavioural balance between sustained body turning and visual scanning.","turnLockThreshold":"Angular velocity at which vision locks its eye geometry and ray directions in world space during a rapid turn.","gazeWander":"Controls how far idle gaze is allowed to wander when no target is being tracked.","samplingHz":"Sets how often the sensor schedules a new batch of ray observations.","scanMode":"Chooses the order in which unsampled ray positions are visited, including sequential, ping-pong, centre-out and jittered patterns.","scanDirection":"Sets the preferred direction of progression through the ray array.","scanSpeed":"Scales how quickly the sampling cursor advances through available ray positions.","adaptive":"Allows the controller and sensory state to shift more of the available ray budget toward useful regions.","priorityBoost":"Adds extra sampling priority to directions associated with the currently attended target.","persistence":"Controls how long old ray observations remain visible before fading from the diagnostic display.","stagger":"Offsets sampling phases so different ray positions do not all update in the same temporal pattern.","contrast":"Sets sensitivity to contrast between an object and its surroundings.","luminance":"Sets the minimum illumination-weighted signal required for visual detection.","minTarget":"Sets the minimum apparent target size needed for reliable detection.","classification":"Controls how far processing goes beyond a raw hit: motion signal, detection, broad category or object identity.","colourSensitivity":"Controls how strongly colour information contributes to classification.","motionSensitivity":"Controls sensitivity to movement cues, which can reveal targets even when other visual signals are weak.","depthResolution":"Sets the number of distance steps used when quantising measured range. More steps provide finer distance estimates.","transparency":"Controls how much light and visual signal is attenuated while rays pass through partially transparent objects.","fog":"Adds distance-dependent environmental attenuation, reducing the strength of distant observations.","ambient":"Sets the baseline illumination available to the visual transduction stage.","confidenceMin":"Sets the minimum confidence an observation must reach before it is accepted by the processor.","gazeOffset":"Applies a persistent angular offset to gaze relative to the body and eye axes.","gazeSpeed":"Caps how quickly the eyes can rotate toward a new gaze target.","attentionSpan":"Controls the time scale over which attention remains committed to a target or region.","fixation":"Sets the preferred duration of a fixation before attention is free to move elsewhere.","saccade":"Sets the maximum angular size of rapid gaze shifts.","attentionThreshold":"Sets how much stronger a new candidate must be before it can displace the current focus.","threatBias":"Weights predator or threat observations more strongly during target selection.","foodBias":"Weights food observations more strongly during target selection.","idleScan":"Sets the angular amplitude of scanning when no target is currently attended.","tracking":"Controls how strongly estimated target motion is used to stabilise tracking.","prediction":"Sets how far ahead target motion is projected when estimating its future position.","reacquisition":"Sets how long a lost target can remain eligible for reacquisition.","memory":"Sets the maximum retention time for remembered visual tracks.","shortTerm":"Controls the short-lived visual buffer used to compare recent observations.","temporalSmooth":"Blends new measurements with previous estimates to reduce jitter. Higher values produce smoother but slower responses.","noiseTolerance":"Reduces the effect of visual measurement noise on whether a signal is trusted.","habituation":"Controls how strongly confidence in repeatedly observed, unchanged targets decays over time.","occlusionMemory":"Controls how strongly a target's remembered position is retained while it is hidden.","predictionHorizon":"Sets the maximum time span used by the memory system when projecting a target's position forward.","visualNoise":"Adds measurement uncertainty to visual signals, testing how robust detection and tracking are.","learningRate":"Sets the size of each neural teaching update to class-association weights.","plasticity":"Scales how readily controller connections adapt in response to feedback.","energyPerRay":"Sets the metabolic energy cost of evaluating each ray.","processingCost":"Sets the energy cost of processing each visible object after ray intersections.","energyReserve":"Sets the sensor's energy capacity and influences how much energy is available for sampling.","mutationRate":"Sets the typical magnitude of inherited parameter changes during genome mutation.","developmentalVariance":"Adds extra spread to mutation effects, allowing more varied expressed phenotypes.","tradeoff":"Controls the bias toward lower-energy sensing versus higher-resolution, more expensive perception.","overlayOpacity":"Sets the opacity of diagnostic drawings over the simulation without changing the underlying sensing calculations."};
 const help=$('parameterHelp');
 function showParameterHelp(key,anchor){
  const item=groups.flatMap(g=>g.items).find(x=>x[0]===key);
@@ -240,31 +237,17 @@ function showParameterHelp(key,anchor){
  help.style.left=left+'px';help.style.top=top+'px';
 }
 function buildParameterMap(){
- const map=$('parameterMap');
- const root=$('parameterMapGroups');
+ const map=$('parameterMap'),root=$('parameterMapGroups');
  map.addEventListener('click',e=>{
   if(e.target.closest('.parameterChip'))return;
   map.classList.toggle('is-collapsed');
  });
- groups.forEach(group=>{
-  const section=document.createElement('div');section.className='mapGroup';section.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);
-  const title=document.createElement('div');title.className='mapGroupTitle';title.textContent=group.name;section.append(title);
-  const buckets=new Map();
-  for(const item of group.items){const sub=item[7]||'General';if(!buckets.has(sub))buckets.set(sub,[]);buckets.get(sub).push(item)}
-  for(const [sub,items] of buckets){
-   const subSection=document.createElement('div');subSection.className='mapSubgroup';subSection.style.setProperty('--sub-color',itemColor(group,items[0]));
-   const subTitle=document.createElement('div');subTitle.className='mapSubgroupTitle';subTitle.textContent=sub;subSection.append(subTitle);
-   const chips=document.createElement('div');chips.className='mapChips';
-   items.forEach(item=>{
-    const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent=item[1];chip.style.setProperty('--group-color',itemColor(group,item));chip.addEventListener('click',()=>showParameterHelp(item[0],chip));chips.append(chip);
-   });
-   subSection.append(chips);section.append(subSection);
-  }
-  root.append(section);
- });
- const overlay=document.createElement('div');overlay.className='mapGroup';overlay.style.setProperty('--group-color','#aab8c5');
- const title=document.createElement('div');title.className='mapGroupTitle';title.textContent='Diagnostic overlays';overlay.append(title);
- const chips=document.createElement('div');chips.className='mapChips';const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent='Overlay opacity';chip.style.setProperty('--group-color','#aab8c5');chip.addEventListener('click',()=>showParameterHelp('overlayOpacity',chip));chips.append(chip);overlay.append(chips);root.append(overlay);
+ const chips=document.createElement('div');chips.className='mapChips';
+ for(const group of groups)for(const item of group.items){
+  const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent=item[1];chip.style.setProperty('--group-color',itemColor(group,item));chip.addEventListener('click',()=>showParameterHelp(item[0],chip));chips.append(chip);
+ }
+ const overlayChip=document.createElement('button');overlayChip.type='button';overlayChip.className='parameterChip';overlayChip.textContent='Overlay opacity';overlayChip.style.setProperty('--group-color','#aab8c5');overlayChip.addEventListener('click',()=>showParameterHelp('overlayOpacity',overlayChip));chips.append(overlayChip);
+ root.append(chips);
 }
 document.addEventListener('pointerdown',e=>{if(!help.hidden&&!help.contains(e.target))help.hidden=true});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')help.hidden=true});
@@ -318,16 +301,16 @@ let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,
 let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),bodyTurnVelocity=0,visionLocked=false,lockedRaySpecs=[],lockedEyeGeometry=[],scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null,targetSelectedAt=0,neuralOutputs=[0,.5,.5,0,.5];
 const creature={x:0,y:0};
 const things=[
- {id:'food-a',kind:'food',x:-122,y:-165,vx:4,vy:1,r:10,h:0,contrast:86,luminance:.85,opacity:.45,color:'#a9e47e'},
- {id:'food-b',kind:'food',x:148,y:-222,vx:-3,vy:4,r:8,h:0,contrast:72,luminance:.8,opacity:.55,color:'#9ddc75'},
- {id:'food-c',kind:'food',x:-214,y:66,vx:1,vy:-2,r:11,h:0,contrast:90,luminance:.8,opacity:.4,color:'#a9e47e'},
- {id:'predator-a',kind:'predator',x:127,y:100,vx:-8,vy:-2,r:17,h:4,contrast:92,luminance:.45,opacity:1,color:'#ff7787'},
- {id:'predator-b',kind:'predator',x:270,y:-55,vx:-2,vy:7,r:13,h:3,contrast:82,luminance:.5,opacity:1,color:'#f27c89'},
- {id:'kin-a',kind:'conspecific',x:-58,y:220,vx:8,vy:-2,r:12,h:0,contrast:65,luminance:.75,opacity:.75,color:'#75b9ef'},
- {id:'kin-b',kind:'conspecific',x:220,y:205,vx:-5,vy:-3,r:11,h:0,contrast:64,luminance:.8,opacity:.7,color:'#75b9ef'},
- {id:'object-a',kind:'object',x:245,y:28,vx:0,vy:0,r:14,h:0,contrast:45,luminance:.6,opacity:.8,color:'#dfb277'},
- {id:'object-b',kind:'object',x:-250,y:-190,vx:0,vy:0,r:9,h:0,contrast:38,luminance:.55,opacity:.65,color:'#b9a2e7'},
- {id:'plankton-a',kind:'food',x:50,y:-335,vx:-2,vy:2,r:4,h:0,contrast:32,luminance:.7,opacity:.3,color:'#a9e47e'}
+ {id:'food-a',kind:'food',x:-122,y:-165,vx:4,vy:1,r:10,contrast:86,luminance:.85,opacity:.45,color:'#a9e47e'},
+ {id:'food-b',kind:'food',x:148,y:-222,vx:-3,vy:4,r:8,contrast:72,luminance:.8,opacity:.55,color:'#9ddc75'},
+ {id:'food-c',kind:'food',x:-214,y:66,vx:1,vy:-2,r:11,contrast:90,luminance:.8,opacity:.4,color:'#a9e47e'},
+ {id:'predator-a',kind:'predator',x:127,y:100,vx:-8,vy:-2,r:17,contrast:92,luminance:.45,opacity:1,color:'#ff7787'},
+ {id:'predator-b',kind:'predator',x:270,y:-55,vx:-2,vy:7,r:13,contrast:82,luminance:.5,opacity:1,color:'#f27c89'},
+ {id:'kin-a',kind:'conspecific',x:-58,y:220,vx:8,vy:-2,r:12,contrast:65,luminance:.75,opacity:.75,color:'#75b9ef'},
+ {id:'kin-b',kind:'conspecific',x:220,y:205,vx:-5,vy:-3,r:11,contrast:64,luminance:.8,opacity:.7,color:'#75b9ef'},
+ {id:'object-a',kind:'object',x:245,y:28,vx:0,vy:0,r:14,contrast:45,luminance:.6,opacity:.8,color:'#dfb277'},
+ {id:'object-b',kind:'object',x:-250,y:-190,vx:0,vy:0,r:9,contrast:38,luminance:.55,opacity:.65,color:'#b9a2e7'},
+ {id:'plankton-a',kind:'food',x:50,y:-335,vx:-2,vy:2,r:4,contrast:32,luminance:.7,opacity:.3,color:'#a9e47e'}
 ];
 const walls=[
  {id:'wall-a',kind:'obstacle',x:-35,y:-105,w:76,h:15,opacity:1,color:'#526d7b'},
@@ -407,10 +390,6 @@ function raySpec(i){
  const angle=clamp(geometry.start+(geometry.end-geometry.start)*t+rad(params.curvature)*Math.sin(Math.PI*t)*.35,normal-rad(85),normal+rad(85));
  return{index:i,eye,origin:geometry.origin,angle,dir:{x:Math.cos(angle),y:Math.sin(angle)},t};
 }
-function verticalVisible(o,distance){
- const elevation=deg(Math.atan2((o.h||0)-params.eyeHeight,Math.max(1,distance)));
- return Math.abs(elevation)<=params.verticalFov/2;
-}
 function raycast(spec){
  const max=params.maxRange,min=params.minRange,dx=spec.dir.x,dy=spec.dir.y;
  const candidates=grid.rayCandidates(spec.origin.x,spec.origin.y,dx,dy,max);
@@ -418,7 +397,7 @@ function raycast(spec){
  for(const o of candidates){
   totalCandidateChecks++;
   const t=o.kind==='obstacle'?rayRect(spec.origin.x,spec.origin.y,dx,dy,max,o,params.rayWidth/2):rayCircle(spec.origin.x,spec.origin.y,dx,dy,max,o,params.rayWidth/2);
-  if(t!==null&&verticalVisible(o,t))hits.push({o,t});
+  if(t!==null)hits.push({o,t});
  }
  hits.sort((a,b)=>a.t-b.t);
  let transmission=1,detected=[],blocked=false,end=max;
@@ -436,7 +415,7 @@ function raycast(spec){
   const signal=contrast*100*sizeFactor;
   const noisePenalty=1-(params.visualNoise/100)*(1-params.noiseTolerance/100);
   const confidence=clamp(signal/Math.max(1,params.luminance+params.confidenceMin*100),0,1)*transmission*noisePenalty;
-  const colourSignal=(params.colourSensitivity/100)*(o.h?1:.55);
+  const colourSignal=params.colourSensitivity/100;
   const canDetect=(params.classification===0?motionSignal>.12:(signal>=params.luminance&&sizeFactor>=.35&&contrast*100>=params.contrast*.14)||motionSignal>.12);
   if(canDetect&&confidence>=params.confidenceMin){
    const quant=Math.max(1,params.maxRange/Math.max(1,params.depthResolution));
