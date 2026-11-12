@@ -54,8 +54,9 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
   const end = worker.indexOf('function drawWaterways()', start);
   assert.ok(start >= 0 && end > start);
   const renderer = worker.slice(start, end);
+  assert.match(renderer, /scale=\(6\+p\.size\*8\.5\)\*\(mature\?1\.24:\.82\)\*\(senescent\?\.68:1\)\*\.5/);
   assert.match(renderer, /quadraticCurveTo/);
-  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.5/);
+  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
   assert.doesNotMatch(renderer, /ctx\.arc\(/);
@@ -67,7 +68,7 @@ console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore ge
 
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
-  assert.match(worker, /Math.max\(32,Math.min\(60,Math.round\(W\*H\/28000\)\)\)/);
+  assert.match(worker, /Math.max\(16,Math.min\(30,Math.round\(W\*H\/56000\)\)\)/);
   assert.match(worker, /plantGain/);
   assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
   assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
@@ -89,3 +90,21 @@ test('observatory charts do not redraw while the drawer is closed', () => {
   assert.match(html, /if\(which==='analysis'\).*?redrawCharts\(\)/);
   assert.match(worker, /const includeHistory=now-lastHistoryPost>5000/);
 });
+
+test('DNA and observatory use distinct icon tabs and reset lives in Field Operations', () => {
+  assert.ok(html.includes('class="drawerToggle dnaTab" id="openDNA"'));
+  assert.ok(html.includes('class="drawerToggle observatoryTab" id="openObservatory"'));
+  assert.ok(html.includes('id="openDNA" aria-expanded="false" aria-label="Open DNA and neural genome" title="DNA & genetics"><svg'));
+  assert.ok(html.includes('id="openObservatory" aria-expanded="false" aria-label="Open evolutionary observatory" title="Evolutionary observatory"><svg'));
+  assert.ok(!html.includes('id="topReset"'));
+  assert.ok(html.includes('id="reset" title="Replace the entire ecosystem and population">↻ Reset simulation'));
+  assert.ok(html.includes("$('reset').onclick=resetSimulation"));
+  assert.ok(!html.includes("$('topReset').onclick"));
+});
+test('boids resolve physical body overlap and exchange collision impulse', () => {
+  assert.ok(worker.includes('function collisionRadius(i)'));
+  assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
+  assert.ok(worker.includes('if(relative<0){const impulse='));
+  assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
+});
+
