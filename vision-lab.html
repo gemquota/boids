@@ -69,6 +69,13 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .control output{color:var(--group-color,var(--mint))}
 @media(max-width:700px){.parameterMap{padding:10px}.parameterChip{padding:6px 7px;font-size:8px}.parameterMapHead{align-items:flex-start;flex-direction:column;gap:3px}}
 
+
+.mapSubgroup{padding:5px 0 4px 8px;margin:4px 0 0 3px;border-left:2px solid color-mix(in srgb,var(--sub-color) 60%,transparent)}
+.mapSubgroupTitle,.controlSubgroup{font-size:7px;letter-spacing:.11em;text-transform:uppercase;color:var(--sub-color);font-weight:700;margin:0 0 5px}
+.controlSubgroup{padding:8px 0 2px;border-bottom:1px solid color-mix(in srgb,var(--sub-color) 35%,transparent)}
+.parameterChip{border-color:color-mix(in srgb,var(--group-color) 55%,transparent);background:color-mix(in srgb,var(--group-color) 12%,transparent)}
+.parameterChip:before{background:var(--group-color)}
+
 </style>
 </head>
 <body>
@@ -157,26 +164,38 @@ const params={
 };
 const baseline=JSON.parse(JSON.stringify(params));
 const groups=[
- {name:'Optics & ray geometry',note:'The creature has a top-down multi-organ visual array. Per-eye origins and angular sampling are explicit.',items:[
-  ['fov','Horizontal FOV',30,340,1,'°'],['coneScale','Perceptual cone width',35,150,1,'%'],['verticalFov','Vertical FOV / depth band',10,180,1,'°'],['eyeCount','Visual organs',1,8,1,'eyes'],['eyeAngle','Optic-axis offset',-90,90,1,'°'],['eyeHeight','Eye height above ground',0,60,1,'u'],['rayCount','Potential ray positions',4,128,1,'rays'],['rayBudget','Simultaneous ray budget',1,64,1,'rays'],['rayWidth','Physical ray width',0,16,.25,'px'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral']],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered']],['maxRange','Maximum range',60,650,5,'u'],['minRange','Near blind zone',0,100,1,'u'],['curvature','Peripheral curvature',-45,45,1,'°']
+ {name:'Eye anatomy & optics',note:'Eye placement and optical field shape: where the sensors sit, what they can see, and how wide their field extends.',shadeColors:{'Eye placement':'#287fa5','Visual field':'#55b9df'},items:[
+  ['eyeCount','Visual organs',1,8,1,'eyes',null,'Eye placement'],['eyeAngle','Optic-axis offset',-90,90,1,'°',null,'Eye placement'],['eyeHeight','Eye height above ground',0,60,1,'u',null,'Eye placement'],
+  ['fov','Horizontal FOV',30,340,1,'°',null,'Visual field'],['coneScale','Perceptual cone width',35,150,1,'%',null,'Visual field'],['verticalFov','Vertical FOV / depth band',10,180,1,'°',null,'Visual field']
  ]},
- {name:'Body turning & behavioural variance',note:'Body turning alternates with scanning. Fast turns freeze the sensory frame in world space; vision resumes after angular velocity falls below the release threshold.',items:[
-  ['turnSpeed','Body turn speed',0,360,1,'°/s'],['turnVariance','Turn-speed variability',0,100,1,'%'],['behaviorVariance','Scan / turn behaviour variance',0,100,1,'%'],['turnBias','Turning vs scanning bias',0,100,1,'%'],['turnLockThreshold','High-speed vision lock',10,300,1,'°/s'],['gazeWander','Idle gaze variability',0,100,1,'%']
+ {name:'Ray geometry & spatial reach',note:'The physical shape of each ray and the region it can traverse. These define the sensor geometry, not how often rays are evaluated.',shadeColors:{'Beam geometry':'#526fd0','Spatial reach':'#8299ec'},items:[
+  ['rayWidth','Physical ray width',0,16,.25,'px',null,'Beam geometry'],['curvature','Peripheral curvature',-45,45,1,'°',null,'Beam geometry'],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered'],'Beam geometry'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral'],'Beam geometry'],
+  ['maxRange','Maximum range',60,650,5,'u',null,'Spatial reach'],['minRange','Near blind zone',0,100,1,'u',null,'Spatial reach']
  ]},
- {name:'Sampling & computational allocation',note:'The budget is enforced per update. Unvisited ray positions retain age-limited observations.',items:[
-  ['samplingHz','Sampling update frequency',1,60,1,'Hz'],['scanMode','Scheduling pattern',0,3,1,'mode',['Sequential','Ping-pong','Centre-out','Jittered']],['scanDirection','Scan direction',-1,1,1,'mode',['Reverse','Stationary','Forward']],['scanSpeed','Scan progression speed',.2,4,.1,'×'],['adaptive','Adaptive ray allocation',0,100,1,'%'],['priorityBoost','Attention priority boost',0,100,1,'%'],['persistence','Ray observation persistence',0,5,.1,'s'],['stagger','Sampling phase offset',0,100,1,'%']
+ {name:'Sampling & computational allocation',note:'How the ray array is scheduled, how much work can happen per update, and how the limited budget is prioritised.',shadeColors:{'Sampling schedule':'#8064c7','Ray budget':'#a28cdb','Adaptive allocation':'#6549ad'},items:[
+  ['samplingHz','Sampling update frequency',1,60,1,'Hz',null,'Sampling schedule'],['scanMode','Scheduling pattern',0,3,1,'mode',['Sequential','Ping-pong','Centre-out','Jittered'],'Sampling schedule'],['scanDirection','Scan direction',-1,1,1,'mode',['Reverse','Stationary','Forward'],'Sampling schedule'],['scanSpeed','Scan progression speed',.2,4,.1,'×',null,'Sampling schedule'],['stagger','Sampling phase offset',0,100,1,'%',null,'Sampling schedule'],['persistence','Ray observation persistence',0,5,.1,'s',null,'Sampling schedule'],
+  ['rayCount','Potential ray positions',4,128,1,'rays',null,'Ray budget'],['rayBudget','Simultaneous ray budget',1,64,1,'rays',null,'Ray budget'],
+  ['adaptive','Adaptive ray allocation',0,100,1,'%',null,'Adaptive allocation'],['priorityBoost','Attention priority boost',0,100,1,'%',null,'Adaptive allocation']
  ]},
- {name:'Detection & visual transduction',note:'Intersection is not identification. Contrast, light, apparent size, motion and transmission determine whether a hit becomes a usable observation.',items:[
-  ['contrast','Contrast sensitivity',0,100,1,'%'],['luminance','Luminance threshold',0,100,1,'%'],['minTarget','Minimum target radius',0,18,.5,'u'],['classification','Classification depth',0,3,1,'level',['Motion only','Detection','Category','Identity']],['colourSensitivity','Colour sensitivity',0,100,1,'%'],['motionSensitivity','Motion sensitivity',0,100,1,'%'],['depthResolution','Distance resolution',4,128,1,'steps'],['transparency','Transparency attenuation',0,100,1,'%'],['fog','Environmental fog',0,100,1,'%'],['ambient','Ambient illumination',0,100,1,'%'],['confidenceMin','Minimum confidence',0,1,.01,'']
+ {name:'Movement & active gaze',note:'Body rotation and eye movement are separate. Fast body turns lock the sensory frame in world space; gaze and scanning behaviour resume when turning slows.',shadeColors:{'Body motion':'#bd7138','Eye movement':'#e6a05c','Scan behaviour':'#d88a49'},items:[
+  ['turnSpeed','Body turn speed',0,360,1,'°/s',null,'Body motion'],['turnVariance','Turn-speed variability',0,100,1,'%',null,'Body motion'],['behaviorVariance','Scan / turn behaviour variance',0,100,1,'%',null,'Body motion'],['turnBias','Turning vs scanning bias',0,100,1,'%',null,'Body motion'],['turnLockThreshold','High-speed vision lock',10,300,1,'°/s',null,'Body motion'],
+  ['gazeOffset','Gaze offset',-120,120,1,'°',null,'Eye movement'],['gazeSpeed','Gaze rotation speed',5,540,1,'°/s',null,'Eye movement'],
+  ['gazeWander','Idle gaze variability',0,100,1,'%',null,'Scan behaviour'],['idleScan','Idle scan amplitude',0,100,1,'%',null,'Scan behaviour'],['saccade','Saccade amplitude',0,120,1,'°',null,'Scan behaviour']
  ]},
- {name:'Attention & active vision',note:'Gaze is independent of body heading. Attention changes scan focus, target priority and neural outputs.',items:[
-  ['gazeOffset','Gaze offset',-120,120,1,'°'],['gazeSpeed','Gaze rotation speed',5,540,1,'°/s'],['attentionSpan','Attention span',0,5,.1,'s'],['fixation','Target fixation duration',0,5,.1,'s'],['saccade','Saccade amplitude',0,120,1,'°'],['attentionThreshold','Attention switch threshold',0,100,1,'%'],['threatBias','Threat priority',0,100,1,'%'],['foodBias','Food priority',0,100,1,'%'],['idleScan','Idle scan amplitude',0,100,1,'%'],['tracking','Predictive tracking gain',0,100,1,'%'],['prediction','Motion prediction horizon',0,4,.1,'s'],['reacquisition','Target reacquisition window',0,5,.1,'s']
+ {name:'Detection & visual transduction',note:'A ray intersection is only raw sensory evidence. These parameters determine whether the signal is detectable, classifiable and trustworthy.',shadeColors:{'Signal thresholds':'#39875d','Classification':'#65b47d','Environment & noise':'#28744e'},items:[
+  ['contrast','Contrast sensitivity',0,100,1,'%',null,'Signal thresholds'],['luminance','Luminance threshold',0,100,1,'%',null,'Signal thresholds'],['minTarget','Minimum target radius',0,18,.5,'u',null,'Signal thresholds'],['confidenceMin','Minimum confidence',0,1,.01,'',null,'Signal thresholds'],
+  ['classification','Classification depth',0,3,1,'level',['Motion only','Detection','Category','Identity'],'Classification'],['colourSensitivity','Colour sensitivity',0,100,1,'%',null,'Classification'],['motionSensitivity','Motion sensitivity',0,100,1,'%',null,'Classification'],['depthResolution','Distance resolution',4,128,1,'steps',null,'Classification'],
+  ['transparency','Transparency attenuation',0,100,1,'%',null,'Environment & noise'],['fog','Environmental fog',0,100,1,'%',null,'Environment & noise'],['ambient','Ambient illumination',0,100,1,'%',null,'Environment & noise'],['visualNoise','Visual measurement noise',0,20,.5,'%',null,'Environment & noise'],['noiseTolerance','Visual noise tolerance',0,100,1,'%',null,'Environment & noise']
  ]},
- {name:'Memory & temporal processing',note:'Tracks survive brief occlusion, decay with time, and can be projected forward from measured motion.',items:[
-  ['memory','Visual memory retention',0,10,.1,'s'],['shortTerm','Short-term visual buffer',0,8,.1,'s'],['temporalSmooth','Temporal smoothing',0,100,1,'%'],['noiseTolerance','Visual noise tolerance',0,100,1,'%'],['habituation','Sensory habituation',0,100,1,'%'],['occlusionMemory','Occlusion memory strength',0,100,1,'%'],['predictionHorizon','Prediction persistence',0,4,.1,'s'],['visualNoise','Visual measurement noise',0,20,.5,'%']
+ {name:'Attention, tracking & memory',note:'Target selection, gaze commitment, motion tracking and remembered observations. These operate on observations produced by the detection stage.',shadeColors:{'Selection & focus':'#b85691','Tracking & prediction':'#d47aaf','Memory & adaptation':'#963d74'},items:[
+  ['attentionSpan','Attention span',0,5,.1,'s',null,'Selection & focus'],['fixation','Target fixation duration',0,5,.1,'s',null,'Selection & focus'],['attentionThreshold','Attention switch threshold',0,100,1,'%',null,'Selection & focus'],['threatBias','Threat priority',0,100,1,'%',null,'Selection & focus'],['foodBias','Food priority',0,100,1,'%',null,'Selection & focus'],
+  ['tracking','Predictive tracking gain',0,100,1,'%',null,'Tracking & prediction'],['prediction','Motion prediction horizon',0,4,.1,'s',null,'Tracking & prediction'],['reacquisition','Target reacquisition window',0,5,.1,'s',null,'Tracking & prediction'],
+  ['memory','Visual memory retention',0,10,.1,'s',null,'Memory & adaptation'],['shortTerm','Short-term visual buffer',0,8,.1,'s',null,'Memory & adaptation'],['temporalSmooth','Temporal smoothing',0,100,1,'%',null,'Memory & adaptation'],['habituation','Sensory habituation',0,100,1,'%',null,'Memory & adaptation'],['occlusionMemory','Occlusion memory strength',0,100,1,'%',null,'Memory & adaptation'],['predictionHorizon','Prediction persistence',0,4,.1,'s',null,'Memory & adaptation']
  ]},
- {name:'Neural control & metabolic genetics',note:'The controller consumes derived sensory channels. Ray and processing costs drain a finite sensor-energy reserve.',items:[
-  ['learningRate','Neural learning rate',0,.8,.01,''],['plasticity','Synaptic plasticity',0,1,.01,''],['energyPerRay','Energy cost per ray',0,.12,.001,''],['processingCost','Processing cost / object',0,.5,.005,''],['energyReserve','Sensor energy capacity',10,200,1,'units'],['mutationRate','Genome mutation rate',0,.2,.005,''],['developmentalVariance','Developmental variation',0,30,.5,'%'],['tradeoff','Resolution / energy trade-off',0,100,1,'%']
+ {name:'Neural learning, energy & heredity',note:'Controller adaptation, the metabolic price of sensing, and heritable variation. Mutation changes the genome; energy settings affect live sensor operation.',shadeColors:{'Neural learning':'#25867d','Metabolic budget':'#4aa99f','Genetic variation':'#1b7068'},items:[
+  ['learningRate','Neural learning rate',0,.8,.01,'',null,'Neural learning'],['plasticity','Synaptic plasticity',0,1,.01,'',null,'Neural learning'],
+  ['energyPerRay','Energy cost per ray',0,.12,.001,'',null,'Metabolic budget'],['processingCost','Processing cost / object',0,.5,.005,'',null,'Metabolic budget'],['energyReserve','Sensor energy capacity',10,200,1,'units',null,'Metabolic budget'],['tradeoff','Resolution / energy trade-off',0,100,1,'%',null,'Metabolic budget'],
+  ['mutationRate','Genome mutation rate',0,.2,.005,'',null,'Genetic variation'],['developmentalVariance','Developmental variation',0,30,.5,'%',null,'Genetic variation']
  ]}
 ];
 const enumLabels={
@@ -194,15 +213,16 @@ function displayValue(item,value){
  return (Number.isInteger(value)?String(value):fmt(value,2))+(suffix?' '+suffix:'');
 }
 
-const groupColors=['#55c9f2','#ff8b72','#ffbf69','#9fe28a','#f17ddd','#a4a9ff','#79d8c4'];
+const groupColors=groups.map(g=>Object.values(g.shadeColors)[0]);
+function itemColor(group,item){return group.shadeColors[item[7]]||groupColors[groups.indexOf(group)]||'#79f2d0';}
 const parameterDescriptions={"fov":"Sets the horizontal angular field each eye can inspect. Wider fields cover more of the surroundings but spread a fixed ray budget more thinly.","coneScale":"Scales the effective perceptual cone independently of the nominal field of view.","verticalFov":"Sets the vertical elevation band in which targets can be detected, relative to the eye's height.","eyeCount":"Controls how many visual organs are distributed around the body. Each eye contributes its own origin and viewing direction.","eyeAngle":"Offsets the optic axes relative to the creature's normal gaze direction.","eyeHeight":"Sets eye elevation above the ground plane. Target height and distance determine whether it falls inside the vertical field.","rayCount":"Defines the total number of possible ray directions across the visual array, not how many are cast at once.","rayBudget":"Caps how many rays can be evaluated during one sampling update. Energy and adaptive allocation can reduce the actual count further.","rayWidth":"Gives rays a physical width, allowing near-misses to register as intersections.","originCycle":"Controls whether rays originate from fixed eye positions or cycle between origins over time.","distribution":"Changes how ray directions are spaced across the field, from evenly spaced to centre- or edge-weighted patterns.","maxRange":"Sets the farthest distance a ray can inspect.","minRange":"Creates a near-field blind zone. Intersections closer than this distance are ignored.","curvature":"Bends peripheral ray directions away from a perfectly straight angular fan.","turnSpeed":"Sets the maximum baseline angular speed of body rotation. Actual turning is modulated by behaviour and variance.","turnVariance":"Controls how strongly body-turn speed fluctuates around its baseline.","behaviorVariance":"Changes the timing and irregularity of scanning-versus-turning behaviour.","turnBias":"Shifts the behavioural balance between sustained body turning and visual scanning.","turnLockThreshold":"Angular velocity at which vision locks its eye geometry and ray directions in world space during a rapid turn.","gazeWander":"Controls how far idle gaze is allowed to wander when no target is being tracked.","samplingHz":"Sets how often the sensor schedules a new batch of ray observations.","scanMode":"Chooses the order in which unsampled ray positions are visited, including sequential, ping-pong, centre-out and jittered patterns.","scanDirection":"Sets the preferred direction of progression through the ray array.","scanSpeed":"Scales how quickly the sampling cursor advances through available ray positions.","adaptive":"Allows the controller and sensory state to shift more of the available ray budget toward useful regions.","priorityBoost":"Adds extra sampling priority to directions associated with the currently attended target.","persistence":"Controls how long old ray observations remain visible before fading from the diagnostic display.","stagger":"Offsets sampling phases so different ray positions do not all update in the same temporal pattern.","contrast":"Sets sensitivity to contrast between an object and its surroundings.","luminance":"Sets the minimum illumination-weighted signal required for visual detection.","minTarget":"Sets the minimum apparent target size needed for reliable detection.","classification":"Controls how far processing goes beyond a raw hit: motion signal, detection, broad category or object identity.","colourSensitivity":"Controls how strongly colour information contributes to classification.","motionSensitivity":"Controls sensitivity to movement cues, which can reveal targets even when other visual signals are weak.","depthResolution":"Sets the number of distance steps used when quantising measured range. More steps provide finer distance estimates.","transparency":"Controls how much light and visual signal is attenuated while rays pass through partially transparent objects.","fog":"Adds distance-dependent environmental attenuation, reducing the strength of distant observations.","ambient":"Sets the baseline illumination available to the visual transduction stage.","confidenceMin":"Sets the minimum confidence an observation must reach before it is accepted by the processor.","gazeOffset":"Applies a persistent angular offset to gaze relative to the body and eye axes.","gazeSpeed":"Caps how quickly the eyes can rotate toward a new gaze target.","attentionSpan":"Controls the time scale over which attention remains committed to a target or region.","fixation":"Sets the preferred duration of a fixation before attention is free to move elsewhere.","saccade":"Sets the maximum angular size of rapid gaze shifts.","attentionThreshold":"Sets how much stronger a new candidate must be before it can displace the current focus.","threatBias":"Weights predator or threat observations more strongly during target selection.","foodBias":"Weights food observations more strongly during target selection.","idleScan":"Sets the angular amplitude of scanning when no target is currently attended.","tracking":"Controls how strongly estimated target motion is used to stabilise tracking.","prediction":"Sets how far ahead target motion is projected when estimating its future position.","reacquisition":"Sets how long a lost target can remain eligible for reacquisition.","memory":"Sets the maximum retention time for remembered visual tracks.","shortTerm":"Controls the short-lived visual buffer used to compare recent observations.","temporalSmooth":"Blends new measurements with previous estimates to reduce jitter. Higher values produce smoother but slower responses.","noiseTolerance":"Reduces the effect of visual measurement noise on whether a signal is trusted.","habituation":"Controls how strongly confidence in repeatedly observed, unchanged targets decays over time.","occlusionMemory":"Controls how strongly a target's remembered position is retained while it is hidden.","predictionHorizon":"Sets the maximum time span used by the memory system when projecting a target's position forward.","visualNoise":"Adds measurement uncertainty to visual signals, testing how robust detection and tracking are.","learningRate":"Sets the size of each neural teaching update to class-association weights.","plasticity":"Scales how readily controller connections adapt in response to feedback.","energyPerRay":"Sets the metabolic energy cost of evaluating each ray.","processingCost":"Sets the energy cost of processing each visible object after ray intersections.","energyReserve":"Sets the sensor's energy capacity and influences how much energy is available for sampling.","mutationRate":"Sets the typical magnitude of inherited parameter changes during genome mutation.","developmentalVariance":"Adds extra spread to mutation effects, allowing more varied expressed phenotypes.","tradeoff":"Controls the bias toward lower-energy sensing versus higher-resolution, more expensive perception.","overlayOpacity":"Sets the opacity of diagnostic drawings over the simulation without changing the underlying sensing calculations."};
 const help=$('parameterHelp');
 function showParameterHelp(key,anchor){
  const item=groups.flatMap(g=>g.items).find(x=>x[0]===key);
- const groupIndex=groups.findIndex(g=>g.items.some(x=>x[0]===key));
- const color=groupColors[groupIndex]||'#79f2d0';
+ const group=groups.find(g=>g.items.some(x=>x[0]===key));
+ const color=item&&group?itemColor(group,item):'#aab8c5';
  $('parameterHelpTitle').textContent=item?item[1]:'Overlay opacity';
- $('parameterHelpCategory').textContent=groups[groupIndex]?.name||'Diagnostic overlays';
+ $('parameterHelpCategory').textContent=group?(group.name+' · '+item[7]):'Diagnostic overlays';
  $('parameterHelpText').textContent=parameterDescriptions[key]||'This parameter adjusts the corresponding part of the vision system.';
  help.style.setProperty('--help-color',color);
  help.hidden=false;
@@ -213,14 +233,21 @@ function showParameterHelp(key,anchor){
 }
 function buildParameterMap(){
  const root=$('parameterMapGroups');
- groups.forEach((group,index)=>{
-  const section=document.createElement('div');section.className='mapGroup';section.style.setProperty('--group-color',groupColors[index]);
+ groups.forEach(group=>{
+  const section=document.createElement('div');section.className='mapGroup';section.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);
   const title=document.createElement('div');title.className='mapGroupTitle';title.textContent=group.name;section.append(title);
-  const chips=document.createElement('div');chips.className='mapChips';
-  group.items.forEach(item=>{
-   const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent=item[1];chip.style.setProperty('--group-color',groupColors[index]);chip.addEventListener('click',()=>showParameterHelp(item[0],chip));chips.append(chip);
-  });
-  section.append(chips);root.append(section);
+  const buckets=new Map();
+  for(const item of group.items){const sub=item[7]||'General';if(!buckets.has(sub))buckets.set(sub,[]);buckets.get(sub).push(item)}
+  for(const [sub,items] of buckets){
+   const subSection=document.createElement('div');subSection.className='mapSubgroup';subSection.style.setProperty('--sub-color',itemColor(group,items[0]));
+   const subTitle=document.createElement('div');subTitle.className='mapSubgroupTitle';subTitle.textContent=sub;subSection.append(subTitle);
+   const chips=document.createElement('div');chips.className='mapChips';
+   items.forEach(item=>{
+    const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent=item[1];chip.style.setProperty('--group-color',itemColor(group,item));chip.addEventListener('click',()=>showParameterHelp(item[0],chip));chips.append(chip);
+   });
+   subSection.append(chips);section.append(subSection);
+  }
+  root.append(section);
  });
  const overlay=document.createElement('div');overlay.className='mapGroup';overlay.style.setProperty('--group-color','#aab8c5');
  const title=document.createElement('div');title.className='mapGroupTitle';title.textContent='Diagnostic overlays';overlay.append(title);
@@ -238,10 +265,12 @@ function makeControls(){
   const summary=document.createElement('summary');summary.textContent=group.name;details.append(summary);
   const note=document.createElement('div');note.className='groupNote';note.textContent=group.note;details.append(note);
   const holder=document.createElement('div');holder.className='controls';
-  const groupIndex=groups.indexOf(group);
+  let lastSubgroup=null;
   for(const item of group.items){
-   const key=item[0],row=document.createElement('div');row.className='control';row.style.setProperty('--group-color',groupColors[groupIndex]);
-   const label=document.createElement('button');label.type='button';label.className='parameterName';label.style.setProperty('--group-color',groupColors[groupIndex]);label.textContent=item[1];label.addEventListener('click',()=>showParameterHelp(key,label));
+   const subgroup=item[7]||'General';
+   if(subgroup!==lastSubgroup){const subhead=document.createElement('div');subhead.className='controlSubgroup';subhead.style.setProperty('--sub-color',itemColor(group,item));subhead.textContent=subgroup;holder.append(subhead);lastSubgroup=subgroup}
+   const key=item[0],row=document.createElement('div');row.className='control';row.style.setProperty('--group-color',itemColor(group,item));
+   const label=document.createElement('button');label.type='button';label.className='parameterName';label.style.setProperty('--group-color',itemColor(group,item));label.textContent=item[1];label.addEventListener('click',()=>showParameterHelp(key,label));
    const output=document.createElement('output');output.id='v-'+key;output.textContent=displayValue(item,params[key]);
    const input=document.createElement('input');input.type='range';input.id='p-'+key;input.min=item[2];input.max=item[3];input.step=item[4];input.value=params[key];input.setAttribute('aria-label',item[1]);
    input.addEventListener('input',()=>{
@@ -348,6 +377,10 @@ function eyeGeometry(eye){
  const offset=gazeAngle+rad(params.eyeAngle),half=fov/2;
  const start=clamp(offset-half,-rad(85),rad(85)),end=clamp(offset+half,-rad(85),rad(85));
  return{eye:eye.index,origin,center:bodyAngle+eye.normal,start:bodyAngle+eye.normal+start,end:bodyAngle+eye.normal+end,fov:end-start};
+}
+function eyeForRay(i){
+ const count=Math.max(1,Math.round(params.eyeCount));
+ return ((Math.floor(i)%count)+count)%count;
 }
 function raySpec(i){
  const n=Math.max(1,Math.round(params.eyeCount)),eye=eyeForRay(i),perEye=Math.max(1,Math.ceil(params.rayCount/n));
@@ -647,13 +680,23 @@ function updateWorld(dt){
  }
  bodyAngle+=bodyTurnVelocity*dt;
 }
+function reportSimulationError(error){
+ const message=error&&error.message?error.message:String(error);
+ $('stateText').textContent='SIMULATION ERROR';
+ let panel=$('simulationError');
+ if(!panel){panel=document.createElement('div');panel.id='simulationError';panel.style.cssText='position:absolute;inset:12px 12px auto 12px;z-index:5;padding:10px 12px;border:1px solid #ff6f7e88;border-radius:8px;background:#260f18ed;color:#ffdce0;font:11px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere';$('canvasWrap').append(panel)}
+ panel.textContent='Simulation stopped: '+message;
+}
+window.addEventListener('error',e=>reportSimulationError(e.error||e.message));
 function frame(now){
+ try{
  const dt=clamp((now-lastFrame)/1000,0,.06);lastFrame=now;frames++;if(now-fpsTime>1000){fps=frames*1000/(now-fpsTime);frames=0;fpsTime=now}
  if(!paused){simTime+=dt;updateWorld(dt);$('stateText').textContent=visionLocked?'VISION LOCKED · RAPID TURN':energy<params.energyReserve*.12?'LOW SENSOR ENERGY':'SENSING';for(const r of latestRays)if(r&&r.sampledAt)r.age+=dt;
   if(scheduleImmediate||now-lastSample>=1000/params.samplingHz){grid.build(allObjects);sampleVision(dt)}
   else if(sampleAccumulator>0)sampleAccumulator-=dt;
  }
  render();requestAnimationFrame(frame);
+ }catch(error){reportSimulationError(error);paused=true;$('pauseBtn').textContent='Resume'}
 }
 function reset(){
  Object.assign(params,baseline);for(const g of groups)for(const item of g.items)syncControl(item[0]);
