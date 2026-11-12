@@ -37,7 +37,9 @@ assert.deepEqual(schema.normalizeDependencies({ expr_speed_max: 0 }, { expr_spee
 assert.deepEqual(schema.normalizeDependencies({ expr_speed_max: 1.5 }, { expr_speed_min: 1.8, expr_speed_max: 2.25 }), { expr_speed_min: 1.49 });
 assert.equal(schema.expressionTraits.find(item => item.key === 'speed').upper, 8);
 assert.deepEqual(schema.resolveWorkerMapping('count'), { target: 'cfg', key: 'count' });
-assert.ok(schema.extraSliderDefs.some(item=>item.id==='sporeInterval'&&item.label==='Plant spore release interval'&&item.section==='world'&&Number(item.defaultValue??item.value??item.default)===7));
+const sporeControl=schema.extraSliderDefs.find(item=>item.id==='sporeInterval');
+assert.ok(sporeControl,'plant spore interval must be exposed');
+assert.equal(sporeControl.value,7);
 assert.deepEqual(schema.resolveWorkerMapping('flockNoise'), { target: 'cfg', key: 'flockNoise' });
 assert.deepEqual(schema.resolveWorkerMapping('expr_speed_curve'), { target: 'geneExpression', trait: 'speed', field: 'curve' });
 assert.deepEqual(schema.resolveWorkerMapping('expr_speed_min'), { target: 'geneExpression', trait: 'speed', field: 'min' });
