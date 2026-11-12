@@ -157,7 +157,7 @@ test('founder limb counts follow the requested weighted distribution and descend
 });
 
 test('plant morphology continuously responds to freshwater distance and latitude', () => {
-  const start=worker.indexOf('function plantMorphologyFromGradients('),end=worker.indexOf('\\nfunction plantNodeGrowthScale',start);
+  const start=worker.indexOf('function plantMorphologyFromGradients('),end=worker.indexOf('function plantNodeGrowthScale',start);
   assert.ok(start>=0&&end>start,'pure morphology gradient helper must exist');
   const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
   vm.runInNewContext(worker.slice(start,end)+';this.morph=plantMorphologyFromGradients;',context);
@@ -169,7 +169,7 @@ test('plant morphology continuously responds to freshwater distance and latitude
   assert.ok(Math.abs(near.latitudeScale-1.05)<1e-9,'equator should receive only a slight 5% bonus');
   assert.ok(Math.abs(far.latitudeScale-.95)<1e-9,'poles should receive only a slight 5% penalty');
   assert.match(worker,/p\.biomass\+cfg\.plantGrowth\*dt[\s\S]*?nodeGrowth\.scale\*p\.latitudeScale/);
-  assert.match(worker,/p\.size\*p\.nodeScale\*p\.latitudeScale/);
+  assert.match(worker,/\.5\*p\.nodeScale\*p\.latitudeScale/);
   assert.match(worker,/len=\(4\.8\+p\.size\*7\)\*\.5\*p\.branchLengthScale/);
   assert.match(worker,/width=Math\.max\(\.65,\(\.9\+p\.size\*\.32\)\*\(p\.branchThicknessScale\|\|1\)\)/);
   assert.match(worker,/function nearestSaltwater\(px,py\)/);
@@ -179,7 +179,7 @@ test('plant morphology continuously responds to freshwater distance and latitude
 });
 
 test('smaller nodes grow more slowly relative to their whole plant', () => {
-  const start=worker.indexOf('function plantNodeGrowthScale('),end=worker.indexOf('\\nfunction applyPlantMorphology',start);
+  const start=worker.indexOf('function plantNodeGrowthScale('),end=worker.indexOf('function applyPlantMorphology',start);
   assert.ok(start>=0&&end>start);
   const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
   vm.runInNewContext(worker.slice(start,end)+';this.scale=plantNodeGrowthScale;',context);
