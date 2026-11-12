@@ -1,0 +1,4 @@
+const test=require('node:test');const assert=require('node:assert/strict');const P=require('../physics.js');
+test('overlapping circles separate and exchange momentum according to mass',()=>{const a={x:0,y:0,vx:1,vy:0,mass:1,radius:2},b={x:3,y:0,vx:-1,vy:0,mass:3,radius:2};const before=a.mass*a.vx+b.mass*b.vx;const r=P.resolveCircleContact(a,b,{restitution:0,friction:0});assert.equal(r.hit,true);assert.ok(Math.hypot(b.x-a.x,b.y-a.y)>=3.99);assert.ok(Math.abs((a.mass*a.vx+b.mass*b.vx)-before)<1e-8);assert.ok(a.vx<0&&b.vx<0)});
+test('swept-circle test detects tunnelling between non-overlapping endpoints',()=>{const t=P.sweptCircleTime(0,0,10,0,8,0,-10,0,2);assert.ok(t!==null&&t>0&&t<1)});
+test('bond solver pulls connected bodies toward rest length',()=>{const a={x:0,y:0,vx:0,vy:0,mass:1},b={x:20,y:0,vx:0,vy:0,mass:1};const r=P.solveBond(a,b,{restLength:10,stiffness:.5,damping:.2});assert.ok(r.error>0);assert.ok(b.x-a.x<20)});
