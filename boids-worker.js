@@ -17,8 +17,8 @@ function bondRoll(a,b,phase=0){const v=Math.sin(a*12.9898+b*78.233+Math.floor(si
 function bondDegree(id){let n=0;for(const b of bonds)if(b.a===id||b.b===id)n++;return n}
 function pruneBonds(){const alive=new Set(Array.from(individualId.subarray(0,N)));bonds=bonds.filter(b=>alive.has(b.a)&&(b.kind==='plant'||alive.has(b.b)))}
 function updateBonds(dt){
- if(frameNo%6!==0)return;const bondDt=dt*6;
- if(frameNo%60===0){
+ if(frameNo%30!==0)return;const bondDt=dt*30;
+ if(frameNo%120===0){
   rebuildGrid();
   const pairKeys=new Set(),degrees=new Map();
   for(const bond of bonds){if(bond.kind==='pair'){const key=bond.a<bond.b?bond.a+':'+bond.b:bond.b+':'+bond.a;pairKeys.add(key)}degrees.set(bond.a,(degrees.get(bond.a)||0)+1);if(bond.kind==='pair')degrees.set(bond.b,(degrees.get(bond.b)||0)+1)}
