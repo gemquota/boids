@@ -119,7 +119,7 @@ const params={
  rayCount:56,rayBudget:24,rayWidth:2,originCycle:1,distribution:0,maxRange:360,minRange:10,curvature:0,
  samplingHz:18,scanMode:1,scanDirection:1,scanSpeed:1.4,adaptive:58,priorityBoost:72,persistence:1.5,stagger:0,
  contrast:55,luminance:28,minTarget:2,classification:2,colourSensitivity:72,motionSensitivity:52,depthResolution:48,transparency:75,fog:16,ambient:82,confidenceMin:.16,
- gazeOffset:0,gazeSpeed:190,turnSpeed:92,turnVariance:68,behaviorVariance:55,turnLockThreshold:105,gazeWander:24,attentionSpan:1.0,fixation:.9,saccade:36,attentionThreshold:28,threatBias:82,foodBias:64,idleScan:28,tracking:78,prediction:1.1,reacquisition:1.8,
+ gazeOffset:0,gazeSpeed:190,turnSpeed:92,turnVariance:68,behaviorVariance:55,turnBias:48,turnLockThreshold:105,gazeWander:24,attentionSpan:1.0,fixation:.9,saccade:36,attentionThreshold:28,threatBias:82,foodBias:64,idleScan:28,tracking:78,prediction:1.1,reacquisition:1.8,
  memory:2.6,shortTerm:2.2,temporalSmooth:62,noiseTolerance:38,habituation:14,occlusionMemory:68,predictionHorizon:1.25,visualNoise:2,
  learningRate:.18,plasticity:.32,energyPerRay:.018,processingCost:.12,energyReserve:100,mutationRate:.045,developmentalVariance:8,tradeoff:42
 };
@@ -129,7 +129,7 @@ const groups=[
   ['fov','Horizontal FOV',30,340,1,'°'],['coneScale','Perceptual cone width',35,150,1,'%'],['verticalFov','Vertical FOV / depth band',10,180,1,'°'],['eyeCount','Visual organs',1,8,1,'eyes'],['eyeSeparation','Eye origin separation',0,80,1,'px'],['eyeSpread','Eye orientation spread',0,240,1,'°'],['eyeAngle','Optic-axis offset',-90,90,1,'°'],['eyeHeight','Eye height above ground',0,60,1,'u'],['rayCount','Potential ray positions',4,128,1,'rays'],['rayBudget','Simultaneous ray budget',1,64,1,'rays'],['rayWidth','Physical ray width',0,16,.25,'px'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral']],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered']],['maxRange','Maximum range',60,650,5,'u'],['minRange','Near blind zone',0,100,1,'u'],['curvature','Peripheral curvature',-45,45,1,'°']
  ]},
  {name:'Body turning & behavioural variance',note:'Body turning alternates with scanning. Fast turns freeze the sensory frame in world space; vision resumes after angular velocity falls below the release threshold.',items:[
-  ['turnSpeed','Body turn speed',0,360,1,'°/s'],['turnVariance','Turn-speed variability',0,100,1,'%'],['behaviorVariance','Scan / turn behaviour variance',0,100,1,'%'],['turnLockThreshold','High-speed vision lock',10,300,1,'°/s'],['gazeWander','Idle gaze variability',0,100,1,'%']
+  ['turnSpeed','Body turn speed',0,360,1,'°/s'],['turnVariance','Turn-speed variability',0,100,1,'%'],['behaviorVariance','Scan / turn behaviour variance',0,100,1,'%'],['turnBias','Turning vs scanning bias',0,100,1,'%'],['turnLockThreshold','High-speed vision lock',10,300,1,'°/s'],['gazeWander','Idle gaze variability',0,100,1,'%']
  ]},
  {name:'Sampling & computational allocation',note:'The budget is enforced per update. Unvisited ray positions retain age-limited observations.',items:[
   ['samplingHz','Sampling update frequency',1,60,1,'Hz'],['scanMode','Scheduling pattern',0,3,1,'mode',['Sequential','Ping-pong','Centre-out','Jittered']],['scanDirection','Scan direction',-1,1,1,'mode',['Reverse','Stationary','Forward']],['scanSpeed','Scan progression speed',.2,4,.1,'×'],['adaptive','Adaptive ray allocation',0,100,1,'%'],['priorityBoost','Attention priority boost',0,100,1,'%'],['persistence','Ray observation persistence',0,5,.1,'s'],['stagger','Sampling phase offset',0,100,1,'%']
@@ -269,14 +269,14 @@ function eyeLayout(){
  else if(n===2)angles=[front-rad(30),front+rad(30)];
  else if(n===3)angles=[front,front-rad(60),front+rad(60)];
  else angles=Array.from({length:n},(_,i)=>front+i*Math.PI*2/n);
- return angles.map((angle,index)=>({index,angle,local:{x:Math.cos(angle)*22,y:Math.sin(angle)*22}}));
+ return angles.map((angle,index)=>({index,angle,normal:Math.atan2(Math.sin(angle)/20,Math.cos(angle)/29),local:{x:Math.cos(angle)*29,y:Math.sin(angle)*20}}));
 }
 function eyeGeometry(eye){
  const pos=eye.local,rot=rotatePoint(pos.x,pos.y,bodyAngle),origin={x:rot.x,y:rot.y};
  const fov=rad(Math.min(170,clamp(params.fov*(1+neuralOutputs[3]*.3)*params.coneScale/100,10,340)));
  const offset=gazeAngle+rad(params.eyeAngle),half=fov/2;
  const start=clamp(offset-half,-rad(85),rad(85)),end=clamp(offset+half,-rad(85),rad(85));
- return{eye:eye.index,origin,center:bodyAngle+eye.angle,start:bodyAngle+eye.angle+start,end:bodyAngle+eye.angle+end,fov:end-start};
+ return{eye:eye.index,origin,center:bodyAngle+eye.normal,start:bodyAngle+eye.normal+start,end:bodyAngle+eye.normal+end,fov:end-start};
 }
 function raySpec(i){
  const n=Math.max(1,Math.round(params.eyeCount)),eye=eyeForRay(i),perEye=Math.max(1,Math.ceil(params.rayCount/n));
@@ -454,7 +454,7 @@ function sampleVision(dt){
  else if(currentTarget&&simTime-(processor.tracks.get(currentTarget.id)?.lastSeen||0)>params.reacquisition){currentTarget=null;targetSelectedAt=simTime}
  const freshTarget=currentTarget&&processor.tracks.get(currentTarget.id);
  const targetAngle=freshTarget?Math.atan2(freshTarget.position.y,freshTarget.position.x):null;
- let gazeGoal=targetAngle!==null?targetAngle-bodyAngle:Math.sin(simTime*(.45+out[1]*1.6))*rad(params.idleScan*(.25+.75*out[1]));
+ let gazeGoal=targetAngle!==null?targetAngle-bodyAngle:Math.sin(simTime*(.45+out[1]*1.6))*rad(params.idleScan*(.25+.75*out[1])*(.2+params.gazeWander/100));
  gazeGoal+=rad(params.gazeOffset);
  gazeGoal+=out[0]*rad(params.saccade)*.18;
  gazeGoal=clamp(gazeGoal,-rad(175),rad(175));
@@ -564,10 +564,9 @@ function render(){
 function updateWorld(dt){
  for(const o of things){o.x+=o.vx*dt;o.y+=o.vy*dt;if(Math.abs(o.x)>315)o.vx*=-1;if(Math.abs(o.y)>330)o.vy*=-1}
  const phase=Math.sin(simTime*(.18+params.behaviorVariance/180));
- const burst=Math.max(0,(phase+.12)/1.12);
+ const burst=clamp((phase+(params.turnBias/100-.5)*.85+.65)/1.3,0,1);
  const modulation=1+(params.turnVariance/100)*(.55*Math.sin(simTime*(.7+params.behaviorVariance/55))+.25*Math.sin(simTime*1.73));
  bodyTurnVelocity=rad(params.turnSpeed)*burst*modulation*Math.sign(Math.sin(simTime*(.16+params.behaviorVariance/220)+.4));
- bodyAngle+=bodyTurnVelocity*dt;
  const speed=Math.abs(deg(bodyTurnVelocity));
  if(!visionLocked&&speed>=params.turnLockThreshold){
   visionLocked=true;lockedEyeGeometry=eyeLayout().map(eye=>eyeGeometry(eye));
@@ -575,10 +574,11 @@ function updateWorld(dt){
  }else if(visionLocked&&speed<params.turnLockThreshold*.72){
   visionLocked=false;lockedRaySpecs=[];lockedEyeGeometry=[];scheduleImmediate=true;lastSample=0;
  }
+ bodyAngle+=bodyTurnVelocity*dt;
 }
 function frame(now){
  const dt=clamp((now-lastFrame)/1000,0,.06);lastFrame=now;frames++;if(now-fpsTime>1000){fps=frames*1000/(now-fpsTime);frames=0;fpsTime=now}
- if(!paused){simTime+=dt;updateWorld(dt);for(const r of latestRays)if(r&&r.sampledAt)r.age+=dt;
+ if(!paused){simTime+=dt;updateWorld(dt);$('stateText').textContent=visionLocked?'VISION LOCKED · RAPID TURN':energy<params.energyReserve*.12?'LOW SENSOR ENERGY':'SENSING';for(const r of latestRays)if(r&&r.sampledAt)r.age+=dt;
   if(!visionLocked&&(scheduleImmediate||now-lastSample>=1000/params.samplingHz)){grid.build(allObjects);sampleVision(dt)}
   else if(sampleAccumulator>0)sampleAccumulator-=dt;
  }
