@@ -22,10 +22,11 @@ BOIDS is a static browser application. `index.html` owns presentation, browser s
 3. A seeded RNG and shuffled update order remove fixed array-index priority.
 4. The spatial index supplies local neighbours and environmental queries.
 5. Each agent evaluates its expressed traits and inherited neural controller.
-6. Movement, feeding, attack proposals, hydration and energetic costs are evaluated.
-7. Resource claims and attacks are resolved consistently after proposal collection.
-8. Reproduction and inheritance update population state.
-9. Sampled telemetry is posted to the UI; history is throttled rather than rebuilt every render frame.
+6. Movement, feeding, attack proposals, hydration and energetic costs are evaluated through one shared organism-economics model. Costs are separated into basal/tissue, brain, vision, limb, bonding, aggression, reproduction and locomotion components.
+7. Persistent boid-to-boid and boid-to-plant bonds update attraction, energy transfers and symbiotic plant growth; bonded plants are excluded from grazing. Bond capacity and specialized appendage roles are inherited and can mutate.
+8. Resource claims and attacks are resolved consistently after proposal collection.
+9. Reproduction and inheritance update population state; construction costs for body tissue, limbs, neural topology, sensory investment and bonding sites are charged to the parent.
+10. Sampled telemetry is posted to the UI; history is throttled rather than rebuilt every render frame.
 
 ## Genome and phenotype layers
 
