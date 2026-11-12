@@ -290,6 +290,7 @@ const beforeGermination = plantApi.plants.length;
 const waterLanding = plantApi.nearestFreshwater(500, 300);
 plantApi.spores.push({ x: waterLanding.x, y: waterLanding.y, vx: 0, vy: 0, life: 7.1, settleAfter: 7, landed: true, settleClock: 1.8, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
 plantApi.growPlants(.01);
+console.log('SPORE_DEBUG',JSON.stringify({waterLanding,plants:plantApi.plants.map(p=>({id:p.id,x:p.x,y:p.y,cloneParent:p.cloneParent,asexual:p.asexual})),spores:plantApi.spores}));
 const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && p.x > 450);
 assert.ok(germinated, 'a landed, viable asexual spore should germinate into a clonal seedling');
 assert.ok(plantApi.plants.length > beforeGermination, 'adult clonal nodes should continue branching during the next growth tick');
