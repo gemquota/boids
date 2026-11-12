@@ -108,9 +108,3 @@ test('boids resolve physical body overlap and exchange collision impulse', () =>
   assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
 });
 
-test('boids resolve physical body overlap and exchange collision impulse', () => {
-  assert.match(worker, /function collisionRadius\\(i\\)/);
-  assert.match(worker, /function resolveAgentCollisions\\(updateN\\)/);
-  assert.match(worker, /if\\(relative<0\\)\\{const impulse=/);
-  assert.match(worker, /resolveAgentCollisions\\(updateN\\)/);
-});
