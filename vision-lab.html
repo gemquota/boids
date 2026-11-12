@@ -344,7 +344,7 @@ class VisionProcessor{
   return this.snapshot();
  }
  snapshot(){
-  const now=simTime,tracks=[...this.tracks.values()].map(t=>({...t,age:now-t.lastSeen,visible:now-t.lastSeen<.12,predicted:{x:t.position.x+t.velocity.x*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen)),y:t.position.y+t.velocity.y*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen))}}));
+  const now=simTime,tracks=[...this.tracks.values()].map(t=>({...t,age:now-t.lastSeen,visible:now-t.lastSeen<.12,predicted:{x:t.position.x+t.velocity.x*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen))*params.prediction,y:t.position.y+t.velocity.y*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen))*params.prediction}}));
   return{visible:this.observations,tracks,memory:tracks.filter(t=>t.age>.12&&t.age<=Math.min(params.memory,Math.max(params.shortTerm,params.memory*(params.occlusionMemory/100)))),novelty:this.novelty};
  }
 }
@@ -401,7 +401,9 @@ function selectTarget(perception){
  if(currentTarget&&candidate&&currentTarget.id!==candidate.id){
   const retained=processor.tracks.get(currentTarget.id);
   if(retained&&simTime-targetSelectedAt<params.fixation)return currentTarget;
-  const oldScore=attentionScore(currentTarget),newScore=attentionScore(candidate);
+  const span=Math.max(.1,params.attentionSpan);
+  const focusDecay=.4*clamp((simTime-targetSelectedAt)/span,0,1);
+  const oldScore=attentionScore(currentTarget)*(1-focusDecay),newScore=attentionScore(candidate);
   if(newScore<oldScore+params.attentionThreshold/150) return currentTarget;
  }
  return candidate;
