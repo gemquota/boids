@@ -188,7 +188,7 @@ function collisionRadius(i){const m=morphologyById.get(individualId[i])||{bodyWi
 let collisionRadiusCache=new Float32Array(0),collisionGridHead=new Int32Array(0),collisionGridLink=new Int32Array(0),collisionGridCols=0,collisionGridRows=0;
 function resolveAgentCollisions(updateN){
  // Fine 8-unit spatial hash keeps contact checks independent of the much larger vision radius.
- const cell=8,cols=Math.max(1,Math.ceil(W/cell)),rows=Math.max(1,Math.ceil(H/cell)),total=cols*rows;
+ const cell=16,cols=Math.max(1,Math.ceil(W/cell)),rows=Math.max(1,Math.ceil(H/cell)),total=cols*rows;
  if(cols!==collisionGridCols||rows!==collisionGridRows){collisionGridCols=cols;collisionGridRows=rows;collisionGridHead=new Int32Array(total);collisionGridLink=new Int32Array(Math.max(cap,updateN))}
  collisionGridHead.fill(-1);
  if(collisionGridLink.length<updateN)collisionGridLink=new Int32Array(updateN);
