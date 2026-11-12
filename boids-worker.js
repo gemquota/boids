@@ -190,7 +190,7 @@ function resolveAgentCollisions(updateN){
  // Fine 8-unit spatial hash keeps contact checks independent of the much larger vision radius.
  const cell=8,cols=Math.max(1,Math.ceil(W/cell)),rows=Math.max(1,Math.ceil(H/cell)),total=cols*rows;
  if(cols!==collisionGridCols||rows!==collisionGridRows){collisionGridCols=cols;collisionGridRows=rows;collisionGridHead=new Int32Array(total);collisionGridLink=new Int32Array(Math.max(cap,updateN))}
- else collisionGridHead.fill(-1);
+ collisionGridHead.fill(-1);
  if(collisionGridLink.length<updateN)collisionGridLink=new Int32Array(updateN);
  if(collisionRadiusCache.length<updateN)collisionRadiusCache=new Float32Array(updateN);
  for(let i=0;i<updateN;i++){
