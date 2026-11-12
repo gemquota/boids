@@ -20,7 +20,7 @@ jobs:
       - name: Validate paired Run 16 experiment batch
         run: |
           node research/run16-followup.js > /tmp/run16-followup.json
-          node -e "const batch=require('/tmp/run16-followup.json'); if(batch.runs.length!==50 || batch.scenarios.length!==5 || new Set(batch.pairedSeeds).size!==10) process.exit(1); console.log('50 paired-seed runs across five conditions validated')"
+          node -e "const batch=require('/tmp/run16-followup.json'); if(batch.runs.length!==60 || batch.scenarios.length!==6 || new Set(batch.pairedSeeds).size!==10) process.exit(1); console.log('60 paired-seed runs across six conditions validated')"
       - name: Check worker and module syntax
         run: |
           node --check evolution.js
