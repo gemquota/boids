@@ -41,7 +41,7 @@ Every role contributes to appendage maintenance. Only locomotor and grasping rol
 
 Bonds are persistent graph edges between organisms or between an organism and a plant. An organism's left and right bonding sites limit its degree; adhesive appendages add capacity on their corresponding side. Multiple sites permit chains and hubs.
 
-Bond records store endpoints, attachment sides, relationship kind, strength, age and creation time. Strength grows with proximity and decays when partners separate; weak links are pruned. Existing bonds attract partners and contribute a recurring maintenance cost.
+Bond records store endpoints, attachment sides, relationship kind, strength, age and creation time. Bond strength, transfers and pruning update at 10 Hz while recurring upkeep is charged every worker step. Strength grows with proximity and decays when partners separate; weak links are pruned. Existing bonds attract partners and contribute a recurring maintenance cost. Cached partner, attachment-degree and plant-link indexes keep relationships out of the per-neighbour linear-scan path.
 
 Relationship effects are energy-accounted:
 
