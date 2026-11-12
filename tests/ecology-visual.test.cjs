@@ -122,7 +122,7 @@ test('plants avoid canopy collisions and use treetop tip-shyness for new growth'
 test('new plants inherit nearby colour using distance and size weighted hue blending', () => {
   assert.match(worker, /function plantHueAt\(px,py,ignoreId=0\)/);
   assert.match(worker, /weight=\(\.25\+Math\.max\(\.05,p\.size\|\|\.2\)\*1\.5\)\/\(1\+d2\/\(64\*64\)\)/);
-  assert.match(worker, /node\.hue=plantHueAt\(node\.x,node\.y,node\.parent\|\|0\)/);
+  assert.match(worker, /node\.hue=plantHueAt\(node\.x,node\.y,0\)/);
   assert.match(worker, /Number\.isFinite\(p\.hue\)/);
 });
 
