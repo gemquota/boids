@@ -162,6 +162,7 @@ test('run telemetry records changing watershed conditions rather than only stati
 test('neural interface exposes additional named sensory and behavior channels', () => {
   assert.ok(worker.includes('waterProximity:8,thirst:9,bondTension:10,contactPressure:11'));
   assert.ok(worker.includes('forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11'));
+  assert.ok(worker.includes('contributionPenalty=Math.log1p(reproductiveSuccess.get(individualId[j])||0)*.08'));
   assert.ok(worker.includes('sense[10]=clamp(bondTensionByAgent[i]||0,0,1)'));
   assert.ok(worker.includes('tension=clamp(Math.max(0,extension)/Math.max(1,bond.restLength),0,1)'));
 });
