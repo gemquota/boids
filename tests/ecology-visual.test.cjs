@@ -140,7 +140,8 @@ test('colony bonds persist through ordinary separation and only lose endpoints o
 test('newborns receive four temporary bonding spots and adults develop one or two permanent spots', () => {
   assert.ok(worker.includes('m.temporaryBondingSitesLeft=2;m.temporaryBondingSitesRight=2'));
   assert.ok(worker.includes('Math.max(2,Math.min(12,cfg.ageMin*.6))'));
-  assert.ok(worker.includes('total=clamp(Math.round(m.bondingSites||1),1,2)'));
+  assert.ok(worker.includes('(random()<.65?1:2)'));
+  assert.ok(worker.includes('activePermanent=Math.floor(target*maturity+1e-6)'));
   assert.ok(worker.includes('permanentBondingSitesLeft'));
   assert.ok(worker.includes('updateBondingDevelopmentForAgent'));
 });
