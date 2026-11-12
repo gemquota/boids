@@ -2,6 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const genetics=require('../genetics.js');
+const evolution=require('../evolution.js');
 const configSchema=require('../config-schema.js');
 
 test('ten stable loci have ordered indices and valid gene bounds',()=>{
@@ -140,4 +141,18 @@ test('Observatory exposes live species and population-genetic metrics',()=>{
   assert.ok(html.includes('speciesStagnantCount'));
   assert.ok(html.includes('function drawNetwork(m)'));
   assert.match(html,/positions=new Map\(\)/);
+});
+
+test('NEAT species assignment enforces its cap when every genome is incompatible',()=>{
+  const individuals=Array.from({length:80},(_,i)=>({
+    id:i+1,
+    genome:{nodes:[{id:0,type:'input'},{id:1,type:'output'}],connections:Array.from({length:24},(_,j)=>({
+      innovation:i*24+j+1,source:0,destination:1,weight:.1,enabled:true
+    }))}
+  }));
+  const species=evolution.assignSpecies(individuals,[],{
+    threshold:3,maxSpecies:12,coefficients:{excess:10,disjoint:10,weight:0}
+  });
+  assert.equal(species.length,12);
+  assert.equal(species.reduce((sum,group)=>sum+group.members.length,0),80);
 });

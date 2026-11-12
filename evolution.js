@@ -113,9 +113,22 @@
   }
 
   function assignSpecies(individuals,previous=[],options={}){
-    const threshold=Math.max(.01,finite(options.threshold,3)),coefficients=options.coefficients||{},species=previous.map(s=>({...s,representative:cloneGenome(s.representative),members:[]}));let nextId=Math.max(0,...species.map(s=>s.id))+1;
-    for(const individual of individuals){let best=null,bestDistance=Infinity;for(const s of species){const d=compatibilityDistance(individual.genome,s.representative,coefficients);if(d<threshold&&d<bestDistance){best=s;bestDistance=d}}
-      if(best)best.members.push(individual);else species.push({id:nextId++,representative:cloneGenome(individual.genome),members:[individual]})}
+    const threshold=Math.max(.01,finite(options.threshold,3)),coefficients=options.coefficients||{},
+      maxSpecies=Math.max(4,Math.floor(finite(options.maxSpecies,32))),
+      retained=previous.length>maxSpecies?previous.slice().sort((a,b)=>(b.members?.length||0)-(a.members?.length||0)||a.id-b.id).slice(0,maxSpecies):previous,
+      species=retained.map(s=>({...s,representative:cloneGenome(s.representative),members:[]}));
+    let nextId=Math.max(0,...previous.map(s=>s.id))+1;
+    for(const individual of individuals){
+      let best=null,bestDistance=Infinity,nearest=null,nearestDistance=Infinity;
+      for(const s of species){
+        const d=compatibilityDistance(individual.genome,s.representative,coefficients);
+        if(d<nearestDistance){nearest=s;nearestDistance=d}
+        if(d<threshold&&d<bestDistance){best=s;bestDistance=d}
+      }
+      if(best)best.members.push(individual);
+      else if(species.length<maxSpecies)species.push({id:nextId++,representative:cloneGenome(individual.genome),members:[individual]});
+      else if(nearest)nearest.members.push(individual);
+    }
     for(const s of species)if(s.members.length)s.representative=cloneGenome(s.members[0].genome);
     return species.filter(s=>s.members.length);
   }
