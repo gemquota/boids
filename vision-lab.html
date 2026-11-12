@@ -115,18 +115,21 @@ const deg=r=>r*180/Math.PI;
 const sigmoid=x=>1/(1+Math.exp(-clamp(x,-12,12)));
 const fmt=(v,d=0)=>Number(v).toFixed(d);
 const params={
- fov:150,coneScale:100,verticalFov:76,eyeCount:2,eyeSeparation:24,eyeSpread:34,eyeAngle:0,eyeHeight:12,
+ fov:150,coneScale:100,verticalFov:76,eyeCount:1,eyeSeparation:24,eyeSpread:34,eyeAngle:0,eyeHeight:12,
  rayCount:56,rayBudget:24,rayWidth:2,originCycle:1,distribution:0,maxRange:360,minRange:10,curvature:0,
  samplingHz:18,scanMode:1,scanDirection:1,scanSpeed:1.4,adaptive:58,priorityBoost:72,persistence:1.5,stagger:0,
  contrast:55,luminance:28,minTarget:2,classification:2,colourSensitivity:72,motionSensitivity:52,depthResolution:48,transparency:75,fog:16,ambient:82,confidenceMin:.16,
- gazeOffset:0,gazeSpeed:190,attentionSpan:1.0,fixation:.9,saccade:36,attentionThreshold:28,threatBias:82,foodBias:64,idleScan:28,tracking:78,prediction:1.1,reacquisition:1.8,
+ gazeOffset:0,gazeSpeed:190,turnSpeed:92,turnVariance:68,behaviorVariance:55,turnLockThreshold:105,gazeWander:24,attentionSpan:1.0,fixation:.9,saccade:36,attentionThreshold:28,threatBias:82,foodBias:64,idleScan:28,tracking:78,prediction:1.1,reacquisition:1.8,
  memory:2.6,shortTerm:2.2,temporalSmooth:62,noiseTolerance:38,habituation:14,occlusionMemory:68,predictionHorizon:1.25,visualNoise:2,
  learningRate:.18,plasticity:.32,energyPerRay:.018,processingCost:.12,energyReserve:100,mutationRate:.045,developmentalVariance:8,tradeoff:42
 };
 const baseline=JSON.parse(JSON.stringify(params));
 const groups=[
  {name:'Optics & ray geometry',note:'The creature has a top-down multi-organ visual array. Per-eye origins and angular sampling are explicit.',items:[
-  ['fov','Horizontal FOV',30,340,1,'°'],['coneScale','Perceptual cone width',35,150,1,'%'],['verticalFov','Vertical FOV / depth band',10,180,1,'°'],['eyeCount','Visual organs',1,6,1,'eyes'],['eyeSeparation','Eye origin separation',0,80,1,'px'],['eyeSpread','Eye orientation spread',0,240,1,'°'],['eyeAngle','Optic-axis offset',-90,90,1,'°'],['eyeHeight','Eye height above ground',0,60,1,'u'],['rayCount','Potential ray positions',4,128,1,'rays'],['rayBudget','Simultaneous ray budget',1,64,1,'rays'],['rayWidth','Physical ray width',0,16,.25,'px'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral']],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered']],['maxRange','Maximum range',60,650,5,'u'],['minRange','Near blind zone',0,100,1,'u'],['curvature','Peripheral curvature',-45,45,1,'°']
+  ['fov','Horizontal FOV',30,340,1,'°'],['coneScale','Perceptual cone width',35,150,1,'%'],['verticalFov','Vertical FOV / depth band',10,180,1,'°'],['eyeCount','Visual organs',1,8,1,'eyes'],['eyeSeparation','Eye origin separation',0,80,1,'px'],['eyeSpread','Eye orientation spread',0,240,1,'°'],['eyeAngle','Optic-axis offset',-90,90,1,'°'],['eyeHeight','Eye height above ground',0,60,1,'u'],['rayCount','Potential ray positions',4,128,1,'rays'],['rayBudget','Simultaneous ray budget',1,64,1,'rays'],['rayWidth','Physical ray width',0,16,.25,'px'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral']],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered']],['maxRange','Maximum range',60,650,5,'u'],['minRange','Near blind zone',0,100,1,'u'],['curvature','Peripheral curvature',-45,45,1,'°']
+ ]},
+ {name:'Body turning & behavioural variance',note:'Body turning alternates with scanning. Fast turns freeze the sensory frame in world space; vision resumes after angular velocity falls below the release threshold.',items:[
+  ['turnSpeed','Body turn speed',0,360,1,'°/s'],['turnVariance','Turn-speed variability',0,100,1,'%'],['behaviorVariance','Scan / turn behaviour variance',0,100,1,'%'],['turnLockThreshold','High-speed vision lock',10,300,1,'°/s'],['gazeWander','Idle gaze variability',0,100,1,'%']
  ]},
  {name:'Sampling & computational allocation',note:'The budget is enforced per update. Unvisited ray positions retain age-limited observations.',items:[
   ['samplingHz','Sampling update frequency',1,60,1,'Hz'],['scanMode','Scheduling pattern',0,3,1,'mode',['Sequential','Ping-pong','Centre-out','Jittered']],['scanDirection','Scan direction',-1,1,1,'mode',['Reverse','Stationary','Forward']],['scanSpeed','Scan progression speed',.2,4,.1,'×'],['adaptive','Adaptive ray allocation',0,100,1,'%'],['priorityBoost','Attention priority boost',0,100,1,'%'],['persistence','Ray observation persistence',0,5,.1,'s'],['stagger','Sampling phase offset',0,100,1,'%']
@@ -199,7 +202,7 @@ $('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textC
 makeControls();buildOverlays();
 const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:false});
 let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,sampleAccumulator=0,simTime=0,sampleCount=0,totalCandidateChecks=0,energy=100,energySpent=0,frames=0,fpsTime=0,fps=0,scanCursor=0,scanDir=1,jitterSeed=713,cycle=0;
-let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null,targetSelectedAt=0,neuralOutputs=[0,.5,.5,0,.5];
+let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),bodyTurnVelocity=0,visionLocked=false,lockedRaySpecs=[],lockedEyeGeometry=[],scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null,targetSelectedAt=0,neuralOutputs=[0,.5,.5,0,.5];
 const creature={x:0,y:0};
 const things=[
  {id:'food-a',kind:'food',x:-122,y:-165,vx:4,vy:1,r:10,h:0,contrast:86,luminance:.85,opacity:.45,color:'#a9e47e'},
@@ -259,25 +262,27 @@ function distributionT(t){
  if(params.distribution===3)v=clamp(x+.18*Math.sin(t*Math.PI*6),-1,1);
  return v;
 }
-function eyeForRay(i){
- const n=Math.max(1,Math.round(params.eyeCount));
- if(params.originCycle===0)return 0;
- if(params.originCycle===1)return i%n;
- if(params.originCycle===2)return Math.floor(i/Math.max(1,Math.ceil(params.rayCount/n)))%n;
- return (i+cycle)%n;
+function eyeLayout(){
+ const n=Math.max(1,Math.round(params.eyeCount)),front=-Math.PI/2;
+ let angles;
+ if(n===1)angles=[front];
+ else if(n===2)angles=[front-rad(30),front+rad(30)];
+ else if(n===3)angles=[front,front-rad(60),front+rad(60)];
+ else angles=Array.from({length:n},(_,i)=>front+i*Math.PI*2/n);
+ return angles.map((angle,index)=>({index,angle,local:{x:Math.cos(angle)*22,y:Math.sin(angle)*22}}));
+}
+function eyeGeometry(eye){
+ const pos=eye.local,rot=rotatePoint(pos.x,pos.y,bodyAngle),origin={x:rot.x,y:rot.y};
+ const fov=rad(Math.min(170,clamp(params.fov*(1+neuralOutputs[3]*.3)*params.coneScale/100,10,340)));
+ const offset=gazeAngle+rad(params.eyeAngle),half=fov/2;
+ const start=clamp(offset-half,-rad(85),rad(85)),end=clamp(offset+half,-rad(85),rad(85));
+ return{eye:eye.index,origin,center:bodyAngle+eye.angle,start:bodyAngle+eye.angle+start,end:bodyAngle+eye.angle+end,fov:end-start};
 }
 function raySpec(i){
- const n=Math.max(1,Math.round(params.eyeCount)),eye=eyeForRay(i),perEye=Math.max(1,Math.ceil(params.rayCount/n)),local=i%n===0?Math.floor(i/n):Math.floor(i/n);
- const slot=Math.floor(i/n),t=perEye<=1?.5:slot/(perEye-1);
- const organOffset=n<=1?0:(eye-(n-1)/2)*rad(params.eyeSpread);
- const originLocal={x:(eye-(n-1)/2)*params.eyeSeparation,y:-18};
- const originRot=rotatePoint(originLocal.x,originLocal.y,bodyAngle);
- const origin={x:originRot.x,y:originRot.y};
- const center=bodyAngle+gazeAngle+rad(params.eyeAngle)+organOffset;
- const fov=rad(clamp(params.fov*(1+neuralOutputs[3]*.3)*params.coneScale/100,10,340));
- let angle=center+distributionT(t)*fov/2;
- angle+=rad(params.curvature)*Math.sin(Math.PI*distributionT(t))*.35;
- return{index:i,eye,origin,angle,dir:{x:Math.cos(angle),y:Math.sin(angle)},t};
+ const n=Math.max(1,Math.round(params.eyeCount)),eye=eyeForRay(i),perEye=Math.max(1,Math.ceil(params.rayCount/n));
+ const slot=Math.floor(i/n),t=perEye<=1?.5:slot/(perEye-1),geometry=eyeGeometry(eyeLayout()[eye]);
+ const angle=geometry.start+(geometry.end-geometry.start)*t+rad(params.curvature)*Math.sin(Math.PI*t)*.35;
+ return{index:i,eye,origin:geometry.origin,angle,dir:{x:Math.cos(angle),y:Math.sin(angle)},t};
 }
 function verticalVisible(o,distance){
  const elevation=deg(Math.atan2((o.h||0)-params.eyeHeight,Math.max(1,distance)));
@@ -478,7 +483,7 @@ function updatePanels(perception,out,used,budget){
  const names=['Gaze','Scan','Focus','FOV','Ray budget'];
  $('outputCells').innerHTML=names.map((n,i)=>'<div class="networkCell"><b>'+fmt(out[i],2)+'</b><span>'+n+'</span></div>').join('');
  const target=currentTarget,txt=target?target.kind+' · '+fmt(target.distance,0)+'u · confidence '+fmt(target.confidence*100,0)+'% · angle '+fmt(deg(target.angle),0)+'°':'No current fixation. Peripheral observations still feed the processor.';
- $('attentionReadout').textContent=txt+' · controller updates '+network.updates;
+ $('attentionReadout').textContent=txt+' · '+(visionLocked?'VISION LOCKED · rapid body turn':'VISION ACTIVE')+' · body turn '+fmt(Math.abs(deg(bodyTurnVelocity)),0)+'°/s · controller updates '+network.updates;
  $('targetReadout').textContent=target?'Attended: '+target.kind+' ('+target.id+'), estimated '+fmt(target.distance,1)+'u away. Reward or discourage this actual observation to update controller weights.':'No attended target currently available. The controller is using available ray-derived observations and scanning behaviour.';
 }
 function updateGenome(){
@@ -494,11 +499,10 @@ function drawGrid(){
 }
 function drawCone(){
  if(!overlays.cones)return;const alpha=Number($('overlayOpacity').value)/100;
- const n=Math.max(1,params.eyeCount),span=rad(clamp(params.fov*(1+neuralOutputs[3]*.3)*params.coneScale/100,10,340));
- for(let i=0;i<n;i++){
-  const loc=rotatePoint((i-(n-1)/2)*params.eyeSeparation,-18,bodyAngle),origin=worldScreen(loc.x,loc.y),angle=bodyAngle+gazeAngle+rad(params.eyeAngle)+(i-(n-1)/2)*rad(params.eyeSpread);
-  ctx.save();ctx.globalAlpha=.105*alpha;ctx.fillStyle='#55c9f2';ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.arc(origin.x,origin.y,params.maxRange*scale,angle-span/2,angle+span/2);ctx.closePath();ctx.fill();
-  ctx.globalAlpha=.5*alpha;ctx.strokeStyle='#55c9f277';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.lineTo(origin.x+Math.cos(angle-span/2)*params.maxRange*scale,origin.y+Math.sin(angle-span/2)*params.maxRange*scale);ctx.moveTo(origin.x,origin.y);ctx.lineTo(origin.x+Math.cos(angle+span/2)*params.maxRange*scale,origin.y+Math.sin(angle+span/2)*params.maxRange*scale);ctx.stroke();ctx.restore();
+ const eyes=visionLocked&&lockedEyeGeometry.length?lockedEyeGeometry:eyeLayout().map(eye=>eyeGeometry(eye));
+ for(const eye of eyes){const origin=worldScreen(eye.origin.x,eye.origin.y),start=eye.start,end=eye.end;
+  ctx.save();ctx.globalAlpha=.105*alpha;ctx.fillStyle='#55c9f2';ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.arc(origin.x,origin.y,params.maxRange*scale,start,end);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=.5*alpha;ctx.strokeStyle='#55c9f277';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.lineTo(origin.x+Math.cos(start)*params.maxRange*scale,origin.y+Math.sin(start)*params.maxRange*scale);ctx.moveTo(origin.x,origin.y);ctx.lineTo(origin.x+Math.cos(end)*params.maxRange*scale,origin.y+Math.sin(end)*params.maxRange*scale);ctx.stroke();ctx.restore();
  }
 }
 const rayColors={clear:'#55c9f2',detected:'#ffbf69',selected:'#f17ddd',blocked:'#ff6f7e'};
@@ -523,8 +527,9 @@ function drawObjects(){
  }
 }
 function drawOrigins(){
- if(!overlays.origins)return;const alpha=Number($('overlayOpacity').value)/100,n=Math.max(1,params.eyeCount);
- for(let i=0;i<n;i++){const loc=rotatePoint((i-(n-1)/2)*params.eyeSeparation,-18,bodyAngle),p=worldScreen(loc.x,loc.y);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#fff';ctx.strokeStyle='#55c9f2';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore()}
+ if(!overlays.origins)return;const alpha=Number($('overlayOpacity').value)/100;
+ const eyes=visionLocked&&lockedEyeGeometry.length?lockedEyeGeometry:eyeLayout().map(eye=>eyeGeometry(eye));
+ for(const eye of eyes){const p=worldScreen(eye.origin.x,eye.origin.y);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#fff';ctx.strokeStyle='#55c9f2';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore()}
 }
 function drawDetections(){
  if(!overlays.detections)return;const alpha=Number($('overlayOpacity').value)/100,seen=new Map();
@@ -545,8 +550,8 @@ function drawCreature(){
  const x=W/2,y=H/2;ctx.save();ctx.translate(x,y);ctx.rotate(bodyAngle);
  ctx.fillStyle='#79f2d02a';ctx.strokeStyle='#79f2d0';ctx.lineWidth=1.7;ctx.beginPath();ctx.ellipse(0,0,29*scale,20*scale,0,0,Math.PI*2);ctx.fill();ctx.stroke();
  ctx.fillStyle='#79f2d066';ctx.beginPath();ctx.moveTo(-13*scale,-7*scale);ctx.lineTo(-25*scale,-27*scale);ctx.lineTo(-3*scale,-16*scale);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(13*scale,-7*scale);ctx.lineTo(25*scale,-27*scale);ctx.lineTo(3*scale,-16*scale);ctx.closePath();ctx.fill();
- ctx.fillStyle='#d9fff5';ctx.beginPath();ctx.arc(-11*scale,-12*scale,3*scale,0,Math.PI*2);ctx.arc(11*scale,-12*scale,3*scale,0,Math.PI*2);ctx.fill();
- ctx.fillStyle='#06111a';ctx.beginPath();ctx.arc(-11*scale,-12*scale,1.4*scale,0,Math.PI*2);ctx.arc(11*scale,-12*scale,1.4*scale,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#d9fff5';ctx.beginPath();for(const eye of eyeLayout()){ctx.moveTo(eye.local.x*scale+3*scale,eye.local.y*scale);ctx.arc(eye.local.x*scale,eye.local.y*scale,3*scale,0,Math.PI*2)}ctx.fill();
+ ctx.fillStyle='#06111a';ctx.beginPath();for(const eye of eyeLayout()){ctx.moveTo(eye.local.x*scale+1.4*scale,eye.local.y*scale);ctx.arc(eye.local.x*scale,eye.local.y*scale,1.4*scale,0,Math.PI*2)}ctx.fill();
  ctx.strokeStyle='#e3fff5';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-5*scale,-17*scale);ctx.lineTo(0,-24*scale);ctx.lineTo(5*scale,-17*scale);ctx.stroke();
  ctx.restore();
  ctx.save();ctx.translate(x,y);ctx.rotate(bodyAngle+gazeAngle);ctx.strokeStyle='#f17ddd';ctx.globalAlpha=.85;ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(0,-25*scale);ctx.lineTo(0,-47*scale);ctx.stroke();ctx.fillStyle='#f17ddd';ctx.beginPath();ctx.moveTo(0,-53*scale);ctx.lineTo(-4*scale,-45*scale);ctx.lineTo(4*scale,-45*scale);ctx.closePath();ctx.fill();ctx.restore();
@@ -558,18 +563,30 @@ function render(){
 }
 function updateWorld(dt){
  for(const o of things){o.x+=o.vx*dt;o.y+=o.vy*dt;if(Math.abs(o.x)>315)o.vx*=-1;if(Math.abs(o.y)>330)o.vy*=-1}
+ const phase=Math.sin(simTime*(.18+params.behaviorVariance/180));
+ const burst=Math.max(0,(phase+.12)/1.12);
+ const modulation=1+(params.turnVariance/100)*(.55*Math.sin(simTime*(.7+params.behaviorVariance/55))+.25*Math.sin(simTime*1.73));
+ bodyTurnVelocity=rad(params.turnSpeed)*burst*modulation*Math.sign(Math.sin(simTime*(.16+params.behaviorVariance/220)+.4));
+ bodyAngle+=bodyTurnVelocity*dt;
+ const speed=Math.abs(deg(bodyTurnVelocity));
+ if(!visionLocked&&speed>=params.turnLockThreshold){
+  visionLocked=true;lockedEyeGeometry=eyeLayout().map(eye=>eyeGeometry(eye));
+  lockedRaySpecs=Array.from({length:Math.round(params.rayCount)},(_,i)=>{const old=latestRays[i];return old?{index:i,eye:old.eye,origin:{...old.origin},angle:Math.atan2(old.dir.y,old.dir.x),dir:{...old.dir},t:old.t}:raySpec(i)});
+ }else if(visionLocked&&speed<params.turnLockThreshold*.72){
+  visionLocked=false;lockedRaySpecs=[];lockedEyeGeometry=[];scheduleImmediate=true;lastSample=0;
+ }
 }
 function frame(now){
  const dt=clamp((now-lastFrame)/1000,0,.06);lastFrame=now;frames++;if(now-fpsTime>1000){fps=frames*1000/(now-fpsTime);frames=0;fpsTime=now}
  if(!paused){simTime+=dt;updateWorld(dt);for(const r of latestRays)if(r&&r.sampledAt)r.age+=dt;
-  if(scheduleImmediate||now-lastSample>=1000/params.samplingHz){grid.build(allObjects);sampleVision(dt)}
+  if(!visionLocked&&(scheduleImmediate||now-lastSample>=1000/params.samplingHz)){grid.build(allObjects);sampleVision(dt)}
   else if(sampleAccumulator>0)sampleAccumulator-=dt;
  }
  render();requestAnimationFrame(frame);
 }
 function reset(){
  Object.assign(params,baseline);for(const g of groups)for(const item of g.items)syncControl(item[0]);
- bodyAngle=-Math.PI/2;gazeAngle=0;energy=params.energyReserve;energySpent=0;simTime=0;sampleCount=0;scanCursor=0;cycle=0;latestRays=[];latestDetections.clear();processor.tracks.clear();processor.observations=[];currentTarget=null;network.classAssociation={food:.2,predator:.4,conspecific:.1,object:0};network.updates=0;network.weights=[
+ bodyAngle=-Math.PI/2;gazeAngle=0;bodyTurnVelocity=0;visionLocked=false;lockedRaySpecs=[];lockedEyeGeometry=[];energy=params.energyReserve;energySpent=0;simTime=0;sampleCount=0;scanCursor=0;cycle=0;latestRays=[];latestDetections.clear();processor.tracks.clear();processor.observations=[];currentTarget=null;network.classAssociation={food:.2,predator:.4,conspecific:.1,object:0};network.updates=0;network.weights=[
  [-.08,.72,.12,.08,.64,.1,.22,-.18],[.16,.5,.38,.3,0,.2,-.1,.44],[.22,.9,.15,.1,0,.12,.42,-.2],[.18,.15,.05,.22,0,.08,.1,.32],[.1,.36,.25,.25,0,.2,.1,.38]];
  network.bias=[0,-.2,-.35,-.1,-.15];scheduleImmediate=true;refreshGenome();updatePanels({visible:[],memory:[],novelty:0},[0,0,0,0,0],0,params.rayBudget);
 }
