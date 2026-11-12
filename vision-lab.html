@@ -199,7 +199,7 @@ $('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textC
 makeControls();buildOverlays();
 const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:false});
 let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,sampleAccumulator=0,simTime=0,sampleCount=0,totalCandidateChecks=0,energy=100,energySpent=0,frames=0,fpsTime=0,fps=0,scanCursor=0,scanDir=1,jitterSeed=713,cycle=0;
-let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null;
+let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null,targetSelectedAt=0,neuralOutputs=[0,.5,.5,0,.5];
 const creature={x:0,y:0};
 const things=[
  {id:'food-a',kind:'food',x:-122,y:-165,vx:4,vy:1,r:10,h:0,contrast:86,luminance:.85,opacity:.45,color:'#a9e47e'},
@@ -274,7 +274,7 @@ function raySpec(i){
  const originRot=rotatePoint(originLocal.x,originLocal.y,bodyAngle);
  const origin={x:originRot.x,y:originRot.y};
  const center=bodyAngle+gazeAngle+rad(params.eyeAngle)+organOffset;
- const fov=rad(params.fov*params.coneScale/100);
+ const fov=rad(clamp(params.fov*(1+neuralOutputs[3]*.3)*params.coneScale/100,10,340));
  let angle=center+distributionT(t)*fov/2;
  angle+=rad(params.curvature)*Math.sin(Math.PI*distributionT(t))*.35;
  return{index:i,eye,origin,angle,dir:{x:Math.cos(angle),y:Math.sin(angle)},t};
@@ -306,20 +306,22 @@ function raycast(spec){
   const motionSignal=clamp(motion/28*params.motionSensitivity/100,0,1);
   const sizeFactor=clamp(apparent/Math.max(.01,params.minTarget*2),0,1);
   const signal=contrast*100*sizeFactor;
-  const confidence=clamp(signal/Math.max(1,params.luminance+params.confidenceMin*100),0,1)*transmission;
-  const canDetect=(signal>=params.luminance&&sizeFactor>=.35&&contrast*100>=params.contrast*.14)||motionSignal>params.motionSensitivity/180;
+  const confidence=clamp(signal/Math.max(1,params.luminance+params.confidenceMin*100),0,1)*transmission*noisePenalty;
+  const noisePenalty=1-(params.visualNoise/100)*(1-params.noiseTolerance/100);
+  const colourSignal=(params.colourSensitivity/100)*(o.h?1:.55);
+  const canDetect=(params.classification===0?motionSignal>.12:(signal>=params.luminance&&sizeFactor>=.35&&contrast*100>=params.contrast*.14)||motionSignal>.12);
   if(canDetect&&confidence>=params.confidenceMin){
    const quant=Math.max(1,params.maxRange/Math.max(1,params.depthResolution));
    const measured=Math.round(t/quant)*quant;
    const level=Math.round(params.classification);
-   const className=level>=3?o.kind:level===2?(o.kind==='food'||o.kind==='predator'?'organism':o.kind==='conspecific'?'conspecific':'object'):level===1?'unclassified':motionSignal>.12?'moving signal':'signal';
+   const className=level>=3&&colourSignal>.2?o.kind:level>=2?(o.kind==='food'||o.kind==='predator'?'organism':o.kind==='conspecific'?'conspecific':'object'):level===1?'unclassified':motionSignal>.12?'moving signal':'signal';
    detected.push({id:o.id,kind:o.kind,className,confidence,signal,distance:measured,actualDistance:t,angle:spec.angle,position:{x:o.x,y:o.y},velocity:{x:o.vx||0,y:o.vy||0},motion:motionSignal,transmission});
   }
   const opacity=clamp((o.opacity??1)*params.transparency/100,0,1);
   transmission*=1-opacity;
   if(transmission<.03){end=t;break}
  }
- return{...spec,endDistance:end,blocked,detected,state:blocked?'blocked':detected.length?'detected':'clear',age:0,transmission};
+ return{...spec,endDistance:end,blocked,detected,state:blocked?'blocked':detected.length?'detected':'clear',age:0,sampledAt:performance.now(),transmission};
 }
 class VisionProcessor{
  constructor(){this.tracks=new Map();this.observations=[];this.novelty=0;this.lastTarget=null}
@@ -330,10 +332,11 @@ class VisionProcessor{
   for(const d of observations){
    const prior=this.tracks.get(d.id),elapsed=prior?Math.max(.001,now-prior.lastSeen):dt;
    const measuredV=prior?{x:(d.position.x-prior.position.x)/elapsed,y:(d.position.y-prior.position.y)/elapsed}:d.velocity;
-   const alpha=1-params.temporalSmooth/100*.85;
+   const alpha=prior?clamp(1-params.temporalSmooth/100*Math.min(1,elapsed/Math.max(.05,params.shortTerm)),.02,1):0;
    const velocity=prior?{x:prior.velocity.x*alpha+measuredV.x*(1-alpha),y:prior.velocity.y*alpha+measuredV.y*(1-alpha)}:measuredV;
-   d.velocity=velocity;d.novelty=prior?0:1;
-   this.tracks.set(d.id,{...d,position:{...d.position},velocity,lastSeen:now,firstSeen:prior?prior.firstSeen:now,confidence:d.confidence});
+   const habituation=prior?1-(params.habituation/100)*clamp((now-prior.firstSeen)/12,0,.65):1;
+   d.confidence*=habituation;d.velocity={x:velocity.x*params.tracking/100+measuredV.x*(1-params.tracking/100),y:velocity.y*params.tracking/100+measuredV.y*(1-params.tracking/100)};d.novelty=prior?0:1;
+   this.tracks.set(d.id,{...d,position:{...d.position},velocity:d.velocity,lastSeen:now,firstSeen:prior?prior.firstSeen:now,confidence:d.confidence,colourConfidence:params.colourSensitivity/100});
   }
   this.observations=observations;
   for(const [id,t] of this.tracks){if(now-t.lastSeen>Math.max(params.memory,params.reacquisition))this.tracks.delete(id)}
@@ -342,7 +345,7 @@ class VisionProcessor{
  }
  snapshot(){
   const now=simTime,tracks=[...this.tracks.values()].map(t=>({...t,age:now-t.lastSeen,visible:now-t.lastSeen<.12,predicted:{x:t.position.x+t.velocity.x*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen)),y:t.position.y+t.velocity.y*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen))}}));
-  return{visible:this.observations,tracks,memory:tracks.filter(t=>t.age>.12&&t.age<=params.memory),novelty:this.novelty};
+  return{visible:this.observations,tracks,memory:tracks.filter(t=>t.age>.12&&t.age<=Math.min(params.memory,Math.max(params.shortTerm,params.memory*(params.occlusionMemory/100)))),novelty:this.novelty};
  }
 }
 class VisionNetwork{
@@ -396,6 +399,8 @@ function selectTarget(perception){
  candidates.sort((a,b)=>attentionScore(b)-attentionScore(a));
  const candidate=candidates[0]||null;
  if(currentTarget&&candidate&&currentTarget.id!==candidate.id){
+  const retained=processor.tracks.get(currentTarget.id);
+  if(retained&&simTime-targetSelectedAt<params.fixation)return currentTarget;
   const oldScore=attentionScore(currentTarget),newScore=attentionScore(candidate);
   if(newScore<oldScore+params.attentionThreshold/150) return currentTarget;
  }
@@ -407,12 +412,12 @@ function scheduleIndices(budget,perception,outputs){
  const selected=perception.visible.length&&params.adaptive>0?perception.visible.slice().sort((a,b)=>b.confidence-a.confidence)[0]:null;
  const targetAngle=selected?selected.angle:null;
  if(targetAngle!==null&&params.adaptive>0){
-  const focusN=Math.round(n*params.adaptive/100),all=[];
+  const focusN=Math.round(n*params.adaptive/100*(.5+params.priorityBoost/200)),all=[];
   for(let i=0;i<count;i++)all.push({i,d:Math.abs(Math.atan2(Math.sin(raySpec(i).angle-targetAngle),Math.cos(raySpec(i).angle-targetAngle)))});
   all.sort((a,b)=>a.d-b.d);
   for(let j=0;j<focusN&&j<all.length;j++)result.push(all[j].i);
  }
- let cursor=scanCursor;
+ let cursor=(scanCursor+Math.floor(cycle*params.stagger/100*count))%count;
  while(result.length<n){
   let idx;
   if(params.scanMode===3){jitterSeed=(jitterSeed*1664525+1013904223)>>>0;idx=jitterSeed%count}
@@ -421,36 +426,39 @@ function scheduleIndices(budget,perception,outputs){
   idx=(idx+count)%count;if(!result.includes(idx))result.push(idx);
   if(result.length<count*2&&cursor>count*3)cursor=0;
  }
- scanCursor=(scanCursor+Math.max(1,Math.round(params.scanSpeed*n/3)))%count;
+ scanCursor=(scanCursor+Math.max(1,Math.round(params.scanSpeed*(.25+outputs[1]*1.5)*n/3)))%count;
  if(params.scanDirection===0)scanDir=-1;else if(params.scanDirection===2)scanDir=1;
  return [...new Set(result)].slice(0,n);
 }
 function sampleVision(dt){
  const perception=processor.snapshot(),out=network.forward(perception).outputs;
  const requested=Math.min(params.rayBudget,params.rayCount);
- const energyFactor=clamp(energy/Math.max(1,params.energyReserve*.25),.12,1);
+ const energyFactor=clamp(energy/Math.max(1,params.energyReserve*.25),.12,1)*(1-params.tradeoff/350);
  const dynamicBudget=Math.max(1,Math.floor(requested*energyFactor*(1+out[4]*params.adaptive/140)));
  const indices=scheduleIndices(dynamicBudget,perception,out);
+ neuralOutputs=out.slice();
  grid.build(allObjects);
  const rays=[];
  for(const i of indices){const spec=raySpec(i);const ray=raycast(spec);rays.push(ray);const prior=latestRays[i];latestRays[i]=ray}
- const all=latestRays.filter(Boolean);
- const processed=processor.update(all,dt);
+ const processed=processor.update(rays,dt);
  const target=selectTarget(processed);
- if(target){currentTarget=target;lastPerception=target}
- else if(currentTarget&&simTime-(processor.tracks.get(currentTarget.id)?.lastSeen||0)>params.reacquisition)currentTarget=null;
+ if(target&&(!currentTarget||target.id!==currentTarget.id)){currentTarget=target;targetSelectedAt=simTime;lastPerception=target}
+ else if(target){currentTarget=target;lastPerception=target}
+ else if(currentTarget&&simTime-(processor.tracks.get(currentTarget.id)?.lastSeen||0)>params.reacquisition){currentTarget=null;targetSelectedAt=simTime}
  const freshTarget=currentTarget&&processor.tracks.get(currentTarget.id);
  const targetAngle=freshTarget?Math.atan2(freshTarget.position.y,freshTarget.position.x):null;
- let gazeGoal=targetAngle!==null?targetAngle-bodyAngle:Math.sin(simTime*.65)*rad(params.idleScan*.65);
+ let gazeGoal=targetAngle!==null?targetAngle-bodyAngle:Math.sin(simTime*(.45+out[1]*1.6))*rad(params.idleScan*(.25+.75*out[1]));
+ gazeGoal+=rad(params.gazeOffset);
  gazeGoal+=out[0]*rad(params.saccade)*.18;
  gazeGoal=clamp(gazeGoal,-rad(175),rad(175));
  const diff=Math.atan2(Math.sin(gazeGoal-gazeAngle),Math.cos(gazeGoal-gazeAngle));
  const step=rad(params.gazeSpeed)*dt*(.3+.7*out[2]);
  gazeAngle+=clamp(diff,-step,step);
  const nominalBudget=params.rayBudget;
- energy=Math.max(0,energy-indices.length*params.energyPerRay-processed.visible.length*params.processingCost);
+ const metabolicLoad=1+params.tradeoff/100;
+ energy=Math.max(0,energy-indices.length*params.energyPerRay*metabolicLoad-processed.visible.length*params.processingCost);
  energy=Math.min(params.energyReserve,energy+dt*(.18+params.energyReserve*.0009));
- energySpent+=indices.length*params.energyPerRay+processed.visible.length*params.processingCost;
+ energySpent+=indices.length*params.energyPerRay*metabolicLoad+processed.visible.length*params.processingCost;
  sampleCount+=indices.length;lastSample=performance.now();sampleAccumulator=0;
  cycle++;scheduleImmediate=false;
  updatePanels(processed,out,indices.length,dynamicBudget);
@@ -484,7 +492,7 @@ function drawGrid(){
 }
 function drawCone(){
  if(!overlays.cones)return;const alpha=Number($('overlayOpacity').value)/100;
- const n=Math.max(1,params.eyeCount),span=rad(params.fov*params.coneScale/100);
+ const n=Math.max(1,params.eyeCount),span=rad(clamp(params.fov*(1+neuralOutputs[3]*.3)*params.coneScale/100,10,340));
  for(let i=0;i<n;i++){
   const loc=rotatePoint((i-(n-1)/2)*params.eyeSeparation,-18,bodyAngle),origin=worldScreen(loc.x,loc.y),angle=bodyAngle+gazeAngle+rad(params.eyeAngle)+(i-(n-1)/2)*rad(params.eyeSpread);
   ctx.save();ctx.globalAlpha=.105*alpha;ctx.fillStyle='#55c9f2';ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.arc(origin.x,origin.y,params.maxRange*scale,angle-span/2,angle+span/2);ctx.closePath();ctx.fill();
