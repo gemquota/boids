@@ -317,7 +317,7 @@ function makeControls(){
   for(const item of group.items){
    const subgroup=item[7]||'General';
    if(subgroup!==lastSubgroup){const subhead=document.createElement('div');subhead.className='controlSubgroup';subhead.style.setProperty('--sub-color',itemColor(group,item));subhead.textContent=subgroup;holder.append(subhead);lastSubgroup=subgroup}
-   const key=item[0],row=document.createElement('div');row.className='control';if(key==='maxRange'||key==='samplingHz')row.classList.add('advancedHidden');row.style.setProperty('--group-color',itemColor(group,item));
+   const key=item[0],row=document.createElement('div');row.className='control';if((key==='maxRange'||key==='samplingHz')&&row.classList?.add)row.classList.add('advancedHidden');row.style.setProperty('--group-color',itemColor(group,item));
    const label=document.createElement('button');label.type='button';label.className='parameterName';label.style.setProperty('--group-color',itemColor(group,item));label.textContent=item[1];label.addEventListener('click',()=>showParameterHelp(key,label));
    const output=document.createElement('output');output.id='v-'+key;output.textContent=displayValue(item,params[key]);
    const input=document.createElement('input');input.type='range';input.id='p-'+key;input.min=item[2];input.max=item[3];input.step=item[4];input.value=params[key];input.setAttribute('aria-label',item[1]);
