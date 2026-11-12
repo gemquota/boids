@@ -331,11 +331,30 @@ function drawBoids(){
   ctx.fillStyle='rgba(240,255,255,.95)';ctx.beginPath();ctx.arc(len*.28,-baseHalf*negScale*.53,Math.max(.45,len*.055),0,TAU);ctx.arc(len*.28,baseHalf*posScale*.53,Math.max(.45,len*.055),0,TAU);ctx.fill();ctx.restore();
  }
 }
+function drawBondNetwork(plantById){
+ if(!bondLinks.length)return;
+ const agentIndexById=new Map();for(let i=0;i<N;i++)agentIndexById.set(individualId[i],i);
+ const colors={mutualistic:'#78e7ce',commensal:'#9bd6ff',parasitic:'#ff83a8',altruistic:'#ffd58b'};
+ ctx.save();ctx.lineCap='round';
+ for(const bond of bondLinks){
+  const i=agentIndexById.get(bond.a);if(i===undefined)continue;
+  let tx,ty;
+  if(bond.targetType==='agent'){const j=agentIndexById.get(bond.b);if(j===undefined)continue;tx=x[j];ty=y[j]}
+  else{const plant=plantById.get(bond.b);if(!plant)continue;tx=plant.x;ty=plant.y}
+  let dx=tx-x[i],dy=ty-y[i];
+  if(cfg.wrap){if(dx>W*.5)dx-=W;if(dx< -W*.5)dx+=W;if(dy>H*.5)dy-=H;if(dy< -H*.5)dy+=H}
+  ctx.strokeStyle=colors[bond.kind]||colors.mutualistic;ctx.globalAlpha=.22+.48*clamp(bond.strength,0,1);
+  ctx.lineWidth=Math.max(.55,(.65+1.15*bond.strength)/Math.max(.5,cameraZoom));
+  ctx.beginPath();ctx.moveTo(x[i],y[i]);ctx.lineTo(x[i]+dx,y[i]+dy);ctx.stroke();
+  ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(x[i]+dx*.5,y[i]+dy*.5,Math.max(.65,1.15*bond.strength/Math.max(.5,cameraZoom)),0,TAU);ctx.fill();
+ }
+ ctx.restore();
+}
 function draw(){
  ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle="#030a12";ctx.fillRect(0,0,viewW,viewH);ctx.restore();
  ctx.save();ctx.translate(W/2+cameraPanX,H/2+cameraPanY);ctx.scale(cameraZoom,cameraZoom);ctx.translate(-W/2,-H/2);drawAtmosphere();drawWaterways();
  ctx.save();ctx.globalAlpha=.13;ctx.strokeStyle='#527d91';for(let oi=0;oi<obstacles.length;oi++){let o=obstacles[oi];ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,TAU);ctx.stroke()}ctx.restore();
- ctx.save();ctx.lineCap='round';let plantById=new Map();for(const p of plants)plantById.set(p.id,p);for(const p of plants){if(p.parent){let q=plantById.get(p.parent);if(q){ctx.save();const palette=plantPalette(p);ctx.shadowBlur=7;ctx.shadowColor=palette.glow;ctx.strokeStyle=palette.arm;ctx.lineWidth=Math.max(1,Math.min(3,1+p.size*1.1));ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore()}}}for(const p of plants)drawPlantNode(p);for(const sp of spores){ctx.save();ctx.fillStyle=sp.landed?'#86b6a4':'#c7f5ff';ctx.globalAlpha=sp.landed?.48:.86;hexPath(sp.x,sp.y,sp.landed?1.15:1.8,Math.PI/6);ctx.fill();ctx.restore()}ctx.restore();
+ ctx.save();ctx.lineCap='round';let plantById=new Map();for(const p of plants)plantById.set(p.id,p);for(const p of plants){if(p.parent){let q=plantById.get(p.parent);if(q){ctx.save();const palette=plantPalette(p);ctx.shadowBlur=7;ctx.shadowColor=palette.glow;ctx.strokeStyle=palette.arm;ctx.lineWidth=Math.max(1,Math.min(3,1+p.size*1.1));ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore()}}}for(const p of plants)drawPlantNode(p);for(const sp of spores){ctx.save();ctx.fillStyle=sp.landed?'#86b6a4':'#c7f5ff';ctx.globalAlpha=sp.landed?.48:.86;hexPath(sp.x,sp.y,sp.landed?1.15:1.8,Math.PI/6);ctx.fill();ctx.restore()}drawBondNetwork(plantById);ctx.restore();
  drawBoids();
  ctx.save();ctx.strokeStyle="rgba(108,242,208,.9)";ctx.lineWidth=Math.max(1.2,2.2/cameraZoom);ctx.setLineDash([7/cameraZoom,4/cameraZoom]);ctx.shadowColor="#6cf2d0";ctx.shadowBlur=9;ctx.strokeRect(1,1,W-2,H-2);ctx.setLineDash([]);ctx.restore();
  if(selectedAgent>=0&&selectedAgent<N){ctx.save();ctx.strokeStyle='#ffffff';ctx.lineWidth=1.8;ctx.globalAlpha=.95;ctx.beginPath();ctx.arc(x[selectedAgent],y[selectedAgent],Math.max(3.5,12*cfg.boidSize),0,TAU);ctx.stroke();ctx.strokeStyle='#70f5d2';ctx.beginPath();ctx.arc(x[selectedAgent],y[selectedAgent],Math.max(5,18*cfg.boidSize),0,TAU);ctx.stroke();ctx.restore()}
