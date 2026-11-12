@@ -52,6 +52,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .sliderAccordion .groupNote{padding:0 2px 7px}
 .sliderAccordion .controls{padding:0 3px 7px}
 .parameterName{max-width:100%}
+.toggle .parameterName{flex:1;text-align:left;text-decoration:none;color:#c3d4d9;font-size:9px;padding:0}
+.toggle .parameterName:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 .parameterName[data-help]{text-decoration-style:dotted}
 .overlayTitle[data-help]{cursor:help;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
 .control input[type=range]{grid-column:1/-1;width:100%;height:17px;margin:0;accent-color:var(--mint);touch-action:pan-y}
@@ -260,6 +262,17 @@ function showParameterHelp(key,anchor){
   exportGenome:{title:'Export genome JSON',category:'Genome tools',text:'Downloads the current parameter values and neural controller weights as a JSON genome snapshot.',color:'#1b7068'},
   restoreGenome:{title:'Restore baseline',category:'Genome tools',text:'Restores the baseline parameter values and resets the simulation and controller state.',color:'#1b7068'}
  };
+ if(key==='overlay-all'){
+  extraHelp[key]={title:'All overlays',category:'Diagnostic overlays',text:'Turns every diagnostic overlay on or off together. Individual overlay switches remain independently adjustable.',color:'#aab8c5'};
+ }
+ if(key.startsWith('overlay-')&&key!=='overlay-all'){
+  const overlayName=overlayLabels.find(x=>x[0]===key.slice(8))?.[1]||'Diagnostic overlay';
+  extraHelp[key]={title:overlayName,category:'Diagnostic overlays',text:'Toggles this diagnostic layer in the 2D vision display. It changes only what is drawn, not the underlying ray observations or neural processing.',color:'#aab8c5'};
+ }
+ if(key.startsWith('group-')){
+  const g=groups[Number(key.slice(6))];
+  if(g)extraHelp[key]={title:g.name,category:'Vision parameter group',text:g.note,color:groupColors[Number(key.slice(6))]};
+ }
  const extra=extraHelp[key];
  const color=item&&group?itemColor(group,item):extra?.color||'#aab8c5';
  $('parameterHelpTitle').textContent=item?item[1]:extra?.title||'Diagnostic control';
@@ -293,7 +306,7 @@ function makeControls(){
  const root=$('parameterGroups');
  for(const group of groups){
   const details=document.createElement('details');details.className='sliderAccordion';details.open=false;details.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);
-  const summary=document.createElement('summary');summary.textContent=group.name;details.append(summary);
+  const summary=document.createElement('summary');summary.textContent=group.name;summary.dataset.help='group-'+groups.indexOf(group);details.append(summary);
   const holder=document.createElement('div');holder.className='controls';
   const note=document.createElement('div');note.className='groupNote';note.textContent=group.note;holder.append(note);
   let lastSubgroup=null;
@@ -325,9 +338,9 @@ const overlayLabels=[['rays','Individual rays'],['cones','FOV cones'],['width','
 const overlays={...overlayDefaults};
 function buildOverlays(){
  const root=$('overlayToggles');
- const all=document.createElement('label');all.className='toggle';all.innerHTML='<span>All overlays</span><input type="checkbox" checked id="ov-all">';root.append(all);
+ const all=document.createElement('div');all.className='toggle';all.innerHTML='<button type="button" class="parameterName" data-help="overlay-all">All overlays</button><input type="checkbox" checked id="ov-all" aria-label="All overlays">';root.append(all);
  $('ov-all').addEventListener('change',e=>{const v=e.target.checked;for(const key of Object.keys(overlays))overlays[key]=v;root.querySelectorAll('input[data-overlay]').forEach(i=>i.checked=v);});
- for(const [key,label] of overlayLabels){const l=document.createElement('label');l.className='toggle';l.innerHTML='<span>'+label+'</span><input type="checkbox" data-overlay="'+key+'" checked>';const input=l.querySelector('input');input.addEventListener('change',()=>{overlays[key]=input.checked;$('ov-all').checked=Object.values(overlays).every(Boolean)});root.append(l)}
+ for(const [key,label] of overlayLabels){const l=document.createElement('div');l.className='toggle';l.innerHTML='<button type="button" class="parameterName" data-help="overlay-'+key+'">'+label+'</button><input type="checkbox" data-overlay="'+key+'" checked aria-label="'+label+'">';const input=l.querySelector('input');input.addEventListener('change',()=>{overlays[key]=input.checked;$('ov-all').checked=Object.values(overlays).every(Boolean)});root.append(l)}
 }
 $('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textContent=$('overlayOpacity').value+'%'});
 document.addEventListener('click',e=>{
