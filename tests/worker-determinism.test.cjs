@@ -326,7 +326,11 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationBirthTime.entries()),'structural innovation protection ages must survive snapshot restoration');
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
-assert.equal(restoredSnapshot.schemaVersion, 23);
+assert.equal(restoredSnapshot.schemaVersion, 24);
+assert.deepEqual(Array.from(restoredSnapshot.arrays.extraBrainOut),Array.from(sourceSnapshot.arrays.extraBrainOut));
+assert.deepEqual(Array.from(restoredSnapshot.arrays.collisionPressureByAgent),Array.from(sourceSnapshot.arrays.collisionPressureByAgent));
+assert.deepEqual(restoredSnapshot.populationEvents,sourceSnapshot.populationEvents);
+assert.equal(restoredSnapshot.counters.initialPopulation,sourceSnapshot.counters.initialPopulation);
 assert.ok(Array.isArray(restoredSnapshot.bondLinks),'persistent organism bonds must be included in snapshots');
 assert.equal(JSON.stringify(restoredSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))),JSON.stringify(sourceSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))), 'organism bond topology and relationship types must survive snapshot restoration');
 assert.equal(JSON.stringify(BoidsEcology.serializeFields(restored.__boidsTest.environmentFields)),JSON.stringify(restoredSnapshot.environmentFields),'deterministic habitat fields must survive snapshot restoration');
