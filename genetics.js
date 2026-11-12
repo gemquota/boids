@@ -19,7 +19,7 @@
     {index:9,key:'exploration',label:'Exploration',min:.55,max:1.65,geneMin:.55,geneMax:1.65,phenotypeMin:.55,phenotypeMax:1.65}
   ]);
   const DEFAULT_EXPRESSION=Object.freeze(Object.fromEntries(TRAITS.map(t=>[t.key,Object.freeze({
-    min:t.phenotypeMin,max:t.phenotypeMax,curve:'linear',strength:2,midpoint:.5,bias:0,environmentSensitivity:0
+    min:t.phenotypeMin,max:t.phenotypeMax,curve:t.key==='speed'?'exponential':'linear',strength:t.key==='speed'?2.8:2,midpoint:.5,bias:0,environmentSensitivity:0
   })])));
   const DEFAULT_MUTATION=Object.freeze(Object.fromEntries(TRAITS.map(t=>[t.key,Object.freeze({
     rate:.016,magnitude:.075,heritability:.98
