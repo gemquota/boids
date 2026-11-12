@@ -34,7 +34,7 @@
       if(!splits.has(key)){const nodeId=nextNode++,left=connection(source,nodeId),right=connection(nodeId,destination);splits.set(key,{nodeId,left,right})}
       return {...splits.get(key)};
     }
-    function node(){return nextNode++}
+    function node(minimum=1){nextNode=Math.max(nextNode,Math.floor(finite(minimum,1)));return nextNode++}
     function snapshot(){return{nextInnovation,nextNode,connections:Array.from(connections.entries()),splits:Array.from(splits.entries()).map(([k,v])=>[k,{...v}])}}
     return Object.freeze({connection,split,node,snapshot});
   }
@@ -61,11 +61,11 @@
     }
     if(random()<rates.addInput&&genome.nodes.length<limits.maxNodes&&genome.nodes.filter(n=>n.type==='input').length<limits.maxInputs){
       const channels=['waterProximity','thirst','bondTension','foodQuality'],used=new Set(genome.nodes.filter(n=>n.type==='input').map(n=>n.channel).filter(Boolean)),available=channels.filter(channel=>!used.has(channel)),destinations=genome.nodes.filter(n=>n.type==='hidden'||n.type==='output');
-      if(available.length&&destinations.length){const channel=available[randomIndex(available.length,random)],id=registry.node?registry.node():Math.max(-1,...genome.nodes.map(n=>n.id))+1,destination=destinations[randomIndex(destinations.length,random)];genome.nodes.push({id,type:'input',activation:'linear',bias:0,channel});if(genome.connections.length<limits.maxConnections)genome.connections.push({innovation:registry.connection(id,destination.id),source:id,destination:destination.id,weight:(random()*2-1)*.2,enabled:true,recurrent:false})}
+      if(available.length&&destinations.length){const channel=available[randomIndex(available.length,random)],id=registry.node?registry.node(Math.max(-1,...genome.nodes.map(n=>n.id))+1):Math.max(-1,...genome.nodes.map(n=>n.id))+1,destination=destinations[randomIndex(destinations.length,random)];genome.nodes.push({id,type:'input',activation:'linear',bias:0,channel});if(genome.connections.length<limits.maxConnections)genome.connections.push({innovation:registry.connection(id,destination.id),source:id,destination:destination.id,weight:(random()*2-1)*.2,enabled:true,recurrent:false})}
     }
     if(random()<rates.addOutput&&genome.nodes.length<limits.maxNodes&&genome.nodes.filter(n=>n.type==='output').length<limits.maxOutputs){
       const channels=['forageDrive','waterDrive','colonyCohesion','explorationDrive'],used=new Set(genome.nodes.filter(n=>n.type==='output').map(n=>n.channel).filter(Boolean)),available=channels.filter(channel=>!used.has(channel)),sources=genome.nodes.filter(n=>n.type==='input'||n.type==='hidden');
-      if(available.length&&sources.length){const channel=available[randomIndex(available.length,random)],id=registry.node?registry.node():Math.max(-1,...genome.nodes.map(n=>n.id))+1,source=sources[randomIndex(sources.length,random)];genome.nodes.push({id,type:'output',activation:'tanh',bias:0,channel});if(genome.connections.length<limits.maxConnections)genome.connections.push({innovation:registry.connection(source.id,id),source:source.id,destination:id,weight:(random()*2-1)*.2,enabled:true,recurrent:false})}
+      if(available.length&&sources.length){const channel=available[randomIndex(available.length,random)],id=registry.node?registry.node(Math.max(-1,...genome.nodes.map(n=>n.id))+1):Math.max(-1,...genome.nodes.map(n=>n.id))+1,source=sources[randomIndex(sources.length,random)];genome.nodes.push({id,type:'output',activation:'tanh',bias:0,channel});if(genome.connections.length<limits.maxConnections)genome.connections.push({innovation:registry.connection(source.id,id),source:source.id,destination:id,weight:(random()*2-1)*.2,enabled:true,recurrent:false})}
     }
     if(random()<rates.addConnection&&genome.connections.length<limits.maxConnections){
       const sources=genome.nodes.filter(n=>n.type!=='output'),destinations=genome.nodes.filter(n=>n.type!=='input');
