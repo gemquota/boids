@@ -3,6 +3,7 @@
 **A full-screen, browser-based artificial ecology with evolving neural controllers and heritable traits.**
 
 **Live simulation:** https://gemquota.github.io/boids/  
+**Vision laboratory:** https://gemquota.github.io/boids/vision-lab.html  
 **Repository:** https://github.com/gemquota/boids
 
 BOIDS is a deterministic, worker-driven ecosystem experiment. A single population of boids moves, forages on plant biomass, competes, chooses mates, reproduces, and experiences conspecific predation. Hunting is a behavioural strategy within the population, not a separate predator caste.
