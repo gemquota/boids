@@ -92,7 +92,7 @@ jobs:
               raise SystemExit('Food patches or their hidden stock must not exist in the worker')
           if 'plantGain' not in worker or 'plantEatingFlag[i]=1' not in worker or 'plantBiomass' not in worker:
               raise SystemExit('Plant grazing and biomass telemetry are required')
-          if 'Math.min(bestPlant.biomass,.00008*dt*60)' not in worker:
+          if 'Math.min(bestPlant.biomass,.0009*dt*60*(bestPlant.saltSpines?.32:1))' not in worker:
               raise SystemExit('Plant grazing rate must remain bounded')
           if 'Math.max(64,Math.min(120,Math.round(W*H/14000)))' not in worker:
               raise SystemExit('Initial spore bank must support plant-only ecology')
