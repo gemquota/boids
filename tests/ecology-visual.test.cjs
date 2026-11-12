@@ -91,14 +91,22 @@ test('observatory charts do not redraw while the drawer is closed', () => {
 });
 
 test('DNA and observatory use distinct icon tabs and reset lives in Field Operations', () => {
-  assert.match(html, /class="drawerToggle dnaTab" id="openDNA"/);
-  assert.match(html, /class="drawerToggle observatoryTab" id="openObservatory"/);
-  assert.match(html, /id="openDNA"[^>]*>[\\s\\S]*?<svg/);
-  assert.match(html, /id="openObservatory"[^>]*>[\\s\\S]*?<svg/);
-  assert.doesNotMatch(html, /id="topReset"/);
-  assert.match(html, /id="reset"[^>]*>↻ Reset simulation/);
-  assert.match(html, /\\$\\('reset'\\)\\.onclick=resetSimulation/);
+  assert.ok(html.includes('class="drawerToggle dnaTab" id="openDNA"'));
+  assert.ok(html.includes('class="drawerToggle observatoryTab" id="openObservatory"'));
+  assert.ok(html.includes('id="openDNA" aria-expanded="false" aria-label="Open DNA and neural genome" title="DNA & genetics"><svg'));
+  assert.ok(html.includes('id="openObservatory" aria-expanded="false" aria-label="Open evolutionary observatory" title="Evolutionary observatory"><svg'));
+  assert.ok(!html.includes('id="topReset"'));
+  assert.ok(html.includes('id="reset" title="Replace the entire ecosystem and population">↻ Reset simulation'));
+  assert.ok(html.includes("$('reset').onclick=resetSimulation"));
+  assert.ok(!html.includes("$('topReset').onclick"));
 });
+test('boids resolve physical body overlap and exchange collision impulse', () => {
+  assert.ok(worker.includes('function collisionRadius(i)'));
+  assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
+  assert.ok(worker.includes('if(relative<0){const impulse='));
+  assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
+});
+
 test('boids resolve physical body overlap and exchange collision impulse', () => {
   assert.match(worker, /function collisionRadius\\(i\\)/);
   assert.match(worker, /function resolveAgentCollisions\\(updateN\\)/);
