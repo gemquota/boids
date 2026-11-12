@@ -16,7 +16,7 @@ The worker also reduced bond strength whenever linked organisms were separated. 
 - **Neural interface evolution:** four additional sensory channels are available: water proximity, thirst, bond tension, and contact pressure. Four corresponding behavior outputs are available: forage drive, water drive, colony cohesion, and exploration drive. New input/output neurons are rare structural mutations, inherit through crossover, retain named channel identities, and persist those identities as typed hexadecimal chromosome genes.
 - **Collision response:** positional correction and normal impulses are mass-weighted. Contacts now include tangential friction, contact-pressure feedback, and aggregate penetration/impulse telemetry.
 - **Mate choice:** kinship is a soft penalty rather than an absolute prohibition. If unrelated mates are unavailable, the existing fallback still permits reproduction.
-- **Run observability:** exports now include the bounded event history and an explicit population balance. This makes future run exports useful for causal diagnosis rather than a pile of disconnected counters.
+- **Run observability:** exports now include the bounded event history, an explicit population balance, and time-varying watershed metrics for soil moisture, groundwater, surface water, rainfall, salinity, flooding, tide phase, and storm phase. This distinguishes changing hydrology from the static habitat averages in the old export.
 
 ## Validation gates
 
