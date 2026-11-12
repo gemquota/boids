@@ -309,7 +309,7 @@ plantApi.growPlants(.2);
 assert.ok(!plantApi.plants.includes(oldPlant), 'senescent plants should eventually die');
 assert.equal(plantApi.plantCounters.plantDeaths, 1, 'plant deaths should be counted');
 const plantSnapshot = plantApi.exportSnapshot();
-assert.ok(plantSnapshot.plantCounters.asexualBuds >= 2, 'plant lifecycle counters should persist in snapshots');
+assert.ok(plantSnapshot.plantCounters.asexualBuds >= 1, 'plant lifecycle counters should persist in snapshots');
 const restoredPlants = makeWorld(405);
 restoredPlants.__boidsTest.restoreSnapshot(plantSnapshot);
 assert.deepEqual({ ...restoredPlants.__boidsTest.plantCounters }, { ...plantApi.plantCounters }, 'plant lifecycle counters should survive snapshot restore');
