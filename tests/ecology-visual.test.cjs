@@ -153,6 +153,12 @@ test('population exports distinguish biological births/deaths from manual resizi
   assert.ok(worker.includes("recordPopulationEvent('death'"));
 });
 
+test('run telemetry records changing watershed conditions rather than only static habitat averages', () => {
+  assert.ok(worker.includes('function summarizeHydrology()'));
+  for(const field of ['meanSoilMoisture','meanGroundwater','meanSurfaceWater','meanRainfall','meanSalinity','meanFloodDepth','maxFloodDepth','tidePhase','stormPhase'])assert.ok(worker.includes(field),field);
+  assert.ok(worker.includes('...summarizeHydrology()'));
+});
+
 test('neural interface exposes additional named sensory and behavior channels', () => {
   assert.ok(worker.includes('waterProximity:8,thirst:9,bondTension:10,contactPressure:11'));
   assert.ok(worker.includes('forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11'));
