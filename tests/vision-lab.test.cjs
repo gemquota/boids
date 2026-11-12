@@ -44,6 +44,7 @@ class Element {
     this.dataset = {}; this.width = 0; this.height = 0; this.hidden = false;
   }
   append(...nodes) { this.children.push(...nodes); }
+  replaceChildren(...nodes) { this.children = [...nodes]; }
   addEventListener(name, callback) { (this.listeners[name] ||= []).push(callback); }
   setAttribute() {}
   querySelector() { return new Element('nested-input'); }
