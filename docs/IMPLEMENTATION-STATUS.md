@@ -6,7 +6,7 @@ This file describes the merged evolutionary-ecology foundation and the current c
 
 - Unified organism economics: per-step basal/tissue, brain-topology, vision, limb, bonding, aggression, reproduction and locomotion costs; one-time construction investment for body mass, limbs, sensory systems, neural topology and bonding sites.
 - Inherited specialized appendage roles (locomotor, grasping, striking, defensive, adhesive and sensory) with differentiated locomotion, attack/defence, sensory and maintenance effects.
-- Persistent multi-link boid-to-boid and boid-to-plant bonding, including attraction, mutualistic/commensal/parasitic/altruistic energy transfers, bond decay/replacement through loss of strength, symbiotic plant growth, grazing protection and snapshot persistence. Bonding-site capacity is inherited and subject to selection/mutation.
+- Persistent multi-link boid-to-boid and boid-to-plant bonding, including attraction, mutualistic/commensal/parasitic/altruistic energy transfers, bond decay/replacement through loss of strength, symbiotic plant growth, grazing protection and snapshot persistence. Left/right bonding-site capacity is inherited and subject to selection/mutation; repeatedly bonded sides bias descendants toward additional attachment anatomy. Energetic deficit, dehydration and sustained expenditure contribute to accelerated senescence.
 
 - Fixed-step deterministic updates, seeded RNG, shuffled evaluation order, double-buffered movement state and spatial indexing.
 - Ten inherited quantitative trait loci with configurable expression and mutation.
