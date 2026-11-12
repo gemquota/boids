@@ -112,9 +112,10 @@ test('DNA and observatory use distinct icon tabs and reset lives in Field Operat
 });
 test('boids resolve physical body overlap and exchange collision impulse', () => {
   assert.ok(worker.includes('function collisionRadius(i)'));
-  assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
-  assert.ok(worker.includes('if(relative<0){const impulse='));
-  assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
+  assert.ok(worker.includes('function resolveAgentCollisions(updateN,dt)'));
+  assert.ok(worker.includes('BoidsPhysics.resolveCircleContact'));
+  assert.ok(worker.includes('BoidsPhysics.sweptCircleTime'));
+  assert.ok(worker.includes('resolveAgentCollisions(updateN,dt)'));
 });
 
 
