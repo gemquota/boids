@@ -55,7 +55,7 @@ jobs:
           if not baseline_match:
               raise SystemExit('Rapid-evolution startup baseline missing')
           baseline = json.loads(baseline_match.group(1))
-          expected = {'count': 800, 'timeScale': 0.55, 'connections': 24, 'hidden': 10, 'brainRate': 2,
+          expected = {'count': 500, 'timeScale': 0.55, 'connections': 24, 'hidden': 10, 'brainRate': 2,
                       'mutation': 0.075, 'mutationSize': 0.34, 'drive': 0.78, 'ageMin': 10,
                       'gestation': 14, 'selection': 0.72, 'plantPreference': 0.95,
                       'plantRangeScale': 2.3, 'plantMinRange': 66, 'plantSteering': 0.28}
