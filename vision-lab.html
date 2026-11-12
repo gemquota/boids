@@ -306,8 +306,8 @@ function raycast(spec){
   const motionSignal=clamp(motion/28*params.motionSensitivity/100,0,1);
   const sizeFactor=clamp(apparent/Math.max(.01,params.minTarget*2),0,1);
   const signal=contrast*100*sizeFactor;
-  const confidence=clamp(signal/Math.max(1,params.luminance+params.confidenceMin*100),0,1)*transmission*noisePenalty;
   const noisePenalty=1-(params.visualNoise/100)*(1-params.noiseTolerance/100);
+  const confidence=clamp(signal/Math.max(1,params.luminance+params.confidenceMin*100),0,1)*transmission*noisePenalty;
   const colourSignal=(params.colourSensitivity/100)*(o.h?1:.55);
   const canDetect=(params.classification===0?motionSignal>.12:(signal>=params.luminance&&sizeFactor>=.35&&contrast*100>=params.contrast*.14)||motionSignal>.12);
   if(canDetect&&confidence>=params.confidenceMin){
