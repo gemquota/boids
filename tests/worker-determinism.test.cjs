@@ -331,6 +331,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.extraBrainOut),Array.from(so
 assert.deepEqual(Array.from(restoredSnapshot.arrays.collisionPressureByAgent),Array.from(sourceSnapshot.arrays.collisionPressureByAgent));
 assert.deepEqual(restoredSnapshot.populationEvents,sourceSnapshot.populationEvents);
 assert.equal(restoredSnapshot.counters.initialPopulation,sourceSnapshot.counters.initialPopulation);
+assert.equal(restoredSnapshot.counters.collisionContacts,sourceSnapshot.counters.collisionContacts);
 assert.ok(Array.isArray(restoredSnapshot.bondLinks),'persistent organism bonds must be included in snapshots');
 assert.equal(JSON.stringify(restoredSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))),JSON.stringify(sourceSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))), 'organism bond topology and relationship types must survive snapshot restoration');
 assert.equal(JSON.stringify(BoidsEcology.serializeFields(restored.__boidsTest.environmentFields)),JSON.stringify(restoredSnapshot.environmentFields),'deterministic habitat fields must survive snapshot restoration');
