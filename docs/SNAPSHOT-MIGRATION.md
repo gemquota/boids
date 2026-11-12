@@ -4,7 +4,7 @@
 
 | Layer | Current version | Meaning |
 |---|---:|---|
-| Worker world snapshot | `schemaVersion: 22` | Simulation state and deterministic continuation |
+| Worker world snapshot | `schemaVersion: 23` | Simulation state and deterministic continuation |
 | Browser IndexedDB envelope | `storageSchemaVersion: 2` | Browser storage wrapper and latest/previous snapshot slots |
 | Hexadecimal chromosome codec | `boids-hex-gene-v3` | Typed hexadecimal records for quantitative traits, 32-bit structural topology, neural nodes/connections, regulatory nodes/edges and cis modifiers; full variable-length objects remain the runtime authority |
 
@@ -12,10 +12,11 @@ These versions are independent. Never overwrite the worker's `schemaVersion` wit
 
 ## Restore policy
 
-The worker accepts snapshots with no version marker or a `schemaVersion` no newer than 22. It rejects snapshots newer than the runtime. Migration is primarily field-presence-based rather than a chain of one function per historical schema: older records are hydrated with explicit defaults where safe, and unavailable historical information is not fabricated.
+The worker accepts snapshots with no version marker or a `schemaVersion` no newer than 23. It rejects snapshots newer than the runtime. Migration is primarily field-presence-based rather than a chain of one function per historical schema: older records are hydrated with explicit defaults where safe, and unavailable historical information is not fabricated.
 
 | Missing or legacy state | Restore behaviour |
 | Variable-length per-agent eligibility traces (schema 19) | Persist traces aligned to each agent's innovation-identified connections; older snapshots reconstruct available trace slots from the legacy fixed-size eligibility array and initialize remaining entries to zero |
+| Persistent organism bonds and inherited morphology roles (schema 23) | Persist multi-link agent-to-agent and agent-to-plant bonds, relationship type, strength, age, creation time and left/right attachment identity alongside inherited left/right bonding-site capacity and specialized appendage roles. Older snapshots restore with no active bonds and default legacy appendages to locomotor roles. |
 | Structural-innovation protection ages (schema 20) | Persist the introduction time of new NEAT innovations so temporary reproductive preservation windows continue correctly after restore; older snapshots start with no active protection windows |
 | Variable-length trans-regulatory genomes and expression state (schemas 21–22) | Persist per-agent regulatory nodes/edges, stable copy/edge IDs, paternal network state, the global identity allocator and derived expression arrays. Persist a bounded 5,000-event mutation history. Older worlds receive a neutral ten-node network with zero effect and no edges, empty mutation history and recomputed expression, avoiding invented historical regulatory activity |
 |---|---|

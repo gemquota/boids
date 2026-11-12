@@ -290,7 +290,7 @@ const beforeGermination = plantApi.plants.length;
 const waterLanding = plantApi.nearestFreshwater(500, 300);
 plantApi.spores.push({ x: waterLanding.x, y: waterLanding.y, vx: 0, vy: 0, life: 7.1, settleAfter: 7, landed: true, settleClock: 1.8, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
 plantApi.growPlants(.01);
-const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && p.x > 450);
+const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && Math.hypot(p.x-waterLanding.x,p.y-waterLanding.y)<1);
 assert.ok(germinated, 'a landed, viable asexual spore should germinate into a clonal seedling');
 assert.ok(plantApi.plants.length > beforeGermination, 'adult clonal nodes should continue branching during the next growth tick');
 assert.equal(plantApi.plantCounters.sporesGerminated, 1);
@@ -311,7 +311,8 @@ assert.deepEqual({ ...restoredPlants.__boidsTest.plantCounters }, { ...plantApi.
 
 // Snapshot restore must preserve both the random stream and pedigree identifiers.
 const restored = makeWorld(999);
-restored.__boidsTest.restoreSnapshot(api.exportSnapshot());
+const sourceSnapshot = api.exportSnapshot();
+restored.__boidsTest.restoreSnapshot(sourceSnapshot);
 const restoredSnapshot = restored.__boidsTest.exportSnapshot();
 assert.deepEqual(Array.from(restoredSnapshot.arrays.individualId), Array.from(api.individualId.subarray(0, api.N)));
 assert.deepEqual(Array.from(restoredSnapshot.arrays.parentA), Array.from(api.parentA.subarray(0, api.N)));
@@ -320,7 +321,9 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationBirthTime.entries()),'structural innovation protection ages must survive snapshot restoration');
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
-assert.equal(restoredSnapshot.schemaVersion, 22);
+assert.equal(restoredSnapshot.schemaVersion, 23);
+assert.ok(Array.isArray(restoredSnapshot.bondLinks),'persistent organism bonds must be included in snapshots');
+assert.equal(JSON.stringify(restoredSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))),JSON.stringify(sourceSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))), 'organism bond topology and relationship types must survive snapshot restoration');
 assert.equal(JSON.stringify(BoidsEcology.serializeFields(restored.__boidsTest.environmentFields)),JSON.stringify(restoredSnapshot.environmentFields),'deterministic habitat fields must survive snapshot restoration');
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v3');

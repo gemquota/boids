@@ -29,6 +29,7 @@ jobs:
           node --check /tmp/boids-app.js
           node --check /tmp/boids-vision-lab.js
           node --check boids-worker.js
+          node --check organism-economics.js
           node --check chromosome.js
           node --check config-registry.js
           node --check config-schema.js
@@ -39,6 +40,7 @@ jobs:
           node tests/chromosome.test.cjs
           node tests/vision-lab.test.cjs
           node tests/worker-determinism.test.cjs
+          node tests/organism-economics.test.cjs
           node tests/html-script-syntax.test.cjs
           node tests/worker-benchmark.test.cjs
       - name: Verify plant-only ecology, chromosome wiring and controls
