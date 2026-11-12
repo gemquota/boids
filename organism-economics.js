@@ -77,7 +77,7 @@
   function pruneBonds(links,aliveAgents,alivePlants){
     const agents=aliveAgents instanceof Set?aliveAgents:new Set(aliveAgents||[]);
     const plants=alivePlants instanceof Set?alivePlants:new Set(alivePlants||[]);
-    return (links||[]).map(normalizeBond).filter(b=>b.a>0&&agents.has(b.a)&&b.strength>.025&&(b.targetType==='plant'?plants.has(b.b):b.b>0&&agents.has(b.b)));
+    return (links||[]).filter(b=>b&&b.a>0&&agents.has(b.a)&&b.strength>.025&&(b.targetType==='plant'?plants.has(b.b):b.b>0&&agents.has(b.b)));
   }
   return Object.freeze({calculateEnergyCosts,calculateConstructionCost,pairKey,normalizeBond,countBonds,bondLoad,hasBond,pruneBonds});
 });
