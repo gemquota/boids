@@ -123,27 +123,27 @@ test('boids resolve physical body overlap and exchange collision impulse', () =>
 
 
 test('mature grandmother plants remain reproductively active until senescence', () => {
-  assert.match(worker, /p\\.stage==='mature'\\|\\|p\\.stage==='grandmother'\\|\\|p\\.stage==='great-grandmother'/);
-  assert.match(worker, /sporeFailedCrowded/);
-  assert.match(worker, /sporeFailedDry/);
+  assert.ok(worker.includes("p.stage==='mature'||p.stage==='grandmother'||p.stage==='great-grandmother'"));
+  assert.ok(worker.includes('sporeFailedCrowded'));
+  assert.ok(worker.includes('sporeFailedDry'));
 });
 
 test('colony bonds persist through ordinary separation and only lose endpoints on death', () => {
-  assert.match(worker, /if\\(near\\)bond\\.strength=clamp\\(bond\\.strength\\+\\.035\\*dt,0,1\\)/);
-  assert.doesNotMatch(worker, /near\\?\\.035:-\\.012/);
-  assert.match(worker, /bond_broken.*organism_death/);
+  assert.ok(worker.includes('if(near)bond.strength=clamp(bond.strength+.035*dt,0,1)'));
+  assert.ok(!worker.includes('near?.035:-.012'));
+  assert.ok(worker.includes("recordPopulationEvent('bond_broken',{a:bond.a,b:bond.b,reason:'organism_death'})"));
 });
 
 test('population exports distinguish biological births/deaths from manual resizing', () => {
-  assert.match(worker, /populationResizeAdds/);
-  assert.match(worker, /populationResizeRemovals/);
-  assert.match(worker, /populationAccountingError/);
-  assert.match(worker, /recordPopulationEvent\\('death'/);
+  assert.ok(worker.includes('populationResizeAdds'));
+  assert.ok(worker.includes('populationResizeRemovals'));
+  assert.ok(worker.includes('populationAccountingError'));
+  assert.ok(worker.includes("recordPopulationEvent('death'"));
 });
 
 test('neural interface exposes additional named sensory and behavior channels', () => {
-  assert.match(worker, /waterProximity:8,thirst:9,bondTension:10,contactPressure:11/);
-  assert.match(worker, /forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11/);
+  assert.ok(worker.includes('waterProximity:8,thirst:9,bondTension:10,contactPressure:11'));
+  assert.ok(worker.includes('forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11'));
 });
 
 test('plants avoid canopy collisions and use treetop tip-shyness for new growth', () => {
