@@ -8,8 +8,9 @@ canvas{display:block;width:100vw;height:100dvh;min-height:100%;touch-action:none
 <canvas id="view" aria-label="Minimal vision field with moving objects and edge-reaching sensory rays"></canvas>
 <script>(()=>{'use strict';
 const canvas=document.getElementById('view'),ctx=canvas.getContext('2d');
-let W=0,H=0,dpr=1,angle=-Math.PI/2,last=0,observations=[];
-const FOV=120,RAY_COUNT=64,TAU=Math.PI*2;
+let W=0,H=0,dpr=1,angle=-Math.PI/2,last=0,nextSample=0,observations=[];
+let fov=120,rayCount=64,pollingHz=26;
+const TAU=Math.PI*2;
 const palette={food:'#9de28c',threat:'#ff7882',object:'#e7b96e',signal:'#91a9ff'};
 const objects=[
  {u:.20,v:.20,r:.022,shape:'circle',type:'food',vx:.075,vy:.052,phase:0},
@@ -25,17 +26,30 @@ function resize(){const r=canvas.getBoundingClientRect();dpr=Math.min(window.dev
 function dimensions(o){return {x:(o.u-.5)*W,y:(o.v-.5)*H,r:o.r*Math.min(W,H)}}
 function rayCircle(ox,oy,dx,dy,o){const q=dimensions(o),x=ox-q.x,y=oy-q.y,b=x*dx+y*dy,c=x*x+y*y-q.r*q.r,h=b*b-c;if(h<0)return null;const t=-b-Math.sqrt(h);return t>=0?t:null}
 function edgeDistance(dx,dy){const tx=Math.abs(dx)>1e-8?(W/2)/Math.abs(dx):Infinity,ty=Math.abs(dy)>1e-8?(H/2)/Math.abs(dy):Infinity;return Math.min(tx,ty)}
-function sample(){observations=[];const half=FOV/2*Math.PI/180;for(let i=0;i<RAY_COUNT;i++){const offset=(i/(RAY_COUNT-1)-.5)*2*half,dir=angle+offset,dx=Math.cos(dir),dy=Math.sin(dir);let distance=edgeDistance(dx,dy),hit=null;for(const o of objects){const t=rayCircle(0,0,dx,dy,o);if(t!==null&&t<distance){distance=t;hit=o}}observations.push({dx,dy,distance,hit})}}
+function sample(){observations=[];const half=fov/2*Math.PI/180;for(let i=0;i<rayCount;i++){const offset=(rayCount===1?0:(i/(rayCount-1)-.5)*2*half),dir=angle+offset,dx=Math.cos(dir),dy=Math.sin(dir);let distance=edgeDistance(dx,dy),hit=null;for(const o of objects){const t=rayCircle(0,0,dx,dy,o);if(t!==null&&t<distance){distance=t;hit=o}}observations.push({dx,dy,distance,hit})}}
 function pathShape(x,y,r,shape,phase){ctx.beginPath();if(shape==='circle'){ctx.arc(x,y,r,0,TAU)}
 else if(shape==='ellipse'){ctx.ellipse(x,y,r*1.35,r*.68,phase*.25,0,TAU)}
 else{const sides=shape==='triangle'?3:shape==='square'?4:shape==='diamond'?4:shape==='hex'?6:5;for(let i=0;i<sides;i++){let a=-Math.PI/2+i*TAU/sides+(shape==='diamond'?Math.PI/4:shape==='kite'?.22:0),rr=r*(shape==='kite'&&i===0?1.55:1);const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath()}}
-function draw(){ctx.clearRect(0,0,W,H);const cx=W/2,cy=H/2,half=FOV/2*Math.PI/180;
+function draw(){ctx.clearRect(0,0,W,H);const cx=W/2,cy=H/2,half=fov/2*Math.PI/180;
 ctx.save();ctx.translate(cx,cy);
 ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,Math.hypot(W,H),angle-half,angle+half);ctx.closePath();ctx.fillStyle='#55c9f208';ctx.fill();
 for(const o of objects){const q=dimensions(o);pathShape(q.x,q.y,q.r,o.shape,o.phase);ctx.fillStyle=palette[o.type];ctx.globalAlpha=.88;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle=palette[o.type];ctx.globalAlpha=.55;ctx.stroke();ctx.globalAlpha=1}
 for(const ray of observations){ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(ray.dx*ray.distance,ray.dy*ray.distance);ctx.strokeStyle=ray.hit?(ray.hit.type==='threat'?'#ff7882':palette[ray.hit.type]):'#65d7f2';ctx.globalAlpha=ray.hit?.92:.34;ctx.lineWidth=ray.hit?1.35:.8;ctx.stroke();ctx.globalAlpha=1;if(ray.hit){ctx.beginPath();ctx.arc(ray.dx*ray.distance,ray.dy*ray.distance,2.1,0,TAU);ctx.fillStyle=ray.hit.type==='threat'?'#ff7882':palette[ray.hit.type];ctx.fill()}}
 ctx.beginPath();ctx.arc(0,0,2.4,0,TAU);ctx.fillStyle='#d9faff';ctx.fill();ctx.restore()}
-function frame(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;for(const o of objects){o.u+=o.vx*dt;o.v+=o.vy*dt;if(o.u<.035||o.u>.965){o.vx*=-1;o.u=Math.max(.035,Math.min(.965,o.u))}if(o.v<.04||o.v>.96){o.vy*=-1;o.v=Math.max(.04,Math.min(.96,o.v))}o.phase+=dt*.45}sample();draw();requestAnimationFrame(frame)}
-let drag=null;canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX};canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!drag)return;angle+=(e.clientX-drag.x)*.008;drag.x=e.clientX});for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,()=>drag=null);
+function frame(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;for(const o of objects){o.u+=o.vx*dt;o.v+=o.vy*dt;if(o.u<.035||o.u>.965){o.vx*=-1;o.u=Math.max(.035,Math.min(.965,o.u))}if(o.v<.04||o.v>.96){o.vy*=-1;o.v=Math.max(.04,Math.min(.96,o.v))}o.phase+=dt*.45}if(now>=nextSample){sample();nextSample=now+1000/pollingHz}draw();requestAnimationFrame(frame)}
+const pointers=new Map();let gesture=null;
+function pointOf(e){return{x:e.clientX,y:e.clientY}}
+function twoPointState(){const p=[...pointers.values()];if(p.length<2)return null;const dx=p[1].x-p[0].x,dy=p[1].y-p[0].y;return{x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2,d:Math.hypot(dx,dy)}}
+canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,pointOf(e));canvas.setPointerCapture(e.pointerId);if(pointers.size===1)gesture={mode:'rotate',x:e.clientX};else if(pointers.size===2)gesture={mode:'two',state:twoPointState(),vertical:0,horizontal:0};else gesture={mode:'ignore'}});
+canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,pointOf(e));if(pointers.size===1&&gesture?.mode==='rotate'){angle+=(e.clientX-gesture.x)*.008;gesture.x=e.clientX;return}if(pointers.size!==2||gesture?.mode!=='two')return;const current=twoPointState(),prev=gesture.state;if(!current||!prev)return;const dx=current.x-prev.x,dy=current.y-prev.y, pinch=current.d-prev.d;
+// Two-finger vertical movement changes ray count in pairs.
+gesture.vertical+=-dy;while(Math.abs(gesture.vertical)>=24){const step=Math.sign(gesture.vertical);rayCount=Math.max(8,Math.min(256,rayCount+step*2));gesture.vertical-=step*24;sample()}
+// Two-finger horizontal movement changes the sensing update frequency.
+gesture.horizontal+=dx;while(Math.abs(gesture.horizontal)>=22){const step=Math.sign(gesture.horizontal);pollingHz=Math.max(1,Math.min(120,pollingHz+step));gesture.horizontal-=step*22}
+// Pinching outward widens the field of view; pinching inward narrows it.
+if(Math.abs(pinch)>0.1)fov=Math.max(20,Math.min(180,fov+pinch*.22));gesture.state=current;
+});
+function endPointer(e){pointers.delete(e.pointerId);if(pointers.size===1){const p=[...pointers.values()][0];gesture={mode:'rotate',x:p.x}}else if(pointers.size>=2){gesture={mode:'two',state:twoPointState(),vertical:0,horizontal:0}}else gesture=null}
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,endPointer);
 window.addEventListener('resize',resize);resize();requestAnimationFrame(frame);
 })();</script></body></html>
