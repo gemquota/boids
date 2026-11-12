@@ -26,10 +26,6 @@ function updateBondNetwork(dt){
  bondLinks=BoidsEconomics.pruneBonds(bondLinks,aliveAgentIds,alivePlantIds);
  bondGrowthByPlant.clear();boundNeonatalMasks.clear();
  for(const bond of bondLinks){
-  if(bond.targetType==='agent'){
-   let a=bondStrengthById.get(bond.a);if(!a)bondStrengthById.set(bond.a,a=new Map());a.set(bond.b,bond.strength);
-   let b=bondStrengthById.get(bond.b);if(!b)bondStrengthById.set(bond.b,b=new Map());b.set(bond.a,bond.strength);
-  }
   const mark=(id,side)=>{if(!side?.startsWith('neonatal'))return;const site=Number(side.slice(8));if(site<0||site>3||!Number.isInteger(site))return;boundNeonatalMasks.set(id,(boundNeonatalMasks.get(id)||0)|(1<<site))};
   mark(bond.a,bond.sideA);if(bond.targetType==='agent')mark(bond.b,bond.sideB);
  }
