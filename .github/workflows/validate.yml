@@ -29,6 +29,9 @@ jobs:
           node --check /tmp/boids-app.js
           node --check /tmp/boids-vision-lab.js
           node --check boids-worker.js
+          node --check physics.js
+          node --check development.js
+          node --test tests/physics.test.js tests/development.test.js
           node --check hydrology.js
           node tests/hydrology.test.js
           node --check organism-economics.js
