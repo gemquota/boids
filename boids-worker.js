@@ -128,7 +128,7 @@ function growPlants(dt){
  for(const node of plants){const root=node.root||node.id;wholePlantSizeByRoot.set(root,Math.max(wholePlantSizeByRoot.get(root)||.03,node.size||.03))}
  for(let i=0;i<existingCount;i++){
   const p=plants[i];p.grandmother=!!p.grandmother;p.greatGrandmother=!!p.greatGrandmother;p.adultNode=!!p.adultNode;p.senescent=!!p.senescent;p.offspring=p.offspring||0;p.lifespan=p.lifespan||rand(110,140);p.cloneParent=p.cloneParent||0;p.asexual=!!p.asexual;p.age+=dt;
-  const habitat=plantHabitat(p.x,p.y);applyPlantMorphology(p,habitat);
+  const freshDistance=nearestFreshwater(p.x,p.y).distance;applyPlantMorphology(p,{freshDistance,latitude:Math.abs(2*p.y/Math.max(1,H)-1),mangrove:p.mangrove,saltSpines:p.saltSpines});
   const wholePlantSize=wholePlantSizeByRoot.get(p.root||p.id)||p.size||.2,nodeGrowth=plantNodeGrowthScale(p.size,wholePlantSize);p.nodeSizeRatio=nodeGrowth.ratio;p.nodeGrowthScale=nodeGrowth.scale;
   const oldStage=plantStage(p);p.stage=oldStage;
   if(p.age>=p.lifespan){p.senescent=true;p.biomass=Math.max(0,p.biomass-dt*(.0045+Math.max(0,.22-p.biomass)*.01))}
