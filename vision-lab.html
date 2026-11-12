@@ -50,7 +50,13 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .parameterMapHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
 .parameterMapHead h3{margin:0;color:var(--text);font-size:10px;letter-spacing:.13em;text-transform:uppercase}
 .parameterMapHead span{font-size:8px;color:var(--muted)}
-.parameterMapGroups{display:grid;gap:8px}
+.parameterMapGroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:7px}
+.parameterMap.is-collapsed .parameterMapGroups{display:none}
+.parameterMap{cursor:pointer}
+.parameterMapHead{cursor:pointer;user-select:none}
+.parameterMap.is-collapsed{padding-top:9px;padding-bottom:9px}
+.parameterMap.is-collapsed .parameterMapHead{margin:0}
+.parameterMap.is-collapsed .parameterMapHead span:after{content:" · collapsed"}
 .mapGroup{border-left:3px solid var(--group-color);padding:2px 0 3px 9px;min-width:0}
 .mapGroupTitle{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--group-color);margin-bottom:5px}
 .mapChips{display:flex;flex-wrap:wrap;gap:5px}
@@ -63,7 +69,6 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .parameterHelpTitle{font-size:10px;font-weight:700;color:var(--help-color,var(--mint))}
 .parameterHelpCategory{font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--help-color,var(--mint));margin-top:2px}
 .parameterHelp p{font-size:9px;line-height:1.55;color:#c4d6dc;margin:0}
-.parameterHelpClose{border:1px solid #ffffff25;background:#ffffff0b;border-radius:5px;padding:2px 6px;font-size:11px;line-height:1.3}
 .parameterName{border:0;background:none;color:var(--group-color,var(--text));padding:0;text-align:left;font-size:9px;cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--group-color,var(--mint)) 45%,transparent);text-underline-offset:3px}
 .control input[type=range]{accent-color:var(--group-color,var(--mint))}
 .control output{color:var(--group-color,var(--mint))}
@@ -73,6 +78,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .mapSubgroup{padding:5px 0 4px 8px;margin:4px 0 0 3px;border-left:2px solid color-mix(in srgb,var(--sub-color) 60%,transparent)}
 .mapSubgroupTitle,.controlSubgroup{font-size:7px;letter-spacing:.11em;text-transform:uppercase;color:var(--sub-color);font-weight:700;margin:0 0 5px}
 .controlSubgroup{padding:8px 0 2px;border-bottom:1px solid color-mix(in srgb,var(--sub-color) 35%,transparent)}
+.controlGroupTitle{font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--group-color);padding:11px 0 3px;border-bottom:1px solid color-mix(in srgb,var(--group-color) 35%,transparent);margin-top:5px}
+.controlGroupTitle:first-child{margin-top:0}
 .parameterChip{border-color:color-mix(in srgb,var(--group-color) 55%,transparent);background:color-mix(in srgb,var(--group-color) 12%,transparent)}
 .parameterChip:before{background:var(--group-color)}
 
@@ -99,7 +106,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
    </div>
   </section>
   <section class="parameterMap" id="parameterMap" aria-label="Interactive vision parameter map">
-   <div class="parameterMapHead"><h3>Interactive parameter map</h3><span>Tap any coloured parameter to see what it controls</span></div>
+   <div class="parameterMapHead"><h3>Interactive parameter map</h3><span>Tap a coloured parameter for details · tap the panel background to collapse</span></div>
    <div class="parameterMapGroups" id="parameterMapGroups"></div>
   </section>
   <div class="metrics">
@@ -116,7 +123,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   </div>
  </section>
  <aside class="panel sidePanel">
-  <div class="panelHead"><h2>Vision apparatus</h2><p>Every control changes the live sensor, processor or controller. Open groups to inspect the full parameter set.</p></div>
+  <div class="panelHead"><h2>Vision apparatus</h2><p>One compact, colour-coded control block for the full sensor, processor and controller.</p></div>
   <div class="panelScroll">
    <section class="overlayBox">
     <div class="overlayTitle">Diagnostic overlays · default on</div>
@@ -141,7 +148,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
  </aside>
 </main>
 <div class="parameterHelp" id="parameterHelp" role="dialog" aria-live="polite" aria-label="Parameter explanation" hidden>
- <div class="parameterHelpHead"><div><div class="parameterHelpTitle" id="parameterHelpTitle"></div><div class="parameterHelpCategory" id="parameterHelpCategory"></div></div><button class="parameterHelpClose" id="parameterHelpClose" type="button" aria-label="Close explanation">×</button></div>
+ <div class="parameterHelpHead"><div><div class="parameterHelpTitle" id="parameterHelpTitle"></div><div class="parameterHelpCategory" id="parameterHelpCategory"></div></div></div>
  <p id="parameterHelpText"></p>
 </div>
 <script>
@@ -154,13 +161,13 @@ const deg=r=>r*180/Math.PI;
 const sigmoid=x=>1/(1+Math.exp(-clamp(x,-12,12)));
 const fmt=(v,d=0)=>Number(v).toFixed(d);
 const params={
- fov:150,coneScale:100,verticalFov:76,eyeCount:1,eyeAngle:0,eyeHeight:12,
- rayCount:56,rayBudget:24,rayWidth:2,originCycle:1,distribution:0,maxRange:360,minRange:10,curvature:0,
- samplingHz:18,scanMode:1,scanDirection:1,scanSpeed:1.4,adaptive:58,priorityBoost:72,persistence:1.5,stagger:0,
- contrast:55,luminance:28,minTarget:2,classification:2,colourSensitivity:72,motionSensitivity:52,depthResolution:48,transparency:75,fog:16,ambient:82,confidenceMin:.16,
- gazeOffset:0,gazeSpeed:190,turnSpeed:92,turnVariance:68,behaviorVariance:55,turnBias:48,turnLockThreshold:105,gazeWander:24,attentionSpan:1.0,fixation:.9,saccade:36,attentionThreshold:28,threatBias:82,foodBias:64,idleScan:28,tracking:78,prediction:1.1,reacquisition:1.8,
- memory:2.6,shortTerm:2.2,temporalSmooth:62,noiseTolerance:38,habituation:14,occlusionMemory:68,predictionHorizon:1.25,visualNoise:2,
- learningRate:.18,plasticity:.32,energyPerRay:.018,processingCost:.12,energyReserve:100,mutationRate:.045,developmentalVariance:8,tradeoff:42
+ fov:224,coneScale:112,verticalFov:118,eyeCount:3,eyeAngle:0,eyeHeight:18,
+ rayCount:96,rayBudget:52,rayWidth:2.75,originCycle:2,distribution:1,maxRange:520,minRange:5,curvature:8,
+ samplingHz:26,scanMode:2,scanDirection:1,scanSpeed:2.1,adaptive:84,priorityBoost:88,persistence:2.1,stagger:1,
+ contrast:42,luminance:18,minTarget:1,classification:3,colourSensitivity:88,motionSensitivity:86,depthResolution:76,transparency:58,fog:9,ambient:91,confidenceMin:.12,
+ gazeOffset:0,gazeSpeed:225,turnSpeed:54,turnVariance:82,behaviorVariance:76,turnBias:38,turnLockThreshold:92,gazeWander:34,attentionSpan:1.4,fixation:.72,saccade:54,attentionThreshold:22,threatBias:78,foodBias:74,idleScan:38,tracking:91,prediction:1.45,reacquisition:2.4,
+ memory:4.2,shortTerm:3.4,temporalSmooth:48,noiseTolerance:52,habituation:9,occlusionMemory:84,predictionHorizon:1.85,visualNoise:3,
+ learningRate:.22,plasticity:.42,energyPerRay:.012,processingCost:.085,energyReserve:100,mutationRate:.055,developmentalVariance:11,tradeoff:31
 };
 const baseline=JSON.parse(JSON.stringify(params));
 const groups=[
@@ -233,7 +240,13 @@ function showParameterHelp(key,anchor){
  help.style.left=left+'px';help.style.top=top+'px';
 }
 function buildParameterMap(){
+ const map=$('parameterMap');
  const root=$('parameterMapGroups');
+ map.addEventListener('click',e=>{
+  if(e.target.closest('.parameterChip'))return;
+  map.classList.toggle('is-collapsed');
+ });
+ root.addEventListener('click',e=>e.stopPropagation());
  groups.forEach(group=>{
   const section=document.createElement('div');section.className='mapGroup';section.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);
   const title=document.createElement('div');title.className='mapGroupTitle';title.textContent=group.name;section.append(title);
@@ -254,18 +267,18 @@ function buildParameterMap(){
  const title=document.createElement('div');title.className='mapGroupTitle';title.textContent='Diagnostic overlays';overlay.append(title);
  const chips=document.createElement('div');chips.className='mapChips';const chip=document.createElement('button');chip.type='button';chip.className='parameterChip';chip.textContent='Overlay opacity';chip.style.setProperty('--group-color','#aab8c5');chip.addEventListener('click',()=>showParameterHelp('overlayOpacity',chip));chips.append(chip);overlay.append(chips);root.append(overlay);
 }
-$('parameterHelpClose').addEventListener('click',()=>help.hidden=true);
-document.addEventListener('pointerdown',e=>{if(!help.hidden&&!help.contains(e.target)&&!e.target.closest('.parameterName,.parameterChip'))help.hidden=true});
+document.addEventListener('pointerdown',e=>{if(!help.hidden&&!help.contains(e.target))help.hidden=true});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')help.hidden=true});
 window.addEventListener('resize',()=>help.hidden=true);
 
 function makeControls(){
  const root=$('parameterGroups');
+ const details=document.createElement('details');details.className='panelSection';details.open=true;
+ const summary=document.createElement('summary');summary.textContent='All vision parameters';details.append(summary);
+ const holder=document.createElement('div');holder.className='controls';
  for(const group of groups){
-  const details=document.createElement('details');details.className='panelSection';details.open=true;
-  const summary=document.createElement('summary');summary.textContent=group.name;details.append(summary);
-  const note=document.createElement('div');note.className='groupNote';note.textContent=group.note;details.append(note);
-  const holder=document.createElement('div');holder.className='controls';
+  const groupTitle=document.createElement('div');groupTitle.className='controlGroupTitle';groupTitle.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);groupTitle.textContent=group.name;holder.append(groupTitle);
+  const note=document.createElement('div');note.className='groupNote';note.textContent=group.note;holder.append(note);
   let lastSubgroup=null;
   for(const item of group.items){
    const subgroup=item[7]||'General';
@@ -283,8 +296,8 @@ function makeControls(){
    });
    row.append(label,output,input);holder.append(row);
   }
-  details.append(holder);root.append(details);
  }
+ details.append(holder);root.append(details);
 }
 function syncControl(key){
  const input=$('p-'+key);if(!input)return;input.value=params[key];
