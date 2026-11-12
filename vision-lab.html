@@ -271,7 +271,7 @@ function buildOverlays(){
 }
 $('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textContent=$('overlayOpacity').value+'%'});
 makeControls();buildParameterMap();buildOverlays();
-const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:false});
+const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:true});
 let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,sampleAccumulator=0,simTime=0,sampleCount=0,totalCandidateChecks=0,energy=100,energySpent=0,frames=0,fpsTime=0,fps=0,scanCursor=0,scanDir=1,jitterSeed=713,cycle=0;
 let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),bodyTurnVelocity=0,visionLocked=false,lockedRaySpecs=[],lockedEyeGeometry=[],scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null,targetSelectedAt=0,neuralOutputs=[0,.5,.5,0,.5];
 const creature={x:0,y:0};
