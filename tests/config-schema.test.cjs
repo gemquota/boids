@@ -14,7 +14,7 @@ const ids = [
   ...schema.expressionTraits.flatMap(trait => schema.expressionFields.map(field => `expr_${trait.key}_${field.key}`)),
   ...schema.expressionTraits.flatMap(trait => schema.expressionMutationFields.map(field => `trait_${trait.key}_${field.key}`))
 ];
-assert.equal(ids.length, 190, 'schema must define all 190 sliders');
+assert.equal(ids.length, 191, 'schema must define all 191 sliders');
 assert.equal(new Set(ids).size, ids.length, 'generated control IDs must be unique');
 assert.ok(!ids.includes('trail'), 'trail control must remain removed');
 assert.ok(schema.coreSliderDefs.every(item => item.id && item.label && Number.isFinite(item.min) && Number.isFinite(item.max) && item.min < item.max && item.step > 0 && ['motion','brain','genetics','reproduction','selection','world','dynamics'].includes(item.section)));
@@ -37,6 +37,7 @@ assert.deepEqual(schema.normalizeDependencies({ expr_speed_max: 0 }, { expr_spee
 assert.deepEqual(schema.normalizeDependencies({ expr_speed_max: 1.5 }, { expr_speed_min: 1.8, expr_speed_max: 2.25 }), { expr_speed_min: 1.49 });
 assert.equal(schema.expressionTraits.find(item => item.key === 'speed').upper, 8);
 assert.deepEqual(schema.resolveWorkerMapping('count'), { target: 'cfg', key: 'count' });
+assert.ok(schema.coreSliderDefs.some(item=>item.id==='sporeInterval'&&item.label==='Plant spore release interval'&&Number(item.defaultValue??item.value??item.default)===7));
 assert.deepEqual(schema.resolveWorkerMapping('flockNoise'), { target: 'cfg', key: 'flockNoise' });
 assert.deepEqual(schema.resolveWorkerMapping('expr_speed_curve'), { target: 'geneExpression', trait: 'speed', field: 'curve' });
 assert.deepEqual(schema.resolveWorkerMapping('expr_speed_min'), { target: 'geneExpression', trait: 'speed', field: 'min' });
@@ -51,4 +52,4 @@ assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesStagnationL
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'activationMutationRate').value, .01);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'nodeDeletionRate').value, .005);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'recurrentMutationRate').value, .01);
-console.log('Shared configuration schema: 191 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
+console.log('Shared configuration schema: 192 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
