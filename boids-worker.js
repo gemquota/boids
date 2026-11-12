@@ -223,7 +223,7 @@ function drawPlantFronds(p){
  ctx.restore();
 }
 function drawPlantNode(p){
- const palette=plantPalette(p),senescent=!!p.senescent,r=2.8+Math.min(3.4,p.size*2.7);
+ const palette=plantPalette(p),senescent=!!p.senescent,r=(2.8+Math.min(3.4,p.size*2.7))*.5;
  drawPlantFronds(p);ctx.save();ctx.globalAlpha=senescent?.45:.9;ctx.fillStyle=senescent?'#89958f':palette.accent;ctx.strokeStyle=senescent?'#bdc6bf':palette.edge;ctx.lineWidth=.7;hexPath(p.x,p.y,r,p.angle);ctx.fill();ctx.stroke();ctx.save();ctx.globalAlpha=senescent?.28:.52;ctx.strokeStyle=palette.deep;ctx.lineWidth=.65;hexPath(p.x,p.y,r*.56,p.angle+Math.PI/6);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-r*.82,p.y);ctx.lineTo(p.x+r*.82,p.y);ctx.moveTo(p.x-r*.42,p.y-r*.72);ctx.lineTo(p.x+r*.42,p.y+r*.72);ctx.stroke();ctx.restore();ctx.restore();
 }
 function drawWaterways(){
