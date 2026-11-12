@@ -60,7 +60,7 @@
       }
     }
     if(random()<rates.addInput&&genome.nodes.length<limits.maxNodes&&genome.nodes.filter(n=>n.type==='input').length<limits.maxInputs){
-      const channels=['waterProximity','thirst','bondTension','foodQuality'],used=new Set(genome.nodes.filter(n=>n.type==='input').map(n=>n.channel).filter(Boolean)),available=channels.filter(channel=>!used.has(channel)),destinations=genome.nodes.filter(n=>n.type==='hidden'||n.type==='output');
+      const channels=['waterProximity','thirst','bondTension','contactPressure'],used=new Set(genome.nodes.filter(n=>n.type==='input').map(n=>n.channel).filter(Boolean)),available=channels.filter(channel=>!used.has(channel)),destinations=genome.nodes.filter(n=>n.type==='hidden'||n.type==='output');
       if(available.length&&destinations.length){const channel=available[randomIndex(available.length,random)],id=registry.node?registry.node(Math.max(-1,...genome.nodes.map(n=>n.id))+1):Math.max(-1,...genome.nodes.map(n=>n.id))+1,destination=destinations[randomIndex(destinations.length,random)];genome.nodes.push({id,type:'input',activation:'linear',bias:0,channel});if(genome.connections.length<limits.maxConnections)genome.connections.push({innovation:registry.connection(id,destination.id),source:id,destination:destination.id,weight:(random()*2-1)*.2,enabled:true,recurrent:false})}
     }
     if(random()<rates.addOutput&&genome.nodes.length<limits.maxNodes&&genome.nodes.filter(n=>n.type==='output').length<limits.maxOutputs){
