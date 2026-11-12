@@ -281,7 +281,8 @@ function eyeGeometry(eye){
 function raySpec(i){
  const n=Math.max(1,Math.round(params.eyeCount)),eye=eyeForRay(i),perEye=Math.max(1,Math.ceil(params.rayCount/n));
  const slot=Math.floor(i/n),t=perEye<=1?.5:slot/(perEye-1),geometry=eyeGeometry(eyeLayout()[eye]);
- const angle=geometry.start+(geometry.end-geometry.start)*t+rad(params.curvature)*Math.sin(Math.PI*t)*.35;
+ const normal=bodyAngle+eyeLayout()[eye].normal;
+ const angle=clamp(geometry.start+(geometry.end-geometry.start)*t+rad(params.curvature)*Math.sin(Math.PI*t)*.35,normal-rad(85),normal+rad(85));
  return{index:i,eye,origin:geometry.origin,angle,dir:{x:Math.cos(angle),y:Math.sin(angle)},t};
 }
 function verticalVisible(o,distance){
@@ -420,7 +421,7 @@ function scheduleIndices(budget,perception,outputs){
  const targetAngle=selected?selected.angle:null;
  if(targetAngle!==null&&params.adaptive>0){
   const focusN=Math.round(n*params.adaptive/100*(.5+params.priorityBoost/200)),all=[];
-  for(let i=0;i<count;i++)all.push({i,d:Math.abs(Math.atan2(Math.sin(raySpec(i).angle-targetAngle),Math.cos(raySpec(i).angle-targetAngle)))});
+  for(let i=0;i<count;i++){const spec=visionLocked&&lockedRaySpecs[i]?lockedRaySpecs[i]:raySpec(i);all.push({i,d:Math.abs(Math.atan2(Math.sin(spec.angle-targetAngle),Math.cos(spec.angle-targetAngle)))});}
   all.sort((a,b)=>a.d-b.d);
   for(let j=0;j<focusN&&j<all.length;j++)result.push(all[j].i);
  }
@@ -446,7 +447,7 @@ function sampleVision(dt){
  neuralOutputs=out.slice();
  grid.build(allObjects);
  const rays=[];
- for(const i of indices){const spec=raySpec(i);const ray=raycast(spec);rays.push(ray);const prior=latestRays[i];latestRays[i]=ray}
+ for(const i of indices){const spec=visionLocked&&lockedRaySpecs[i]?lockedRaySpecs[i]:raySpec(i);const ray=raycast(spec);rays.push(ray);const prior=latestRays[i];latestRays[i]=ray}
  const processed=processor.update(rays,dt);
  const target=selectTarget(processed);
  if(target&&(!currentTarget||target.id!==currentTarget.id)){currentTarget=target;targetSelectedAt=simTime;lastPerception=target}
@@ -454,13 +455,12 @@ function sampleVision(dt){
  else if(currentTarget&&simTime-(processor.tracks.get(currentTarget.id)?.lastSeen||0)>params.reacquisition){currentTarget=null;targetSelectedAt=simTime}
  const freshTarget=currentTarget&&processor.tracks.get(currentTarget.id);
  const targetAngle=freshTarget?Math.atan2(freshTarget.position.y,freshTarget.position.x):null;
- let gazeGoal=targetAngle!==null?targetAngle-bodyAngle:Math.sin(simTime*(.45+out[1]*1.6))*rad(params.idleScan*(.25+.75*out[1])*(.2+params.gazeWander/100));
- gazeGoal+=rad(params.gazeOffset);
- gazeGoal+=out[0]*rad(params.saccade)*.18;
- gazeGoal=clamp(gazeGoal,-rad(175),rad(175));
- const diff=Math.atan2(Math.sin(gazeGoal-gazeAngle),Math.cos(gazeGoal-gazeAngle));
- const step=rad(params.gazeSpeed)*dt*(.3+.7*out[2]);
- gazeAngle+=clamp(diff,-step,step);
+ if(!visionLocked){
+  let gazeGoal=targetAngle!==null?targetAngle-bodyAngle:Math.sin(simTime*(.45+out[1]*1.6))*rad(params.idleScan*(.25+.75*out[1])*(.2+params.gazeWander/100));
+  gazeGoal+=rad(params.gazeOffset);gazeGoal+=out[0]*rad(params.saccade)*.18;gazeGoal=clamp(gazeGoal,-rad(85),rad(85));
+  const diff=Math.atan2(Math.sin(gazeGoal-gazeAngle),Math.cos(gazeGoal-gazeAngle));
+  const step=rad(params.gazeSpeed)*dt*(.3+.7*out[2]);gazeAngle+=clamp(diff,-step,step);
+ }
  const nominalBudget=params.rayBudget;
  const metabolicLoad=1+params.tradeoff/100;
  energy=Math.max(0,energy-indices.length*params.energyPerRay*metabolicLoad-processed.visible.length*params.processingCost);
@@ -579,7 +579,7 @@ function updateWorld(dt){
 function frame(now){
  const dt=clamp((now-lastFrame)/1000,0,.06);lastFrame=now;frames++;if(now-fpsTime>1000){fps=frames*1000/(now-fpsTime);frames=0;fpsTime=now}
  if(!paused){simTime+=dt;updateWorld(dt);$('stateText').textContent=visionLocked?'VISION LOCKED · RAPID TURN':energy<params.energyReserve*.12?'LOW SENSOR ENERGY':'SENSING';for(const r of latestRays)if(r&&r.sampledAt)r.age+=dt;
-  if(!visionLocked&&(scheduleImmediate||now-lastSample>=1000/params.samplingHz)){grid.build(allObjects);sampleVision(dt)}
+  if(scheduleImmediate||now-lastSample>=1000/params.samplingHz){grid.build(allObjects);sampleVision(dt)}
   else if(sampleAccumulator>0)sampleAccumulator-=dt;
  }
  render();requestAnimationFrame(frame);
