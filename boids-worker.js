@@ -125,7 +125,7 @@ function makePlantNode(values){let id=nextPlantId++;const node={id,parent:0,root
 function seedPlants(){plants=[];spores=[];nextPlantId=1;plantCounters={asexualBuds:0,sporesReleased:0,sporesGerminated:0,plantDeaths:0};const initialSporeCount=Math.max(16,Math.min(30,Math.round(W*H/56000)));const sources=3;for(let i=0;i<initialSporeCount;i++){const source=i%sources,originX=W*(.2+source*.3),originY=H*(source===1?.28:.68),a=rand(0,TAU),speed=rand(4,12),spread=rand(0,Math.min(W,H)*.25);spores.push({x:clamp(originX+Math.cos(a)*spread,8,W-8),y:clamp(originY+Math.sin(a)*spread,8,H-8),vx:Math.cos(a)*speed+rand(-2,2),vy:Math.sin(a)*speed+rand(-2,2),life:rand(0,2),settleAfter:rand(5,10),landed:false,settleClock:0,parentId:0,root:0,kind:'initial-dispersal-spore'})}}
 function growPlants(dt){
  const existingCount=plants.length,wholePlantSizeByRoot=new Map();
- for(const node of plants){const root=node.root||node.id;wholePlantSizeByRoot.set(root,Math.max(wholePlantSizeByRoot.get(root)||.03,node.size||.03))}
+ for(const node of plants){const root=node.root||node.id;wholePlantSizeByRoot.set(root,(wholePlantSizeByRoot.get(root)||0)+Math.max(.03,node.size||.03))}
  for(let i=0;i<existingCount;i++){
   const p=plants[i];p.grandmother=!!p.grandmother;p.greatGrandmother=!!p.greatGrandmother;p.adultNode=!!p.adultNode;p.senescent=!!p.senescent;p.offspring=p.offspring||0;p.lifespan=p.lifespan||rand(110,140);p.cloneParent=p.cloneParent||0;p.asexual=!!p.asexual;p.age+=dt;
   const freshDistance=nearestFreshwater(p.x,p.y).distance;applyPlantMorphology(p,{freshDistance,latitude:Math.abs(2*p.y/Math.max(1,H)-1),mangrove:p.mangrove,saltSpines:p.saltSpines});
