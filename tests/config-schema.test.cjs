@@ -55,4 +55,4 @@ assert.equal(schema.extraSliderDefs.find(item => item.id === 'speciesStagnationL
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'activationMutationRate').value, .01);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'nodeDeletionRate').value, .005);
 assert.equal(schema.extraSliderDefs.find(item => item.id === 'recurrentMutationRate').value, .01);
-console.log('Shared configuration schema: 191 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
+console.log('Shared configuration schema: 192 sliders, field guide, dependency rules, bounds, defaults and curve options passed.');
