@@ -105,7 +105,7 @@ jobs:
               raise SystemExit('Charts must not redraw while the Observatory drawer is closed')
           if "new Worker('./boids-worker.js?v=20261113-bonding-physics-v1')" not in html:
               raise SystemExit('Updated worker cache-bust missing')
-          if 'r=2.8+Math.min(3.4,p.size*2.7)' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
+          if 'r=(2.8+Math.min(3.4,p.size*2.7))*.25' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
               raise SystemExit('Faceted hexagonal plant crowns must remain visibly sized')
           if 'function drawWaterways()' not in worker or 'function nearestFreshwater(' not in worker:
               raise SystemExit('Shared river and freshwater geometry is missing')
