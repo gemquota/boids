@@ -170,3 +170,14 @@ test('plant ecotypes respond independently to freshwater distance, salt exposure
   assert.match(worker, /if\(p\.saltSpines&&!senescent\)/);
   assert.match(worker, /const \[northWest,southEast\]=network\.coasts/);
 });
+
+test('neonatal bonding can recruit distinct colony neighbours', () => {
+  assert.match(worker, /neonatalAvailableCount/);
+  assert.match(worker, /myBondStrengths\?\.has\(individualId\[j\]\)/);
+  assert.match(worker, /bondOpportunity\(individualId\[i\],individualId\[bondIndex\],frameNo\)/);
+});
+test('organism contacts use swept collision impulses and persistent tether constraints', () => {
+  assert.match(worker, /BoidsPhysics\.resolveCircleContact/);
+  assert.match(worker, /BoidsPhysics\.sweptCircleTime/);
+  assert.match(worker, /function applyBondConstraints\(updateN,dt\)/);
+});
