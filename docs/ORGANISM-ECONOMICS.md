@@ -22,7 +22,7 @@ Thermal/habitat stress and age-related maintenance scale recurring maintenance. 
 
 ## One-time construction investment
 
-Initial organisms pay from their starting energy reserve. Newborn anatomy is paid by the mother at delivery. The investment covers body tissue, appendage mass, neural nodes/connections, sensory investment and bonding sites. It is not a generic building/construction subsystem.
+Initial organisms pay from their starting energy reserve. Newborn anatomy is paid by the mother at delivery. The investment covers body tissue, appendage mass, neural nodes/connections, sensory investment and bonding sites. Forming an agent-agent or agent-plant bond also incurs a small one-time construction charge. Successful attacks incur an additional immediate effort cost on top of aggression-readiness maintenance. It is not a generic building/construction subsystem.
 
 ## Specialized appendages
 
