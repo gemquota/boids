@@ -5,7 +5,7 @@ const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,Number(v)||0));
 function hash(seed,x,y,k=0){let n=(seed>>>0)^Math.imul((x+1)|0,0x9e3779b1)^Math.imul((y+1)|0,0x85ebca77)^Math.imul((k+1)|0,0xc2b2ae3d);n^=n>>>16;n=Math.imul(n,0x7feb352d);n^=n>>>15;n=Math.imul(n,0x846ca68b);n^=n>>>16;return(n>>>0)/4294967295}
 function gaussian(x,y,cx,cy,sx,sy){return Math.exp(-(((x-cx)/sx)**2+((y-cy)/sy)**2)*.5)}
 function create(width,height,seed=1,options={}){
- const cols=Math.max(20,Math.min(72,Math.floor(options.cols||40))),rows=Math.max(16,Math.min(56,Math.floor(options.rows||30))),n=cols*rows;
+ const cols=Math.max(20,Math.min(72,Math.floor(options.cols||30))),rows=Math.max(16,Math.min(56,Math.floor(options.rows||21))),n=cols*rows;
  const s={width,height,cols,rows,seed:seed>>>0,cellW:width/(cols-1),cellH:height/(rows-1),time:0,tidePeriod:options.tidePeriod||180,tideAmplitude:options.tideAmplitude||.075,stormPeriod:options.stormPeriod||92};
  for(const k of ['elevation','soil','groundwater','surface','rainfall','salinity','flood','accumulation','coastDistance'])s[k]=new Float32Array(n);
  s.downhill=new Int32Array(n);s.downhill.fill(-1);
@@ -28,7 +28,7 @@ function create(width,height,seed=1,options={}){
  // Accumulate upstream area in descending elevation order.
  const order=Array.from({length:n},(_,i)=>i).sort((a,b)=>s.elevation[b]-s.elevation[a]);for(let i=0;i<n;i++)s.accumulation[i]=1;
  for(const i of order){const j=s.downhill[i];if(j>=0)s.accumulation[j]+=s.accumulation[i]}
- s.streamThreshold=Math.max(5,cols*rows*.0035);s.order=order;
+ s.streamThreshold=Math.max(5,cols*rows*.0035);s.order=order;s.rainPotential=new Float32Array(n);s.nextSurface=new Float32Array(n);s.nextGround=new Float32Array(n);for(let i=0;i<n;i++){const e=s.elevation[i];s.rainPotential[i]=clamp(.58+e*.9+Math.max(0,e-.42)*1.5,.45,2.1)*(.55+.45*hash(s.seed,i%s.cols,(i/s.cols)|0,3))}
  return s;
 }
 function step(s,dt,time=s.time+dt){
@@ -36,11 +36,10 @@ function step(s,dt,time=s.time+dt){
  const tide=.09+Math.sin(time*Math.PI*2/s.tidePeriod)*s.tideAmplitude;
  const storm=.5+.5*Math.sin(time*Math.PI*2/s.stormPeriod-.9),pulse=Math.pow(Math.max(0,storm),5);
  const rainBase=.0008+pulse*.014;
- const nextSurface=new Float32Array(s.surface.length),nextGround=new Float32Array(s.groundwater.length);
+ const nextSurface=s.nextSurface,nextGround=s.nextGround;nextSurface.set(s.surface);nextGround.set(s.groundwater);
  for(let i=0;i<s.elevation.length;i++){
-  const x=i%s.cols,y=(i/s.cols)|0,nx=x/(s.cols-1),ny=y/(s.rows-1),e=s.elevation[i];
-  const orographic=clamp(.58+e*.9+Math.max(0,e-.42)*1.5,.45,2.1);
-  const rain=rainBase*orographic*(.55+.45*hash(s.seed,x,y,3));s.rainfall[i]=rain;
+  const e=s.elevation[i];
+  const rain=rainBase*s.rainPotential[i];s.rainfall[i]=rain;
   const coast=s.coastDistance[i],tidal=coast<.19?clamp((tide-e+.045)/.12)*clamp(1-coast/.2):0;
   const fresh=clamp(s.surface[i]+s.groundwater[i]*.45);
   const soil=s.soil[i],infiltration=Math.min(rain*dt*.72,Math.max(0,1-soil)*.018*dt);
