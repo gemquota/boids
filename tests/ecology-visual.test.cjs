@@ -132,6 +132,9 @@ test('colony bonds persist through ordinary separation and only lose endpoints o
   assert.ok(worker.includes('if(near)bond.strength=clamp(bond.strength+.035*dt,0,1)'));
   assert.ok(!worker.includes('near?.035:-.012'));
   assert.ok(worker.includes("recordPopulationEvent('bond_broken',{a:bond.a,b:bond.b,reason:'organism_death'})"));
+  assert.ok(worker.includes('function resolveBondConstraints(updateN,dt)'));
+  assert.ok(worker.includes('bond.restLength'));
+  assert.ok(worker.includes('resolveBondConstraints(updateN,dt)'));
 });
 
 test('population exports distinguish biological births/deaths from manual resizing', () => {
