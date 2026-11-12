@@ -137,7 +137,7 @@ function growPlants(dt){
  for(let i=spores.length-1;i>=0;i--){
   const sp=spores[i];let remove=sp.life>24||sp.x<0||sp.x>W||sp.y<0||sp.y>H;
   if(!remove&&sp.landed&&sp.settleClock>=1.8){
-   const crowded=plants.some(p=>(p.x-sp.x)**2+(p.y-sp.y)**2<26*26),waterDistance=nearestFreshwater(sp.x,sp.y).distance,waterProximity=clamp(1-waterDistance/230,0,1),germinationChance=.08+.84*waterProximity;
+   const crowded=plants.some(p=>(p.x-sp.x)**2+(p.y-sp.y)**2<26*26),waterDistance=nearestFreshwater(sp.x,sp.y).distance,waterProximity=clamp(1-waterDistance/230,0,1),germinationChance=.08+.92*waterProximity;
    if(!crowded&&plants.length<360&&random()<germinationChance){const id=nextPlantId++;plants.push(makePlantNode({id,x:sp.x,y:sp.y,age:0,biomass:.2,size:.2,cloneParent:sp.parentId||0,asexual:true}));plantCounters.sporesGerminated++;remove=true}
    else if(crowded||waterProximity<.08||sp.settleClock>8)remove=true;
    else sp.settleClock=0;
