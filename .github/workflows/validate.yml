@@ -29,6 +29,7 @@ jobs:
           node --check /tmp/boids-app.js
           node --check /tmp/boids-vision-lab.js
           node --check boids-worker.js
+          node --check organism-economics.js
           node --check chromosome.js
           node --check config-registry.js
           node --check config-schema.js
