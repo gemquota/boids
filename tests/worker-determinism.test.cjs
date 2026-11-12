@@ -323,6 +323,8 @@ assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationB
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
 assert.equal(restoredSnapshot.schemaVersion, 23);
 assert.equal(restoredSnapshot.counters.frameNo,sourceSnapshot.counters.frameNo,'deterministic frame counter must survive snapshot restoration');
+assert.equal(JSON.stringify(restoredSnapshot.maintenanceCosts),JSON.stringify(sourceSnapshot.maintenanceCosts),'cached organism upkeep must survive snapshot restoration');
+assert.equal(restoredSnapshot.counters.costCacheDirty,sourceSnapshot.counters.costCacheDirty,'upkeep cache invalidation state must survive snapshot restoration');
 assert.ok(Array.isArray(restoredSnapshot.bondLinks),'persistent organism bonds must be included in snapshots');
 assert.equal(JSON.stringify(restoredSnapshot.bondLinks),JSON.stringify(sourceSnapshot.bondLinks),'bond endpoints, attachment sides, relationship state and strength must survive snapshot restoration');
 assert.equal(JSON.stringify(BoidsEcology.serializeFields(restored.__boidsTest.environmentFields)),JSON.stringify(restoredSnapshot.environmentFields),'deterministic habitat fields must survive snapshot restoration');
