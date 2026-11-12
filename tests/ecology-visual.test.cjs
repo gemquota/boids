@@ -156,16 +156,35 @@ test('founder limb counts follow the requested weighted distribution and descend
   assert.doesNotMatch(worker, /Math\.floor\(random\(\)\*5\)/);
 });
 
-test('plant ecotypes respond independently to freshwater distance, salt exposure and latitude', () => {
-  assert.match(worker, /function nearestSaltwater\(px,py\)/);
-  assert.match(worker, /function plantHabitat\(px,py\)/);
-  assert.match(worker, /waterVariant:fresh<66\?'riparian':fresh>175\?'long':'standard'/);
-  assert.match(worker, /saltSpines:salt<fresh/);
-  assert.match(worker, /latitudeScale=1\.22-\.44\*latitude/);
-  assert.match(worker, /childLimit=p\.waterVariant==='long'\?4:2/);
-  assert.match(worker, /connectionScale=p\.waterVariant==='long'\?2:1/);
-  assert.match(worker, /bestPlant\.saltSpines\?\.32:1/);
-  assert.match(worker, /energy\[i\]=Math\.max\(0,energy\[i\]-\.0022\*dt\*60\)/);
-  assert.match(worker, /if\(p\.saltSpines&&!senescent\)/);
-  assert.match(worker, /const \[northWest,southEast\]=network\.coasts/);
+test('plant morphology continuously responds to freshwater distance and latitude', () => {
+  const start=worker.indexOf('function plantMorphologyFromGradients('),end=worker.indexOf('\\nfunction plantNodeGrowthScale',start);
+  assert.ok(start>=0&&end>start,'pure morphology gradient helper must exist');
+  const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
+  vm.runInNewContext(worker.slice(start,end)+';this.morph=plantMorphologyFromGradients;',context);
+  const near=context.morph(1,0),far=context.morph(0,1);
+  assert.ok(near.nodeScale>far.nodeScale,'near-water nodes should be larger');
+  assert.ok(near.branchLimit<far.branchLimit,'near-water plants should produce fewer nodes');
+  assert.ok(near.branchLengthScale<far.branchLengthScale,'near-water branches should be shorter');
+  assert.ok(near.branchThicknessScale>far.branchThicknessScale,'near-water branches should be thicker');
+  assert.ok(Math.abs(near.latitudeScale-1.05)<1e-9,'equator should receive only a slight 5% bonus');
+  assert.ok(Math.abs(far.latitudeScale-.95)<1e-9,'poles should receive only a slight 5% penalty');
+  assert.match(worker,/p\.biomass\+cfg\.plantGrowth\*dt[\s\S]*?nodeGrowth\.scale\*p\.latitudeScale/);
+  assert.match(worker,/p\.size\*p\.nodeScale\*p\.latitudeScale/);
+  assert.match(worker,/len=\(4\.8\+p\.size\*7\)\*\.5\*p\.branchLengthScale/);
+  assert.match(worker,/width=Math\.max\(\.65,\(\.9\+p\.size\*\.32\)\*\(p\.branchThicknessScale\|\|1\)\)/);
+  assert.match(worker,/function nearestSaltwater\(px,py\)/);
+  assert.match(worker,/saltSpines:salt<fresh/);
+  assert.match(worker,/if\(p\.saltSpines&&!senescent\)/);
+  assert.match(worker,/const \[northWest,southEast\]=network\.coasts/);
+});
+
+test('smaller nodes grow more slowly relative to their whole plant', () => {
+  const start=worker.indexOf('function plantNodeGrowthScale('),end=worker.indexOf('\\nfunction applyPlantMorphology',start);
+  assert.ok(start>=0&&end>start);
+  const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
+  vm.runInNewContext(worker.slice(start,end)+';this.scale=plantNodeGrowthScale;',context);
+  const large=context.scale(.8,.8),small=context.scale(.2,.8);
+  assert.equal(large.ratio,1);
+  assert.ok(small.ratio<large.ratio);
+  assert.ok(small.scale<large.scale);
 });
