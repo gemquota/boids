@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111d">
+<title>BOIDS // Vision Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#07111d;--panel:#0c1a29;--panel2:#102235;--line:#ffffff18;--text:#e8f2f5;--muted:#91a7b3;--mint:#79f2d0;--cyan:#55c9f2;--amber:#ffbf69;--pink:#f17ddd;--red:#ff6f7e;--green:#9fe28a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:13px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+body{min-height:100dvh;display:flex;flex-direction:column;overscroll-behavior:none}
+button,input{font:inherit}button{color:inherit;cursor:pointer}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:#091523}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}.brandMark{width:34px;height:34px;border:1px solid #79f2d055;border-radius:10px;display:grid;place-items:center;color:var(--mint);font-weight:800;font-size:17px}.brand h1{font-size:13px;letter-spacing:.12em;margin:0}.brand p{font-size:9px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin:2px 0 0}
+.topActions{display:flex;gap:7px;align-items:center}.button{border:1px solid var(--line);background:#ffffff09;border-radius:8px;padding:8px 11px;font-size:10px;white-space:nowrap}.button:hover{border-color:#79f2d077;background:#79f2d012}.button.primary{border-color:#79f2d066;color:var(--mint);background:#79f2d012}.button.danger{color:#ff9aa3;border-color:#ff6f7e55}
+.layout{width:100%;max-width:1800px;margin:0 auto;padding:12px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;flex:1;min-height:0}
+.stageColumn{min-width:0;display:flex;flex-direction:column;gap:10px}.stageCard,.panel{border:1px solid var(--line);border-radius:13px;background:var(--panel);overflow:hidden;box-shadow:0 12px 35px #0002}
+.stageHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;border-bottom:1px solid var(--line)}.stageTitle{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mint)}.stageSub{font-size:9px;color:var(--muted);margin-top:2px}.stageState{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--muted)}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #9fe28a88}
+.canvasWrap{position:relative;min-height:370px;height:min(68vh,760px);background:radial-gradient(ellipse at 50% 49%,#142c3b,#081522 68%,#06101a);touch-action:none}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.canvasLegend{position:absolute;left:12px;bottom:10px;display:flex;flex-wrap:wrap;gap:8px;padding:7px 9px;border:1px solid #ffffff18;border-radius:8px;background:#07111ddd;backdrop-filter:blur(8px);font-size:8px;color:var(--muted);pointer-events:none}
+.legendItem{display:flex;align-items:center;gap:5px}.swatch{width:13px;height:3px;border-radius:2px}
+.hint{position:absolute;right:12px;bottom:12px;padding:6px 8px;background:#07111dcc;border-radius:7px;color:#b7cbd3;font-size:8px;pointer-events:none}
+.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.metric{min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#0c1a29}.metric strong{display:block;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.metric span{display:block;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.telemetry{display:grid;grid-template-columns:1fr 1fr;gap:10px}.telemetryCard{padding:11px;border:1px solid var(--line);border-radius:10px;background:#0c1a29;min-width:0}.telemetryCard h3{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mint);margin:0 0 8px}.bars{display:grid;gap:6px}.barRow{display:grid;grid-template-columns:88px minmax(0,1fr) 35px;gap:7px;align-items:center;font-size:9px;color:var(--muted)}.barTrack{height:5px;border-radius:5px;background:#ffffff12;overflow:hidden}.barFill{height:100%;width:0;background:var(--mint);border-radius:5px;transition:width .1s linear}.barRow output{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.networkReadout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.networkCell{padding:7px 5px;background:#ffffff07;border:1px solid #ffffff0d;border-radius:7px;text-align:center;min-width:0}.networkCell b{display:block;font-size:13px;font-variant-numeric:tabular-nums}.networkCell span{font-size:7px;color:var(--muted);letter-spacing:.09em;text-transform:uppercase}
+.sidePanel{min-width:0;display:flex;flex-direction:column;max-height:calc(100dvh - 24px);position:sticky;top:12px}.panelHead{padding:13px 14px 10px;border-bottom:1px solid var(--line)}.panelHead h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:0;color:var(--mint)}.panelHead p{font-size:9px;color:var(--muted);margin:4px 0 0}
+.panelScroll{overflow:auto;overscroll-behavior:contain;padding:10px 11px 14px;scrollbar-width:thin;scrollbar-color:#ffffff2b transparent}
+.panelSection{border:1px solid #ffffff15;border-radius:10px;margin:0 0 9px;background:#ffffff03;overflow:hidden}
+.panelSection summary{list-style:none;cursor:pointer;padding:10px 11px;color:#cce0e5;font-size:9px;text-transform:uppercase;letter-spacing:.13em;display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none}
+.panelSection summary::-webkit-details-marker{display:none}.panelSection summary:after{content:"＋";color:var(--mint);font-size:12px}.panelSection[open] summary:after{content:"−"}
+.groupNote{font-size:8px;color:var(--muted);padding:0 11px 7px;border-bottom:1px solid #ffffff0b}
+.controls{padding:4px 11px 10px}.control{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:center;padding:7px 0;border-bottom:1px solid #ffffff0a}.control:last-child{border-bottom:0}
+.control label{font-size:9px;color:#d7e6e9;min-width:0}.control output{font-size:9px;color:var(--mint);font-variant-numeric:tabular-nums;text-align:right}
+.control input[type=range]{grid-column:1/-1;width:100%;height:17px;margin:0;accent-color:var(--mint);touch-action:pan-y}
+.control small{grid-column:1/-1;color:#718b98;font-size:7px;margin-top:-2px}
+.overlayBox{padding:11px;border:1px solid var(--line);border-radius:10px;margin-bottom:9px;background:#ffffff04}.overlayTitle{font-size:9px;text-transform:uppercase;letter-spacing:.13em;color:var(--mint);margin:0 0 8px}
+.toggleGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px}.toggle{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:9px;color:#c3d4d9}.toggle input{accent-color:var(--mint);width:14px;height:14px;margin:0}
+.actionGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.actionGrid .button{width:100%;font-size:9px;padding:8px 7px}
+.feedback{display:flex;gap:7px;margin-top:8px}.feedback .button{flex:1}
+.readout{font-size:9px;color:var(--muted);line-height:1.6;padding:9px 10px;border-radius:8px;background:#ffffff06;border:1px solid #ffffff0c;min-height:48px}
+.genome{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:8px}.gene{padding:6px 5px;border-radius:6px;background:#ffffff07;border:1px solid #ffffff0c;min-width:0}.gene b{display:block;font-size:8px;color:var(--mint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gene span{display:block;font-size:7px;color:var(--muted);margin-top:2px}
+.footnote{font-size:8px;color:#728a95;line-height:1.55;padding:4px 3px 0}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr) 340px}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.canvasWrap{height:min(62vh,650px)}}
+@media(max-width:700px){.topbar{padding:9px 11px}.layout{display:flex;flex-direction:column;padding:8px;gap:8px}.stageColumn{gap:7px}.canvasWrap{height:47vh;min-height:260px;max-height:520px}.sidePanel{position:static;max-height:none;min-height:500px}.panelScroll{overflow:visible}.metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.metric{padding:7px}.metric strong{font-size:14px}.metric span{font-size:7px}.telemetry{grid-template-columns:1fr}.topActions .button{padding:7px 8px;font-size:9px}.brand p{font-size:7px}.hint{display:none}}
+@media(max-width:390px){.brand h1{font-size:11px}.brandMark{width:29px;height:29px}.topActions{gap:4px}.topActions .button{padding:6px}.canvasWrap{height:43vh}.networkReadout{grid-template-columns:repeat(5,minmax(0,1fr))}.barRow{grid-template-columns:72px minmax(0,1fr) 30px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <div class="brand"><div class="brandMark">V</div><div><h1>BOIDS / VISION LAB</h1><p>Genetic optics · perception · neural attention</p></div></div>
+ <div class="topActions"><button class="button" id="pauseBtn">Pause</button><button class="button" id="resetBtn">Reset</button><button class="button primary" id="mutateBtn">Mutate genome</button></div>
+</header>
+<main class="layout">
+ <section class="stageColumn">
+  <section class="stageCard">
+   <div class="stageHead"><div><div class="stageTitle">Single-creature sensory field</div><div class="stageSub">Top-down 2D · live ray intersections · spatially indexed scene</div></div><div class="stageState"><i class="dot"></i><span id="stateText">SENSING</span></div></div>
+   <div class="canvasWrap" id="canvasWrap">
+    <canvas id="world" aria-label="Top-down creature vision simulation"></canvas>
+    <div class="canvasLegend">
+     <span class="legendItem"><i class="swatch" style="background:#55c9f2"></i>Clear</span>
+     <span class="legendItem"><i class="swatch" style="background:#ffbf69"></i>Detected</span>
+     <span class="legendItem"><i class="swatch" style="background:#f17ddd"></i>Attended</span>
+     <span class="legendItem"><i class="swatch" style="background:#ff6f7e"></i>Occluded</span>
+    </div>
+    <div class="hint">Drag a target · drag empty space to rotate the body</div>
+   </div>
+  </section>
+  <div class="metrics">
+   <div class="metric"><strong id="metricRays">0 / 24</strong><span>Rays sampled</span></div>
+   <div class="metric"><strong id="metricSeen">0</strong><span>Objects detected</span></div>
+   <div class="metric"><strong id="metricKinds">0</strong><span>Classified</span></div>
+   <div class="metric"><strong id="metricHz">0 Hz</strong><span>Sampling rate</span></div>
+   <div class="metric"><strong id="metricCost">0.0</strong><span>Energy / s</span></div>
+   <div class="metric"><strong id="metricCandidates">0</strong><span>Spatial candidates</span></div>
+  </div>
+  <div class="telemetry">
+   <section class="telemetryCard"><h3>Perception channels · actual ray observations</h3><div class="bars" id="inputBars"></div></section>
+   <section class="telemetryCard"><h3>Neural outputs · active control signals</h3><div class="networkReadout" id="outputCells"></div><div class="readout" id="attentionReadout" style="margin-top:8px">Waiting for first sensory update…</div></section>
+  </div>
+ </section>
+ <aside class="panel sidePanel">
+  <div class="panelHead"><h2>Vision apparatus</h2><p>Every control changes the live sensor, processor or controller. Open groups to inspect the full parameter set.</p></div>
+  <div class="panelScroll">
+   <section class="overlayBox">
+    <div class="overlayTitle">Diagnostic overlays · default on</div>
+    <div class="toggleGrid" id="overlayToggles"></div>
+    <div class="control" style="margin-top:7px"><label for="overlayOpacity">Overlay opacity</label><output id="overlayOpacityValue">72%</output><input id="overlayOpacity" type="range" min="10" max="100" value="72" step="1"></div>
+   </section>
+   <div id="parameterGroups"></div>
+   <section class="overlayBox">
+    <div class="overlayTitle">Online neural teaching</div>
+    <div class="readout" id="targetReadout">No attended target yet. The controller is receiving only current ray-derived observations.</div>
+    <div class="feedback"><button class="button primary" id="rewardBtn">Reward attention +</button><button class="button danger" id="punishBtn">Discourage −</button></div>
+    <div class="footnote">Feedback updates the small controller's class-association weights. It does not invent a sensory observation or label unseen objects.</div>
+   </section>
+   <section class="overlayBox">
+    <div class="overlayTitle">Expressed genetic loci</div>
+    <div class="readout">The numeric controls are the creature's current heritable parameter values. Mutation changes those loci; the displayed phenotype is what the raycaster actually uses.</div>
+    <div class="genome" id="genomeReadout"></div>
+    <div class="actionGrid" style="margin-top:8px"><button class="button" id="exportGenomeBtn">Export genome JSON</button><button class="button" id="restoreGenomeBtn">Restore baseline</button></div>
+   </section>
+   <p class="footnote">This is a standalone sensory-system laboratory. It demonstrates the physical sensing → perception → neural control separation with a single organism; population inheritance and the production worker are not modified by this page.</p>
+  </div>
+ </aside>
+</main>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rad=d=>d*Math.PI/180;
+const deg=r=>r*180/Math.PI;
+const sigmoid=x=>1/(1+Math.exp(-clamp(x,-12,12)));
+const fmt=(v,d=0)=>Number(v).toFixed(d);
+const params={
+ fov:150,coneScale:100,verticalFov:76,eyeCount:2,eyeSeparation:24,eyeSpread:34,eyeAngle:0,eyeHeight:12,
+ rayCount:56,rayBudget:24,rayWidth:2,originCycle:1,distribution:0,maxRange:360,minRange:10,curvature:0,
+ samplingHz:18,scanMode:1,scanDirection:1,scanSpeed:1.4,adaptive:58,priorityBoost:72,persistence:1.5,stagger:0,
+ contrast:55,luminance:28,minTarget:2,classification:2,colourSensitivity:72,motionSensitivity:52,depthResolution:48,transparency:75,fog:16,ambient:82,confidenceMin:.16,
+ gazeOffset:0,gazeSpeed:190,attentionSpan:1.0,fixation:.9,saccade:36,attentionThreshold:28,threatBias:82,foodBias:64,idleScan:28,tracking:78,prediction:1.1,reacquisition:1.8,
+ memory:2.6,shortTerm:2.2,temporalSmooth:62,noiseTolerance:38,habituation:14,occlusionMemory:68,predictionHorizon:1.25,visualNoise:2,
+ learningRate:.18,plasticity:.32,energyPerRay:.018,processingCost:.12,energyReserve:100,mutationRate:.045,developmentalVariance:8,tradeoff:42
+};
+const baseline=JSON.parse(JSON.stringify(params));
+const groups=[
+ {name:'Optics & ray geometry',note:'The creature has a top-down multi-organ visual array. Per-eye origins and angular sampling are explicit.',items:[
+  ['fov','Horizontal FOV',30,340,1,'°'],['coneScale','Perceptual cone width',35,150,1,'%'],['verticalFov','Vertical FOV / depth band',10,180,1,'°'],['eyeCount','Visual organs',1,6,1,'eyes'],['eyeSeparation','Eye origin separation',0,80,1,'px'],['eyeSpread','Eye orientation spread',0,240,1,'°'],['eyeAngle','Optic-axis offset',-90,90,1,'°'],['eyeHeight','Eye height above ground',0,60,1,'u'],['rayCount','Potential ray positions',4,128,1,'rays'],['rayBudget','Simultaneous ray budget',1,64,1,'rays'],['rayWidth','Physical ray width',0,16,.25,'px'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral']],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered']],['maxRange','Maximum range',60,650,5,'u'],['minRange','Near blind zone',0,100,1,'u'],['curvature','Peripheral curvature',-45,45,1,'°']
+ ]},
+ {name:'Sampling & computational allocation',note:'The budget is enforced per update. Unvisited ray positions retain age-limited observations.',items:[
+  ['samplingHz','Sampling update frequency',1,60,1,'Hz'],['scanMode','Scheduling pattern',0,3,1,'mode',['Sequential','Ping-pong','Centre-out','Jittered']],['scanDirection','Scan direction',-1,1,1,'mode',['Reverse','Stationary','Forward']],['scanSpeed','Scan progression speed',.2,4,.1,'×'],['adaptive','Adaptive ray allocation',0,100,1,'%'],['priorityBoost','Attention priority boost',0,100,1,'%'],['persistence','Ray observation persistence',0,5,.1,'s'],['stagger','Sampling phase offset',0,100,1,'%']
+ ]},
+ {name:'Detection & visual transduction',note:'Intersection is not identification. Contrast, light, apparent size, motion and transmission determine whether a hit becomes a usable observation.',items:[
+  ['contrast','Contrast sensitivity',0,100,1,'%'],['luminance','Luminance threshold',0,100,1,'%'],['minTarget','Minimum target radius',0,18,.5,'u'],['classification','Classification depth',0,3,1,'level',['Motion only','Detection','Category','Identity']],['colourSensitivity','Colour sensitivity',0,100,1,'%'],['motionSensitivity','Motion sensitivity',0,100,1,'%'],['depthResolution','Distance resolution',4,128,1,'steps'],['transparency','Transparency attenuation',0,100,1,'%'],['fog','Environmental fog',0,100,1,'%'],['ambient','Ambient illumination',0,100,1,'%'],['confidenceMin','Minimum confidence',0,1,.01,'']
+ ]},
+ {name:'Attention & active vision',note:'Gaze is independent of body heading. Attention changes scan focus, target priority and neural outputs.',items:[
+  ['gazeOffset','Gaze offset',-120,120,1,'°'],['gazeSpeed','Gaze rotation speed',5,540,1,'°/s'],['attentionSpan','Attention span',0,5,.1,'s'],['fixation','Target fixation duration',0,5,.1,'s'],['saccade','Saccade amplitude',0,120,1,'°'],['attentionThreshold','Attention switch threshold',0,100,1,'%'],['threatBias','Threat priority',0,100,1,'%'],['foodBias','Food priority',0,100,1,'%'],['idleScan','Idle scan amplitude',0,100,1,'%'],['tracking','Predictive tracking gain',0,100,1,'%'],['prediction','Motion prediction horizon',0,4,.1,'s'],['reacquisition','Target reacquisition window',0,5,.1,'s']
+ ]},
+ {name:'Memory & temporal processing',note:'Tracks survive brief occlusion, decay with time, and can be projected forward from measured motion.',items:[
+  ['memory','Visual memory retention',0,10,.1,'s'],['shortTerm','Short-term visual buffer',0,8,.1,'s'],['temporalSmooth','Temporal smoothing',0,100,1,'%'],['noiseTolerance','Visual noise tolerance',0,100,1,'%'],['habituation','Sensory habituation',0,100,1,'%'],['occlusionMemory','Occlusion memory strength',0,100,1,'%'],['predictionHorizon','Prediction persistence',0,4,.1,'s'],['visualNoise','Visual measurement noise',0,20,.5,'%']
+ ]},
+ {name:'Neural control & metabolic genetics',note:'The controller consumes derived sensory channels. Ray and processing costs drain a finite sensor-energy reserve.',items:[
+  ['learningRate','Neural learning rate',0,.8,.01,''],['plasticity','Synaptic plasticity',0,1,.01,''],['energyPerRay','Energy cost per ray',0,.12,.001,''],['processingCost','Processing cost / object',0,.5,.005,''],['energyReserve','Sensor energy capacity',10,200,1,'units'],['mutationRate','Genome mutation rate',0,.2,.005,''],['developmentalVariance','Developmental variation',0,30,.5,'%'],['tradeoff','Resolution / energy trade-off',0,100,1,'%']
+ ]}
+];
+const enumLabels={
+ originCycle:['Fixed','Alternate','Sequential','Spiral'],
+ distribution:['Uniform','Centre','Peripheral','Clustered'],
+ scanMode:['Sequential','Ping-pong','Centre-out','Jitter'],
+ scanDirection:['Reverse','Still','Forward'],
+ classification:['Motion','Detection','Category','Identity']
+};
+function displayValue(item,value){
+ const key=item[0],suffix=item[5]||'';
+ if(enumLabels[key])return enumLabels[key][Math.round(value)]||String(value);
+ if(key==='confidenceMin'||key==='learningRate'||key==='plasticity')return fmt(value,2);
+ if(key==='energyPerRay'||key==='processingCost')return fmt(value,3);
+ return (Number.isInteger(value)?String(value):fmt(value,2))+(suffix?' '+suffix:'');
+}
+function makeControls(){
+ const root=$('parameterGroups');
+ for(const group of groups){
+  const details=document.createElement('details');details.className='panelSection';details.open=true;
+  const summary=document.createElement('summary');summary.textContent=group.name;details.append(summary);
+  const note=document.createElement('div');note.className='groupNote';note.textContent=group.note;details.append(note);
+  const holder=document.createElement('div');holder.className='controls';
+  for(const item of group.items){
+   const key=item[0],row=document.createElement('div');row.className='control';
+   const label=document.createElement('label');label.htmlFor='p-'+key;label.textContent=item[1];
+   const output=document.createElement('output');output.id='v-'+key;output.textContent=displayValue(item,params[key]);
+   const input=document.createElement('input');input.type='range';input.id='p-'+key;input.min=item[2];input.max=item[3];input.step=item[4];input.value=params[key];input.setAttribute('aria-label',item[1]);
+   input.addEventListener('input',()=>{
+    params[key]=Number(input.value);
+    output.textContent=displayValue(item,params[key]);
+    if(key==='rayCount'&&params.rayBudget>params.rayCount){params.rayBudget=params.rayCount;syncControl('rayBudget')}
+    if(key==='rayBudget'&&params.rayBudget>params.rayCount){params.rayBudget=params.rayCount;syncControl('rayBudget')}
+    refreshGenome();scheduleImmediate=true;
+   });
+   row.append(label,output,input);holder.append(row);
+  }
+  details.append(holder);root.append(details);
+ }
+}
+function syncControl(key){
+ const input=$('p-'+key);if(!input)return;input.value=params[key];
+ const item=groups.flatMap(g=>g.items).find(x=>x[0]===key);$('v-'+key).textContent=displayValue(item,params[key]);
+}
+const overlayDefaults={all:true,rays:true,cones:true,width:true,origins:true,detections:true,attention:true,memory:true,prediction:true,grid:true,labels:true};
+const overlayLabels=[['rays','Individual rays'],['cones','FOV cones'],['width','Ray-width footprint'],['origins','Ray origins'],['detections','Hit / detection markers'],['attention','Attention and tracking'],['memory','Visual memory'],['prediction','Predicted positions'],['grid','Spatial partition'],['labels','Confidence labels']];
+const overlays={...overlayDefaults};
+function buildOverlays(){
+ const root=$('overlayToggles');
+ const all=document.createElement('label');all.className='toggle';all.innerHTML='<span>All overlays</span><input type="checkbox" checked id="ov-all">';root.append(all);
+ $('ov-all').addEventListener('change',e=>{const v=e.target.checked;for(const key of Object.keys(overlays))overlays[key]=v;root.querySelectorAll('input[data-overlay]').forEach(i=>i.checked=v);});
+ for(const [key,label] of overlayLabels){const l=document.createElement('label');l.className='toggle';l.innerHTML='<span>'+label+'</span><input type="checkbox" data-overlay="'+key+'" checked>';const input=l.querySelector('input');input.addEventListener('change',()=>{overlays[key]=input.checked;$('ov-all').checked=Object.values(overlays).every(Boolean)});root.append(l)}
+}
+$('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textContent=$('overlayOpacity').value+'%'});
+makeControls();buildOverlays();
+const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:false});
+let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,sampleAccumulator=0,simTime=0,sampleCount=0,totalCandidateChecks=0,energy=100,energySpent=0,frames=0,fpsTime=0,fps=0,scanCursor=0,scanDir=1,jitterSeed=713,cycle=0;
+let bodyAngle=-Math.PI/2,gazeAngle=rad(params.gazeOffset),scheduleImmediate=true,latestRays=[],latestDetections=new Map(),currentTarget=null,lastPerception=null;
+const creature={x:0,y:0};
+const things=[
+ {id:'food-a',kind:'food',x:-122,y:-165,vx:4,vy:1,r:10,h:0,contrast:86,luminance:.85,opacity:.45,color:'#a9e47e'},
+ {id:'food-b',kind:'food',x:148,y:-222,vx:-3,vy:4,r:8,h:0,contrast:72,luminance:.8,opacity:.55,color:'#9ddc75'},
+ {id:'food-c',kind:'food',x:-214,y:66,vx:1,vy:-2,r:11,h:0,contrast:90,luminance:.8,opacity:.4,color:'#a9e47e'},
+ {id:'predator-a',kind:'predator',x:127,y:100,vx:-8,vy:-2,r:17,h:4,contrast:92,luminance:.45,opacity:1,color:'#ff7787'},
+ {id:'predator-b',kind:'predator',x:270,y:-55,vx:-2,vy:7,r:13,h:3,contrast:82,luminance:.5,opacity:1,color:'#f27c89'},
+ {id:'kin-a',kind:'conspecific',x:-58,y:220,vx:8,vy:-2,r:12,h:0,contrast:65,luminance:.75,opacity:.75,color:'#75b9ef'},
+ {id:'kin-b',kind:'conspecific',x:220,y:205,vx:-5,vy:-3,r:11,h:0,contrast:64,luminance:.8,opacity:.7,color:'#75b9ef'},
+ {id:'object-a',kind:'object',x:245,y:28,vx:0,vy:0,r:14,h:0,contrast:45,luminance:.6,opacity:.8,color:'#dfb277'},
+ {id:'object-b',kind:'object',x:-250,y:-190,vx:0,vy:0,r:9,h:0,contrast:38,luminance:.55,opacity:.65,color:'#b9a2e7'},
+ {id:'plankton-a',kind:'food',x:50,y:-335,vx:-2,vy:2,r:4,h:0,contrast:32,luminance:.7,opacity:.3,color:'#a9e47e'}
+];
+const walls=[
+ {id:'wall-a',kind:'obstacle',x:-35,y:-105,w:76,h:15,opacity:1,color:'#526d7b'},
+ {id:'wall-b',kind:'obstacle',x:192,y:45,w:20,h:115,opacity:1,color:'#526d7b'},
+ {id:'wall-c',kind:'obstacle',x:-235,y:145,w:76,h:17,opacity:1,color:'#526d7b'}
+];
+const allObjects=[...things,...walls];
+function resize(){
+ const rect=$('canvasWrap').getBoundingClientRect();W=Math.max(1,rect.width);H=Math.max(1,rect.height);DPR=Math.min(1.75,window.devicePixelRatio||1);
+ canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);
+ scale=Math.min(W,H)/720;
+}
+new ResizeObserver(resize).observe($('canvasWrap'));resize();
+function worldScreen(x,y){return{x:W/2+x*scale,y:H/2+y*scale}}
+function localFromScreen(x,y){return{x:(x-W/2)/scale,y:(y-H/2)/scale}}
+function rotatePoint(x,y,a){return{x:x*Math.cos(a)-y*Math.sin(a),y:x*Math.sin(a)+y*Math.cos(a)}}
+class SpatialGrid{
+ constructor(size){this.size=size;this.cells=new Map();this.inserted=0}
+ key(x,y){return Math.floor(x/this.size)+','+Math.floor(y/this.size)}
+ build(objects){this.cells.clear();this.inserted=0;for(const o of objects){
+  const minX=o.kind==='obstacle'?o.x:o.x-o.r,maxX=o.kind==='obstacle'?o.x+o.w:o.x+o.r,minY=o.kind==='obstacle'?o.y:o.y-o.r,maxY=o.kind==='obstacle'?o.y+o.h:o.y+o.r;
+  for(let x=Math.floor(minX/this.size);x<=Math.floor(maxX/this.size);x++)for(let y=Math.floor(minY/this.size);y<=Math.floor(maxY/this.size);y++){const k=x+','+y;if(!this.cells.has(k))this.cells.set(k,[]);this.cells.get(k).push(o);this.inserted++}
+ }}
+ rayCandidates(x,y,dx,dy,length){const out=new Map(),step=this.size*.42,n=Math.ceil(length/step);for(let i=0;i<=n;i++){const d=Math.min(length,i*step),px=x+dx*d,py=y+dy*d,k=this.key(px,py),list=this.cells.get(k);if(list)for(const o of list)out.set(o.id,o)}return [...out.values()]}
+}
+const grid=new SpatialGrid(80);
+function rayCircle(x,y,dx,dy,max,object,radius){
+ const ox=x-object.x,oy=y-object.y,R=object.r+radius;
+ const b=ox*dx+oy*dy,c=ox*ox+oy*oy-R*R,disc=b*b-c;if(disc<0)return null;
+ let t=-b-Math.sqrt(disc);if(t<0)t=-b+Math.sqrt(disc);return t>=0&&t<=max?t:null;
+}
+function rayRect(x,y,dx,dy,max,o,pad){
+ const minX=o.x-pad,maxX=o.x+o.w+pad,minY=o.y-pad,maxY=o.y+o.h+pad;
+ let lo=0,hi=max;
+ for(const [p,d,mn,mx] of [[x,dx,minX,maxX],[y,dy,minY,maxY]]){
+  if(Math.abs(d)<1e-9){if(p<mn||p>mx)return null;continue}
+  let a=(mn-p)/d,b=(mx-p)/d;if(a>b){const t=a;a=b;b=t}lo=Math.max(lo,a);hi=Math.min(hi,b);if(lo>hi)return null;
+ }
+ return lo>=0&&lo<=max?lo:hi>=0&&hi<=max?hi:null;
+}
+function distributionT(t){
+ const x=2*t-1;let v=x;
+ if(params.distribution===1)v=Math.sign(x)*Math.pow(Math.abs(x),1.65);
+ if(params.distribution===2)v=Math.sign(x)*Math.sqrt(Math.abs(x));
+ if(params.distribution===3)v=clamp(x+.18*Math.sin(t*Math.PI*6),-1,1);
+ return v;
+}
+function eyeForRay(i){
+ const n=Math.max(1,Math.round(params.eyeCount));
+ if(params.originCycle===0)return 0;
+ if(params.originCycle===1)return i%n;
+ if(params.originCycle===2)return Math.floor(i/Math.max(1,Math.ceil(params.rayCount/n)))%n;
+ return (i+cycle)%n;
+}
+function raySpec(i){
+ const n=Math.max(1,Math.round(params.eyeCount)),eye=eyeForRay(i),perEye=Math.max(1,Math.ceil(params.rayCount/n)),local=i%n===0?Math.floor(i/n):Math.floor(i/n);
+ const slot=Math.floor(i/n),t=perEye<=1?.5:slot/(perEye-1);
+ const organOffset=n<=1?0:(eye-(n-1)/2)*rad(params.eyeSpread);
+ const originLocal={x:(eye-(n-1)/2)*params.eyeSeparation,y:-18};
+ const originRot=rotatePoint(originLocal.x,originLocal.y,bodyAngle);
+ const origin={x:originRot.x,y:originRot.y};
+ const center=bodyAngle+gazeAngle+rad(params.eyeAngle)+organOffset;
+ const fov=rad(params.fov*params.coneScale/100);
+ let angle=center+distributionT(t)*fov/2;
+ angle+=rad(params.curvature)*Math.sin(Math.PI*distributionT(t))*.35;
+ return{index:i,eye,origin,angle,dir:{x:Math.cos(angle),y:Math.sin(angle)},t};
+}
+function verticalVisible(o,distance){
+ const elevation=deg(Math.atan2((o.h||0)-params.eyeHeight,Math.max(1,distance)));
+ return Math.abs(elevation)<=params.verticalFov/2;
+}
+function raycast(spec){
+ const max=params.maxRange,min=params.minRange,dx=spec.dir.x,dy=spec.dir.y;
+ const candidates=grid.rayCandidates(spec.origin.x,spec.origin.y,dx,dy,max);
+ const hits=[];
+ for(const o of candidates){
+  totalCandidateChecks++;
+  const t=o.kind==='obstacle'?rayRect(spec.origin.x,spec.origin.y,dx,dy,max,o,params.rayWidth/2):rayCircle(spec.origin.x,spec.origin.y,dx,dy,max,o,params.rayWidth/2);
+  if(t!==null&&verticalVisible(o,t))hits.push({o,t});
+ }
+ hits.sort((a,b)=>a.t-b.t);
+ let transmission=1,detected=[],blocked=false,end=max;
+ for(const hit of hits){
+  const o=hit.o,t=hit.t;
+  if(t<min)continue;
+  if(o.kind==='obstacle'){blocked=true;end=t;break}
+  const falloff=Math.exp(-params.fog/100*(t/max)*2.4);
+  const illumination=params.ambient/100*falloff*Math.max(.05,o.luminance||.6);
+  const contrast=(o.contrast/100)*(params.contrast/100)*illumination*transmission;
+  const apparent=(o.r*2)/Math.max(1,t)*100;
+  const motion=Math.hypot(o.vx||0,o.vy||0);
+  const motionSignal=clamp(motion/28*params.motionSensitivity/100,0,1);
+  const sizeFactor=clamp(apparent/Math.max(.01,params.minTarget*2),0,1);
+  const signal=contrast*100*sizeFactor;
+  const confidence=clamp(signal/Math.max(1,params.luminance+params.confidenceMin*100),0,1)*transmission;
+  const canDetect=(signal>=params.luminance&&sizeFactor>=.35&&contrast*100>=params.contrast*.14)||motionSignal>params.motionSensitivity/180;
+  if(canDetect&&confidence>=params.confidenceMin){
+   const quant=Math.max(1,params.maxRange/Math.max(1,params.depthResolution));
+   const measured=Math.round(t/quant)*quant;
+   const level=Math.round(params.classification);
+   const className=level>=3?o.kind:level===2?(o.kind==='food'||o.kind==='predator'?'organism':o.kind==='conspecific'?'conspecific':'object'):level===1?'unclassified':motionSignal>.12?'moving signal':'signal';
+   detected.push({id:o.id,kind:o.kind,className,confidence,signal,distance:measured,actualDistance:t,angle:spec.angle,position:{x:o.x,y:o.y},velocity:{x:o.vx||0,y:o.vy||0},motion:motionSignal,transmission});
+  }
+  const opacity=clamp((o.opacity??1)*params.transparency/100,0,1);
+  transmission*=1-opacity;
+  if(transmission<.03){end=t;break}
+ }
+ return{...spec,endDistance:end,blocked,detected,state:blocked?'blocked':detected.length?'detected':'clear',age:0,transmission};
+}
+class VisionProcessor{
+ constructor(){this.tracks=new Map();this.observations=[];this.novelty=0;this.lastTarget=null}
+ update(rayResults,dt){
+  const now=simTime,seen=new Map();
+  for(const ray of rayResults)for(const d of ray.detected){const old=seen.get(d.id);if(!old||d.confidence>old.confidence)seen.set(d.id,d)}
+  const observations=[...seen.values()];
+  for(const d of observations){
+   const prior=this.tracks.get(d.id),elapsed=prior?Math.max(.001,now-prior.lastSeen):dt;
+   const measuredV=prior?{x:(d.position.x-prior.position.x)/elapsed,y:(d.position.y-prior.position.y)/elapsed}:d.velocity;
+   const alpha=1-params.temporalSmooth/100*.85;
+   const velocity=prior?{x:prior.velocity.x*alpha+measuredV.x*(1-alpha),y:prior.velocity.y*alpha+measuredV.y*(1-alpha)}:measuredV;
+   d.velocity=velocity;d.novelty=prior?0:1;
+   this.tracks.set(d.id,{...d,position:{...d.position},velocity,lastSeen:now,firstSeen:prior?prior.firstSeen:now,confidence:d.confidence});
+  }
+  this.observations=observations;
+  for(const [id,t] of this.tracks){if(now-t.lastSeen>Math.max(params.memory,params.reacquisition))this.tracks.delete(id)}
+  this.novelty=observations.filter(d=>d.novelty>.5).length;
+  return this.snapshot();
+ }
+ snapshot(){
+  const now=simTime,tracks=[...this.tracks.values()].map(t=>({...t,age:now-t.lastSeen,visible:now-t.lastSeen<.12,predicted:{x:t.position.x+t.velocity.x*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen)),y:t.position.y+t.velocity.y*Math.min(params.predictionHorizon,Math.max(0,now-t.lastSeen))}}));
+  return{visible:this.observations,tracks,memory:tracks.filter(t=>t.age>.12&&t.age<=params.memory),novelty:this.novelty};
+ }
+}
+class VisionNetwork{
+ constructor(){
+  this.inputs=['food','threat','motion','novelty','left/right','memory','confidence','uncertainty'];
+  this.outputs=['gaze','scan','focus','FOV','ray budget'];
+  this.weights=[
+   [-.08,.72,.12,.08,.64,.1,.22,-.18],
+   [.16,.5,.38,.3,0,.2,-.1,.44],
+   [.22,.9,.15,.1,0,.12,.42,-.2],
+   [.18,.15,.05,.22,0,.08,.1,.32],
+   [.1,.36,.25,.25,0,.2,.1,.38]
+  ];
+  this.bias=[0,-.2,-.35,-.1,-.15];this.lastHidden=[];this.values=[0,0,0,0,0];this.updates=0;
+  this.classAssociation={food:.2,predator:.4,conspecific:.1,object:0};
+ }
+ forward(perception){
+  const rows=perception.visible,mem=perception.memory;
+  const strongest=k=>rows.filter(x=>x.kind===k).reduce((m,x)=>Math.max(m,x.confidence*(1-x.distance/Math.max(1,params.maxRange))),0);
+  const best=rows.slice().sort((a,b)=>b.confidence-a.confidence)[0];
+  const x=[strongest('food'),strongest('predator'),rows.reduce((m,d)=>Math.max(m,d.motion),0),clamp(perception.novelty/3,0,1),best?Math.sin(best.angle-bodyAngle):0,mem.length?clamp(mem.length/3,0,1):0,best?best.confidence:0,rows.length?1-rows.reduce((a,d)=>a+d.confidence,0)/rows.length:1];
+  const hidden=[0,0,0,0,0];
+  for(let j=0;j<5;j++){let z=-.1;for(let i=0;i<x.length;i++)z+=x[i]*([.22,.16,.14,.11,.09][j]);hidden[j]=Math.tanh(z+(j===0?x[4]*.7:0)+(j===2?x[1]*.8:0)+(j===4?x[7]*.35:0))}
+  const raw=this.weights.map((w,j)=>w.reduce((s,v,i)=>s+v*x[i],this.bias[j]));
+  this.values=[Math.tanh(raw[0]),sigmoid(raw[1]),sigmoid(raw[2]),Math.tanh(raw[3]),sigmoid(raw[4])];
+  this.lastHidden=x;this.lastBest=best;this.inputsValue=x;return{inputs:x,outputs:this.values,hidden};
+ }
+ teach(kind,reward){
+  if(!kind)return false;
+  const rate=params.learningRate*params.plasticity;
+  const signal={food:0,predator:1,conspecific:0,object:0};signal[kind]=1;
+  const direction=kind==='predator'?-reward:reward;
+  const x=this.inputsValue||[];
+  for(let j=0;j<this.weights.length;j++){
+   for(let i=0;i<this.weights[j].length;i++)this.weights[j][i]=clamp(this.weights[j][i]+rate*direction*(x[i]||0)*(.22+j*.06),-2,2);
+   this.bias[j]=clamp(this.bias[j]+rate*direction*.03,-2,2);
+  }
+  this.classAssociation[kind]=clamp(this.classAssociation[kind]+rate*direction,-1,1);this.updates++;return true;
+ }
+}
+const processor=new VisionProcessor(),network=new VisionNetwork();
+function attentionScore(t){
+ let classBias=t.kind==='food'?params.foodBias/100:t.kind==='predator'?params.threatBias/100:t.kind==='conspecific'?.4:.2;
+ const learned=network.classAssociation[t.kind]||0;
+ const distance=1/(1+t.distance/Math.max(1,params.maxRange));
+ const motion=t.motion||0,novel=t.novelty||0;
+ return (classBias+learned+motion*.25+novel*.16)*t.confidence*(.4+.6*distance);
+}
+function selectTarget(perception){
+ const candidates=perception.visible.filter(t=>t.confidence>=params.attentionThreshold/100);
+ candidates.sort((a,b)=>attentionScore(b)-attentionScore(a));
+ const candidate=candidates[0]||null;
+ if(currentTarget&&candidate&&currentTarget.id!==candidate.id){
+  const oldScore=attentionScore(currentTarget),newScore=attentionScore(candidate);
+  if(newScore<oldScore+params.attentionThreshold/150) return currentTarget;
+ }
+ return candidate;
+}
+function scheduleIndices(budget,perception,outputs){
+ const count=Math.round(params.rayCount),n=Math.min(count,Math.max(1,budget));
+ const result=[];
+ const selected=perception.visible.length&&params.adaptive>0?perception.visible.slice().sort((a,b)=>b.confidence-a.confidence)[0]:null;
+ const targetAngle=selected?selected.angle:null;
+ if(targetAngle!==null&&params.adaptive>0){
+  const focusN=Math.round(n*params.adaptive/100),all=[];
+  for(let i=0;i<count;i++)all.push({i,d:Math.abs(Math.atan2(Math.sin(raySpec(i).angle-targetAngle),Math.cos(raySpec(i).angle-targetAngle)))});
+  all.sort((a,b)=>a.d-b.d);
+  for(let j=0;j<focusN&&j<all.length;j++)result.push(all[j].i);
+ }
+ let cursor=scanCursor;
+ while(result.length<n){
+  let idx;
+  if(params.scanMode===3){jitterSeed=(jitterSeed*1664525+1013904223)>>>0;idx=jitterSeed%count}
+  else if(params.scanMode===2){let radius=Math.ceil(cursor/2),center=Math.floor(count/2);idx=center+(cursor%2===0?radius:-radius);cursor++}
+  else{idx=cursor;cursor+=scanDir;if(idx>=count||idx<0){if(params.scanMode===1)scanDir*=-1;cursor=clamp(idx,0,count-1)}}
+  idx=(idx+count)%count;if(!result.includes(idx))result.push(idx);
+  if(result.length<count*2&&cursor>count*3)cursor=0;
+ }
+ scanCursor=(scanCursor+Math.max(1,Math.round(params.scanSpeed*n/3)))%count;
+ if(params.scanDirection===0)scanDir=-1;else if(params.scanDirection===2)scanDir=1;
+ return [...new Set(result)].slice(0,n);
+}
+function sampleVision(dt){
+ const perception=processor.snapshot(),out=network.forward(perception).outputs;
+ const requested=Math.min(params.rayBudget,params.rayCount);
+ const energyFactor=clamp(energy/Math.max(1,params.energyReserve*.25),.12,1);
+ const dynamicBudget=Math.max(1,Math.floor(requested*energyFactor*(1+out[4]*params.adaptive/140)));
+ const indices=scheduleIndices(dynamicBudget,perception,out);
+ grid.build(allObjects);
+ const rays=[];
+ for(const i of indices){const spec=raySpec(i);const ray=raycast(spec);rays.push(ray);const prior=latestRays[i];latestRays[i]=ray}
+ const all=latestRays.filter(Boolean);
+ const processed=processor.update(all,dt);
+ const target=selectTarget(processed);
+ if(target){currentTarget=target;lastPerception=target}
+ else if(currentTarget&&simTime-(processor.tracks.get(currentTarget.id)?.lastSeen||0)>params.reacquisition)currentTarget=null;
+ const freshTarget=currentTarget&&processor.tracks.get(currentTarget.id);
+ const targetAngle=freshTarget?Math.atan2(freshTarget.position.y,freshTarget.position.x):null;
+ let gazeGoal=targetAngle!==null?targetAngle-bodyAngle:Math.sin(simTime*.65)*rad(params.idleScan*.65);
+ gazeGoal+=out[0]*rad(params.saccade)*.18;
+ gazeGoal=clamp(gazeGoal,-rad(175),rad(175));
+ const diff=Math.atan2(Math.sin(gazeGoal-gazeAngle),Math.cos(gazeGoal-gazeAngle));
+ const step=rad(params.gazeSpeed)*dt*(.3+.7*out[2]);
+ gazeAngle+=clamp(diff,-step,step);
+ const nominalBudget=params.rayBudget;
+ energy=Math.max(0,energy-indices.length*params.energyPerRay-processed.visible.length*params.processingCost);
+ energy=Math.min(params.energyReserve,energy+dt*(.18+params.energyReserve*.0009));
+ energySpent+=indices.length*params.energyPerRay+processed.visible.length*params.processingCost;
+ sampleCount+=indices.length;lastSample=performance.now();sampleAccumulator=0;
+ cycle++;scheduleImmediate=false;
+ updatePanels(processed,out,indices.length,dynamicBudget);
+}
+function updatePanels(perception,out,used,budget){
+ const visible=perception.visible,unique=new Set(visible.map(x=>x.id)),classified=visible.filter(x=>params.classification>=2&&x.className!=='unclassified').length;
+ $('metricRays').textContent=used+' / '+budget+' · '+params.rayCount;
+ $('metricSeen').textContent=unique.size;$('metricKinds').textContent=classified;
+ $('metricHz').textContent=params.samplingHz+' Hz';$('metricCost').textContent=fmt(energySpent/Math.max(1,simTime),2);
+ $('metricCandidates').textContent=String(totalCandidateChecks);
+ $('stateText').textContent=paused?'PAUSED':energy<params.energyReserve*.12?'LOW SENSOR ENERGY':'SENSING';
+ const labels=['Food signal','Threat signal','Motion','Visual novelty','Target direction','Memory signal','Confidence','Uncertainty'];
+ const vals=network.inputsValue||Array(8).fill(0);
+ $('inputBars').innerHTML=labels.map((l,i)=>'<div class="barRow"><span>'+l+'</span><div class="barTrack"><div class="barFill" style="width:'+clamp(vals[i]*100,0,100)+'%;background:'+(i===1?'#ff6f7e':i===0?'#9fe28a':'#79f2d0')+'"></div></div><output>'+fmt(vals[i],2)+'</output></div>').join('');
+ const names=['Gaze','Scan','Focus','FOV','Ray budget'];
+ $('outputCells').innerHTML=names.map((n,i)=>'<div class="networkCell"><b>'+fmt(out[i],2)+'</b><span>'+n+'</span></div>').join('');
+ const target=currentTarget,txt=target?target.kind+' · '+fmt(target.distance,0)+'u · confidence '+fmt(target.confidence*100,0)+'% · angle '+fmt(deg(target.angle),0)+'°':'No current fixation. Peripheral observations still feed the processor.';
+ $('attentionReadout').textContent=txt+' · controller updates '+network.updates;
+ $('targetReadout').textContent=target?'Attended: '+target.kind+' ('+target.id+'), estimated '+fmt(target.distance,1)+'u away. Reward or discourage this actual observation to update controller weights.':'No attended target currently available. The controller is using available ray-derived observations and scanning behaviour.';
+}
+function updateGenome(){
+ const root=$('genomeReadout');root.replaceChildren();
+ const keys=['fov','rayCount','rayBudget','maxRange','contrast','motionSensitivity','classification','gazeSpeed','memory','learningRate','energyPerRay','mutationRate'];
+ for(const key of keys){const cell=document.createElement('div');cell.className='gene';const b=document.createElement('b');b.textContent=key;const s=document.createElement('span');s.textContent=String(params[key]);cell.append(b,s);root.append(cell)}
+}
+function refreshGenome(){updateGenome()}
+updateGenome();
+function drawGrid(){
+ if(!overlays.grid)return;ctx.save();ctx.globalAlpha=.18;ctx.strokeStyle='#7090a1';ctx.lineWidth=.55;
+ const step=80*scale,x0=(W/2)%step,y0=(H/2)%step;for(let x=x0;x<W;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=y0;y<H;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.restore();
+}
+function drawCone(){
+ if(!overlays.cones)return;const alpha=Number($('overlayOpacity').value)/100;
+ const n=Math.max(1,params.eyeCount),span=rad(params.fov*params.coneScale/100);
+ for(let i=0;i<n;i++){
+  const loc=rotatePoint((i-(n-1)/2)*params.eyeSeparation,-18,bodyAngle),origin=worldScreen(loc.x,loc.y),angle=bodyAngle+gazeAngle+rad(params.eyeAngle)+(i-(n-1)/2)*rad(params.eyeSpread);
+  ctx.save();ctx.globalAlpha=.105*alpha;ctx.fillStyle='#55c9f2';ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.arc(origin.x,origin.y,params.maxRange*scale,angle-span/2,angle+span/2);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=.5*alpha;ctx.strokeStyle='#55c9f277';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.lineTo(origin.x+Math.cos(angle-span/2)*params.maxRange*scale,origin.y+Math.sin(angle-span/2)*params.maxRange*scale);ctx.moveTo(origin.x,origin.y);ctx.lineTo(origin.x+Math.cos(angle+span/2)*params.maxRange*scale,origin.y+Math.sin(angle+span/2)*params.maxRange*scale);ctx.stroke();ctx.restore();
+ }
+}
+const rayColors={clear:'#55c9f2',detected:'#ffbf69',selected:'#f17ddd',blocked:'#ff6f7e'};
+function drawRays(){
+ if(!overlays.rays)return;const alpha=Number($('overlayOpacity').value)/100,now=performance.now(),persist=Math.max(.15,params.persistence*1000);
+ for(const ray of latestRays){if(!ray)continue;const age=now-(ray.sampledAt||lastSample),fade=params.persistence===0?1:clamp(1-age/persist,0,1);if(fade<=0)continue;
+  const origin=worldScreen(ray.origin.x,ray.origin.y),end=worldScreen(ray.origin.x+ray.dir.x*ray.endDistance,ray.origin.y+ray.dir.y*ray.endDistance);
+  const isSelected=currentTarget&&ray.detected.some(d=>d.id===currentTarget.id),state=ray.blocked?'blocked':isSelected?'selected':ray.detected.length?'detected':'clear';
+  const color=rayColors[state]||'#778794';
+  ctx.save();ctx.globalAlpha=alpha*fade*(state==='clear'?.34:.88);ctx.strokeStyle=color;ctx.lineWidth=overlays.width?Math.max(1,params.rayWidth*scale):1.1;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.lineTo(end.x,end.y);ctx.stroke();
+  if(overlays.width&&params.rayWidth>0){ctx.globalAlpha=alpha*fade*.09;ctx.lineWidth=Math.max(1,params.rayWidth*2*scale);ctx.stroke()}
+  ctx.restore();
+ }
+}
+function drawObjects(){
+ for(const o of walls){const p=worldScreen(o.x,o.y);ctx.save();ctx.fillStyle='#486270';ctx.strokeStyle='#8aa9b6';ctx.globalAlpha=.72;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(p.x,p.y,o.w*scale,o.h*scale,4*scale);ctx.fill();ctx.stroke();ctx.restore()}
+ for(const o of things){const p=worldScreen(o.x,o.y),r=Math.max(2,o.r*scale);ctx.save();ctx.fillStyle=o.color;ctx.strokeStyle='#eaf7fa';ctx.globalAlpha=.92;ctx.lineWidth=1.15;ctx.beginPath();
+  if(o.kind==='predator'){for(let i=0;i<8;i++){const a=i*Math.PI/4,rr=i%2?r*.74:r*1.3;const x=p.x+Math.cos(a)*rr,y=p.y+Math.sin(a)*rr;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath()}
+  else if(o.kind==='object'){ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath()}
+  else ctx.arc(p.x,p.y,r,0,Math.PI*2);
+  ctx.fill();ctx.stroke();ctx.globalAlpha=.65;ctx.beginPath();ctx.arc(p.x,p.y,r+3,0,Math.PI*2);ctx.strokeStyle=o.color;ctx.stroke();ctx.restore();
+ }
+}
+function drawOrigins(){
+ if(!overlays.origins)return;const alpha=Number($('overlayOpacity').value)/100,n=Math.max(1,params.eyeCount);
+ for(let i=0;i<n;i++){const loc=rotatePoint((i-(n-1)/2)*params.eyeSeparation,-18,bodyAngle),p=worldScreen(loc.x,loc.y);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#fff';ctx.strokeStyle='#55c9f2';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore()}
+}
+function drawDetections(){
+ if(!overlays.detections)return;const alpha=Number($('overlayOpacity').value)/100,seen=new Map();
+ for(const ray of latestRays)if(ray)for(const d of ray.detected)seen.set(d.id,d);
+ for(const d of seen.values()){const p=worldScreen(d.position.x,d.position.y);ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=d.kind==='predator'?'#ff6f7e':d.kind==='food'?'#9fe28a':'#ffbf69';ctx.fillStyle='#ffffff';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(7,(things.find(x=>x.id===d.id)?.r||8)*scale+5),0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill();if(overlays.labels){ctx.font='9px system-ui';ctx.fillText((d.className||'signal')+' '+fmt(d.confidence*100,0)+'%',p.x+9,p.y-8)}ctx.restore()}
+}
+function drawMemory(){
+ if(!overlays.memory&&!overlays.prediction)return;
+ const snapshot=processor.snapshot(),alpha=Number($('overlayOpacity').value)/100;
+ if(overlays.memory)for(const t of snapshot.memory){const p=worldScreen(t.position.x,t.position.y);ctx.save();ctx.globalAlpha=alpha*clamp(1-t.age/Math.max(.1,params.memory),0,1)*.5;ctx.strokeStyle='#a4b0ff';ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(6,7*scale),0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#a4b0ff';ctx.font='8px system-ui';ctx.fillText('MEM '+fmt(t.age,1)+'s',p.x+9,p.y+3);ctx.restore()}
+ if(overlays.prediction)for(const t of snapshot.memory){const p=worldScreen(t.predicted.x,t.predicted.y);ctx.save();ctx.globalAlpha=alpha*.8;ctx.strokeStyle='#f17ddd';ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(worldScreen(t.position.x,t.position.y).x,worldScreen(t.position.x,t.position.y).y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.stroke();ctx.restore()}
+}
+function drawAttention(){
+ if(!overlays.attention||!currentTarget)return;const t=processor.tracks.get(currentTarget.id);if(!t)return;const p=worldScreen(t.position.x,t.position.y),alpha=Number($('overlayOpacity').value)/100;
+ ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle='#f17ddd';ctx.fillStyle='#f17ddd';ctx.lineWidth=1.8;ctx.setLineDash([5,3]);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(12,(things.find(x=>x.id===t.id)?.r||8)*scale+11),0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(W/2,H/2);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.font='bold 9px system-ui';ctx.fillText('ATTENTION · '+t.kind.toUpperCase(),p.x+10,p.y+16);ctx.restore();
+}
+function drawCreature(){
+ const x=W/2,y=H/2;ctx.save();ctx.translate(x,y);ctx.rotate(bodyAngle);
+ ctx.fillStyle='#79f2d02a';ctx.strokeStyle='#79f2d0';ctx.lineWidth=1.7;ctx.beginPath();ctx.ellipse(0,0,29*scale,20*scale,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#79f2d066';ctx.beginPath();ctx.moveTo(-13*scale,-7*scale);ctx.lineTo(-25*scale,-27*scale);ctx.lineTo(-3*scale,-16*scale);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(13*scale,-7*scale);ctx.lineTo(25*scale,-27*scale);ctx.lineTo(3*scale,-16*scale);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#d9fff5';ctx.beginPath();ctx.arc(-11*scale,-12*scale,3*scale,0,Math.PI*2);ctx.arc(11*scale,-12*scale,3*scale,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#06111a';ctx.beginPath();ctx.arc(-11*scale,-12*scale,1.4*scale,0,Math.PI*2);ctx.arc(11*scale,-12*scale,1.4*scale,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#e3fff5';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-5*scale,-17*scale);ctx.lineTo(0,-24*scale);ctx.lineTo(5*scale,-17*scale);ctx.stroke();
+ ctx.restore();
+ ctx.save();ctx.translate(x,y);ctx.rotate(bodyAngle+gazeAngle);ctx.strokeStyle='#f17ddd';ctx.globalAlpha=.85;ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(0,-25*scale);ctx.lineTo(0,-47*scale);ctx.stroke();ctx.fillStyle='#f17ddd';ctx.beginPath();ctx.moveTo(0,-53*scale);ctx.lineTo(-4*scale,-45*scale);ctx.lineTo(4*scale,-45*scale);ctx.closePath();ctx.fill();ctx.restore();
+}
+function render(){
+ ctx.clearRect(0,0,W,H);drawGrid();
+ ctx.save();ctx.strokeStyle='#ffffff0c';ctx.lineWidth=1;ctx.beginPath();ctx.arc(W/2,H/2,params.maxRange*scale,0,Math.PI*2);ctx.stroke();ctx.restore();
+ drawCone();drawObjects();drawRays();drawDetections();drawMemory();drawAttention();drawOrigins();drawCreature();
+}
+function updateWorld(dt){
+ for(const o of things){o.x+=o.vx*dt;o.y+=o.vy*dt;if(Math.abs(o.x)>315)o.vx*=-1;if(Math.abs(o.y)>330)o.vy*=-1}
+}
+function frame(now){
+ const dt=clamp((now-lastFrame)/1000,0,.06);lastFrame=now;frames++;if(now-fpsTime>1000){fps=frames*1000/(now-fpsTime);frames=0;fpsTime=now}
+ if(!paused){simTime+=dt;updateWorld(dt);for(const r of latestRays)if(r&&r.sampledAt)r.age+=dt;
+  if(scheduleImmediate||now-lastSample>=1000/params.samplingHz){grid.build(allObjects);sampleVision(dt)}
+  else if(sampleAccumulator>0)sampleAccumulator-=dt;
+ }
+ render();requestAnimationFrame(frame);
+}
+function reset(){
+ Object.assign(params,baseline);for(const g of groups)for(const item of g.items)syncControl(item[0]);
+ bodyAngle=-Math.PI/2;gazeAngle=0;energy=params.energyReserve;energySpent=0;simTime=0;sampleCount=0;scanCursor=0;cycle=0;latestRays=[];latestDetections.clear();processor.tracks.clear();processor.observations=[];currentTarget=null;network.classAssociation={food:.2,predator:.4,conspecific:.1,object:0};network.updates=0;network.weights=[
+ [-.08,.72,.12,.08,.64,.1,.22,-.18],[.16,.5,.38,.3,0,.2,-.1,.44],[.22,.9,.15,.1,0,.12,.42,-.2],[.18,.15,.05,.22,0,.08,.1,.32],[.1,.36,.25,.25,0,.2,.1,.38]];
+ network.bias=[0,-.2,-.35,-.1,-.15];scheduleImmediate=true;refreshGenome();updatePanels({visible:[],memory:[],novelty:0},[0,0,0,0,0],0,params.rayBudget);
+}
+$('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'Resume':'Pause';$('stateText').textContent=paused?'PAUSED':'SENSING';if(!paused)scheduleImmediate=true});
+$('resetBtn').addEventListener('click',reset);
+$('mutateBtn').addEventListener('click',()=>{
+ const items=groups.flatMap(g=>g.items).filter(x=>!['mutationRate','developmentalVariance'].includes(x[0]));
+ const count=2+Math.floor(Math.random()*4);
+ for(let j=0;j<count;j++){const item=items[Math.floor(Math.random()*items.length)],key=item[0];let delta=(Math.random()*2-1)*(Number(item[3])-Number(item[2]))*params.mutationRate*(1+params.developmentalVariance/100)*3;
+ params[key]=clamp(params[key]+delta,Number(item[2]),Number(item[3]));if(enumLabels[key])params[key]=Math.round(params[key]);syncControl(key)}
+ if(params.rayBudget>params.rayCount){params.rayBudget=params.rayCount;syncControl('rayBudget')}
+ refreshGenome();scheduleImmediate=true;
+});
+$('rewardBtn').addEventListener('click',()=>{if(currentTarget){network.teach(currentTarget.kind,1);$('targetReadout').textContent='Reinforced attention to '+currentTarget.kind+'. Association weights updated; sensory values remain ray-derived.'}});
+$('punishBtn').addEventListener('click',()=>{if(currentTarget){network.teach(currentTarget.kind,-1);$('targetReadout').textContent='Discouraged attention to '+currentTarget.kind+'. Association weights updated; sensory values remain ray-derived.'}});
+$('exportGenomeBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({schema:'boids-vision-lab-genome-v1',genes:params,neural:{weights:network.weights,bias:network.bias,classAssociation:network.classAssociation}},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='boids-vision-genome.json';a.click();URL.revokeObjectURL(a.href)});
+$('restoreGenomeBtn').addEventListener('click',reset);
+let drag=null;
+canvas.addEventListener('pointerdown',e=>{
+ const rect=canvas.getBoundingClientRect(),sx=e.clientX-rect.left,sy=e.clientY-rect.top,w=localFromScreen(sx,sy);let nearest=null,dist=Infinity;
+ for(const o of things){const d=Math.hypot(w.x-o.x,w.y-o.y);if(d<o.r+18&&d<dist){nearest=o;dist=d}}
+ if(nearest)drag={kind:'object',object:nearest};else drag={kind:'body',last:{x:sx,y:sy}};
+ canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;const r=canvas.getBoundingClientRect(),sx=e.clientX-r.left,sy=e.clientY-r.top,w=localFromScreen(sx,sy);
+ if(drag.kind==='object'){drag.object.x=w.x;drag.object.y=w.y;drag.object.vx=0;drag.object.vy=0;scheduleImmediate=true}
+ else{bodyAngle=Math.atan2(sy-H/2,sx-W/2)+Math.PI/2;drag.last={x:sx,y:sy};scheduleImmediate=true}
+});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,()=>drag=null);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)paused=true});
+window.addEventListener('keydown',e=>{if(e.key===' '&&e.target.tagName!=='INPUT'){e.preventDefault();paused=!paused;$('pauseBtn').textContent=paused?'Resume':'Pause'}});
+window.addEventListener('resize',()=>{resize();scheduleImmediate=true});
+updatePanels({visible:[],memory:[],novelty:0},[0,0,0,0,0],0,params.rayBudget);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
