@@ -23,7 +23,7 @@ function updateBondNetwork(dt){
  for(let k=0;k<N;k++){const id=individualId[k];bondAgentIndex.set(id,k);aliveAgentIds.add(id)}
  bondPlantIndex.clear();alivePlantIds.clear();
  for(const p of plants){bondPlantIndex.set(p.id,p);alivePlantIds.add(p.id)}
- bondLinks=BoidsEconomics.pruneBonds(bondLinks,aliveAgentIds,alivePlantIds);
+ bondLinks=bondLinks.filter(b=>b.a>0&&aliveAgentIds.has(b.a)&&b.strength>.025&&(b.targetType==='plant'?alivePlantIds.has(b.b):b.b>0&&aliveAgentIds.has(b.b)));
  bondGrowthByPlant.clear();boundNeonatalMasks.clear();
  const markBondSite=(id,side)=>{if(!side?.startsWith('neonatal'))return;const site=Number(side.slice(8));if(site<0||site>3||!Number.isInteger(site))return;boundNeonatalMasks.set(id,(boundNeonatalMasks.get(id)||0)|(1<<site))};
  for(const bond of bondLinks){markBondSite(bond.a,bond.sideA);if(bond.targetType==='agent')markBondSite(bond.b,bond.sideB)}
