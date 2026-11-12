@@ -180,4 +180,5 @@ test('organism contacts use swept collision impulses and persistent tether const
   assert.match(worker, /BoidsPhysics\.resolveCircleContact/);
   assert.match(worker, /BoidsPhysics\.sweptCircleTime/);
   assert.match(worker, /function applyBondConstraints\(updateN,dt\)/);
+  assert.match(worker, /function drawBondNetwork\(plantById\)/);
 });
