@@ -40,6 +40,7 @@ jobs:
           node tests/chromosome.test.cjs
           node tests/vision-lab.test.cjs
           node tests/worker-determinism.test.cjs
+          node tests/organism-economics.test.cjs
           node tests/html-script-syntax.test.cjs
           node tests/worker-benchmark.test.cjs
       - name: Verify plant-only ecology, chromosome wiring and controls
