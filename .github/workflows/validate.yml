@@ -37,6 +37,7 @@ jobs:
           node tests/config-registry.test.cjs
           node tests/genetics.test.js
           node tests/chromosome.test.cjs
+          node tests/vision-lab.test.cjs
           node tests/worker-determinism.test.cjs
           node tests/html-script-syntax.test.cjs
           node tests/worker-benchmark.test.cjs
