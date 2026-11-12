@@ -54,9 +54,9 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
   const end = worker.indexOf('function drawWaterways()', start);
   assert.ok(start >= 0 && end > start);
   const renderer = worker.slice(start, end);
-  assert.match(renderer, /scale=\(6\+p\.size\*8\.5\)\*\(mature\?1\.24:\.82\)\*\(senescent\?\.68:1\)\*\.5/);
+  assert.match(renderer, /scale=\(6\+p\.size\*8\.5\)\*\(mature\?1\.24:\.82\)\*\(senescent\?\.68:1\)\*\.5\*\(p\.waterVariant==='riparian'\?\.68:1\)/);
   assert.match(renderer, /quadraticCurveTo/);
-  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25/);
+  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25\*\(p\.waterVariant==='riparian'\?1\.3:1\)\*\(p\.waterVariant==='long'\?\.5:1\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
   assert.match(renderer, /flowerCount/);
@@ -139,4 +139,33 @@ test('mother plants grow branch-tip flowers without grandmother twin-spawning', 
   assert.match(worker, /if\(p\.grandmother\)p\.flowerGrowth=Math\.min\(1,/);
   assert.match(worker, /if\(!senescent&&k<\(p\.flowerCount\|\|0\)\)/);
   assert.doesNotMatch(worker, /p\.grandmother=true;p\.offspring\+=2/);
+});
+
+test('founder limb counts follow the requested weighted distribution and descendants mutate conservatively', () => {
+  const start = worker.indexOf('const LIMB_COUNT_WEIGHTS=');
+  const end = worker.indexOf('function bondOpportunity', start);
+  assert.ok(start >= 0 && end > start, 'weighted limb sampler must be defined');
+  const context = { seed: 123456789, random() { this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0; return this.seed / 4294967296; } };
+  vm.runInNewContext(worker.slice(start, end) + ';this.sample=sampleLimbCount;this.weights=LIMB_COUNT_WEIGHTS;', context);
+  assert.deepEqual(Array.from(context.weights), [10,15,30,15,10,8,4,3,2,2,1]);
+  const counts = new Array(11).fill(0);
+  for (let i = 0; i < 100000; i++) counts[context.sample()]++;
+  for (let i = 0; i < counts.length; i++) assert.ok(Math.abs(counts[i] / 1000 - context.weights[i]) < 0.65, 'limb count ' + i + ' should match its percentage');
+  assert.match(worker, /m\.limbs\.length<10/);
+  assert.match(worker, /random\(\)<\.025/);
+  assert.doesNotMatch(worker, /Math\.floor\(random\(\)\*5\)/);
+});
+
+test('plant ecotypes respond independently to freshwater distance, salt exposure and latitude', () => {
+  assert.match(worker, /function nearestSaltwater\(px,py\)/);
+  assert.match(worker, /function plantHabitat\(px,py\)/);
+  assert.match(worker, /waterVariant:fresh<66\?'riparian':fresh>175\?'long':'standard'/);
+  assert.match(worker, /saltSpines:salt<fresh/);
+  assert.match(worker, /latitudeScale=1\.22-\.44\*latitude/);
+  assert.match(worker, /childLimit=p\.waterVariant==='long'\?4:2/);
+  assert.match(worker, /connectionScale=p\.waterVariant==='long'\?2:1/);
+  assert.match(worker, /bestPlant\.saltSpines\?\.32:1/);
+  assert.match(worker, /energy\[i\]=Math\.max\(0,energy\[i\]-\.0022\*dt\*60\)/);
+  assert.match(worker, /if\(p\.saltSpines&&!senescent\)/);
+  assert.match(worker, /const \[northWest,southEast\]=network\.coasts/);
 });
