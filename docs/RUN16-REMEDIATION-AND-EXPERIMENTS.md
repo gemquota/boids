@@ -12,7 +12,7 @@ The worker also reduced bond strength whenever linked organisms were separated. 
 
 - **Population accounting:** initial population, births, deaths, and population-control additions/removals now reconcile explicitly. A bounded event log records initialization, resize events, births, deaths, colony bond creation/breakage, and severe collisions.
 - **Bond persistence and mechanics:** newborns receive four temporary bonding sites, while adults gradually develop one or two permanent sites. Temporary-site expiry does not sever an established bond. Distance no longer weakens bonds; agent bonds are removed when a member dies. Each agent-agent bond carries a rest length, stiffness, and damping term and is solved as a mass-weighted physical spring. Colony members remain distinct organisms.
-- **Plant recruitment:** spore release begins earlier, runs more frequently, and permits a larger airborne/settling spore pool. The interval is exposed as a Plant spore release interval control so the replicate conditions can vary it cleanly. Telemetry distinguishes release, germination, crowding failure, dry-site failure, expiry, and plant death.
+- **Plant recruitment:** spore release begins earlier, runs more frequently, and permits a larger airborne/settling spore pool. The interval is exposed as a Plant spore release interval control. Colony bond formation rate is also exposed so the early bonding hypothesis can be tested without changing bond persistence or newborn bonding-site rules. Telemetry distinguishes release, germination, crowding failure, dry-site failure, expiry, and plant death.
 - **Neural interface evolution:** four additional sensory channels are available: water proximity, thirst, bond tension, and contact pressure. Four corresponding behavior outputs are available: forage drive, water drive, colony cohesion, and exploration drive. New input/output neurons are rare structural mutations, inherit through crossover, retain named channel identities, and persist those identities as typed hexadecimal chromosome genes.
 - **Collision response:** positional correction and normal impulses are mass-weighted. Contacts now include tangential friction, contact-pressure feedback, and aggregate penetration/impulse telemetry.
 - **Mate choice and genetic resilience:** kinship is a soft penalty rather than an absolute prohibition, and already overrepresented parents receive a small contribution penalty. If unrelated or underrepresented mates are unavailable, the existing fallback still permits reproduction.
@@ -32,13 +32,14 @@ For collisions, monitor contact count, mean/max penetration, impulse, and contac
 
 ## Paired experiment plan
 
-The research/run16-followup.js script generates five conditions with ten paired seeds each. The seed list is identical across conditions, so differences are not confounded by a different random seed set.
+The research/run16-followup.js script generates six conditions with ten paired seeds each. The seed list is identical across conditions, so differences are not confounded by a different random seed set.
 
 1. Fixed baseline
 2. Faster plant spore interval
 3. New default plant spore interval
 4. Stronger mate-diversity preference
-5. Greater mate-distance priority under kinship avoidance
+5. Lower colony bond formation rate
+6. Greater mate-distance priority under kinship avoidance
 
 Run the same batch on the previous main revision and this remediation branch where possible. Then compare the corrected branch against itself one factor at a time. Do not combine all parameter changes until each subsystem has a stable isolated result.
 
