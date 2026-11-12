@@ -115,7 +115,7 @@ const deg=r=>r*180/Math.PI;
 const sigmoid=x=>1/(1+Math.exp(-clamp(x,-12,12)));
 const fmt=(v,d=0)=>Number(v).toFixed(d);
 const params={
- fov:150,coneScale:100,verticalFov:76,eyeCount:1,eyeSeparation:24,eyeSpread:34,eyeAngle:0,eyeHeight:12,
+ fov:150,coneScale:100,verticalFov:76,eyeCount:1,eyeAngle:0,eyeHeight:12,
  rayCount:56,rayBudget:24,rayWidth:2,originCycle:1,distribution:0,maxRange:360,minRange:10,curvature:0,
  samplingHz:18,scanMode:1,scanDirection:1,scanSpeed:1.4,adaptive:58,priorityBoost:72,persistence:1.5,stagger:0,
  contrast:55,luminance:28,minTarget:2,classification:2,colourSensitivity:72,motionSensitivity:52,depthResolution:48,transparency:75,fog:16,ambient:82,confidenceMin:.16,
@@ -126,7 +126,7 @@ const params={
 const baseline=JSON.parse(JSON.stringify(params));
 const groups=[
  {name:'Optics & ray geometry',note:'The creature has a top-down multi-organ visual array. Per-eye origins and angular sampling are explicit.',items:[
-  ['fov','Horizontal FOV',30,340,1,'°'],['coneScale','Perceptual cone width',35,150,1,'%'],['verticalFov','Vertical FOV / depth band',10,180,1,'°'],['eyeCount','Visual organs',1,8,1,'eyes'],['eyeSeparation','Eye origin separation',0,80,1,'px'],['eyeSpread','Eye orientation spread',0,240,1,'°'],['eyeAngle','Optic-axis offset',-90,90,1,'°'],['eyeHeight','Eye height above ground',0,60,1,'u'],['rayCount','Potential ray positions',4,128,1,'rays'],['rayBudget','Simultaneous ray budget',1,64,1,'rays'],['rayWidth','Physical ray width',0,16,.25,'px'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral']],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered']],['maxRange','Maximum range',60,650,5,'u'],['minRange','Near blind zone',0,100,1,'u'],['curvature','Peripheral curvature',-45,45,1,'°']
+  ['fov','Horizontal FOV',30,340,1,'°'],['coneScale','Perceptual cone width',35,150,1,'%'],['verticalFov','Vertical FOV / depth band',10,180,1,'°'],['eyeCount','Visual organs',1,8,1,'eyes'],['eyeAngle','Optic-axis offset',-90,90,1,'°'],['eyeHeight','Eye height above ground',0,60,1,'u'],['rayCount','Potential ray positions',4,128,1,'rays'],['rayBudget','Simultaneous ray budget',1,64,1,'rays'],['rayWidth','Physical ray width',0,16,.25,'px'],['originCycle','Ray-origin cycling',0,3,1,'mode',['Fixed','Alternate','Sequential','Spiral']],['distribution','Angular distribution',0,3,1,'mode',['Uniform','Centre-weighted','Peripheral','Clustered']],['maxRange','Maximum range',60,650,5,'u'],['minRange','Near blind zone',0,100,1,'u'],['curvature','Peripheral curvature',-45,45,1,'°']
  ]},
  {name:'Body turning & behavioural variance',note:'Body turning alternates with scanning. Fast turns freeze the sensory frame in world space; vision resumes after angular velocity falls below the release threshold.',items:[
   ['turnSpeed','Body turn speed',0,360,1,'°/s'],['turnVariance','Turn-speed variability',0,100,1,'%'],['behaviorVariance','Scan / turn behaviour variance',0,100,1,'%'],['turnBias','Turning vs scanning bias',0,100,1,'%'],['turnLockThreshold','High-speed vision lock',10,300,1,'°/s'],['gazeWander','Idle gaze variability',0,100,1,'%']
@@ -570,7 +570,7 @@ function updateWorld(dt){
  const speed=Math.abs(deg(bodyTurnVelocity));
  if(!visionLocked&&speed>=params.turnLockThreshold){
   visionLocked=true;lockedEyeGeometry=eyeLayout().map(eye=>eyeGeometry(eye));
-  lockedRaySpecs=Array.from({length:Math.round(params.rayCount)},(_,i)=>{const old=latestRays[i];return old?{index:i,eye:old.eye,origin:{...old.origin},angle:Math.atan2(old.dir.y,old.dir.x),dir:{...old.dir},t:old.t}:raySpec(i)});
+  lockedRaySpecs=Array.from({length:Math.round(params.rayCount)},(_,i)=>raySpec(i));
  }else if(visionLocked&&speed<params.turnLockThreshold*.72){
   visionLocked=false;lockedRaySpecs=[];lockedEyeGeometry=[];scheduleImmediate=true;lastSample=0;
  }
