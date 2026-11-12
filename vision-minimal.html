@@ -25,7 +25,7 @@ function sync(){for(const k of Object.keys(p)){$(k).value=p[k];$(k+'Out').textCo
 for(const k of Object.keys(p))$(k).addEventListener('input',e=>{p[k]=Number(e.target.value);sync();sample()});
 $('showAdvancedControls').addEventListener('change',e=>document.querySelectorAll('.control.advancedHidden').forEach(row=>row.classList.toggle('is-visible',e.target.checked)));
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause';$('status').textContent=paused?'PAUSED':'SENSING'};
-$('reset').onclick=()=>{Object.assign(p,{rays:48,range:420,rate:20});angle=-Math.PI/2;sync();sample()};
+$('reset').onclick=()=>{Object.assign(p,{rays:48,range:300,rate:10});for(const k of ['rays','range','rate']){const input=$(k);p[k]=Math.min(Number(input.max),Math.max(Number(input.min),p[k]))}angle=-Math.PI/2;sync();sample()};
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;angle+=(e.clientX-drag.x)*.012;drag={x:e.clientX,y:e.clientY};sample()});
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,()=>drag=null);
