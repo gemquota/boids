@@ -25,10 +25,8 @@ function updateBondNetwork(dt){
  for(const p of plants){bondPlantIndex.set(p.id,p);alivePlantIds.add(p.id)}
  bondLinks=BoidsEconomics.pruneBonds(bondLinks,aliveAgentIds,alivePlantIds);
  bondGrowthByPlant.clear();boundNeonatalMasks.clear();
- for(const bond of bondLinks){
-  const mark=(id,side)=>{if(!side?.startsWith('neonatal'))return;const site=Number(side.slice(8));if(site<0||site>3||!Number.isInteger(site))return;boundNeonatalMasks.set(id,(boundNeonatalMasks.get(id)||0)|(1<<site))};
-  mark(bond.a,bond.sideA);if(bond.targetType==='agent')mark(bond.b,bond.sideB);
- }
+ const markBondSite=(id,side)=>{if(!side?.startsWith('neonatal'))return;const site=Number(side.slice(8));if(site<0||site>3||!Number.isInteger(site))return;boundNeonatalMasks.set(id,(boundNeonatalMasks.get(id)||0)|(1<<site))};
+ for(const bond of bondLinks){markBondSite(bond.a,bond.sideA);if(bond.targetType==='agent')markBondSite(bond.b,bond.sideB)}
  for(let k=0;k<N;k++){
   const id=individualId[k],m=morphologyById.get(id);if(!m)continue;
   for(const site of m.neonatalBondSites||[])if(site.state==='attached'&&!(boundNeonatalMasks.get(id)&(1<<site.index)))site.state=age[k]<=(m.neonatalBondWindow??4)?'available':'converting';
