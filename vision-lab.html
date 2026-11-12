@@ -246,7 +246,6 @@ function buildParameterMap(){
   if(e.target.closest('.parameterChip'))return;
   map.classList.toggle('is-collapsed');
  });
- root.addEventListener('click',e=>e.stopPropagation());
  groups.forEach(group=>{
   const section=document.createElement('div');section.className='mapGroup';section.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);
   const title=document.createElement('div');title.className='mapGroupTitle';title.textContent=group.name;section.append(title);
