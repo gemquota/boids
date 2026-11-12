@@ -15,7 +15,7 @@ function sweptCircleTime(px,py,vx,vy,rx,ry,rvx,rvy,radius){
 function resolveCircleContact(a,b,options={}){
   const dx=finite(b.x)-finite(a.x),dy=finite(b.y)-finite(a.y),d2=dx*dx+dy*dy;
   const distance=Math.sqrt(d2),minimum=Math.max(0,finite(a.radius))+Math.max(0,finite(b.radius));
-  if(distance>=minimum)return {hit:false,impulse:0,penetration:0};
+  if(distance>minimum+1e-6)return {hit:false,impulse:0,penetration:0};
   const nx=distance>1e-8?dx/distance:1,ny=distance>1e-8?dy/distance:0;
   const invA=1/Math.max(.001,finite(a.mass,1)),invB=1/Math.max(.001,finite(b.mass,1)),sum=invA+invB;
   const penetration=minimum-distance,slop=Math.max(0,finite(options.slop,.01));
