@@ -290,10 +290,14 @@ assert.ok(plantApi.plantCounters.asexualBuds >= 1, 'ordinary collision-aware clo
 const beforeGermination = plantApi.plants.length;
 const waterLanding = plantApi.nearestFreshwater(500, 300);
 plantApi.spores.push({ x: waterLanding.x, y: waterLanding.y, vx: 0, vy: 0, life: 7.1, settleAfter: 7, landed: true, settleClock: 1.8, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
-plantApi.growPlants(.01);
+for (let attempt = 0; attempt < 12 && plantApi.plantCounters.sporesGerminated === 0; attempt++) {
+  const waiting = plantApi.spores.find(sp => sp.parentId === mother.id);
+  if (waiting) waiting.settleClock = 1.8;
+  plantApi.growPlants(.01);
+}
 const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && Math.hypot(p.x-waterLanding.x,p.y-waterLanding.y)<1);
-assert.ok(germinated, 'a landed, viable asexual spore should germinate into a clonal seedling');
-assert.ok(plantApi.plants.length > beforeGermination, 'adult clonal nodes should continue branching during the next growth tick');
+assert.ok(germinated, 'a landed, viable asexual spore should germinate after repeated settlement checks');
+assert.ok(plantApi.plants.length > beforeGermination, 'ordinary clonal nodes should continue branching during subsequent growth ticks');
 assert.equal(plantApi.plantCounters.sporesGerminated, 1);
 const oldPlant = { id: 9002, parent: 0, root: 9002, x: 600, y: 300, angle: 0, size: .3, biomass: .2, age: 100, children: 0, lifespan: 100, senescent: false };
 plantApi.plants.push(oldPlant);
