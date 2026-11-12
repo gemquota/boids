@@ -40,12 +40,13 @@ limitDialog.innerHTML='<form method="dialog" style="display:grid;gap:10px"><stro
 document.body.append(limitDialog);let editingSlider=null;
 function openLimitEditor(input){editingSlider=input;$('limitTitle').textContent='Limits · '+(input.getAttribute('aria-label')||input.id);$('limitMin').value=input.min;$('limitMax').value=input.max;limitDialog.showModal()}
 function exportLimits(){const blob=new Blob([JSON.stringify({schema:'boids-vision-slider-limits-v1',limits:savedLimits},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='boids-vision-slider-limits.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-for(const input of sliders){let hold=null,moved=false,start=null;const label=input.closest('.control')?.querySelector('label');if(!label)continue;
-label.title='Long-press to edit this slider’s minimum and maximum';
-label.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;moved=false;start={x:e.clientX,y:e.clientY};hold=setTimeout(()=>{moved=true;openLimitEditor(input)},600)});
-label.addEventListener('pointermove',e=>{if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>9){clearTimeout(hold);hold=null}});
-for(const ev of ['pointerup','pointercancel','pointerleave'])label.addEventListener(ev,()=>{clearTimeout(hold);hold=null;start=null});
-label.addEventListener('contextmenu',e=>{e.preventDefault();moved=true;openLimitEditor(input)});
+for(const input of sliders){let hold=null,start=null;const label=input.closest('.control')?.querySelector('label');if(!label)continue;
+for(const target of [label,input]){target.title='Long-press to edit this slider’s minimum and maximum';
+target.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;start={x:e.clientX,y:e.clientY};hold=setTimeout(()=>openLimitEditor(input),600)});
+target.addEventListener('pointermove',e=>{if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>9){clearTimeout(hold);hold=null}});
+for(const ev of ['pointerup','pointercancel','pointerleave'])target.addEventListener(ev,()=>{clearTimeout(hold);hold=null;start=null});
+target.addEventListener('contextmenu',e=>{e.preventDefault();openLimitEditor(input)});
+}
 }
 limitDialog.querySelector('form').addEventListener('submit',e=>{if(e.submitter?.id!=='saveLimits')return;e.preventDefault();if(!editingSlider)return;const min=Number($('limitMin').value),max=Number($('limitMax').value);if(!Number.isFinite(min)||!Number.isFinite(max)||min>=max){$('limitMin').focus();return}
 editingSlider.min=String(min);editingSlider.max=String(max);const key=editingSlider.id;savedLimits[key]={min,max};localStorage.setItem(LIMITS_KEY,JSON.stringify(savedLimits));
