@@ -207,7 +207,8 @@ const enumLabels={
 };
 function displayValue(item,value){
  const key=item[0],suffix=item[5]||'';
- if(key==='scanDirection')return enumLabels[key][Math.round(value)+1]||String(value);\n if(enumLabels[key])return enumLabels[key][Math.round(value)]||String(value);
+ if(key==='scanDirection')return enumLabels[key][Math.round(value)+1]||String(value);
+ if(enumLabels[key])return enumLabels[key][Math.round(value)]||String(value);
  if(key==='confidenceMin'||key==='learningRate'||key==='plasticity')return fmt(value,2);
  if(key==='energyPerRay'||key==='processingCost')return fmt(value,3);
  return (Number.isInteger(value)?String(value):fmt(value,2))+(suffix?' '+suffix:'');
