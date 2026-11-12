@@ -55,7 +55,7 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
   assert.ok(start >= 0 && end > start);
   const renderer = worker.slice(start, end);
   assert.match(renderer, /quadraticCurveTo/);
-  assert.match(renderer, /r=2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)/);
+  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.5/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
   assert.doesNotMatch(renderer, /ctx\.arc\(/);
