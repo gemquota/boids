@@ -327,6 +327,8 @@ function drawBoids(){
    for(let j=0;j<limb.joints;j++){const t=(j+1)/limb.joints,wiggle=Math.sin(phase+(j*.8)+(limb.side<0?Math.PI:0))*reach*.22,spread=limb.side*(reach*t*limb.spread),nx=ax+Math.cos(phase*.25+limb.side)*reach*t*.38+wiggle,ny=ay+spread;ctx.lineTo(nx,ny);px=nx;py=ny;joints.push([px,py])}
    ctx.stroke();ctx.fillStyle='rgba(224,250,255,.9)';for(const joint of joints){ctx.beginPath();ctx.arc(joint[0],joint[1],jointRadius,0,TAU);ctx.fill()}
   }
+  ctx.fillStyle='rgba(8,22,31,.92)';ctx.strokeStyle='rgba(225,250,255,.8)';ctx.lineWidth=Math.max(.45,len*.045);ctx.beginPath();ctx.ellipse(len*.42,0,len*.105,Math.max(.45,len*.075),0,0,TAU);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(240,255,255,.95)';ctx.beginPath();ctx.arc(len*.28,-baseHalf*negScale*.53,Math.max(.45,len*.055),0,TAU);ctx.arc(len*.28,baseHalf*posScale*.53,Math.max(.45,len*.055),0,TAU);ctx.fill();
   for(const site of m.neonatalBondSites||[]){
    if(!['available','attached','converting'].includes(site.state))continue;
    const sx=(site.index-1.5)*len*.18,sy=(site.index%2===0?-1:1)*baseHalf*.86;
@@ -337,8 +339,7 @@ function drawBoids(){
   ctx.globalAlpha=1;
   for(let k=0;k<(m.bondingSitesLeft||0);k++){ctx.fillStyle='#ffd58b';ctx.beginPath();ctx.arc(-len*.12+k*len*.17,-baseHalf*.9,Math.max(.4,len*.035),0,TAU);ctx.fill()}
   for(let k=0;k<(m.bondingSitesRight||0);k++){ctx.fillStyle='#ffd58b';ctx.beginPath();ctx.arc(-len*.12+k*len*.17,baseHalf*.9,Math.max(.4,len*.035),0,TAU);ctx.fill()}
-  ctx.fillStyle='rgba(8,22,31,.92)';ctx.strokeStyle='rgba(225,250,255,.8)';ctx.lineWidth=Math.max(.45,len*.045);ctx.beginPath();ctx.ellipse(len*.42,0,len*.105,Math.max(.45,len*.075),0,0,TAU);ctx.fill();ctx.stroke();
-  ctx.fillStyle='rgba(240,255,255,.95)';ctx.beginPath();ctx.arc(len*.28,-baseHalf*negScale*.53,Math.max(.45,len*.055),0,TAU);ctx.arc(len*.28,baseHalf*posScale*.53,Math.max(.45,len*.055),0,TAU);ctx.fill();ctx.restore();
+  ctx.globalAlpha=1;ctx.restore();
  }
 }
 function drawBondNetwork(plantById){
