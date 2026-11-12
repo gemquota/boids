@@ -273,7 +273,7 @@ const exportResponse = a.__messages.at(-1);
 assert.equal(exportResponse.type, 'exportData', 'worker should answer export requests');
 assert.equal(exportResponse.requestId, 42, 'worker should preserve export request IDs');
 
-// Plant life cycle: clonal budding, mature adult offspring, spore germination, senescence and death.
+// Plant life cycle: collision-aware budding, maternal flowers, local colour inheritance, spore germination, senescence and death.
 const plantWorld = makeWorld(404);
 const plantApi = plantWorld.__boidsTest;
 plantApi.plants.splice(0);
@@ -282,10 +282,11 @@ const mother = { id: 9001, parent: 0, root: 9001, x: 180, y: 180, angle: 0, size
 plantApi.plants.push(mother);
 plantApi.growPlants(.01);
 assert.equal(mother.grandmother, true, 'a sufficiently large mature mother should become a grandmother');
-const adultClones = plantApi.plants.filter(p => p.parent === mother.id && p.adultNode);
-assert.equal(adultClones.length, 2, 'grandmother should produce two fully mature clonal offspring');
-assert.ok(adultClones.every(p => p.biomass >= .72 && p.age >= 9), 'adult clones should be branch-ready immediately');
-assert.ok(plantApi.plantCounters.asexualBuds >= 2, 'clonal budding should be counted');
+assert.equal(plantApi.plants.filter(p => p.parent === mother.id && p.adultNode).length, 0, 'grandmother status must not automatically create two mature offspring');
+assert.ok(mother.flowerCount >= 3 && mother.flowerCount <= 5, 'mother plants should develop a small cluster of flowers');
+assert.ok(mother.flowerGrowth > 0, 'flowers should begin growing when maternal status is reached');
+assert.equal(mother.offspring, 0, 'grandmother status alone must not fabricate offspring');
+assert.ok(plantApi.plantCounters.asexualBuds >= 1, 'ordinary collision-aware clonal budding should still be counted');
 const beforeGermination = plantApi.plants.length;
 const waterLanding = plantApi.nearestFreshwater(500, 300);
 plantApi.spores.push({ x: waterLanding.x, y: waterLanding.y, vx: 0, vy: 0, life: 7.1, settleAfter: 7, landed: true, settleClock: 1.8, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
