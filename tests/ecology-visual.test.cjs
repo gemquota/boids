@@ -59,7 +59,8 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
   assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
-  assert.doesNotMatch(renderer, /ctx\.arc\(/);
+  assert.match(renderer, /flowerCount/);
+  assert.match(renderer, /ctx\.arc\(/);
   assert.doesNotMatch(worker, /function drawCrystal\(p\)|function drawPolypArms\(/);
   assert.doesNotMatch(worker, /function lagoon\(/);
 });
@@ -108,3 +109,26 @@ test('boids resolve physical body overlap and exchange collision impulse', () =>
   assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
 });
 
+
+
+test('plants avoid canopy collisions and use treetop tip-shyness for new growth', () => {
+  assert.match(worker, /function plantCollisionRadius\(p\)/);
+  assert.match(worker, /function plantPositionClear\(px,py,size=\.2,ignoreId=0\)/);
+  assert.match(worker, /function findPlantGrowthPosition\(parent,angle,distance,size=\.2\)/);
+  assert.match(worker, /placement=findPlantGrowthPosition\(p,a,len,\.2\)/);
+  assert.match(worker, /crowded=!plantPositionClear\(sp\.x,sp\.y,\.2\)/);
+});
+
+test('new plants inherit nearby colour using distance and size weighted hue blending', () => {
+  assert.match(worker, /function plantHueAt\(px,py,ignoreId=0\)/);
+  assert.match(worker, /weight=\(\.25\+Math\.max\(\.05,p\.size\|\|\.2\)\*1\.5\)\/\(1\+d2\/\(64\*64\)\)/);
+  assert.match(worker, /node\.hue=plantHueAt\(node\.x,node\.y,node\.parent\|\|0\)/);
+  assert.match(worker, /Number\.isFinite\(p\.hue\)/);
+});
+
+test('mother plants grow branch-tip flowers without grandmother twin-spawning', () => {
+  assert.match(worker, /p\.grandmother=true;p\.flowerCount=3\+Math\.floor\(random\(\)\*3\);p\.flowerGrowth=0/);
+  assert.match(worker, /if\(p\.grandmother\)p\.flowerGrowth=Math\.min\(1,/);
+  assert.match(worker, /if\(!senescent&&k<\(p\.flowerCount\|\|0\)\)/);
+  assert.doesNotMatch(worker, /p\.grandmother=true;p\.offspring\+=2/);
+});
