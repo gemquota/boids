@@ -32,7 +32,7 @@ For collisions, monitor contact count, mean/max penetration, impulse, and contac
 
 ## Paired experiment plan
 
-The research/run16-followup.js script generates six conditions with ten paired seeds each. The seed list is identical across conditions, so differences are not confounded by a different random seed set.
+The research/run16-followup.js script generates 60 runs across six conditions with ten paired seeds each. The seed list is identical across conditions, so differences are not confounded by a different random seed set.
 
 1. Fixed baseline
 2. Faster plant spore interval
