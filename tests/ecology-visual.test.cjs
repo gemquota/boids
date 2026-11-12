@@ -54,10 +54,11 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
   const end = worker.indexOf('function drawWaterways()', start);
   assert.ok(start >= 0 && end > start);
   const renderer = worker.slice(start, end);
-  assert.match(renderer, /scale=\\(6\\+p\\.size\\*8\\.5\\)\\*\\(mature\\?1\\.24:\\.82\\)\\*\\(senescent\\?\\.68:1\\)\\*\\.5/);
+  assert.match(renderer, /scale=\(6\+p\.size\*8\.5\)\*\(mature\?1\.24:\.82\)\*\(senescent\?\.68:1\)\*\.5/);
   assert.match(renderer, /quadraticCurveTo/);
-  assert.match(renderer, /length=scale\\*\\(\\.72\\+\\.28\\*Math\\.cos\\(spread\\*Math\\.PI\\)\\)\\*\\(p\\.branchLengthScale\\|\\|1\\)/);\n  assert.match(renderer, /width=Math\\.max\\(\\.65,\\(\\.9\\+p\\.size\\*\\.32\\)\\*\\(p\\.branchThicknessScale\\|\\|1\\)\\)/);
-  assert.match(renderer, /r=\\(2\\.8\\+Math\\.min\\(3\\.4,p\\.size\\*2\\.7\\)\\)\\*\\.25\\*\\(p\\.nodeScale\\|\\|1\\)/);
+  assert.match(renderer, /length=scale\*\(\.72\+\.28\*Math\.cos\(spread\*Math\.PI\)\)\*\(p\.branchLengthScale\|\|1\)/);
+  assert.match(renderer, /width=Math\.max\(\.65,\(\.9\+p\.size\*\.32\)\*\(p\.branchThicknessScale\|\|1\)\)/);
+  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25\*\(p\.nodeScale\|\|1\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
   assert.match(renderer, /flowerCount/);
