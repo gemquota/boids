@@ -329,6 +329,7 @@ assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,resto
 assert.equal(restoredSnapshot.schemaVersion, 24);
 assert.deepEqual(Array.from(restoredSnapshot.arrays.extraBrainOut),Array.from(sourceSnapshot.arrays.extraBrainOut));
 assert.deepEqual(Array.from(restoredSnapshot.arrays.collisionPressureByAgent),Array.from(sourceSnapshot.arrays.collisionPressureByAgent));
+assert.deepEqual(Array.from(restoredSnapshot.arrays.bondTensionByAgent),Array.from(sourceSnapshot.arrays.bondTensionByAgent));
 assert.deepEqual(restoredSnapshot.populationEvents,sourceSnapshot.populationEvents);
 assert.equal(restoredSnapshot.counters.initialPopulation,sourceSnapshot.counters.initialPopulation);
 assert.equal(restoredSnapshot.counters.collisionContacts,sourceSnapshot.counters.collisionContacts);
