@@ -69,7 +69,8 @@
     return {a:Math.max(0,Math.floor(finite(input.a,0))),b:Math.max(0,Math.floor(finite(input.b,0))),
       targetType,sideA:input.sideA==='right'?'right':'left',...(targetType==='agent'?{sideB:input.sideB==='right'?'right':'left'}:{}),
       kind,strength:clamp(finite(input.strength,.1),0,1),age:Math.max(0,finite(input.age,0)),
-      createdAt:Math.max(0,finite(input.createdAt,0))};
+      createdAt:Math.max(0,finite(input.createdAt,0)),restLength:clamp(finite(input.restLength,0),0,128),
+      stiffness:clamp(finite(input.stiffness,.75),0,4),damping:clamp(finite(input.damping,.22),0,2)};
   }
   function countBonds(links,agentId){return (links||[]).reduce((n,b)=>n+(b.a===agentId||(b.targetType==='agent'&&b.b===agentId)?1:0),0)}
   function bondLoad(links,agentId){return (links||[]).reduce((n,b)=>n+((b.a===agentId||(b.targetType==='agent'&&b.b===agentId))?b.strength:0),0)}
