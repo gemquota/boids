@@ -145,8 +145,8 @@ test('founder limb counts follow the requested weighted distribution and descend
   const start = worker.indexOf('const LIMB_COUNT_WEIGHTS=');
   const end = worker.indexOf('function bondOpportunity', start);
   assert.ok(start >= 0 && end > start, 'weighted limb sampler must be defined');
-  const context = { seed: 123456789, random() { this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0; return this.seed / 4294967296; } };
-  vm.runInNewContext(worker.slice(start, end) + ';this.sample=sampleLimbCount;this.weights=LIMB_COUNT_WEIGHTS;', context);
+  const context = {};
+  vm.runInNewContext('let seed=123456789;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};' + worker.slice(start, end) + ';this.sample=sampleLimbCount;this.weights=LIMB_COUNT_WEIGHTS;', context);
   assert.deepEqual(Array.from(context.weights), [10,15,30,15,10,8,4,3,2,2,1]);
   const counts = new Array(11).fill(0);
   for (let i = 0; i < 100000; i++) counts[context.sample()]++;
