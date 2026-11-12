@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#080512"><title>BOIDS / Psychedelic Audio Vision</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#080512}
+body{background:radial-gradient(ellipse at center,#180d2c 0%,#080512 68%,#030208 100%);font-family:system-ui,sans-serif}
+canvas{display:block;width:100vw;height:100dvh;touch-action:none}
+#dock{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #ffffff20;border-radius:999px;background:#090613bb;backdrop-filter:blur(16px);color:#eee;z-index:3;transition:opacity .3s}
+button{border:1px solid #ffffff26;background:#ffffff10;color:#f7eaff;border-radius:999px;padding:9px 13px;font-size:12px;white-space:nowrap}
+button:active{background:#ffffff2a}#status{font-size:10px;color:#c8b8dc;min-width:62px;text-align:center}
+#file{display:none}#hint{position:fixed;top:14px;left:0;right:0;text-align:center;color:#c7b4e8a0;font:10px system-ui;letter-spacing:.18em;pointer-events:none}
+#dock.hidden{opacity:0;pointer-events:none}
+</style></head><body>
+<canvas id="view" aria-label="Audio-reactive psychedelic radial vision field"></canvas>
+<div id="hint">AUDIO VISION · FEED IT MUSIC</div>
+<div id="dock"><button id="load">LOAD TRACK</button><button id="mic">MIC INPUT</button><button id="toggle" disabled>PAUSE</button><span id="status">NO SIGNAL</span><input id="file" type="file" accept="audio/*"></div>
+<audio id="player" crossorigin="anonymous"></audio>
+<script>(()=>{'use strict';
+const canvas=document.getElementById('view'),ctx=canvas.getContext('2d'),file=document.getElementById('file'),player=document.getElementById('player'),dock=document.getElementById('dock'),status=document.getElementById('status'),toggle=document.getElementById('toggle');
+let W=0,H=0,dpr=1,angle=-Math.PI/2,last=0,fov=112,rayCount=72,pollingHz=30,nextSample=0;
+let audioCtx=null,analyser=null,source=null,micStream=null,frequency=null,waveform=null,playing=false,energy={bass:0,mid:0,high:0,all:0},phase=0,manualFov=112,manualRays=72;
+const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const streaks=Array.from({length:320},(_,i)=>({a:Math.random()*TAU,r:.12+Math.random()*.88,len:8+Math.random()*100,w:.5+Math.random()*2.8,band:Math.floor(Math.random()*3),seed:Math.random()*TAU}));
+function resize(){const r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+function setupAudio(){if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();analyser=audioCtx.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=.76;frequency=new Uint8Array(analyser.frequencyBinCount);waveform=new Uint8Array(analyser.fftSize)}if(audioCtx.state==='suspended')audioCtx.resume()}
+function connect(node){if(source){try{source.disconnect()}catch{}}source=node;source.connect(analyser);analyser.connect(audioCtx.destination);toggle.disabled=false;toggle.textContent='PAUSE';playing=true;status.textContent='LIVE SIGNAL'}
+function loadTrack(f){if(!f)return;setupAudio();if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}player.pause();player.src=URL.createObjectURL(f);player.load();const start=()=>{const node=audioCtx.createMediaElementSource(player);connect(node);player.play().catch(()=>status.textContent='TAP PLAY')};if(player.readyState>=2)start();else player.addEventListener('canplay',start,{once:true})}
+async function useMic(){try{setupAudio();player.pause();if(micStream)micStream.getTracks().forEach(t=>t.stop());micStream=await navigator.mediaDevices.getUserMedia({audio:true});connect(audioCtx.createMediaStreamSource(micStream));status.textContent='MIC LIVE'}catch(e){status.textContent='MIC BLOCKED'}}
+function readAudio(){if(!analyser||!playing){energy.bass*=.94;energy.mid*=.94;energy.high*=.94;energy.all*=.94;return}analyser.getByteFrequencyData(frequency);analyser.getByteTimeDomainData(waveform);const band=(a,b)=>{let sum=0,n=0;for(let i=a;i<b&&i<frequency.length;i++){sum+=frequency[i];n++}return n?sum/n/255:0};const smooth=(old,v)=>old*.72+v*.28;energy.bass=smooth(energy.bass,band(1,12));energy.mid=smooth(energy.mid,band(12,90));energy.high=smooth(energy.high,band(90,360));energy.all=smooth(energy.all,band(1,500))}
+function edgeDistance(dx,dy){const tx=Math.abs(dx)>1e-8?(W/2)/Math.abs(dx):Infinity,ty=Math.abs(dy)>1e-8?(H/2)/Math.abs(dy):Infinity;return Math.min(tx,ty)}
+function drawBackground(t){ctx.fillStyle='#080512';ctx.fillRect(0,0,W,H);const glow=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.72);glow.addColorStop(0,'#281044');glow.addColorStop(.38,'#120b25');glow.addColorStop(1,'#030208');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H)}
+function draw(t){drawBackground(t);const cx=W/2,cy=H/2,half=fov*Math.PI/360,rot=angle;ctx.save();ctx.translate(cx,cy);
+const hueBase=(t*.025+energy.mid*110)%360;
+ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,Math.hypot(W,H),rot-half,rot+half);ctx.closePath();ctx.fillStyle='hsla('+hueBase+',95%,60%,'+(.025+energy.bass*.09)+')';ctx.fill();
+const beat=energy.bass,mid=energy.mid,high=energy.high;
+for(let i=0;i<streaks.length;i++){const s=streaks[i],band=s.band,amp=band===0?beat:band===1?mid:high;let a=s.a+Math.sin(t*.0004+s.seed)*(.018+amp*.09);let radius=s.r*Math.min(W,H)*(.22+amp*.28);if(Math.abs(((a-rot+Math.PI*3)%TAU)-Math.PI)>half*1.35)continue;const x=Math.cos(a)*radius,y=Math.sin(a)*radius;const length=s.len*(.2+amp*(band===0?3.8:band===1?2.5:1.8));const hue=(hueBase+band*112+s.seed*50+amp*90)%360;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*length,y+Math.sin(a)*length);ctx.strokeStyle='hsla('+hue+',100%,'+(58+amp*32)+'%,'+(.12+amp*.72)+')';ctx.lineWidth=s.w*(.5+amp*2.8);ctx.shadowBlur=amp*18;ctx.shadowColor='hsl('+hue+',100%,65%)';ctx.stroke()}
+ctx.shadowBlur=0;
+for(let i=0;i<rayCount;i++){const p=rayCount===1?.5:i/(rayCount-1),a=rot+(p-.5)*2*half;const dx=Math.cos(a),dy=Math.sin(a),dist=edgeDistance(dx,dy);const local=(i*7)%frequencySafe(),v=playing?frequency[local]/255:0;const pulse=beat*.8+v*.2;const hue=(hueBase+p*150+mid*120+i%9*8)%360;const reach=dist*(.55+.45*Math.max(.12,pulse));ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(dx*reach,dy*reach);ctx.strokeStyle='hsla('+hue+',100%,'+(58+high*25)+'%,'+(.2+pulse*.75)+')';ctx.lineWidth=.55+pulse*2.3;ctx.shadowBlur=pulse*14;ctx.shadowColor='hsl('+hue+',100%,65%)';ctx.stroke();if(pulse>.22){ctx.beginPath();ctx.arc(dx*reach,dy*reach,1+pulse*3,0,TAU);ctx.fillStyle='hsl('+hue+',100%,75%)';ctx.fill()}}
+ctx.shadowBlur=0;
+const core=3+beat*16;ctx.beginPath();ctx.arc(0,0,core,0,TAU);ctx.fillStyle='hsl('+(hueBase+180)+',100%,80%)';ctx.shadowBlur=12+beat*35;ctx.shadowColor='hsl('+hueBase+',100%,65%)';ctx.fill();ctx.restore();ctx.shadowBlur=0}
+function frequencySafe(){return frequency?frequency.length:1}
+function frame(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;readAudio();phase+=dt;const pulse=energy.bass,mid=energy.mid,high=energy.high;fov=clamp(manualFov+pulse*48+Math.sin(phase*2.1)*mid*12,25,178);rayCount=Math.round(clamp(manualRays+pulse*110+high*48,12,256)/2)*2;angle+=dt*(.12+mid*.9+pulse*1.4)*(Math.sin(phase*.31)*.55+.75);if(now>=nextSample){nextSample=now+1000/pollingHz}draw(now);requestAnimationFrame(frame)}
+let pointers=new Map(),gesture=null;
+function centreDistance(){const p=[...pointers.values()];return p.length<2?0:Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y)}
+canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);if(pointers.size===1)gesture={mode:'rotate',x:e.clientX};else if(pointers.size===2)gesture={mode:'two',distance:centreDistance(),x:( [...pointers.values()][0].x+[...pointers.values()][1].x)/2,y:([...pointers.values()][0].y+[...pointers.values()][1].y)/2}})
+canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1&&gesture?.mode==='rotate'){angle+=(e.clientX-gesture.x)*.008;gesture.x=e.clientX}else if(pointers.size===2&&gesture?.mode==='two'){const p=[...pointers.values()],x=(p[0].x+p[1].x)/2,y=(p[0].y+p[1].y)/2,d=centreDistance();manualRays=clamp(manualRays+(gesture.y-y)*.8,12,256);manualFov=clamp(manualFov+(d-gesture.distance)*.25,25,178);gesture={mode:'two',distance:d,x,y}}})
+function end(e){pointers.delete(e.pointerId);if(!pointers.size)gesture=null;else if(pointers.size===1){const p=[...pointers.values()][0];gesture={mode:'rotate',x:p.x}}}for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,end);
+document.getElementById('load').addEventListener('click',()=>file.click());file.addEventListener('change',()=>loadTrack(file.files[0]));document.getElementById('mic').addEventListener('click',useMic);
+toggle.addEventListener('click',()=>{if(!audioCtx)return;if(playing){if(micStream){micStream.getTracks().forEach(t=>t.enabled=false)}else player.pause();playing=false;toggle.textContent='RESUME';status.textContent='PAUSED'}else{if(micStream)micStream.getTracks().forEach(t=>t.enabled=true);else player.play();playing=true;toggle.textContent='PAUSE';status.textContent='LIVE SIGNAL'}});
+let hideTimer;function showDock(){dock.classList.remove('hidden');clearTimeout(hideTimer);hideTimer=setTimeout(()=>{if(playing)dock.classList.add('hidden')},3500)}canvas.addEventListener('pointerdown',showDock);dock.addEventListener('pointerdown',()=>{clearTimeout(hideTimer)});window.addEventListener('resize',resize);resize();requestAnimationFrame(frame);
+})();</script></body></html>
