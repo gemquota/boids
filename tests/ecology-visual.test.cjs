@@ -154,6 +154,12 @@ test('population exports distinguish biological births/deaths from manual resizi
   assert.ok(worker.includes("recordPopulationEvent('death'"));
 });
 
+test('parental contribution telemetry exposes reproductive skew', () => {
+  assert.ok(worker.includes('function summarizeParentalContribution()'));
+  for(const field of ['parentContributionHHI','parentContributionEffectiveCount','topParentContributionShare'])assert.ok(worker.includes(field),field);
+  assert.ok(worker.includes('...summarizeParentalContribution()'));
+});
+
 test('run telemetry records changing watershed conditions rather than only static habitat averages', () => {
   assert.ok(worker.includes('function summarizeHydrology()'));
   for(const field of ['meanSoilMoisture','meanGroundwater','meanSurfaceWater','meanRainfall','meanSalinity','meanFloodDepth','maxFloodDepth','tidePhase','stormPhase'])assert.ok(worker.includes(field),field);
