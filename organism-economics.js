@@ -67,7 +67,7 @@
     const kind=['mutualistic','commensal','parasitic','altruistic'].includes(input.kind)?input.kind:'mutualistic';
     const targetType=input.targetType==='plant'?'plant':'agent';
     return {a:Math.max(0,Math.floor(finite(input.a,0))),b:Math.max(0,Math.floor(finite(input.b,0))),
-      targetType,sideA:input.sideA==='right'?'right':'left',...(targetType==='agent'?{sideB:input.sideB==='right'?'right':'left'}:{}),
+      targetType,sideA:/^neonatal[0-3]$/.test(input.sideA||'')?input.sideA:(input.sideA==='right'?'right':'left'),...(targetType==='agent'?{sideB:/^neonatal[0-3]$/.test(input.sideB||'')?input.sideB:(input.sideB==='right'?'right':'left')}:{}),
       kind,strength:clamp(finite(input.strength,.1),0,1),age:Math.max(0,finite(input.age,0)),
       createdAt:Math.max(0,finite(input.createdAt,0))};
   }
