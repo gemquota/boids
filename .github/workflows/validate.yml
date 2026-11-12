@@ -22,6 +22,12 @@ jobs:
           open('/tmp/boids-app.js', 'w', encoding='utf-8').write(match.group(1))
           PY
           node --check /tmp/boids-app.js
+          vision = open('vision-lab.html', encoding='utf-8').read()
+          vision_match = re.search(r'<script>(.*?)</script>', vision, re.S)
+          if not vision_match:
+              raise SystemExit('Vision lab inline script not found')
+          open('/tmp/boids-vision-lab.js', 'w', encoding='utf-8').write(vision_match.group(1))
+          node --check /tmp/boids-vision-lab.js
           node --check boids-worker.js
           node --check chromosome.js
           node --check config-registry.js
