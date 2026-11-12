@@ -113,11 +113,38 @@ test('DNA and observatory use distinct icon tabs and reset lives in Field Operat
 test('boids resolve physical body overlap and exchange collision impulse', () => {
   assert.ok(worker.includes('function collisionRadius(i)'));
   assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
-  assert.ok(worker.includes('if(relative<0){const impulse='));
+  assert.ok(worker.includes('const massI=Math.max(.1,phenotype(i,1))'));
+  assert.ok(worker.includes('normalImpulse=-(1+.22)*relative/invTotal'));
+  assert.ok(worker.includes('normalAfter=rvx*nx+rvy*ny'));
+  assert.ok(worker.includes('collisionPressureByAgent[i]'));
   assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
 });
 
 
+
+test('mature grandmother plants remain reproductively active until senescence', () => {
+  assert.match(worker, /p\\.stage==='mature'\\|\\|p\\.stage==='grandmother'\\|\\|p\\.stage==='great-grandmother'/);
+  assert.match(worker, /sporeFailedCrowded/);
+  assert.match(worker, /sporeFailedDry/);
+});
+
+test('colony bonds persist through ordinary separation and only lose endpoints on death', () => {
+  assert.match(worker, /if\\(near\\)bond\\.strength=clamp\\(bond\\.strength\\+\\.035\\*dt,0,1\\)/);
+  assert.doesNotMatch(worker, /near\\?\\.035:-\\.012/);
+  assert.match(worker, /bond_broken.*organism_death/);
+});
+
+test('population exports distinguish biological births/deaths from manual resizing', () => {
+  assert.match(worker, /populationResizeAdds/);
+  assert.match(worker, /populationResizeRemovals/);
+  assert.match(worker, /populationAccountingError/);
+  assert.match(worker, /recordPopulationEvent\\('death'/);
+});
+
+test('neural interface exposes additional named sensory and behavior channels', () => {
+  assert.match(worker, /waterProximity:8,thirst:9,bondTension:10,contactPressure:11/);
+  assert.match(worker, /forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11/);
+});
 
 test('plants avoid canopy collisions and use treetop tip-shyness for new growth', () => {
   assert.match(worker, /function plantCollisionRadius\(p\)/);
