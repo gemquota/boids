@@ -384,7 +384,7 @@ function installLongPressLimitEditor(key,label,anchor){
  anchor.addEventListener('pointermove',e=>{if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>9){clearTimeout(timer);timer=null}});
  for(const ev of ['pointerup','pointercancel','pointerleave'])anchor.addEventListener(ev,()=>{clearTimeout(timer);timer=null;start=null});
  anchor.addEventListener('contextmenu',e=>{e.preventDefault();longPressed=true;openSliderLimitEditor(key,label)});
- anchor.addEventListener('click',e=>{if(longPressed){e.preventDefault();e.stopImmediatePropagation();longPressed=false}});
+ anchor.addEventListener('click',e=>{if(longPressed){e.preventDefault();e.stopImmediatePropagation();longPressed=false}},true);
 }
 for(const group of groups)for(const item of group.items){const key=item[0],label=document.querySelector('#p-'+key)?.closest('.control')?.querySelector('.parameterName');if(label)installLongPressLimitEditor(key,item[1],label)}
 limitDialog.querySelector('form').addEventListener('submit',e=>{
