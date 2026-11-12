@@ -29,7 +29,7 @@ Initial organisms pay from their starting energy reserve. Newborn anatomy is pai
 Appendage roles are inherited and can mutate:
 
 - **Locomotor:** contributes to propulsion.
-- **Grasping:** contributes to propulsion and manipulation-like handling.
+- **Grasping:** contributes to propulsion, plant-feeding reach and bite efficiency.
 - **Striking:** improves attack effectiveness.
 - **Defensive:** reduces incoming attack effectiveness.
 - **Adhesive:** adds left/right attachment capacity for bonds.
