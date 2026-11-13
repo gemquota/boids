@@ -311,3 +311,30 @@ test('resource ownership is exclusive across cell clouds',()=>{
     {ownerId:'a',particleIds:['x']},{ownerId:'b',particleIds:['x']}
   ]}),/multiple resource clouds/i);
 });
+
+
+test('collection and transfer move bonded molecules as intact resource units',()=>{
+  const world=bio.createParticleWorld([
+    {id:'c',element:'C',position:{x:1,y:0}},
+    {id:'h',element:'H',position:{x:1.5,y:0}},
+    {id:'free',element:'O',position:{x:2,y:0}}
+  ]);
+  bio.createResourceCloud(world,'cell-a',[]);
+  bio.createResourceCloud(world,'cell-b',[]);
+  bio.craftMolecule(world,'cloud-cell-a',['c','h'],[{a:'c',b:'h'}],{id:'CH'});
+  const collected=bio.collectResources(world,'cloud-cell-b',{position:{x:0,y:0}},{radius:4});
+  assert.deepEqual(collected,['free']);
+  assert.equal(bio.transferResource(world,'cloud-cell-a','cloud-cell-b','c'),true);
+  assert.deepEqual(world.resourceClouds[0].particleIds,[]);
+  assert.deepEqual(world.resourceClouds[1].particleIds.sort(),['c','free','h']);
+  assert.equal(bio.resourceInventory(world,'cloud-cell-b').moleculeCount,1);
+});
+test('failed molecule crafting leaves existing particles and bonds unchanged',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'},{id:'h1',element:'H'},{id:'h2',element:'H'},{id:'h3',element:'H'},{id:'h4',element:'H'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['c','h1','h2','h3','h4']);
+  bio.craftMolecule(world,cloud.id,['c','h1','h2','h3'],[{a:'c',b:'h1'},{a:'c',b:'h2'},{a:'c',b:'h3'}],{id:'CH3'});
+  const before=world.bonds.length;
+  assert.throws(()=>bio.craftMolecule(world,cloud.id,['c','h4'],[{a:'c',b:'h4'}],{id:'bad'}),/already belongs/i);
+  assert.equal(world.bonds.length,before);
+  assert.equal(world.molecules.length,1);
+});
