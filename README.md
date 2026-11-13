@@ -78,3 +78,6 @@ A passing Node test suite does not replace browser/device smoke tests. Before re
 ## Deployment
 
 GitHub Pages serves the static application from the repository. The deployment workflow is `.github/workflows/pages.yml`. The published URL is https://gemquota.github.io/boids/.
+
+
+The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](docs/Abiogenesis.md) and the [standalone lab](abiogenesis-lab.html).
