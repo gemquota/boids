@@ -138,14 +138,63 @@
   }
 
   function createSeededRandom(seed=1){let state=(Number(seed)>>>0)||0x6d2b79f5;const random=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296};Object.defineProperty(random,'state',{get:()=>state>>>0});random.setState=value=>{state=(Number(value)>>>0)||0x6d2b79f5};return random}
-  function snapshotParticleWorld(world){return clone({particles:world.particles,bonds:world.bonds,time:world.time,stats:world.stats})}
-  function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,...(snapshot.stats||{})};return world}
+  function snapshotParticleWorld(world){return clone({particles:world.particles,bonds:world.bonds,resourceClouds:world.resourceClouds||[],time:world.time,stats:world.stats})}
+  function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,resourceClouds:snapshot.resourceClouds||[],time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,...(snapshot.stats||{})};return world}
+  function normalizeResourceCloud(input,particleIds){
+    if(!input||input.ownerId===undefined)throw new TypeError('Resource cloud requires an ownerId');
+    const ids=Array.from(new Set((input.particleIds||[]).map(String)));
+    for(const id of ids)if(!particleIds.has(id))throw new Error('Resource cloud references missing particle '+id);
+    return {id:String(input.id||'cloud-'+input.ownerId),ownerId:String(input.ownerId),particleIds:ids,
+      radius:Math.max(.1,finite(input.radius,28)),followStrength:clamp(finite(input.followStrength,1.8),0,100),
+      damping:clamp(finite(input.damping,.16),0,1),containment:clamp(finite(input.containment,.8),0,100),
+      maxAcceleration:Math.max(.01,finite(input.maxAcceleration,18)),metadata:input.metadata&&typeof input.metadata==='object'?clone(input.metadata):{}};
+  }
+  function createResourceCloud(world,ownerId,particleIds,options={}){
+    if(!world||!Array.isArray(world.particles))throw new TypeError('Resource cloud requires a particle world');
+    const ids=new Set(world.particles.map(p=>p.id)),cloud=normalizeResourceCloud({ownerId,particleIds,...options},ids);
+    if(world.resourceClouds.some(c=>c.id===cloud.id))throw new Error('Resource cloud ID must be unique');
+    world.resourceClouds.push(cloud);return cloud;
+  }
+  function transferResource(world,fromCloudId,toCloudId,particleId){
+    const from=world.resourceClouds.find(c=>c.id===String(fromCloudId)),to=world.resourceClouds.find(c=>c.id===String(toCloudId));
+    if(!from||!to)throw new Error('Resource cloud not found');
+    const id=String(particleId),index=from.particleIds.indexOf(id);
+    if(index<0||to.particleIds.includes(id))return false;
+    from.particleIds.splice(index,1);to.particleIds.push(id);return true;
+  }
+  function consumeResource(world,cloudId,particleId){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)return null;
+    const id=String(particleId),member=cloud.particleIds.indexOf(id);if(member<0)return null;
+    const index=world.particles.findIndex(p=>p.id===id);if(index<0)return null;
+    cloud.particleIds.splice(member,1);
+    for(const bond of world.bonds.filter(b=>b.a===id||b.b===id))breakBond(world.particles,world.bonds,bond.id);
+    return world.particles.splice(world.particles.findIndex(p=>p.id===id),1)[0];
+  }
+  function applyResourceCloudForces(world,anchors,forces,dt){
+    if(!Array.isArray(world.resourceClouds)||!anchors)return;
+    const index=new Map(world.particles.map((p,i)=>[p.id,i]));
+    for(const cloud of world.resourceClouds){
+      const anchor=anchors[cloud.ownerId];if(!anchor||!anchor.position)continue;
+      const ap=anchor.position,av=anchor.velocity||{x:0,y:0,z:0};
+      for(const id of cloud.particleIds){
+        const i=index.get(id);if(i===undefined)continue;const p=world.particles[i];
+        const dx=finite(ap.x)-p.position.x,dy=finite(ap.y)-p.position.y,dz=finite(ap.z)-p.position.z;
+        const distance=Math.hypot(dx,dy,dz)||1e-9,excess=Math.max(0,distance-cloud.radius);
+        const strength=cloud.followStrength+(excess/distance)*cloud.containment;
+        const ax=dx*strength-finite(cloud.damping)* (p.velocity.x-finite(av.x));
+        const ay=dy*strength-finite(cloud.damping)* (p.velocity.y-finite(av.y));
+        const az=dz*strength-finite(cloud.damping)* (p.velocity.z-finite(av.z));
+        const mag=Math.hypot(ax,ay,az)||1,scale=Math.min(1,cloud.maxAcceleration/mag);
+        forces[i].x+=ax*scale*p.mass;forces[i].y+=ay*scale*p.mass;forces[i].z+=az*scale*p.mass;
+      }
+    }
+  }
   function createParticleWorld(inputs=[],options={}){
     const particles=inputs.map(normalizeParticle),ids=new Set(particles.map(p=>p.id));
     if(ids.size!==particles.length)throw new Error('Particle IDs must be unique');
     const bonds=(options.bonds||[]).map(normalizeBond);for(const p of particles)p.bonds=[];
     for(const b of bonds){if(!ids.has(b.a)||!ids.has(b.b))throw new Error('Bond endpoint is missing');const a=particles.find(p=>p.id===b.a),c=particles.find(p=>p.id===b.b);if(a.bonds.length>=a.valence||c.bonds.length>=c.valence)throw new Error('Bond topology exceeds particle valence');if(a.bonds.includes(c.id)||c.bonds.includes(a.id))throw new Error('Duplicate particle bond');a.bonds.push(c.id);c.bonds.push(a.id)}
-    return {particles,bonds,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0}};
+    const resourceClouds=(options.resourceClouds||[]).map(c=>normalizeResourceCloud(c,ids));\n    return {particles,bonds,resourceClouds,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0}};
   }
   function stepParticleWorld(world,dt,options={}){
     dt=clamp(finite(dt),0,.05);if(!world||!Array.isArray(world.particles)||!Array.isArray(world.bonds))throw new TypeError('Invalid particle world');
@@ -264,5 +313,5 @@
     return {enabled:Array.from(enabled).sort(),unmet,passes};
   }
   return {ELEMENTS,ELEMENT_VALENCE,BOND_TYPES,CAPABILITIES,createSeededRandom,snapshotParticleWorld,restoreParticleWorld,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
-    normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,evaluateCapabilities};
+    normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,normalizeResourceCloud,createResourceCloud,transferResource,consumeResource,evaluateCapabilities};
 });
