@@ -88,7 +88,7 @@
       }
       return{particles,seed:this.tick+this.entities.length,clusters:this.clusters.map(c=>({...c}))};
     }
-    snapshot(){return{width:this.width,height:this.height,time:this.time,tick:this.tick,nextId:this.nextId,energy:this.energy,entities:this.entities.map(e=>({...e,bonds:e.bonds.slice()})),clusters:this.clusters.map(c=>({...c,members:c.members.slice()})),fields:Object.fromEntries(Object.entries(this.fields).map(([k,v])=>[k:Array.from(v)]))}}
+    snapshot(){return{width:this.width,height:this.height,time:this.time,tick:this.tick,nextId:this.nextId,energy:this.energy,entities:this.entities.map(e=>({...e,bonds:e.bonds.slice()})),clusters:this.clusters.map(c=>({...c,members:c.members.slice()})),fields:Object.fromEntries(Object.entries(this.fields).map(([k,v])=>[k,Array.from(v)]))}}
   }
   return Object.freeze({PrimordialWorld});
 });
