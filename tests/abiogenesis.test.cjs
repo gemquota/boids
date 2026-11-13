@@ -177,3 +177,11 @@ test('metabolism, molecular replication, membrane stability and environmental re
   assert.ok(replicated.enabled.includes('molecularReplication'));
   assert.ok(!replicated.enabled.includes('metabolicActivity'));
 });
+
+test('elemental valence defaults reflect the element identity',()=>{
+  assert.equal(bio.normalizeParticle({id:'h',element:'H'}).valence,1);
+  assert.equal(bio.normalizeParticle({id:'c',element:'C'}).valence,4);
+  assert.equal(bio.normalizeParticle({id:'n',element:'N'}).valence,3);
+  assert.equal(bio.normalizeParticle({id:'o',element:'O'}).valence,2);
+  assert.equal(bio.normalizeParticle({id:'s',element:'S'}).valence,2);
+});
