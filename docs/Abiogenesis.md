@@ -40,3 +40,14 @@ The code represents prerequisites as a dependency graph. Observed capabilities a
 6. Higher-level anatomy is physically instantiated and developmentally constructed.
 7. Capability prerequisites form a graph, not a single hard-coded stage counter.
 8. Every stateful addition requires snapshot migration, deterministic replay tests and observable telemetry.
+
+## Worker interface
+
+The existing worker exposes an isolated abiogenesis channel alongside the organism simulation:
+
+- `{type:'abiogenesis:init', seed, particles, bonds}` creates the particle world.
+- `{type:'abiogenesis:step', steps, dt, options, includeWorld}` advances up to 240 fixed substeps (each (0 < dt \le 0.05)) and returns telemetry; set `includeWorld:true` to include a full state snapshot.
+- `{type:'abiogenesis:snapshot', requestId}` returns serialisable particle/bond state plus the deterministic random-generator state.
+- `{type:'abiogenesis:restore', world, randomState}` restores both simulation state and random stream.
+
+This is an opt-in worker API, not yet a visible in-page laboratory. It intentionally does not apply atom-scale forces to existing organism boids.
