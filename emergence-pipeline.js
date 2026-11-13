@@ -86,7 +86,7 @@
         particles.push({id:'pre-'+(id++),element,mass:element==='H'?.65:1,radius:e.r,charge:0,valence:element==='C'?4:element==='H'?1:element==='O'?2:3,
           position:{x:e.x,y:e.y,z:0},velocity:{x:e.vx,y:e.vy,z:0},thermalEnergy:.1,metadata:{origin:'primordial-aggregate',sourceEntity:e.id,adsorbed:!!e.adsorbed}});
       }
-      return{particles,seed:this.tick+this.entities.length,clusters:this.clusters.map(c=>({...c}))};
+      const idMap=new Map(this.entities.map((e,i)=>[e.id,'pre-'+i])),bonds=[];for(const e of this.entities)for(const other of e.bonds)if(e.id<other&&idMap.has(other))bonds.push({a:idMap.get(e.id),b:idMap.get(other),type:'adhesion',strength:.18,restLength:2});return{particles,bonds,seed:this.tick+this.entities.length,clusters:this.clusters.map(c=>({...c}))};
     }
     snapshot(){return{width:this.width,height:this.height,time:this.time,tick:this.tick,nextId:this.nextId,energy:this.energy,entities:this.entities.map(e=>({...e,bonds:e.bonds.slice()})),clusters:this.clusters.map(c=>({...c,members:c.members.slice()})),fields:Object.fromEntries(Object.entries(this.fields).map(([k,v])=>[k,Array.from(v)]))}}
   }
