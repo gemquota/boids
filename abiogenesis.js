@@ -196,6 +196,15 @@
       const jitter=(random()-.5)*2*thermal*Math.sqrt(dt);
       p.velocity.x+=(f.x*invMass)*dt+jitter;p.velocity.y+=(f.y*invMass)*dt+(random()-.5)*2*thermal*Math.sqrt(dt);p.velocity.z+=(f.z*invMass)*dt+(random()-.5)*2*thermal*Math.sqrt(dt);
       p.position.x+=p.velocity.x*dt;p.position.y+=p.velocity.y*dt;p.position.z+=p.velocity.z*dt;
+      const bounds=options.bounds,boundRestitution=clamp(finite(options.boundRestitution,restitution),0,1);
+      if(bounds){
+        for(const [axis,size] of [['x',bounds.width],['y',bounds.height],['z',bounds.depth]]){
+          if(!Number.isFinite(size)||size<=0)continue;
+          const min=p.radius,max=size-p.radius;
+          if(p.position[axis]<min){p.position[axis]=min;p.velocity[axis]=Math.abs(p.velocity[axis])*boundRestitution}
+          else if(p.position[axis]>max){p.position[axis]=max;p.velocity[axis]=-Math.abs(p.velocity[axis])*boundRestitution}
+        }
+      }
       kineticEnergy+=.5*p.mass*(p.velocity.x**2+p.velocity.y**2+p.velocity.z**2);thermalEnergy+=p.thermalEnergy;
     }
     world.time+=dt;world.stats={steps:world.stats.steps+1,collisions,bondsFormed:world.stats.bondsFormed+bondsFormed,bondsBroken:world.stats.bondsBroken+bondsBroken,thermalEnergy,kineticEnergy,candidatePairs:candidates.length};
