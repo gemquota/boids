@@ -1,11 +1,11 @@
 'use strict';
-importScripts('abiogenesis.js?v=20261113-abiogenesis-physics-v3');
+importScripts('abiogenesis.js?v=20261113-resource-clouds-v1');
 
 let world=null,random=null;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 function summary(){
-  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length};
+  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,resourceCloudCount:(world.resourceClouds||[]).length};
 }
 
 onmessage=event=>{
