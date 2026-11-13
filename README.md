@@ -43,7 +43,8 @@ That is 190 unique numeric controls. Do not hand-maintain a separate count in UI
 |---|---|
 | `index.html` | UI, drawers, Observatory, browser persistence, worker messaging |
 | `boids-worker.js` | Simulation orchestration, ecology, reproduction, live telemetry, snapshot export/restore, isolated abiogenesis particle channel |
-| `abiogenesis.js` | Spatial particle physics, dynamic bonding, molecular chemistry, compartments and emergent capability graph |\n| `evolution.js` | Pure variable-genome, NEAT, regulatory/statistical and experiment-analysis primitives |
+| `abiogenesis.js` | Spatial particle physics, dynamic bonding, molecular chemistry, compartments and emergent capability graph |
+| `evolution.js` | Pure variable-genome, NEAT, regulatory/statistical and experiment-analysis primitives |
 | `genetics.js` | Ten-locus trait schema, expression curves, inheritance and trait helpers |
 | `chromosome.js` | Typed hexadecimal gene-record codec |
 | `config-schema.js` | Shared control definitions, field guide and dependency normalization |
