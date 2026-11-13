@@ -31,6 +31,8 @@ jobs:
           node --check boids-worker.js
           node --check hydrology.js
           node tests/hydrology.test.js
+          node --check abiogenesis.js
+          node tests/abiogenesis.test.cjs
           node --check organism-economics.js
           node --check chromosome.js
           node --check config-registry.js
