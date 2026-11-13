@@ -52,7 +52,7 @@
         for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)for(const b of grid.get((gx+ox)+','+(gy+oy))||[]){
           if(b.id<=a.id||b.kind==='energy')continue;
           const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.001;
-          if(d<a.r+b.r+2&&a.bonds.length<4&&b.bonds.length<4){
+          if(d<a.r+b.r+2&&a.bonds.length<4&&b.bonds.length<4&&!a.bonds.includes(b.id)){
             const mineral=(a.kind==='mineral'||b.kind==='mineral'),prob=(mineral?.018:.004)*dt*60*(1+this.sample('nutrient',a));
             if(this.random()<prob){a.bonds.push(b.id);b.bonds.push(a.id);a.activity++;b.activity++;this.emit('aggregation',{a:a.id,b:b.id,catalysed:mineral})}
             const push=(a.r+b.r-d)*.08;a.x-=dx/d*push;a.y-=dy/d*push;b.x+=dx/d*push;b.y+=dy/d*push;
@@ -86,7 +86,7 @@
         particles.push({id,element,mass:element==='H'?.65:1,radius:e.r,charge:0,valence:element==='C'?4:element==='H'?1:element==='O'?2:3,
           position:{x:e.x,y:e.y,z:0},velocity:{x:e.vx,y:e.vy,z:0},thermalEnergy:.1,metadata:{origin:'primordial-aggregate',sourceEntity:e.id,adsorbed:!!e.adsorbed}});
       }
-      const bonds=[],used=new Map(particles.map(atom=>[atom.id,0])),limits={H:1,C:4,N:3,O:2,P:5,S:2,OTHER:1};for(const e of this.entities)for(const other of e.bonds)if(e.id<other&&idMap.has(other)){const a=idMap.get(e.id),b=idMap.get(other),pa=particles.find(v=>v.id===a),pb=particles.find(v=>v.id===b);if(used.get(a)<limits[pa.element]&&used.get(b)<limits[pb.element]){bonds.push({a,b,type:'adhesion',strength:.18,restLength:2});used.set(a,used.get(a)+1);used.set(b,used.get(b)+1)}}return{particles,bonds,seed:this.tick+this.entities.length,clusters:this.clusters.map(c=>({...c}))};
+      const bonds=[],pairs=new Set(),used=new Map(particles.map(atom=>[atom.id,0])),limits={H:1,C:4,N:3,O:2,P:5,S:2,OTHER:1};for(const e of this.entities)for(const other of e.bonds)if(e.id<other&&idMap.has(other)){const a=idMap.get(e.id),b=idMap.get(other),pa=particles.find(v=>v.id===a),pb=particles.find(v=>v.id===b);const pair=[a,b].sort().join('|');if(!pairs.has(pair)&&used.get(a)<limits[pa.element]&&used.get(b)<limits[pb.element]){pairs.add(pair);bonds.push({a,b,type:'adhesion',strength:.18,restLength:2});used.set(a,used.get(a)+1);used.set(b,used.get(b)+1)}}return{particles,bonds,seed:this.tick+this.entities.length,clusters:this.clusters.map(c=>({...c}))};
     }
     snapshot(){return{width:this.width,height:this.height,time:this.time,tick:this.tick,nextId:this.nextId,energy:this.energy,entities:this.entities.map(e=>({...e,bonds:e.bonds.slice()})),clusters:this.clusters.map(c=>({...c,members:c.members.slice()})),fields:Object.fromEntries(Object.entries(this.fields).map(([k,v])=>[k,Array.from(v)]))}}
   }
