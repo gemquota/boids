@@ -183,14 +183,13 @@
     if(atoms.some(p=>!p))throw new Error('Molecule references missing atoms');
     const normalized=normalizeMolecule({id:options.id||'molecule-'+(world.molecules.length+1),atoms,bonds:bondSpecs,energy:options.energy,properties:options.properties});
     if(world.molecules.some(m=>m.id===normalized.id))throw new Error('Molecule ID must be unique');
-    const bondIds=[];
+    const bondIds=[],counts=new Map(atoms.map(p=>[p.id,p.bonds.length]));
     for(const spec of normalized.bonds){
-      const existing=world.bonds.find(b=>(b.a===spec.a&&b.b===spec.b)||(b.a===spec.b&&b.b===spec.a));
-      if(existing)throw new Error('Molecule bond already exists in particle world');
-      const bond=formBond(world.particles,world.bonds,spec.a,spec.b,{bond:{...spec}});
-      if(!bond)throw new Error('Molecule bond violates particle valence or topology');
-      bondIds.push(bond.id);
+      const a=byId.get(spec.a),b=byId.get(spec.b);
+      if(world.bonds.some(existing=>(existing.a===spec.a&&existing.b===spec.b)||(existing.a===spec.b&&existing.b===spec.a)))throw new Error('Molecule bond already exists in particle world');
+      const ca=counts.get(a.id),cb=counts.get(b.id);if(ca>=a.valence||cb>=b.valence)throw new Error('Molecule bond violates particle valence or topology');counts.set(a.id,ca+1);counts.set(b.id,cb+1);
     }
+    for(const spec of normalized.bonds){const bond=formBond(world.particles,world.bonds,spec.a,spec.b,{bond:{...spec}});if(!bond)throw new Error('Molecule bond violates particle valence or topology');bondIds.push(bond.id)}
     const molecule={id:normalized.id,type:String(options.type||'molecule'),atomIds:ids,bondIds,composition:normalized.composition,
       energy:normalized.energy,properties:normalized.properties,metadata:options.metadata&&typeof options.metadata==='object'?clone(options.metadata):{}};
     world.molecules.push(molecule);return molecule;
@@ -205,19 +204,30 @@
     const outputAtoms=outputs.flatMap(o=>(o.atomIds||[]).map(String));
     if(outputAtoms.length!==inputAtoms.length||new Set(outputAtoms).size!==outputAtoms.length||outputAtoms.some(id=>!inputSet.has(id)))throw new Error('Reaction must conserve every input atom exactly once');
     const cost=Math.max(0,finite(options.energyCost));if(cost>cloud.energy)throw new Error('Insufficient stored energy for reaction');
-    for(const molecule of inputs)for(const id of molecule.bondIds||[]){const bond=world.bonds.find(b=>b.id===id);if(bond)breakBond(world.particles,world.bonds,id)}
-    const removeIds=new Set(inputs.map(m=>m.id));world.molecules=world.molecules.filter(m=>!removeIds.has(m.id));cloud.energy-=cost;
+    const removeIds=new Set(inputs.map(m=>m.id)),retained=(world.molecules||[]).filter(m=>!removeIds.has(m.id)),outputIds=outputs.map((o,i)=>String(o.id||'molecule-'+(retained.length+i+1)));
+    if(new Set(outputIds).size!==outputIds.length||outputIds.some(id=>retained.some(m=>m.id===id)))throw new Error('Reaction output molecule IDs must be unique');
+    const removedBonds=new Set(inputs.flatMap(m=>m.bondIds||[])),baseCounts=new Map(world.particles.map(p=>[p.id,p.bonds.filter(other=>!world.bonds.some(b=>removedBonds.has(b.id)&&((b.a===p.id&&b.b===other)||(b.b===p.id&&b.a===other)))).length]));
+    const plannedPairs=new Set();
+    for(let i=0;i<outputs.length;i++){const output=outputs[i],ids=(output.atomIds||[]).map(String),atoms=ids.map(id=>world.particles.find(p=>p.id===id));
+      if(!ids.length||atoms.some(p=>!p)||new Set(ids).size!==ids.length)throw new Error('Invalid reaction output atom set');
+      const checked=normalizeMolecule({id:outputIds[i],atoms,bonds:output.bonds||[],energy:output.energy,properties:output.properties});
+      for(const bond of checked.bonds){const pair=[bond.a,bond.b].sort().join('|');if(plannedPairs.has(pair)||world.bonds.some(b=>!removedBonds.has(b.id)&&((b.a===bond.a&&b.b===bond.b)||(b.a===bond.b&&b.b===bond.a))))throw new Error('Reaction output duplicates an existing bond');plannedPairs.add(pair);
+        for(const id of [bond.a,bond.b]){const atom=world.particles.find(p=>p.id===id),count=baseCounts.get(id)||0;if(count>=atom.valence)throw new Error('Reaction output exceeds atom valence');baseCounts.set(id,count+1)}}
+    }
+    for(const molecule of inputs)for(const id of molecule.bondIds||[])if(world.bonds.some(b=>b.id===id))breakBond(world.particles,world.bonds,id);
+    world.molecules=retained;cloud.energy-=cost;
     const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy),created=[];
     for(let i=0;i<outputs.length;i++){const output=outputs[i],share=productEnergy/outputs.length;
-      created.push(craftMolecule(world,cloudId,output.atomIds,output.bonds||[],{...output,energy:finite(output.energy,share)}))}
+      created.push(craftMolecule(world,cloudId,output.atomIds,output.bonds||[],{...output,id:outputIds[i],energy:finite(output.energy,share)}))}
     return {occurred:true,consumed:inputs.map(m=>m.id),products:created.map(m=>m.id),atomIds:outputAtoms,energyCost:cost};
   }
   function transferResource(world,fromCloudId,toCloudId,particleId){
     const from=world.resourceClouds.find(c=>c.id===String(fromCloudId)),to=world.resourceClouds.find(c=>c.id===String(toCloudId));
     if(!from||!to)throw new Error('Resource cloud not found');
-    const id=String(particleId),index=from.particleIds.indexOf(id);
-    if(index<0||to.particleIds.includes(id))return false;
-    from.particleIds.splice(index,1);to.particleIds.push(id);return true;
+    const id=String(particleId),index=from.particleIds.indexOf(id);if(index<0)return false;
+    const molecule=(world.molecules||[]).find(m=>m.atomIds.includes(id)),moving=molecule?molecule.atomIds:[id];
+    if(moving.some(atomId=>!from.particleIds.includes(atomId)||to.particleIds.includes(atomId)))return false;
+    const movingSet=new Set(moving);from.particleIds=from.particleIds.filter(atomId=>!movingSet.has(atomId));to.particleIds.push(...moving);return true;
   }
   function consumeResource(world,cloudId,particleId){
     const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)return null;
