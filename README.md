@@ -6,6 +6,7 @@
 **Advanced vision laboratory:** https://gemquota.github.io/boids/vision-lab.html  
 **Minimal vision laboratory:** https://gemquota.github.io/boids/vision-minimal.html  
 **Abiogenesis laboratory:** [particle physics and dynamic bonding](abiogenesis-lab.html)  
+**Unified emergence engine:** [shared compositional substrate](docs/EMERGENCE-ENGINE.md)  
 **Repository:** https://github.com/gemquota/boids
 
 BOIDS is a deterministic, worker-driven ecosystem experiment. A single population of boids moves, forages on plant biomass, competes, chooses mates, reproduces, and experiences conspecific predation. Hunting is a behavioural strategy within the population, not a separate predator caste.
