@@ -60,3 +60,15 @@ test('worker supports selective collection, inventory and molecular crafting act
   assert.equal(worker.messages.at(-1).inventory.moleculeCount,1);
   assert.equal(worker.messages.at(-1).world.molecules[0].id,'CH');
 });
+
+
+test('worker exposes finite energy harvesting and metabolic conversion',()=>{
+  const worker=makeWorker();
+  worker.send({type:'abiogenesis:init',seed:8,particles:[{id:'c',element:'C'},{id:'h',element:'H'}],
+    resourceClouds:[{id:'cargo',ownerId:'cell',particleIds:['c','h'],energy:0,energyCapacity:5}],
+    energySources:[{id:'sun',type:'light',energy:10,efficiency:.5}]});
+  worker.send({type:'abiogenesis:harvest',cloudId:'cargo',sourceId:'sun',amount:2});
+  assert.equal(worker.messages.at(-1).type,'abiogenesis:harvested');
+  assert.equal(worker.messages.at(-1).inventory.energy,2);
+  assert.equal(worker.messages.at(-1).world.energySources[0].energy,6);
+});
