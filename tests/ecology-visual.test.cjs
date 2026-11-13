@@ -71,7 +71,7 @@ console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore ge
 
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
-  assert.match(worker, /Math.max\(16,Math.min\(30,Math.round\(W\*H\/56000\)\)\)/);
+  assert.match(worker, /Math.max\(64,Math.min\(120,Math.round\(W\*H\/14000\)\)\)/);
   assert.match(worker, /plantGain/);
   assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
   assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
@@ -114,12 +114,65 @@ test('DNA and observatory use distinct icon tabs and reset lives in Field Operat
 });
 test('boids resolve physical body overlap and exchange collision impulse', () => {
   assert.ok(worker.includes('function collisionRadius(i)'));
-  assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
-  assert.ok(worker.includes('if(relative<0){const impulse='));
-  assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
+  assert.ok(worker.includes('function resolveAgentCollisions(updateN,dt)'));
+  assert.ok(worker.includes('BoidsPhysics.resolveCircleContact'));
+  assert.ok(worker.includes('BoidsPhysics.sweptCircleTime'));
+  assert.ok(worker.includes('resolveAgentCollisions(updateN,dt)'));
 });
 
 
+
+test('mature grandmother plants remain reproductively active until senescence', () => {
+  assert.ok(worker.includes("p.stage==='mature'||p.stage==='grandmother'||p.stage==='great-grandmother'"));
+  assert.ok(worker.includes('sporeFailedCrowded'));
+  assert.ok(worker.includes('sporeFailedDry'));
+});
+
+test('colony bonds persist through ordinary separation and only lose endpoints on death', () => {
+  assert.ok(worker.includes('if(near)bond.strength=clamp(bond.strength+.035*dt,0,1)'));
+  assert.ok(!worker.includes('near?.035:-.012'));
+  assert.ok(worker.includes("recordPopulationEvent('bond_broken',{a:bond.a,b:bond.b,reason:'organism_death'})"));
+  assert.ok(worker.includes('function resolveBondConstraints(updateN,dt)'));
+  assert.ok(worker.includes('cfg.bondFormationRate*dt*60*Math.max(1,bondCapacity(individualId[i]))'));
+  assert.ok(worker.includes('bond.restLength'));
+  assert.ok(worker.includes('resolveBondConstraints(updateN,dt)'));
+});
+
+test('newborns receive four temporary bonding spots and adults develop one or two permanent spots', () => {
+  assert.ok(worker.includes('m.temporaryBondingSitesLeft=2;m.temporaryBondingSitesRight=2'));
+  assert.ok(worker.includes('Math.max(2,Math.min(12,cfg.ageMin*.6))'));
+  assert.ok(worker.includes('(random()<.65?1:2)'));
+  assert.ok(worker.includes('activePermanent=Math.floor(target*maturity+1e-6)'));
+  assert.ok(worker.includes('permanentBondingSitesLeft'));
+  assert.ok(worker.includes('updateBondingDevelopmentForAgent'));
+});
+
+test('population exports distinguish biological births/deaths from manual resizing', () => {
+  assert.ok(worker.includes('populationResizeAdds'));
+  assert.ok(worker.includes('populationResizeRemovals'));
+  assert.ok(worker.includes('populationAccountingError'));
+  assert.ok(worker.includes("recordPopulationEvent('death'"));
+});
+
+test('parental contribution telemetry exposes reproductive skew', () => {
+  assert.ok(worker.includes('function summarizeParentalContribution()'));
+  for(const field of ['parentContributionHHI','parentContributionEffectiveCount','topParentContributionShare'])assert.ok(worker.includes(field),field);
+  assert.ok(worker.includes('...summarizeParentalContribution()'));
+});
+
+test('run telemetry records changing watershed conditions rather than only static habitat averages', () => {
+  assert.ok(worker.includes('function summarizeHydrology()'));
+  for(const field of ['meanSoilMoisture','meanGroundwater','meanSurfaceWater','meanRainfall','meanSalinity','meanFloodDepth','maxFloodDepth','tidePhase','stormPhase'])assert.ok(worker.includes(field),field);
+  assert.ok(worker.includes('...summarizeHydrology()'));
+});
+
+test('neural interface exposes additional named sensory and behavior channels', () => {
+  assert.ok(worker.includes('waterProximity:8,thirst:9,bondTension:10,contactPressure:11'));
+  assert.ok(worker.includes('forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11'));
+  assert.ok(worker.includes('contributionPenalty=Math.log1p(reproductiveSuccess.get(individualId[j])||0)*.08'));
+  assert.ok(worker.includes('sense[10]=clamp(bondTensionByAgent[i]||0,0,1)'));
+  assert.ok(worker.includes('tension=clamp(Math.max(0,extension)/Math.max(1,bond.restLength),0,1)'));
+});
 
 test('plants avoid canopy collisions and use treetop tip-shyness for new growth', () => {
   assert.match(worker, /function plantCollisionRadius\(p\)/);
@@ -189,4 +242,16 @@ test('smaller nodes grow more slowly relative to their whole plant', () => {
   assert.equal(large.ratio,1);
   assert.ok(small.ratio<large.ratio);
   assert.ok(small.scale<large.scale);
+});
+
+test('neonatal bonding can recruit distinct colony neighbours', () => {
+  assert.match(worker, /neonatalAvailableCount/);
+  assert.match(worker, /myBondStrengths\?\.has\(individualId\[j\]\)/);
+  assert.match(worker, /bondOpportunity\(individualId\[i\],individualId\[bondIndex\],frameNo\)/);
+});
+test('organism contacts use swept collision impulses and persistent tether constraints', () => {
+  assert.match(worker, /BoidsPhysics\.resolveCircleContact/);
+  assert.match(worker, /BoidsPhysics\.sweptCircleTime/);
+  assert.match(worker, /function applyBondConstraints\(updateN,dt\)/);
+  assert.match(worker, /function drawBondNetwork\(plantById\)/);
 });
