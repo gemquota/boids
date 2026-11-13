@@ -91,7 +91,7 @@ worker.onmessage=e=>{
  const m=e.data;
  if(m.type==='abiogenesis:ready'){stats.textContent='Worker ready · '+m.particleCount+' particles';requestStep();return}
  if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;cloudIds.clear();for(const cloud of world.resourceClouds||[])for(const id of cloud.particleIds)cloudIds.add(id);busy=false;if(!paused)requestStep();return}
- if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'){const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
+ if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'){if(m.world)world=m.world;const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
  if(m.type==='abiogenesis:transferred'){stats.textContent=m.transferred?'Resource transferred':'Transfer unavailable';return}
  if(m.type==='abiogenesis:error'){stats.textContent=m.message;busy=false}
 };
