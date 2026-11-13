@@ -10,7 +10,7 @@ The implementation is deliberately split between **physical mechanisms** and **e
 
 Aggregation → Bonding → Molecular Formation → Chemical Reactions → Polymerisation → Autocatalytic Networks → Lipid Assembly → Protocells → Molecular Replication → Cellular Reproduction → Fusion and Adhesion → Colonial Organisation → Differentiation → Anatomical Development → Multicellular Evolution.
 
-This is a conceptual map, not a rigid execution pipeline. Chemical reactions, lipid assembly, replication and compartment formation can develop along different paths. Capabilities can be partial, independent, lost, or emerge in alternative orders.
+This is a conceptual map, not a rigid execution pipeline. Chemical reactions, lipid assembly, replication and compartment formation can develop along different paths. Metabolic activity, molecular replication, membrane stability, material exchange, compartment growth and environmental responsiveness are separately evidenced capabilities. Capabilities can be partial, independent, lost, or emerge in alternative orders.
 
 ## Capability graph
 
@@ -24,7 +24,7 @@ The code represents prerequisites as a dependency graph. Observed capabilities a
 - Reactions consume and produce typed quantities according to stoichiometry, can require catalysts and account for energy availability.
 - Polymers retain ordered monomer identity and explicit links.
 - Autocatalytic closure reports reachable products and whether the reaction set contains a regenerative loop. Reachability alone is not proof of a self-sustaining metabolism.
-- Lipid compartments retain their contents and membrane properties. Metabolism and replication remain independent capabilities.
+- Lipid compartments retain their contents and membrane properties. Metabolism, molecular replication, growth and environmental responsiveness remain independent capabilities. Membrane stability and permeability are separately represented physical properties.
 
 ## Current implementation boundary
 
