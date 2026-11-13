@@ -76,13 +76,16 @@
       energy:Math.max(0,finite(input.energy)),properties:input.properties&&typeof input.properties==='object'?clone(input.properties):{}};
   }
   function applyReaction(pool,reaction,options={}){
-    if(!reaction||!Array.isArray(reaction.inputs)||!Array.isArray(reaction.outputs))throw new TypeError('Reaction requires input and output stoichiometry');
-    const available=new Map();for(const item of pool)available.set(item.type,(available.get(item.type)||0)+Math.max(0,finite(item.amount)));
-    for(const input of reaction.inputs)if((available.get(input.type)||0)<input.amount)return {occurred:false,reason:'insufficient-reactants'};
-    if(reaction.catalyst&&(!pool.some(p=>p.type===reaction.catalyst.type&&p.amount>=finite(reaction.catalyst.amount,1))))return {occurred:false,reason:'missing-catalyst'};
+    if(!Array.isArray(pool)||!reaction||!Array.isArray(reaction.inputs)||!Array.isArray(reaction.outputs)||!reaction.inputs.length||!reaction.outputs.length)throw new TypeError('Reaction requires a pool and non-empty input/output stoichiometry');
+    const available=new Map();for(const item of pool){const amount=finite(item.amount,-1);if(amount<0)throw new RangeError('Pool quantities must be finite and non-negative');available.set(item.type,(available.get(item.type)||0)+amount)}
+    const demand=new Map();
+    for(const input of reaction.inputs){const amount=finite(input.amount,-1);if(amount<=0)throw new RangeError('Reactant quantities must be positive');demand.set(input.type,(demand.get(input.type)||0)+amount)}
+    for(const [type,amount] of demand)if((available.get(type)||0)<amount)return {occurred:false,reason:'insufficient-reactants'};
+    if(reaction.catalyst){const required=finite(reaction.catalyst.amount,1);if(required<=0)throw new RangeError('Catalyst quantity must be positive');if((available.get(reaction.catalyst.type)||0)<required)return {occurred:false,reason:'missing-catalyst'}}
+    for(const output of reaction.outputs)if(finite(output.amount,-1)<=0)throw new RangeError('Product quantities must be positive');
     const energy=finite(reaction.energyDelta);
     if(energy>finite(options.availableEnergy,Infinity))return {occurred:false,reason:'insufficient-energy'};
-    for(const input of reaction.inputs){const item=pool.find(p=>p.type===input.type);let left=input.amount;for(const p of pool){if(p.type!==input.type||left<=0)continue;const used=Math.min(p.amount,left);p.amount-=used;left-=used}}
+    for(const [type,amount] of demand){let left=amount;for(const item of pool){if(item.type!==type||left<=0)continue;const used=Math.min(item.amount,left);item.amount-=used;left-=used}}
     for(const output of reaction.outputs){let item=pool.find(p=>p.type===output.type);if(!item){item={type:output.type,amount:0};pool.push(item)}item.amount+=output.amount}
     return {occurred:true,energyDelta:energy,products:reaction.outputs.map(clone)};
   }
