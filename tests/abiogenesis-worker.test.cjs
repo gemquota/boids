@@ -21,11 +21,12 @@ test('dedicated worker initializes, steps, snapshots and restores particle world
   worker.send({type:'abiogenesis:init',seed:7,particles:[
     {id:'a',element:'C',position:{x:10,y:10,z:0},velocity:{x:.1,y:0,z:0}},
     {id:'b',element:'O',position:{x:20,y:10,z:0},velocity:{x:-.1,y:0,z:0}}
-  ]});
+  ],molecules:[{id:'co',type:'CO',atomIds:['a','b'],bondIds:[],composition:{C:1,O:1},energy:1}]});
   assert.equal(worker.messages.at(-1).type,'abiogenesis:ready');
+  assert.equal(worker.messages.at(-1).moleculeCount,1);
   worker.send({type:'abiogenesis:step',steps:3,dt:1/60,includeWorld:true,options:{thermalJitter:0}});
   const frame=worker.messages.at(-1);
-  assert.equal(frame.type,'abiogenesis:frame');assert.equal(frame.stats.steps,3);assert.equal(frame.world.particles.length,2);
+  assert.equal(frame.type,'abiogenesis:frame');assert.equal(frame.stats.steps,3);assert.equal(frame.world.particles.length,2);assert.equal(frame.moleculeCount,1);assert.equal(frame.world.molecules[0].id,'co');
   worker.send({type:'abiogenesis:snapshot',requestId:'save-1'});
   const snapshot=worker.messages.at(-1);assert.equal(snapshot.requestId,'save-1');assert.ok(snapshot.randomState);
   const restored=makeWorker();
