@@ -51,3 +51,17 @@ A dedicated `abiogenesis-worker.js` runs the particle engine independently of th
 - `{type:'abiogenesis:restore', world, randomState}` restores both simulation state and random stream.
 
 This is an opt-in worker API. The standalone [Abiogenesis Lab](../abiogenesis-lab.html) provides a visual test surface. It intentionally does not apply atom-scale forces to existing organism boids.
+
+
+## Cell-carried resource clouds
+
+A cell can own a loose cloud of actual particle-world constituents through `createResourceCloud(world, ownerId, particleIds, options)`. The particles keep their stable identities, masses, positions, velocities and molecular bonds; cloud membership is a separate ownership/transport relationship, not a rigid attachment or a replacement for particle physics.
+
+At each microscopic step, pass moving cell anchors through `options.cellAnchors`, keyed by owner ID. The cloud applies a bounded spring-like drift toward its owner's position and velocity, with a soft containment response outside its preferred radius. Individual particles remain free to collide, bond, drift and exchange momentum. The cloud therefore trails and swirls around the cell instead of forming a fixed halo.
+
+- `transferResource(world, fromCloudId, toCloudId, particleId)` transfers ownership between nearby cells.
+- `consumeResource(world, cloudId, particleId)` removes a carried constituent from the world and returns its particle record for a reaction or crafting operation; attached bonds are safely broken first.
+- Particle-world snapshots preserve cloud ownership and transport settings.
+- The worker accepts `resourceClouds` during initialization; cell anchors are supplied with normal step options.
+
+The lab demonstrates a moving cell anchor with a highlighted subset of particles carried in its loose cloud. This is the transport/ownership foundation, not yet a full metabolic inventory: reaction-driven crafting, selective uptake, resource production and biologically regulated exchange remain separate follow-on systems.
