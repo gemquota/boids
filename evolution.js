@@ -14,7 +14,7 @@
 
   function normalizeGenome(genome){
     if(!genome||!Array.isArray(genome.nodes)||!Array.isArray(genome.connections))throw new TypeError('Genome requires node and connection arrays');
-    const nodes=genome.nodes.map(n=>({id:Number(n.id),type:n.type||'hidden',activation:['tanh','sigmoid','relu','sin','linear'].includes(n.activation)?n.activation||'tanh':'tanh',bias:finite(n.bias)}));
+    const nodes=genome.nodes.map(n=>({id:Number(n.id),type:n.type||'hidden',activation:['tanh','sigmoid','relu','sin','linear'].includes(n.activation)?n.activation||'tanh':'tanh',bias:finite(n.bias),...(typeof n.channel==='string'&&n.channel?{channel:n.channel}:{})}));
     const ids=new Set();
     for(const node of nodes){if(!Number.isInteger(node.id)||node.id<0||node.id>65535)throw new RangeError('Node ID must be uint16');if(ids.has(node.id))throw new Error('Duplicate node ID '+node.id);ids.add(node.id);if(!['input','hidden','output'].includes(node.type))throw new Error('Invalid node type '+node.type)}
     const innovations=new Set();
@@ -34,14 +34,15 @@
       if(!splits.has(key)){const nodeId=nextNode++,left=connection(source,nodeId),right=connection(nodeId,destination);splits.set(key,{nodeId,left,right})}
       return {...splits.get(key)};
     }
+    function node(minimum=1){nextNode=Math.max(nextNode,Math.floor(finite(minimum,1)));return nextNode++}
     function snapshot(){return{nextInnovation,nextNode,connections:Array.from(connections.entries()),splits:Array.from(splits.entries()).map(([k,v])=>[k,{...v}])}}
-    return Object.freeze({connection,split,snapshot});
+    return Object.freeze({connection,split,node,snapshot});
   }
 
   function cloneGenome(genome){return clone(normalizeGenome(genome))}
   function mutateGenome(input,registry,random=Math.random,options={}){
-    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,deleteConnection:.01,toggleConnection:.01,recurrent:0,bias:.08,...options.rates};
-    const limits={maxNodes:128,maxConnections:512,weightStep:.25,...options.limits};
+    const genome=cloneGenome(input),rates={weight:.8,addConnection:.08,splitConnection:.03,addInput:0,addOutput:0,deleteConnection:.01,toggleConnection:.01,recurrent:0,bias:.08,...options.rates};
+    const limits={maxNodes:128,maxConnections:512,maxInputs:16,maxOutputs:16,weightStep:.25,...options.limits};
     for(const gene of genome.connections)if(random()<rates.weight)gene.weight=clamp(gene.weight+(random()*2-1)*limits.weightStep,-5,5);
     for(const node of genome.nodes)if(node.type!=='input'&&random()<rates.bias)node.bias=clamp(node.bias+(random()*2-1)*limits.weightStep,-5,5);
     if(random()<rates.toggleConnection&&genome.connections.length){const g=genome.connections[randomIndex(genome.connections.length,random)];g.enabled=!g.enabled}
@@ -57,6 +58,14 @@
         if(!genome.connections.some(g=>g.innovation===innovation.left))genome.connections.push({innovation:innovation.left,source:old.source,destination:innovation.nodeId,weight:1,enabled:true,recurrent:leftRecurrent});
         if(!genome.connections.some(g=>g.innovation===innovation.right))genome.connections.push({innovation:innovation.right,source:innovation.nodeId,destination:old.destination,weight:old.weight,enabled:true,recurrent:rightRecurrent});
       }
+    }
+    if(random()<rates.addInput&&genome.nodes.length<limits.maxNodes&&genome.nodes.filter(n=>n.type==='input').length<limits.maxInputs){
+      const channels=['waterProximity','thirst','bondTension','contactPressure'],used=new Set(genome.nodes.filter(n=>n.type==='input').map(n=>n.channel).filter(Boolean)),available=channels.filter(channel=>!used.has(channel)),destinations=genome.nodes.filter(n=>n.type==='hidden'||n.type==='output');
+      if(available.length&&destinations.length){const channel=available[randomIndex(available.length,random)],id=registry.node?registry.node(Math.max(-1,...genome.nodes.map(n=>n.id))+1):Math.max(-1,...genome.nodes.map(n=>n.id))+1,destination=destinations[randomIndex(destinations.length,random)];genome.nodes.push({id,type:'input',activation:'linear',bias:0,channel});if(genome.connections.length<limits.maxConnections)genome.connections.push({innovation:registry.connection(id,destination.id),source:id,destination:destination.id,weight:(random()*2-1)*.2,enabled:true,recurrent:false})}
+    }
+    if(random()<rates.addOutput&&genome.nodes.length<limits.maxNodes&&genome.nodes.filter(n=>n.type==='output').length<limits.maxOutputs){
+      const channels=['forageDrive','waterDrive','colonyCohesion','explorationDrive'],used=new Set(genome.nodes.filter(n=>n.type==='output').map(n=>n.channel).filter(Boolean)),available=channels.filter(channel=>!used.has(channel)),sources=genome.nodes.filter(n=>n.type==='input'||n.type==='hidden');
+      if(available.length&&sources.length){const channel=available[randomIndex(available.length,random)],id=registry.node?registry.node(Math.max(-1,...genome.nodes.map(n=>n.id))+1):Math.max(-1,...genome.nodes.map(n=>n.id))+1,source=sources[randomIndex(sources.length,random)];genome.nodes.push({id,type:'output',activation:'tanh',bias:0,channel});if(genome.connections.length<limits.maxConnections)genome.connections.push({innovation:registry.connection(source.id,id),source:source.id,destination:id,weight:(random()*2-1)*.2,enabled:true,recurrent:false})}
     }
     if(random()<rates.addConnection&&genome.connections.length<limits.maxConnections){
       const sources=genome.nodes.filter(n=>n.type!=='output'),destinations=genome.nodes.filter(n=>n.type!=='input');

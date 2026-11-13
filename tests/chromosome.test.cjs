@@ -25,3 +25,12 @@ test('typed chromosome records retain integer node indices and reject invalid re
   assert.throws(()=>DNA.modifierGene(1,0,[0,0],.2),/distinct trait indices/);
 });
 test('allows variable length and reordered genes',()=>{const g=DNA.encode({traits:[.2,.8],connections:[1,9,.4],innovations:[9]}),d=DNA.decode([g[2],g[1],g[0]]);assert.equal(d.source.length,1);assert.equal(d.traits.length,2);assert.equal(d.source[0],1)});
+
+test('named neural interface channels survive typed hexadecimal chromosome round-trips',()=>{
+  const genes=DNA.encode({traits:[.4],connections:[],includeLegacyConnections:false,neuralNodes:[{id:128,type:'input',activation:'linear',bias:0},{id:129,type:'output',activation:'tanh',bias:0}],neuralConnections:[],neuralInterfaces:[{nodeId:128,channel:'contactPressure'},{nodeId:129,channel:'colonyCohesion'}]});
+  const decoded=DNA.decode(genes);
+  assert.equal(DNA.VERSION,4);
+  assert.deepEqual(decoded.neuralNodes.map(node=>[node.id,node.channel]),[[128,'contactPressure'],[129,'colonyCohesion']]);
+  assert.equal(decoded.neuralInterfaces.length,2);
+  assert.throws(()=>DNA.decode(DNA.encode({traits:[.1],connections:[],includeLegacyConnections:false,neuralNodes:[{id:1,type:'hidden'}],neuralInterfaces:[{nodeId:1,channel:'waterProximity'}]})),/direction/);
+});

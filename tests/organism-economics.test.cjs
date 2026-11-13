@@ -37,3 +37,12 @@ test('bond helpers count capacity, strength and clean up dead endpoints',()=>{
   assert.equal(eco.pairKey(9,2),eco.pairKey(2,9));
   assert.equal(eco.pruneBonds(links,new Set([1,2]),new Set([7])).length,2);
 });
+
+test('normalized colony bonds preserve their spring constraint parameters',()=>{
+  const bond=eco.normalizeBond({a:4,b:9,targetType:'agent',restLength:13.5,stiffness:1.2,damping:.3});
+  assert.equal(bond.restLength,13.5);
+  assert.equal(bond.stiffness,1.2);
+  assert.equal(bond.damping,.3);
+  const pruned=eco.pruneBonds([bond],new Set([4,9]),new Set());
+  assert.equal(pruned[0].restLength,13.5);
+});
