@@ -72,3 +72,34 @@ test('capability graph allows partial and alternative emergence without granting
   assert.ok(!later.enabled.includes('fusion'));
   const blocked=bio.evaluateCapabilities({aggregation:true,bonding:true,molecularReplication:true});assert.ok(!blocked.enabled.includes('molecularReplication'),'an observed capability must wait for its prerequisites');
 });
+
+test('spatial particle step resolves elastic collisions and conserves momentum',()=>{
+  const world=bio.createParticleWorld([
+    bio.normalizeParticle({id:'a',mass:1,radius:1,position:{x:-.9,y:0,z:0},velocity:{x:1,y:0,z:0}}),
+    bio.normalizeParticle({id:'b',mass:1,radius:1,position:{x:.9,y:0,z:0},velocity:{x:-1,y:0,z:0}})
+  ]);
+  const stats=bio.stepParticleWorld(world,.01,{cellSize:3,thermalJitter:0,restitution:1,electrostatic:0});
+  assert.equal(stats.collisions,1);
+  assert.ok(world.particles[0].velocity.x<0);assert.ok(world.particles[1].velocity.x>0);
+  assert.ok(Math.abs(world.particles[0].velocity.x+world.particles[1].velocity.x)<1e-8);
+});
+
+test('spatial hash discovers nearby particles without considering distant cells',()=>{
+  const particles=[];for(let i=0;i<40;i++)particles.push(bio.normalizeParticle({id:String(i),position:{x:i*20,y:0,z:0},radius:.2}));
+  particles[0].position.x=0;particles[1].position.x=.3;
+  const world=bio.createParticleWorld(particles);
+  const stats=bio.stepParticleWorld(world,.001,{cellSize:2,thermalJitter:0,electrostatic:0});
+  assert.equal(stats.candidatePairs,1);
+});
+
+test('bond kinetics form a persistent spring and break when overstretched',()=>{
+  const world=bio.createParticleWorld([
+    bio.normalizeParticle({id:'a',valence:1,radius:.5,position:{x:0,y:0,z:0}}),
+    bio.normalizeParticle({id:'b',valence:1,radius:.5,position:{x:.9,y:0,z:0}})
+  ]);
+  const formed=bio.stepParticleWorld(world,.001,{cellSize:2,thermalJitter:0,electrostatic:0,enableBondFormation:true,bondProbability:1,bondStrength:4});
+  assert.equal(formed.bondsFormed,1);assert.equal(world.bonds.length,1);
+  world.particles[1].position.x=5;
+  const broken=bio.stepParticleWorld(world,.001,{cellSize:2,thermalJitter:0,electrostatic:0,breakStretch:2});
+  assert.equal(broken.bondsBroken,1);assert.equal(world.bonds.length,0);
+});
