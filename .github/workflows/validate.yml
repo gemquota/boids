@@ -30,6 +30,8 @@ jobs:
           node --check /tmp/boids-vision-lab.js
           node --check boids-worker.js
           node --check physics.js
+          node --check emergence.js
+          node --test tests/emergence.test.cjs
           node --check development.js
           node --test tests/physics.test.js tests/development.test.js
           node --check hydrology.js
