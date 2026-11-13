@@ -5,7 +5,7 @@ let world=null,random=null;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 function summary(){
-  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,moleculeCount:(world.molecules||[]).length,resourceCloudCount:(world.resourceClouds||[]).length,carriedParticleCount:(world.resourceClouds||[]).reduce((n,c)=>n+c.particleIds.length,0)};
+  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,moleculeCount:(world.molecules||[]).length,resourceCloudCount:(world.resourceClouds||[]).length,carriedParticleCount:(world.resourceClouds||[]).reduce((n,c)=>n+c.particleIds.length,0),energySourceCount:(world.energySources||[]).length,compartmentCount:(world.compartments||[]).length};
 }
 
 onmessage=event=>{
@@ -13,8 +13,20 @@ onmessage=event=>{
   try{
     if(message.type==='abiogenesis:init'){
       random=BoidsAbiogenesis.createSeededRandom(message.seed??1);
-      world=BoidsAbiogenesis.createParticleWorld(message.particles||[],{bonds:message.bonds||[],resourceClouds:message.resourceClouds||[],molecules:message.molecules||[],time:message.time||0});
+      world=BoidsAbiogenesis.createParticleWorld(message.particles||[],{bonds:message.bonds||[],resourceClouds:message.resourceClouds||[],molecules:message.molecules||[],energySources:message.energySources||[],compartments:message.compartments||[],time:message.time||0});
       postMessage({type:'abiogenesis:ready',...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:harvest'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const result=BoidsAbiogenesis.harvestEnergy(world,message.cloudId,message.sourceId,message.amount);
+      postMessage({type:'abiogenesis:harvested',requestId:message.requestId,result,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:metabolize'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const result=BoidsAbiogenesis.metabolizeMolecules(world,message.cloudId,message.inputMoleculeIds||[],message.outputs||[],message.options||{});
+      postMessage({type:'abiogenesis:metabolized',requestId:message.requestId,result,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
       return;
     }
     if(message.type==='abiogenesis:collect'){
