@@ -25,9 +25,15 @@ jobs:
           if not vision_match:
               raise SystemExit('Vision lab inline script not found')
           open('/tmp/boids-vision-lab.js', 'w', encoding='utf-8').write(vision_match.group(1))
+          lab = open('abiogenesis-lab.html', encoding='utf-8').read()
+          lab_match = re.search(r'<script>(.*?)</script>', lab, re.S)
+          if not lab_match:
+              raise SystemExit('Abiogenesis lab inline script not found')
+          open('/tmp/abiogenesis-lab.js', 'w', encoding='utf-8').write(lab_match.group(1))
           PY
           node --check /tmp/boids-app.js
           node --check /tmp/boids-vision-lab.js
+          node --check /tmp/abiogenesis-lab.js
           node --check boids-worker.js
           node --check physics.js
           node --check emergence.js
