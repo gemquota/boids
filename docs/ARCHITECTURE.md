@@ -83,4 +83,4 @@ See [snapshot schemas and migration behaviour](SNAPSHOT-MIGRATION.md) for the fi
 See [Observatory telemetry and analysis exports](TELEMETRY-EXPORTS.md) for sampled metrics, retention limits and bundle contents.
 
 
-See [Abiogenesis and hierarchical biological organisation](ABIogenesis.md) for the foundational chemical/biological model, capability graph and integration invariants.
+See [Abiogenesis and hierarchical biological organisation](Abiogenesis.md) for the foundational chemical/biological model, capability graph and integration invariants.
