@@ -28,7 +28,7 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <section class="panel">
 <div class="toolbar">
 <button class="primary" id="toggle">Pause</button><button id="step">Single step</button><button id="reset">Reset world</button>
-<button id="bonding">Bond formation: on</button><button id="collect">Collect nearby</button><button id="craft">Craft C-H molecule</button><button id="inventory">Inventory</button>
+<button id="bonding">Bond formation: on</button><button id="collect">Collect nearby</button><button id="craft">Craft C-H molecule</button><button id="inventory">Inventory</button><button id="harvest">Harvest energy</button><button id="metabolize">Metabolise CH</button>
 <span class="stat" id="stats">Initialising worker…</span>
 </div>
 <canvas id="world" width="960" height="620" aria-label="Particle and bond simulation"></canvas>
@@ -39,7 +39,7 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <span><i class="dot" style="background:#8da7e8"></i>Nitrogen</span>
 <span><i class="dot" style="background:#a4bd8d"></i>Other</span>
 </div>
-<div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor. Use Collect nearby to acquire unowned particles, Inventory to inspect its elemental stockpile, and Craft C-H molecule to bond two carried atoms while preserving their identities. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
+<div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor. Use Collect nearby to acquire unowned particles, Inventory to inspect the stockpile, Craft C-H molecule to bond two atoms, Harvest energy to draw from a finite light reservoir, and Metabolise CH to release some stored molecular energy. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
 </section>
 </main>
 <script>
@@ -91,7 +91,7 @@ worker.onmessage=e=>{
  const m=e.data;
  if(m.type==='abiogenesis:ready'){stats.textContent='Worker ready · '+m.particleCount+' particles';requestStep();return}
  if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;cloudIds.clear();for(const cloud of world.resourceClouds||[])for(const id of cloud.particleIds)cloudIds.add(id);busy=false;if(!paused)requestStep();return}
- if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'){if(m.world)world=m.world;const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
+ if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'||m.type==='abiogenesis:harvested'||m.type==='abiogenesis:metabolized'){if(m.world)world=m.world;const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
  if(m.type==='abiogenesis:transferred'){stats.textContent=m.transferred?'Resource transferred':'Transfer unavailable';return}
  if(m.type==='abiogenesis:error'){stats.textContent=m.message;busy=false}
 };
@@ -102,6 +102,8 @@ document.getElementById('bonding').onclick=()=>{bonding=!bonding;document.getEle
 document.getElementById('collect').onclick=()=>worker.postMessage({type:'abiogenesis:collect',cloudId:'cell-cargo',anchor:cell,options:{radius:90,maxCount:10}});
 document.getElementById('craft').onclick=()=>worker.postMessage({type:'abiogenesis:craft',cloudId:'cell-cargo',atomIds:['atom-0','atom-1'],bonds:[{a:'atom-0',b:'atom-1',type:'covalent',strength:2}],options:{id:'cell-CH',type:'C-H',energy:1}});
 document.getElementById('inventory').onclick=()=>worker.postMessage({type:'abiogenesis:inventory',cloudId:'cell-cargo'});
+document.getElementById('harvest').onclick=()=>worker.postMessage({type:'abiogenesis:harvest',cloudId:'cell-cargo',sourceId:'sunlight',amount:2});
+document.getElementById('metabolize').onclick=()=>worker.postMessage({type:'abiogenesis:metabolize',cloudId:'cell-cargo',inputMoleculeIds:['cell-CH'],outputs:[{id:'spent-CH',type:'spent',atomIds:['atom-0','atom-1'],bonds:[{a:'atom-0',b:'atom-1'}],energy:.2}],options:{captureEfficiency:.65}});
 seedWorld();requestAnimationFrame(draw);
 </script>
 </body>
