@@ -319,7 +319,7 @@ test('collection and transfer move bonded molecules as intact resource units',()
     {id:'h',element:'H',position:{x:1.5,y:0}},
     {id:'free',element:'O',position:{x:2,y:0}}
   ]);
-  bio.createResourceCloud(world,'cell-a',[]);
+  bio.createResourceCloud(world,'cell-a',['c','h']);
   bio.createResourceCloud(world,'cell-b',[]);
   bio.craftMolecule(world,'cloud-cell-a',['c','h'],[{a:'c',b:'h'}],{id:'CH'});
   const collected=bio.collectResources(world,'cloud-cell-b',{position:{x:0,y:0}},{radius:4});
