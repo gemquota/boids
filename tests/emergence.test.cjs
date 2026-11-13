@@ -71,3 +71,35 @@ test('scheduler runs phases in stable priority order',()=>{
   scheduler.step(.5,{});
   assert.deepEqual(order,['early','late']);assert.equal(scheduler.time,.5);
 });
+
+
+test('string entity IDs do not poison the numeric allocator',()=>{
+  const store=new E.EntityStore();
+  const named=store.create('cell',{}, {id:'cell-A'});
+  const next=store.create('molecule');
+  assert.equal(named.id,'cell-A');
+  assert.equal(next.id,1);
+});
+test('removing a composed entity reparents its children without orphaning them',()=>{
+  const store=new E.EntityStore(),root=store.create('root'),middle=store.create('middle'),leaf=store.create('leaf');
+  store.compose(root.id,middle.id);store.compose(middle.id,leaf.id);
+  store.remove(middle.id);
+  assert.equal(store.get(leaf.id).parent,root.id);
+  assert.deepEqual(store.get(root.id).components,[leaf.id]);
+  assert.deepEqual(store.descendants(root.id),[leaf.id]);
+});
+test('reaction catalysts cannot be consumed as reactants and reaction energy is pooled',()=>{
+  const store=new E.EntityStore();
+  const a=store.create('A',{}, {energy:.2}),b=store.create('B',{}, {energy:2}),catalyst=store.create('catalyst');
+  const rules=new E.RuleEngine({random:()=>0});
+  rules.register({id:'pool',inputs:['A','B'],catalysts:['catalyst'],outputs:[{type:'AB'}],rate:100,energyCost:1});
+  assert.equal(rules.run(store,1),1);
+  assert.equal(store.get(catalyst.id).type,'catalyst');
+  assert.equal(Array.from(store.entities.values()).find(e=>e.type==='AB').energy,1.2);
+  assert.equal(rules.energy.ledger.dissipated,1);
+});
+test('typed graph components do not absorb connected entities of another type',()=>{
+  const store=new E.EntityStore(),a=store.create('unit'),b=store.create('unit'),other=store.create('field');
+  store.link(a.id,b.id);store.link(b.id,other.id);
+  assert.deepEqual(new E.GraphEngine(store).components('unit').map(g=>g.sort()),[[a.id,b.id]]);
+});
