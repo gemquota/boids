@@ -26,7 +26,7 @@ jobs:
               raise SystemExit('Vision lab inline script not found')
           open('/tmp/boids-vision-lab.js', 'w', encoding='utf-8').write(vision_match.group(1))
           emergence = open('emergence-lab.html', encoding='utf-8').read()
-          emergence_match = re.search(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>', emergence, re.S)
+          emergence_match = re.search(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', emergence, re.S)
           if not emergence_match:
               raise SystemExit('Emergence lab inline script not found')
           open('/tmp/boids-emergence-lab.js', 'w', encoding='utf-8').write(emergence_match.group(1))
