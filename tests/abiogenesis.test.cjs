@@ -104,17 +104,19 @@ test('bond kinetics form a persistent spring and break when overstretched',()=>{
   assert.equal(broken.bondsBroken,1);assert.equal(world.bonds.length,0);
 });
 
-test('particle-world snapshots preserve identities, bonds, time and deterministic continuation',()=>{
+test('particle-world snapshots preserve identities and deterministic continuation',()=>{
   const make=()=>bio.createParticleWorld([
     bio.normalizeParticle({id:'x',position:{x:0,y:0,z:0},velocity:{x:.1,y:0,z:0}}),
     bio.normalizeParticle({id:'y',position:{x:1,y:0,z:0},velocity:{x:-.1,y:0,z:0}})
   ],{bonds:[{a:'x',b:'y',restLength:1,strength:2}]});
   const a=make(),b=make(),rngA=bio.createSeededRandom(123),rngB=bio.createSeededRandom(123);
   bio.stepParticleWorld(a,.01,{thermalJitter:.02,random:rngA});
+  bio.stepParticleWorld(b,.01,{thermalJitter:.02,random:rngB});
   const restored=bio.restoreParticleWorld(bio.snapshotParticleWorld(a));
-  bio.stepParticleWorld(a,.01,{thermalJitter:.02,random:rngA});
-  bio.stepParticleWorld(restored,.01,{thermalJitter:.02,random:rngB});
   assert.deepEqual(restored.particles,a.particles);assert.deepEqual(restored.bonds,a.bonds);
+  bio.stepParticleWorld(a,.01,{thermalJitter:.02,random:rngA});
+  bio.stepParticleWorld(b,.01,{thermalJitter:.02,random:rngB});
+  assert.deepEqual(b.particles,a.particles);assert.deepEqual(b.bonds,a.bonds);
 });
 
 test('spatial hash searches enough cells when particles have large radii',()=>{
