@@ -14,7 +14,7 @@ This is a conceptual map, not a rigid execution pipeline. Chemical reactions, li
 
 ## Capability graph
 
-The code represents prerequisites as a dependency graph. Observed capabilities are explicit facts; derived capabilities are enabled only when their prerequisites are satisfied. The graph is intentionally conservative and is not a claim that abiogenesis followed one known historical sequence. In particular, protocellular compartments do not imply metabolism or replication, and fusion is independent of adhesion.
+The code represents prerequisites as a dependency graph. Observed capabilities are explicit facts; the graph only enables an observed capability when its prerequisites are satisfied. Prerequisites never manufacture downstream capabilities by themselves. The graph is intentionally conservative and is not a claim that abiogenesis followed one known historical sequence. In particular, protocellular compartments do not imply metabolism or replication, and fusion is independent of adhesion.
 
 ## Physical and chemical primitives
 
