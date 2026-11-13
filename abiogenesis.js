@@ -126,6 +126,9 @@
       metabolismCapability:false,createdAt:finite(options.createdAt),metadata:options.metadata&&typeof options.metadata==='object'?clone(options.metadata):{}};
   }
 
+  function createSeededRandom(seed=1){let state=(Number(seed)>>>0)||0x6d2b79f5;return function(){state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296}}
+  function snapshotParticleWorld(world){return clone({particles:world.particles,bonds:world.bonds,time:world.time,stats:world.stats})}
+  function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,...(snapshot.stats||{})};return world}
   function createParticleWorld(inputs=[],options={}){
     const particles=inputs.map(normalizeParticle),ids=new Set(particles.map(p=>p.id));
     if(ids.size!==particles.length)throw new Error('Particle IDs must be unique');
@@ -141,12 +144,14 @@
     const restitution=clamp(finite(options.restitution,.65),0,1),breakStretch=Math.max(1,finite(options.breakStretch,3)),breakEnergy=Math.max(0,finite(options.breakEnergy,Infinity));
     const random=typeof options.random==='function'?options.random:Math.random;
     const cells=new Map(),forces=Array.from({length:n},()=>({x:0,y:0,z:0})),index=new Map(ps.map((p,i)=>[p.id,i]));
+    let maxRadius=0;for(const p of ps)maxRadius=Math.max(maxRadius,p.radius);
+    const span=Math.max(1,Math.ceil((maxRadius*2+captureRadius)/cellSize));
     const cellKey=(x,y,z)=>Math.floor(x/cellSize)+','+Math.floor(y/cellSize)+','+Math.floor(z/cellSize);
     for(let i=0;i<n;i++){const p=ps[i],key=cellKey(p.position.x,p.position.y,p.position.z);let bucket=cells.get(key);if(!bucket)cells.set(key,bucket=[]);bucket.push(i)}
     const candidates=[];
     for(let i=0;i<n;i++){
       const a=ps[i],gx=Math.floor(a.position.x/cellSize),gy=Math.floor(a.position.y/cellSize),gz=Math.floor(a.position.z/cellSize);
-      for(let oz=-1;oz<=1;oz++)for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+      for(let oz=-span;oz<=span;oz++)for(let oy=-span;oy<=span;oy++)for(let ox=-span;ox<=span;ox++){
         const bucket=cells.get((gx+ox)+','+(gy+oy)+','+(gz+oz));if(!bucket)continue;
         for(const j of bucket){if(j<=i)continue;const b=ps[j],dx=b.position.x-a.position.x,dy=b.position.y-a.position.y,dz=b.position.z-a.position.z;
           const distance=Math.hypot(dx,dy,dz)||1e-9,range=a.radius+b.radius+captureRadius+cellSize*.0;if(distance>Math.max(range,cellSize))continue;
@@ -232,6 +237,6 @@
       anyOf:(rule.anyOf||[]).filter(path=>!path.every(dep=>enabled.has(dep))).map(path=>path.filter(dep=>!enabled.has(dep)))};
     return {enabled:Array.from(enabled).sort(),unmet,passes};
   }
-  return {ELEMENTS,BOND_TYPES,CAPABILITIES,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
+  return {ELEMENTS,BOND_TYPES,CAPABILITIES,createSeededRandom,snapshotParticleWorld,restoreParticleWorld,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
     normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,evaluateCapabilities};
 });
