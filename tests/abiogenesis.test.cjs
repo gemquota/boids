@@ -60,7 +60,7 @@ test('autocatalytic closure distinguishes reachable products from a closed loop'
 
 test('lipid compartments are variable-capability structures, not automatically living cells',()=>{
   const p=bio.assembleCompartment(['l1','l2','l3'],['m1'],{stability:.8,permeability:.3});
-  assert.equal(p.stability,.8);assert.equal(p.replicationCapability,false);assert.equal(p.metabolismCapability,false);
+  assert.equal(p.stability,.8);assert.deepEqual(p.capabilities,{metabolicActivity:false,molecularReplication:false,growth:false,environmentalResponsiveness:false});
 });
 
 test('capability graph allows partial and alternative emergence without granting life wholesale',()=>{
@@ -162,4 +162,18 @@ test('reaction stoichiometry aggregates repeated reactants before consuming anyt
   pool[1].amount=.5;pool.push({type:'A',amount:1});
   const ok=bio.applyReaction(pool,reaction);assert.equal(ok.occurred,true);
   assert.equal(pool.filter(p=>p.type==='A').reduce((n,p)=>n+p.amount,0),.5);
+});
+
+test('metabolism, molecular replication, membrane stability and environmental response remain independent evidence',()=>{
+  const state=bio.evaluateCapabilities({aggregation:true,bonding:true,molecularFormation:true,chemicalReactions:true,metabolicActivity:true,
+    lipidAssembly:true,compartments:true,protocells:true,membraneStability:true,materialExchange:true,environmentalResponsiveness:true});
+  assert.ok(state.enabled.includes('metabolicActivity'));
+  assert.ok(state.enabled.includes('membraneStability'));
+  assert.ok(state.enabled.includes('environmentalResponsiveness'));
+  assert.ok(!state.enabled.includes('molecularReplication'));
+  assert.ok(!state.enabled.includes('compartmentGrowth'));
+  assert.ok(!state.enabled.includes('cellularReproduction'));
+  const replicated=bio.evaluateCapabilities({aggregation:true,bonding:true,molecularFormation:true,chemicalReactions:true,polymerisation:true,molecularReplication:true});
+  assert.ok(replicated.enabled.includes('molecularReplication'));
+  assert.ok(!replicated.enabled.includes('metabolicActivity'));
 });
