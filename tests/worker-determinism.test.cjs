@@ -20,7 +20,7 @@ function makeWorld(seed) {
   };
   vm.createContext(sandbox);
   sandbox.importScripts = (...paths) => { for (const path of paths) { const filePath = path.split('?')[0]; vm.runInContext(fs.readFileSync(filePath, 'utf8'), sandbox, { filename: path }); } };
-  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get birthCohort(){return birthCohort}, get environmentFields(){return environmentFields}, get pregnant(){return pregnant}, get energy(){return energy}, get fitness(){return fitness}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, makePlantNode, get plantGrid(){return plantGrid}, rebuildPlantGrid, get cols(){return cols}, get rows(){return rows}, get cellSize(){return cellSize}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get parentTraitRecords(){return parentTraitRecords}, get traitGenes(){return traitGenes}, get survivalHistory(){return survivalHistory}, get survivalEntryAgeById(){return survivalEntryAgeById}, get survivalHistoryTruncated(){return survivalHistoryTruncated}, recordSurvivalObservation, populationSurvivalMetrics, resizePopulation, populationGeneticsMetrics, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get innovationBirthTime(){return innovationBirthTime}, get simTime(){return simTime}, set simTime(value){simTime=value}, get frameNo(){return frameNo}, get phenotypeCache(){return phenotypeCache}, get phenotypeCacheReady(){return phenotypeCacheReady}, innovationProtectionFactor, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get agentEligibility(){return agentEligibility}, get agentRegulatoryGenomes(){return agentRegulatoryGenomes}, get paternalRegulatoryGenomes(){return paternalRegulatoryGenomes}, get regulatoryRegistry(){return regulatoryRegistry}, get regulatoryExpressionByAgent(){return regulatoryExpressionByAgent}, get regulatoryMutationHistory(){return regulatoryMutationHistory}, recordRegulatoryMutation, updateRegulatoryExpression, inheritRegulatoryGenome, calculatePhenotype, refreshPhenotypes, phenotype, installNeatGenome, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesQuotaById(){return speciesQuotaById}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
+  vm.runInContext(source + `\nglobalThis.__boidsTest = { get cfg(){return cfg}, get N(){return N}, get rngState(){return rngState}, get sex(){return sex}, get age(){return age}, get birthCohort(){return birthCohort}, get environmentFields(){return environmentFields}, get pregnant(){return pregnant}, get energy(){return energy}, get fitness(){return fitness}, get individualId(){return individualId}, get parentA(){return parentA}, get parentB(){return parentB}, get pedigree(){return pedigree}, get plants(){return plants}, makePlantNode, get plantGrid(){return plantGrid}, rebuildPlantGrid, get cols(){return cols}, get rows(){return rows}, get cellSize(){return cellSize}, get spores(){return spores}, get plantCounters(){return plantCounters}, growPlants, nearestFreshwater, get obstacles(){return obstacles}, set obstacles(v){obstacles=v}, get x(){return x}, get y(){return y}, get xNext(){return xNext}, get yNext(){return yNext}, get vx(){return vx}, get vy(){return vy}, collisionRadius, resolveAgentCollisions, get coverByAgent(){return coverByAgent}, get currentSeasonalFactor(){return currentSeasonalFactor}, get reproductiveSuccess(){return reproductiveSuccess}, get parentTraitRecords(){return parentTraitRecords}, get traitGenes(){return traitGenes}, get survivalHistory(){return survivalHistory}, get survivalEntryAgeById(){return survivalEntryAgeById}, get survivalHistoryTruncated(){return survivalHistoryTruncated}, recordSurvivalObservation, populationSurvivalMetrics, resizePopulation, populationGeneticsMetrics, get selectedParentEvents(){return selectedParentEvents}, get selectedTraitSums(){return selectedTraitSums}, get attackAttempts(){return attackAttempts}, get genome(){return genome}, get innovation(){return innovation}, get innovationRegistry(){return innovationRegistry}, get innovationBirthTime(){return innovationBirthTime}, get simTime(){return simTime}, set simTime(value){simTime=value}, get frameNo(){return frameNo}, get phenotypeCache(){return phenotypeCache}, get phenotypeCacheReady(){return phenotypeCacheReady}, innovationProtectionFactor, get agentGenomes(){return agentGenomes}, get agentGeneIndex(){return agentGeneIndex}, get agentLearnedWeights(){return agentLearnedWeights}, get agentEligibility(){return agentEligibility}, get agentRegulatoryGenomes(){return agentRegulatoryGenomes}, get paternalRegulatoryGenomes(){return paternalRegulatoryGenomes}, get regulatoryRegistry(){return regulatoryRegistry}, get regulatoryExpressionByAgent(){return regulatoryExpressionByAgent}, get regulatoryMutationHistory(){return regulatoryMutationHistory}, recordRegulatoryMutation, updateRegulatoryExpression, inheritRegulatoryGenome, calculatePhenotype, refreshPhenotypes, phenotype, installNeatGenome, get reward(){return reward}, get speciesThresholdCurrent(){return speciesThresholdCurrent}, speciesQuotaFactor, get speciesState(){return speciesState}, get speciesByIndividual(){return speciesByIndividual}, get speciesQuotaById(){return speciesQuotaById}, get speciesChampionById(){return speciesChampionById}, configure:values=>onmessage({data:{type:'config',values}}), brain, inspectBrain, update, exportSnapshot, restoreSnapshot, conceive, deliver, kinshipRelatedness, innovationFor, genomeDistance, evaluatePopulation, exportExperimentData, init };`, sandbox, { filename: 'boids-worker.js' });
   const api = sandbox.__boidsTest;
   api.cfg.seed = seed;
   api.cfg.count = 96;
@@ -273,7 +273,7 @@ const exportResponse = a.__messages.at(-1);
 assert.equal(exportResponse.type, 'exportData', 'worker should answer export requests');
 assert.equal(exportResponse.requestId, 42, 'worker should preserve export request IDs');
 
-// Plant life cycle: clonal budding, mature adult offspring, spore germination, senescence and death.
+// Plant life cycle: collision-aware budding, maternal flowers, local colour inheritance, spore germination, senescence and death.
 const plantWorld = makeWorld(404);
 const plantApi = plantWorld.__boidsTest;
 plantApi.plants.splice(0);
@@ -282,17 +282,22 @@ const mother = { id: 9001, parent: 0, root: 9001, x: 180, y: 180, angle: 0, size
 plantApi.plants.push(mother);
 plantApi.growPlants(.01);
 assert.equal(mother.grandmother, true, 'a sufficiently large mature mother should become a grandmother');
-const adultClones = plantApi.plants.filter(p => p.parent === mother.id && p.adultNode);
-assert.equal(adultClones.length, 2, 'grandmother should produce two fully mature clonal offspring');
-assert.ok(adultClones.every(p => p.biomass >= .72 && p.age >= 9), 'adult clones should be branch-ready immediately');
-assert.ok(plantApi.plantCounters.asexualBuds >= 2, 'clonal budding should be counted');
+assert.equal(plantApi.plants.filter(p => p.parent === mother.id && p.adultNode).length, 0, 'grandmother status must not automatically create two mature offspring');
+assert.ok(mother.flowerCount >= 3 && mother.flowerCount <= 5, 'mother plants should develop a small cluster of flowers');
+assert.ok(mother.flowerGrowth > 0, 'flowers should begin growing when maternal status is reached');
+assert.equal(mother.offspring, 0, 'grandmother status alone must not fabricate offspring');
+assert.ok(plantApi.plantCounters.asexualBuds >= 1, 'ordinary collision-aware clonal budding should still be counted');
 const beforeGermination = plantApi.plants.length;
 const waterLanding = plantApi.nearestFreshwater(500, 300);
 plantApi.spores.push({ x: waterLanding.x, y: waterLanding.y, vx: 0, vy: 0, life: 7.1, settleAfter: 7, landed: true, settleClock: 1.8, parentId: mother.id, root: mother.id, kind: 'asexual-spore' });
-plantApi.growPlants(.01);
+for (let attempt = 0; attempt < 12 && plantApi.plantCounters.sporesGerminated === 0; attempt++) {
+  const waiting = plantApi.spores.find(sp => sp.parentId === mother.id);
+  if (waiting) waiting.settleClock = 1.8;
+  plantApi.growPlants(.01);
+}
 const germinated = plantApi.plants.find(p => p.cloneParent === mother.id && p.asexual && Math.hypot(p.x-waterLanding.x,p.y-waterLanding.y)<1);
-assert.ok(germinated, 'a landed, viable asexual spore should germinate into a clonal seedling');
-assert.ok(plantApi.plants.length > beforeGermination, 'adult clonal nodes should continue branching during the next growth tick');
+assert.ok(germinated, 'a landed, viable asexual spore should germinate after repeated settlement checks');
+assert.ok(plantApi.plants.length > beforeGermination, 'ordinary clonal nodes should continue branching during subsequent growth ticks');
 assert.equal(plantApi.plantCounters.sporesGerminated, 1);
 const oldPlant = { id: 9002, parent: 0, root: 9002, x: 600, y: 300, angle: 0, size: .3, biomass: .2, age: 100, children: 0, lifespan: 100, senescent: false };
 plantApi.plants.push(oldPlant);
@@ -304,7 +309,7 @@ plantApi.growPlants(.2);
 assert.ok(!plantApi.plants.includes(oldPlant), 'senescent plants should eventually die');
 assert.equal(plantApi.plantCounters.plantDeaths, 1, 'plant deaths should be counted');
 const plantSnapshot = plantApi.exportSnapshot();
-assert.ok(plantSnapshot.plantCounters.asexualBuds >= 2, 'plant lifecycle counters should persist in snapshots');
+assert.ok(plantSnapshot.plantCounters.asexualBuds >= 1, 'plant lifecycle counters should persist in snapshots');
 const restoredPlants = makeWorld(405);
 restoredPlants.__boidsTest.restoreSnapshot(plantSnapshot);
 assert.deepEqual({ ...restoredPlants.__boidsTest.plantCounters }, { ...plantApi.plantCounters }, 'plant lifecycle counters should survive snapshot restore');
@@ -432,3 +437,13 @@ assert.equal(migrated.__boidsTest.exportSnapshot().arrays.innovation.length, api
 assert.equal(migrated.__boidsTest.kinshipRelatedness(firstChildId, secondChildId), .5, 'legacy restore should reconstruct the live pedigree from parent IDs');
 
 console.log('Worker deterministic replay, unique identities, pedigree inheritance, and schema-v4 restore and schema-v3 phenotype migration passed.');
+
+const collisionProbe=makeWorld(554433).__boidsTest;
+collisionProbe.cfg.drive=0;
+collisionProbe.x[0]=collisionProbe.x[1]=240;
+collisionProbe.y[0]=collisionProbe.y[1]=180;
+collisionProbe.vx[0]=collisionProbe.vx[1]=0;
+collisionProbe.vy[0]=collisionProbe.vy[1]=0;
+collisionProbe.update(1/60,1000);
+const collisionDistance=Math.hypot(collisionProbe.x[0]-collisionProbe.x[1],collisionProbe.y[0]-collisionProbe.y[1]);
+assert.ok(collisionDistance>=collisionProbe.collisionRadius(0)+collisionProbe.collisionRadius(1)-.1,'overlapping boids should be separated by physical body contact');

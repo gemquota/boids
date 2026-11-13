@@ -46,7 +46,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .overlayOpacityControl{padding:8px 3px 10px}
 .advancedControlToggle{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 4px;margin:2px 0 5px;border:1px solid #ffffff18;border-radius:7px;background:#ffffff06;color:#bcd0d7;font-size:9px;cursor:pointer}
 .advancedControlToggle input{accent-color:var(--mint);width:15px;height:15px;margin:0}
-.control.advancedHidden{display:none}.control.advancedHidden.is-visible{display:grid}
+.control.advancedHidden{display:none}.control.advancedHidden.is-visible{display:grid}.sliderAccordion.advancedHiddenGroup{display:none}.sliderAccordion.advancedHiddenGroup.is-visible{display:block}
 .sliderAccordion{border-top:1px solid #ffffff12;margin-top:5px}
 .sliderAccordion>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 2px 7px;color:var(--group-color);font-size:8px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
 .sliderAccordion>summary::-webkit-details-marker{display:none}
@@ -156,7 +156,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <summary class="apparatusSummary">Vision controls &amp; genetics <span>tap to collapse the whole module</span></summary>
     <div class="apparatusContent">
      <div class="control overlayOpacityControl" style="margin-top:7px"><label for="overlayOpacity" class="parameterName" data-help="overlayOpacity">Overlay opacity</label><output id="overlayOpacityValue">72%</output><input id="overlayOpacity" type="range" min="10" max="100" value="72" step="1"></div>
-     <label class="advancedControlToggle"><span>Show range &amp; polling controls</span><input id="showAdvancedControls" type="checkbox"></label>
+     <label class="advancedControlToggle"><span>Show advanced parameters</span><input id="showAdvancedControls" type="checkbox"></label>
      <div id="parameterGroups"></div>
      <section class="overlayBox">
     <div class="overlayTitle" data-help="teaching">Online neural teaching</div>
@@ -191,8 +191,8 @@ const sigmoid=x=>1/(1+Math.exp(-clamp(x,-12,12)));
 const fmt=(v,d=0)=>Number(v).toFixed(d);
 const params={
  fov:224,coneScale:112,eyeCount:1,eyeAngle:0,
- rayCount:96,rayBudget:52,rayWidth:2.75,originCycle:2,distribution:1,maxRange:300,minRange:5,curvature:8,
- samplingHz:10,scanMode:2,scanDirection:1,scanSpeed:2.1,adaptive:84,priorityBoost:88,persistence:2.1,stagger:1,
+ rayCount:96,rayBudget:52,rayWidth:2.75,originCycle:2,distribution:1,maxRange:520,minRange:5,curvature:8,
+ samplingHz:26,scanMode:2,scanDirection:1,scanSpeed:2.1,adaptive:84,priorityBoost:88,persistence:2.1,stagger:1,
  contrast:42,luminance:18,minTarget:1,classification:3,colourSensitivity:88,motionSensitivity:86,depthResolution:76,transparency:58,fog:9,ambient:91,confidenceMin:.12,
  gazeOffset:0,gazeSpeed:225,turnSpeed:54,turnVariance:82,behaviorVariance:76,turnBias:38,turnLockThreshold:92,gazeWander:34,attentionSpan:1.4,fixation:.72,saccade:54,attentionThreshold:22,threatBias:78,foodBias:74,idleScan:38,tracking:91,prediction:1.45,reacquisition:2.4,
  memory:4.2,shortTerm:3.4,temporalSmooth:48,noiseTolerance:52,habituation:9,occlusionMemory:84,predictionHorizon:1.85,visualNoise:3,
@@ -308,6 +308,7 @@ window.addEventListener('resize',()=>help.hidden=true);
 
 function makeControls(){
  const root=$('parameterGroups');
+ const advancedKeys=new Set(['eyeCount','eyeAngle','coneScale','rayWidth','curvature','distribution','originCycle','minRange','scanMode','scanDirection','scanSpeed','stagger','persistence','adaptive','priorityBoost','turnVariance','behaviorVariance','turnBias','turnLockThreshold','gazeOffset','gazeSpeed','gazeWander','idleScan','saccade','luminance','minTarget','confidenceMin','colourSensitivity','depthResolution','transparency','fog','ambient','visualNoise','noiseTolerance','fixation','attentionThreshold','threatBias','foodBias','tracking','prediction','reacquisition','shortTerm','temporalSmooth','habituation','occlusionMemory','predictionHorizon','learningRate','plasticity','processingCost','tradeoff','mutationRate','developmentalVariance']);
  for(const group of groups){
   const details=document.createElement('details');details.className='sliderAccordion';details.open=false;details.style.setProperty('--group-color',groupColors[groups.indexOf(group)]);
   const summary=document.createElement('summary');summary.textContent=group.name;summary.dataset.help='group-'+groups.indexOf(group);details.append(summary);
@@ -317,7 +318,7 @@ function makeControls(){
   for(const item of group.items){
    const subgroup=item[7]||'General';
    if(subgroup!==lastSubgroup){const subhead=document.createElement('div');subhead.className='controlSubgroup';subhead.style.setProperty('--sub-color',itemColor(group,item));subhead.textContent=subgroup;holder.append(subhead);lastSubgroup=subgroup}
-   const key=item[0],row=document.createElement('div');row.className='control';if((key==='maxRange'||key==='samplingHz')&&row.classList?.add)row.classList.add('advancedHidden');row.style.setProperty('--group-color',itemColor(group,item));
+   const key=item[0],row=document.createElement('div');row.className='control';if(advancedKeys.has(key))row.classList.add('advancedHidden');row.style.setProperty('--group-color',itemColor(group,item));
    const label=document.createElement('button');label.type='button';label.className='parameterName';label.style.setProperty('--group-color',itemColor(group,item));label.textContent=item[1];label.addEventListener('click',()=>showParameterHelp(key,label));
    const output=document.createElement('output');output.id='v-'+key;output.textContent=displayValue(item,params[key]);
    const input=document.createElement('input');input.type='range';input.id='p-'+key;input.min=item[2];input.max=item[3];input.step=item[4];input.value=params[key];input.setAttribute('aria-label',item[1]);
@@ -330,7 +331,7 @@ function makeControls(){
    });
    row.append(label,output,input);holder.append(row);
   }
-  details.append(holder);root.append(details);
+  details.append(holder);if(group.items.every(item=>advancedKeys.has(item[0])))details.classList.add('advancedHiddenGroup');root.append(details);
  }
 }
 function syncControl(key){
@@ -349,14 +350,52 @@ function buildOverlays(){
 $('overlayOpacity').addEventListener('input',()=>{$('overlayOpacityValue').textContent=$('overlayOpacity').value+'%'});
 document.addEventListener('click',e=>{
  const trigger=e.target.closest('[data-help]');
- if(trigger){e.preventDefault();e.stopPropagation();showParameterHelp(trigger.dataset.help,trigger)}
+ if(trigger){if(trigger.matches('summary')){showParameterHelp(trigger.dataset.help,trigger);return;}e.preventDefault();e.stopPropagation();showParameterHelp(trigger.dataset.help,trigger)}
 });
 $('rewardBtn').dataset.help='reward';$('punishBtn').dataset.help='punish';$('exportGenomeBtn').dataset.help='exportGenome';$('restoreGenomeBtn').dataset.help='restoreGenome';
 makeControls();
 $('showAdvancedControls').addEventListener('change',e=>{
- document.querySelectorAll('.control.advancedHidden').forEach(row=>row.classList.toggle('is-visible',e.target.checked));
- document.querySelectorAll('.control.advancedHidden').forEach(row=>{row.style.display=e.target.checked?'':'none'});
+ const visible=e.target.checked;
+ document.querySelectorAll('.control.advancedHidden,.sliderAccordion.advancedHiddenGroup').forEach(row=>row.classList.toggle('is-visible',visible));
 });
+
+const LIMITS_KEY='boids-vision-lab-slider-limits-v1';
+let savedLimits={};try{savedLimits=JSON.parse(localStorage.getItem(LIMITS_KEY)||'{}')||{}}catch{}
+function applySavedSliderLimits(){
+ for(const [key,limits] of Object.entries(savedLimits)){
+  const item=groups.flatMap(g=>g.items).find(x=>x[0]===key),input=$('p-'+key);
+  if(!item||!input||!Number.isFinite(limits.min)||!Number.isFinite(limits.max)||limits.min>=limits.max)continue;
+  item[2]=limits.min;item[3]=limits.max;input.min=limits.min;input.max=limits.max;
+  params[key]=clamp(params[key],limits.min,limits.max);syncControl(key);
+ }
+}
+const limitDialog=document.createElement('dialog');limitDialog.id='sliderLimitEditor';limitDialog.style.cssText='max-width:min(350px,calc(100vw - 28px));width:100%;border:1px solid #ffffff30;border-radius:12px;background:#0c1a29;color:#e8f2f5;padding:16px;box-shadow:0 18px 60px #0009';
+limitDialog.innerHTML='<form method="dialog" style="display:grid;gap:10px"><strong id="limitTitle">Slider limits</strong><label style="display:grid;gap:4px;font-size:11px">Minimum<input id="limitMin" type="number" step="any" style="padding:8px;background:#07111d;color:inherit;border:1px solid #ffffff30;border-radius:6px"></label><label style="display:grid;gap:4px;font-size:11px">Maximum<input id="limitMax" type="number" step="any" style="padding:8px;background:#07111d;color:inherit;border:1px solid #ffffff30;border-radius:6px"></label><div style="display:flex;gap:7px;justify-content:flex-end"><button value="cancel" class="button">Cancel</button><button id="saveLimits" value="save" class="button primary">Save limits + file</button></div><small style="color:#91a7b3">Saved in this browser and exported as a JSON file for backup.</small></form>';
+$('parameterGroups').append(limitDialog);let editingLimit=null;
+function downloadSliderLimits(){const blob=new Blob([JSON.stringify({schema:'boids-vision-lab-slider-limits-v1',limits:savedLimits},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='boids-vision-lab-slider-limits.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1200)}
+function openSliderLimitEditor(key,label){
+ const item=groups.flatMap(g=>g.items).find(x=>x[0]===key),input=$('p-'+key);if(!item||!input)return;
+ editingLimit={key,item,input};$('limitTitle').textContent='Limits · '+label;$('limitMin').value=input.min;$('limitMax').value=input.max;limitDialog.showModal();
+}
+function installLongPressLimitEditor(key,label,anchor){
+ let timer=null,start=null,longPressed=false;
+ const targets=[anchor,$('p-'+key)];
+ for(const target of targets){if(!target)continue;target.title='Long-press to edit minimum and maximum';
+ target.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;longPressed=false;start={x:e.clientX,y:e.clientY};timer=setTimeout(()=>{longPressed=true;openSliderLimitEditor(key,label)},650)});
+ target.addEventListener('pointermove',e=>{if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>9){clearTimeout(timer);timer=null}});
+ for(const ev of ['pointerup','pointercancel','pointerleave'])target.addEventListener(ev,()=>{clearTimeout(timer);timer=null;start=null});
+ target.addEventListener('contextmenu',e=>{e.preventDefault();longPressed=true;openSliderLimitEditor(key,label)});
+ }
+ anchor.addEventListener('click',e=>{if(longPressed){e.preventDefault();e.stopImmediatePropagation();longPressed=false}},true);
+}
+for(const group of groups)for(const item of group.items){const key=item[0],input=$('p-'+key),label=input?.closest?.('.control')?.querySelector?.('.parameterName');if(label)installLongPressLimitEditor(key,item[1],label)}
+limitDialog.querySelector('form').addEventListener('submit',e=>{
+ if(e.submitter?.id!=='saveLimits')return;e.preventDefault();if(!editingLimit)return;
+ const min=Number($('limitMin').value),max=Number($('limitMax').value);if(!Number.isFinite(min)||!Number.isFinite(max)||min>=max){$('limitMin').focus();return}
+ const {key,item,input}=editingLimit;item[2]=min;item[3]=max;input.min=min;input.max=max;params[key]=clamp(params[key],min,max);syncControl(key);savedLimits[key]={min,max};localStorage.setItem(LIMITS_KEY,JSON.stringify(savedLimits));refreshGenome();scheduleImmediate=true;limitDialog.close();downloadSliderLimits();
+});
+applySavedSliderLimits();
+
 buildParameterMap();buildOverlays();
 const canvas=$('world'),ctx=canvas.getContext('2d',{alpha:true});
 let W=1,H=1,DPR=1,scale=1,paused=false,lastFrame=performance.now(),lastSample=0,sampleAccumulator=0,simTime=0,sampleCount=0,totalCandidateChecks=0,energy=100,energySpent=0,frames=0,fpsTime=0,fps=0,scanCursor=0,scanDir=1,jitterSeed=713,cycle=0;

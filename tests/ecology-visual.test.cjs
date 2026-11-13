@@ -54,11 +54,15 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
   const end = worker.indexOf('function drawWaterways()', start);
   assert.ok(start >= 0 && end > start);
   const renderer = worker.slice(start, end);
+  assert.match(renderer, /scale=\(6\+p\.size\*8\.5\)\*\(mature\?1\.24:\.82\)\*\(senescent\?\.68:1\)\*\.5/);
   assert.match(renderer, /quadraticCurveTo/);
-  assert.match(renderer, /r=2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)/);
+  assert.match(renderer, /length=scale\*\(\.72\+\.28\*Math\.cos\(spread\*Math\.PI\)\)\*\(p\.branchLengthScale\|\|1\)/);
+  assert.match(renderer, /width=Math\.max\(\.65,\(\.9\+p\.size\*\.32\)\*\(p\.branchThicknessScale\|\|1\)\)/);
+  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25\*\(p\.nodeScale\|\|1\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
-  assert.doesNotMatch(renderer, /ctx\.arc\(/);
+  assert.match(renderer, /flowerCount/);
+  assert.match(renderer, /ctx\.arc\(/);
   assert.doesNotMatch(worker, /function drawCrystal\(p\)|function drawPolypArms\(/);
   assert.doesNotMatch(worker, /function lagoon\(/);
 });
@@ -67,7 +71,7 @@ console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore ge
 
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
-  assert.match(worker, /Math.max\(64,Math.min\(120,Math.round\(W\*H\/14000\)\)\)/);
+  assert.match(worker, /Math.max\(16,Math.min\(30,Math.round\(W\*H\/56000\)\)\)/);
   assert.match(worker, /plantGain/);
   assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
   assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
@@ -88,4 +92,101 @@ test('observatory charts do not redraw while the drawer is closed', () => {
   assert.match(html, /panel==='analysis'&&Date\.now\(\)-lastChartRender>3500/);
   assert.match(html, /if\(which==='analysis'\).*?redrawCharts\(\)/);
   assert.match(worker, /const includeHistory=now-lastHistoryPost>5000/);
+});
+
+test('DNA and observatory use distinct icon tabs and reset lives in Field Operations', () => {
+  assert.ok(html.includes('class="drawerToggle dnaTab iconTab" id="openDNA"'));
+  assert.ok(html.includes('class="drawerToggle observatoryTab iconTab" id="openObservatory"'));
+  assert.ok(html.includes('id="openDNA" aria-expanded="false" aria-label="DNA and neural genome"><svg'));
+  assert.ok(html.includes('id="openObservatory" aria-expanded="false" aria-label="Evolutionary observatory"><svg'));
+  assert.ok(html.includes('id="openControls" aria-expanded="false" aria-label="Configuration"><svg'));
+  assert.ok(html.includes('id="openInfo" type="button"'));
+  assert.ok(html.includes('id="infoOverlay"'));
+  assert.ok(html.includes('right:33.333%;top:0'));
+  assert.ok(html.includes('top:33.333%'));
+  assert.ok(html.includes('left:33.333%'));
+  assert.ok(html.includes('resize:both'));
+  assert.ok(html.includes('<details class="leftOperations" open>'));
+  assert.ok(!html.includes('id="topReset"'));
+  assert.ok(html.includes('id="reset" title="Replace the entire ecosystem and population">↻ Reset simulation'));
+  assert.ok(html.includes("$('reset').onclick=resetSimulation"));
+  assert.ok(!html.includes("$('topReset').onclick"));
+});
+test('boids resolve physical body overlap and exchange collision impulse', () => {
+  assert.ok(worker.includes('function collisionRadius(i)'));
+  assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
+  assert.ok(worker.includes('if(relative<0){const impulse='));
+  assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
+});
+
+
+
+test('plants avoid canopy collisions and use treetop tip-shyness for new growth', () => {
+  assert.match(worker, /function plantCollisionRadius\(p\)/);
+  assert.match(worker, /function plantPositionClear\(px,py,size=\.2,ignoreId=0\)/);
+  assert.match(worker, /function findPlantGrowthPosition\(parent,angle,distance,size=\.2\)/);
+  assert.match(worker, /placement=findPlantGrowthPosition\(p,a,len,\.2\)/);
+  assert.match(worker, /crowded=!plantPositionClear\(sp\.x,sp\.y,\.2\)/);
+});
+
+test('new plants inherit nearby colour using distance and size weighted hue blending', () => {
+  assert.match(worker, /function plantHueAt\(px,py,ignoreId=0\)/);
+  assert.match(worker, /weight=\(\.25\+Math\.max\(\.05,p\.size\|\|\.2\)\*1\.5\)\/\(1\+d2\/\(64\*64\)\)/);
+  assert.match(worker, /node\.hue=plantHueAt\(node\.x,node\.y,0\)/);
+  assert.match(worker, /Number\.isFinite\(p\.hue\)/);
+});
+
+test('mother plants grow branch-tip flowers without grandmother twin-spawning', () => {
+  assert.match(worker, /p\.grandmother=true;p\.flowerCount=3\+Math\.floor\(random\(\)\*3\);p\.flowerGrowth=0/);
+  assert.match(worker, /if\(p\.grandmother\)p\.flowerGrowth=Math\.min\(1,/);
+  assert.match(worker, /if\(!senescent&&k<\(p\.flowerCount\|\|0\)\)/);
+  assert.doesNotMatch(worker, /p\.grandmother=true;p\.offspring\+=2/);
+});
+
+test('founder limb counts follow the requested weighted distribution and descendants mutate conservatively', () => {
+  const start = worker.indexOf('const LIMB_COUNT_WEIGHTS=');
+  const end = worker.indexOf('function bondOpportunity', start);
+  assert.ok(start >= 0 && end > start, 'weighted limb sampler must be defined');
+  const context = {};
+  vm.runInNewContext('let seed=123456789;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};' + worker.slice(start, end) + ';this.sample=sampleLimbCount;this.weights=LIMB_COUNT_WEIGHTS;', context);
+  assert.deepEqual(Array.from(context.weights), [10,15,30,15,10,8,4,3,2,2,1]);
+  const counts = new Array(11).fill(0);
+  for (let i = 0; i < 100000; i++) counts[context.sample()]++;
+  for (let i = 0; i < counts.length; i++) assert.ok(Math.abs(counts[i] / 1000 - context.weights[i]) < 0.65, 'limb count ' + i + ' should match its percentage');
+  assert.match(worker, /m\.limbs\.length<10/);
+  assert.match(worker, /random\(\)<\.025/);
+  assert.doesNotMatch(worker, /Math\.floor\(random\(\)\*5\)/);
+});
+
+test('plant morphology continuously responds to freshwater distance and latitude', () => {
+  const start=worker.indexOf('function plantMorphologyFromGradients('),end=worker.indexOf('function plantNodeGrowthScale',start);
+  assert.ok(start>=0&&end>start,'pure morphology gradient helper must exist');
+  const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
+  vm.runInNewContext(worker.slice(start,end)+';this.morph=plantMorphologyFromGradients;',context);
+  const near=context.morph(1,0),far=context.morph(0,1);
+  assert.ok(near.nodeScale>far.nodeScale,'near-water nodes should be larger');
+  assert.ok(near.branchLimit<far.branchLimit,'near-water plants should produce fewer nodes');
+  assert.ok(near.branchLengthScale<far.branchLengthScale,'near-water branches should be shorter');
+  assert.ok(near.branchThicknessScale>far.branchThicknessScale,'near-water branches should be thicker');
+  assert.ok(Math.abs(near.latitudeScale-1.05)<1e-9,'equator should receive only a slight 5% bonus');
+  assert.ok(Math.abs(far.latitudeScale-.95)<1e-9,'poles should receive only a slight 5% penalty');
+  assert.match(worker,/p\.biomass\+cfg\.plantGrowth\*dt[\s\S]*?nodeGrowth\.scale\*p\.latitudeScale/);
+  assert.match(worker,/\.5\*p\.nodeScale\*p\.latitudeScale/);
+  assert.match(worker,/len=\(4\.8\+p\.size\*7\)\*\.5\*p\.branchLengthScale/);
+  assert.match(worker,/width=Math\.max\(\.65,\(\.9\+p\.size\*\.32\)\*\(p\.branchThicknessScale\|\|1\)\)/);
+  assert.match(worker,/function nearestSaltwater\(px,py\)/);
+  assert.match(worker,/saltSpines:salt<fresh/);
+  assert.match(worker,/if\(p\.saltSpines&&!senescent\)/);
+  assert.match(worker,/const \[northWest,southEast\]=network\.coasts/);
+});
+
+test('smaller nodes grow more slowly relative to their whole plant', () => {
+  const start=worker.indexOf('function plantNodeGrowthScale('),end=worker.indexOf('function applyPlantMorphology',start);
+  assert.ok(start>=0&&end>start);
+  const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
+  vm.runInNewContext(worker.slice(start,end)+';this.scale=plantNodeGrowthScale;',context);
+  const large=context.scale(.8,.8),small=context.scale(.2,.8);
+  assert.equal(large.ratio,1);
+  assert.ok(small.ratio<large.ratio);
+  assert.ok(small.scale<large.scale);
 });

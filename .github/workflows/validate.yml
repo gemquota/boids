@@ -29,6 +29,8 @@ jobs:
           node --check /tmp/boids-app.js
           node --check /tmp/boids-vision-lab.js
           node --check boids-worker.js
+          node --check hydrology.js
+          node tests/hydrology.test.js
           node --check organism-economics.js
           node --check chromosome.js
           node --check config-registry.js
@@ -55,7 +57,7 @@ jobs:
           if not baseline_match:
               raise SystemExit('Rapid-evolution startup baseline missing')
           baseline = json.loads(baseline_match.group(1))
-          expected = {'count': 50, 'timeScale': 0.55, 'connections': 24, 'hidden': 10, 'brainRate': 2,
+          expected = {'count': 500, 'timeScale': 0.55, 'connections': 24, 'hidden': 10, 'brainRate': 2,
                       'mutation': 0.075, 'mutationSize': 0.34, 'drive': 0.78, 'ageMin': 10,
                       'gestation': 14, 'selection': 0.72, 'plantPreference': 0.95,
                       'plantRangeScale': 2.3, 'plantMinRange': 66, 'plantSteering': 0.28}
@@ -99,6 +101,7 @@ jobs:
           if "panel==='analysis'&&Date.now()-lastChartRender>3500" not in html:
               raise SystemExit('Charts must not redraw while the Observatory drawer is closed')
           if "new Worker('./boids-worker.js?v=20261112-organism-economics-v1')" not in html:
+          if "new Worker('./boids-worker.js?v=20261113-watershed-hydrology-v1')" not in html:
               raise SystemExit('Updated worker cache-bust missing')
           if 'r=2.8+Math.min(3.4,p.size*2.7)' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
               raise SystemExit('Faceted hexagonal plant crowns must remain visibly sized')

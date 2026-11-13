@@ -1,33 +1,55 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0a1118"><title>BOIDS / Minimal Vision</title>
 <style>
-:root{color-scheme:dark;--bg:#0a1118;--panel:#111d27;--line:#ffffff18;--text:#e8f0f3;--muted:#8fa2ad;--accent:#83e5ca}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,sans-serif}header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 17px;border-bottom:1px solid var(--line)}h1{font-size:12px;letter-spacing:.14em;margin:0}header p{font-size:10px;color:var(--muted);margin:3px 0 0}.actions{display:flex;gap:7px}.btn{color:inherit;background:#ffffff08;border:1px solid var(--line);border-radius:7px;padding:7px 10px;font:inherit;font-size:11px;text-decoration:none}main{max-width:1300px;margin:auto;padding:12px;display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:12px}.stage,.controls{background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}.stagehead{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}canvas{display:block;width:100%;height:min(72vh,700px);min-height:340px;touch-action:none;background:radial-gradient(ellipse at center,#172b37,#0b151e 70%)}.legend{padding:9px 12px;color:var(--muted);font-size:10px;border-top:1px solid var(--line)}.controls{padding:13px;height:max-content}.controls h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 4px;color:var(--accent)}.note{font-size:10px;color:var(--muted);margin:0 0 14px}.control{padding:11px 0;border-top:1px solid var(--line)}.control label{display:flex;justify-content:space-between;gap:10px;font-size:11px}.control output{color:var(--accent);font-variant-numeric:tabular-nums}input[type=range],select{width:100%;margin-top:9px;accent-color:var(--accent)}select{background:#0b151e;color:var(--text);border:1px solid var(--line);padding:8px;border-radius:6px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:13px}.stat{background:#ffffff08;border-radius:7px;padding:8px}.stat b{display:block;font-size:15px}.stat span{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}@media(max-width:760px){main{display:flex;flex-direction:column;padding:8px;gap:8px}canvas{height:48vh;min-height:270px}.controls{order:2}.stage{order:1}}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#05080d}
+body{background:radial-gradient(ellipse at center,#0b1721 0%,#05080d 72%)}
+canvas{display:block;width:100vw;height:100dvh;min-height:100%;touch-action:none;background:transparent}
 </style></head><body>
-<header><div><h1>BOIDS / MINIMAL VISION</h1><p>Standalone vision field · fixed 120° FOV · three essential controls</p></div><div class="actions"><a class="btn" href="vision-lab.html">Advanced lab ↗</a><button class="btn" id="pause">Pause</button><button class="btn" id="reset">Reset</button></div></header>
-<main><section class="stage"><div class="stagehead"><span>2D sensory field</span><span><span id="status">SENSING</span> · <span id="hits">0</span> HITS</span></div><canvas id="view" aria-label="Minimal raycast vision simulation"></canvas><div class="legend">Cyan = clear ray · Amber = hit · Red = threat · Drag to rotate the vision cone</div></section>
-<aside class="controls"><h2>Vision parameters</h2><p class="note">Only the controls required to define and run a basic visual sensor. Rays and field-of-view are always visible.</p>
-<div class="control"><label for="rays">Ray count <output id="raysOut">48</output></label><input id="rays" type="range" min="4" max="64" value="48"></div>
-<div class="control"><label for="range">Visual range <output id="rangeOut">420</output></label><input id="range" type="range" min="80" max="600" value="420" step="10"></div>
-<div class="control"><label for="rate">Sampling rate <output id="rateOut">20 Hz</output></label><input id="rate" type="range" min="1" max="60" value="20"></div>
-</aside></main>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id),canvas=$('view'),ctx=canvas.getContext('2d'),p={rays:48,range:420,rate:20};
-let W=0,H=0,dpr=1,angle=-Math.PI/2,paused=false,last=0,elapsed=0,observations=[],hits=0,drag=null;
-const TAU=Math.PI*2,FOV=120;
-const objects=[{x:-155,y:-125,r:17,type:'food',color:'#9de28c',vx:8,vy:12},{x:135,y:-185,r:24,type:'threat',color:'#ff7882',vx:-12,vy:8},{x:205,y:75,r:14,type:'food',color:'#9de28c',vx:-9,vy:-7},{x:-185,y:145,r:21,type:'object',color:'#e7b96e',vx:7,vy:-9},{x:45,y:185,r:18,type:'object',color:'#e7b96e',vx:10,vy:-5},{x:-20,y:-270,r:25,type:'threat',color:'#ff7882',vx:6,vy:5},{x:275,y:-20,r:19,type:'food',color:'#9de28c',vx:-8,vy:9}];
-function resize(){const r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
-function intersect(ox,oy,dx,dy,o){const x=ox-o.x,y=oy-o.y,b=x*dx+y*dy,c=x*x+y*y-o.r*o.r,h=b*b-c;if(h<0)return null;const t=-b-Math.sqrt(h);return t>=0?t:null}
-function sample(){observations=[];hits=0;for(let n=0;n<p.rays;n++){const i=n,count=p.rays,offset=(count===1?0:(i/(count-1)-.5)*FOV)*Math.PI/180,dir=angle+Math.max(-84,Math.min(84,offset)),ox=0,oy=0;let d=p.range,hit=null;for(const o of objects){const t=intersect(ox,oy,Math.cos(dir),Math.sin(dir),o);if(t!==null&&t<d){d=t;hit=o}}observations.push({ox,oy,dir,d,hit});if(hit)hits++}$('hits').textContent=hits}
-function draw(){ctx.clearRect(0,0,W,H);const s=Math.min(W/780,H/690,1.25);ctx.save();ctx.translate(W/2,H/2);ctx.scale(s,s);ctx.strokeStyle='#ffffff10';ctx.beginPath();ctx.arc(0,0,p.range,0,TAU);ctx.stroke();{const half=Math.min(FOV/2,84)*Math.PI/180;ctx.fillStyle='#55c9f21a';ctx.strokeStyle='#55c9f255';ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,p.range,angle-half,angle+half);ctx.closePath();ctx.fill();ctx.stroke()}for(const o of objects){ctx.beginPath();ctx.fillStyle=o.color;ctx.strokeStyle='#ffffff88';ctx.lineWidth=1.5;ctx.arc(o.x,o.y,o.r,0,TAU);ctx.fill();ctx.stroke()}for(const r of observations){ctx.beginPath();ctx.moveTo(r.ox,r.oy);ctx.lineTo(r.ox+Math.cos(r.dir)*r.d,r.oy+Math.sin(r.dir)*r.d);ctx.strokeStyle=r.hit?(r.hit.type==='threat'?'#ff7882':'#ffbf69'):'#55c9f2';ctx.globalAlpha=r.hit?.9:.38;ctx.lineWidth=1.15;ctx.stroke();ctx.globalAlpha=1}ctx.restore()}
-function frame(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;if(!paused){elapsed+=dt;for(const o of objects){o.x+=o.vx*dt;o.y+=o.vy*dt;if(Math.abs(o.x)>310)o.vx*=-1;if(Math.abs(o.y)>310)o.vy*=-1}if(elapsed>=1/p.rate){sample();elapsed=0}}draw();requestAnimationFrame(frame)}
-function sync(){for(const k of Object.keys(p)){$(k).value=p[k];$(k+'Out').textContent=k==='rate'?p[k]+' Hz':p[k]}}
-for(const k of Object.keys(p))$(k).addEventListener('input',e=>{p[k]=Number(e.target.value);sync();sample()});
-$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause';$('status').textContent=paused?'PAUSED':'SENSING'};
-$('reset').onclick=()=>{Object.assign(p,{rays:48,range:420,rate:20});angle=-Math.PI/2;sync();sample()};
-canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener('pointermove',e=>{if(!drag)return;angle+=(e.clientX-drag.x)*.012;drag={x:e.clientX,y:e.clientY};sample()});
-for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,()=>drag=null);
-new ResizeObserver(resize).observe(canvas);resize();sync();sample();requestAnimationFrame(frame);
-})();
-</script></body></html>
+<canvas id="view" aria-label="Minimal vision field with moving objects and edge-reaching sensory rays"></canvas>
+<script>(()=>{'use strict';
+const canvas=document.getElementById('view'),ctx=canvas.getContext('2d');
+let W=0,H=0,dpr=1,angle=-Math.PI/2,last=0,nextSample=0,observations=[];
+let fov=120,rayCount=64,pollingHz=26;
+const TAU=Math.PI*2;
+const palette={food:'#9de28c',threat:'#ff7882',object:'#e7b96e',signal:'#91a9ff'};
+const objects=[
+ {u:.20,v:.20,r:.022,shape:'circle',type:'food',vx:.075,vy:.052,phase:0},
+ {u:.73,v:.17,r:.034,shape:'triangle',type:'threat',vx:-.052,vy:.061,phase:.7},
+ {u:.84,v:.63,r:.019,shape:'diamond',type:'food',vx:-.061,vy:-.043,phase:1.2},
+ {u:.17,v:.72,r:.030,shape:'hex',type:'object',vx:.048,vy:-.055,phase:2},
+ {u:.53,v:.79,r:.025,shape:'square',type:'signal',vx:.037,vy:-.041,phase:2.8},
+ {u:.47,v:.11,r:.040,shape:'ellipse',type:'threat',vx:.043,vy:.035,phase:3.5},
+ {u:.91,v:.38,r:.027,shape:'kite',type:'object',vx:-.046,vy:.049,phase:4.2},
+ {u:.34,v:.48,r:.016,shape:'triangle',type:'food',vx:.067,vy:-.038,phase:5}
+];
+function resize(){const r=canvas.getBoundingClientRect();dpr=Math.min(window.devicePixelRatio||1,2);W=r.width;H=r.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);sample()}
+function dimensions(o){return {x:(o.u-.5)*W,y:(o.v-.5)*H,r:o.r*Math.min(W,H)}}
+function rayCircle(ox,oy,dx,dy,o){const q=dimensions(o),x=ox-q.x,y=oy-q.y,b=x*dx+y*dy,c=x*x+y*y-q.r*q.r,h=b*b-c;if(h<0)return null;const t=-b-Math.sqrt(h);return t>=0?t:null}
+function edgeDistance(dx,dy){const tx=Math.abs(dx)>1e-8?(W/2)/Math.abs(dx):Infinity,ty=Math.abs(dy)>1e-8?(H/2)/Math.abs(dy):Infinity;return Math.min(tx,ty)}
+function sample(){observations=[];const half=fov/2*Math.PI/180;for(let i=0;i<rayCount;i++){const offset=(rayCount===1?0:(i/(rayCount-1)-.5)*2*half),dir=angle+offset,dx=Math.cos(dir),dy=Math.sin(dir);let distance=edgeDistance(dx,dy),hit=null;for(const o of objects){const t=rayCircle(0,0,dx,dy,o);if(t!==null&&t<distance){distance=t;hit=o}}observations.push({dx,dy,distance,hit})}}
+function pathShape(x,y,r,shape,phase){ctx.beginPath();if(shape==='circle'){ctx.arc(x,y,r,0,TAU)}
+else if(shape==='ellipse'){ctx.ellipse(x,y,r*1.35,r*.68,phase*.25,0,TAU)}
+else{const sides=shape==='triangle'?3:shape==='square'?4:shape==='diamond'?4:shape==='hex'?6:5;for(let i=0;i<sides;i++){let a=-Math.PI/2+i*TAU/sides+(shape==='diamond'?Math.PI/4:shape==='kite'?.22:0),rr=r*(shape==='kite'&&i===0?1.55:1);const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath()}}
+function draw(){ctx.clearRect(0,0,W,H);const cx=W/2,cy=H/2,half=fov/2*Math.PI/180;
+ctx.save();ctx.translate(cx,cy);
+ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,Math.hypot(W,H),angle-half,angle+half);ctx.closePath();ctx.fillStyle='#55c9f208';ctx.fill();
+for(const o of objects){const q=dimensions(o);pathShape(q.x,q.y,q.r,o.shape,o.phase);ctx.fillStyle=palette[o.type];ctx.globalAlpha=.88;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle=palette[o.type];ctx.globalAlpha=.55;ctx.stroke();ctx.globalAlpha=1}
+for(const ray of observations){ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(ray.dx*ray.distance,ray.dy*ray.distance);ctx.strokeStyle=ray.hit?(ray.hit.type==='threat'?'#ff7882':palette[ray.hit.type]):'#65d7f2';ctx.globalAlpha=ray.hit?.92:.34;ctx.lineWidth=ray.hit?1.35:.8;ctx.stroke();ctx.globalAlpha=1;if(ray.hit){ctx.beginPath();ctx.arc(ray.dx*ray.distance,ray.dy*ray.distance,2.1,0,TAU);ctx.fillStyle=ray.hit.type==='threat'?'#ff7882':palette[ray.hit.type];ctx.fill()}}
+ctx.beginPath();ctx.arc(0,0,2.4,0,TAU);ctx.fillStyle='#d9faff';ctx.fill();ctx.restore()}
+function frame(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;for(const o of objects){o.u+=o.vx*dt;o.v+=o.vy*dt;if(o.u<.035||o.u>.965){o.vx*=-1;o.u=Math.max(.035,Math.min(.965,o.u))}if(o.v<.04||o.v>.96){o.vy*=-1;o.v=Math.max(.04,Math.min(.96,o.v))}o.phase+=dt*.45}if(now>=nextSample){sample();nextSample=now+1000/pollingHz}draw();requestAnimationFrame(frame)}
+const pointers=new Map();let gesture=null;
+function pointOf(e){return{x:e.clientX,y:e.clientY}}
+function twoPointState(){const p=[...pointers.values()];if(p.length<2)return null;const dx=p[1].x-p[0].x,dy=p[1].y-p[0].y;return{x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2,d:Math.hypot(dx,dy)}}
+canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,pointOf(e));canvas.setPointerCapture(e.pointerId);if(pointers.size===1)gesture={mode:'rotate',x:e.clientX};else if(pointers.size===2)gesture={mode:'two',state:twoPointState(),vertical:0,horizontal:0};else gesture={mode:'ignore'}});
+canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,pointOf(e));if(pointers.size===1&&gesture?.mode==='rotate'){angle+=(e.clientX-gesture.x)*.008;gesture.x=e.clientX;return}if(pointers.size!==2||gesture?.mode!=='two')return;const current=twoPointState(),prev=gesture.state;if(!current||!prev)return;const dx=current.x-prev.x,dy=current.y-prev.y, pinch=current.d-prev.d;
+// Two-finger vertical movement changes ray count in pairs.
+gesture.vertical+=-dy;while(Math.abs(gesture.vertical)>=24){const step=Math.sign(gesture.vertical);rayCount=Math.max(8,Math.min(256,rayCount+step*2));gesture.vertical-=step*24;sample()}
+// Two-finger horizontal movement changes the sensing update frequency.
+gesture.horizontal+=dx;while(Math.abs(gesture.horizontal)>=22){const step=Math.sign(gesture.horizontal);pollingHz=Math.max(1,Math.min(120,pollingHz+step));gesture.horizontal-=step*22}
+// Pinching outward widens the field of view; pinching inward narrows it.
+if(Math.abs(pinch)>0.1)fov=Math.max(20,Math.min(180,fov+pinch*.22));gesture.state=current;
+});
+function endPointer(e){pointers.delete(e.pointerId);if(pointers.size===1){const p=[...pointers.values()][0];gesture={mode:'rotate',x:p.x}}else if(pointers.size>=2){gesture={mode:'two',state:twoPointState(),vertical:0,horizontal:0}}else gesture=null}
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,endPointer);
+window.addEventListener('resize',resize);resize();requestAnimationFrame(frame);
+})();</script></body></html>
