@@ -43,7 +43,7 @@ The code represents prerequisites as a dependency graph. Observed capabilities a
 
 ## Worker interface
 
-The existing worker exposes an isolated abiogenesis channel alongside the organism simulation:
+A dedicated `abiogenesis-worker.js` runs the particle engine independently of the organism worker:
 
 - `{type:'abiogenesis:init', seed, particles, bonds}` creates the particle world.
 - `{type:'abiogenesis:step', steps, dt, options, includeWorld}` advances up to 240 fixed substeps (each with dt greater than 0 and no more than 0.05 seconds) and returns telemetry; set `includeWorld:true` to include a full state snapshot.
