@@ -8,7 +8,7 @@ BOIDS is a static browser application. `index.html` owns presentation, browser s
 |---|---|
 | `index.html` | Drawers, controls, charts, browser lifecycle, IndexedDB persistence, export downloads |
 | `boids-worker.js` | Fixed-step orchestration, movement, spatial queries, plant/freshwater ecology, reproduction, selection, live telemetry, snapshot migration |
-| `abiogenesis.js` | Pure particle, bond, molecular, reaction, polymer, compartment and capability-graph primitives (foundational layer; not yet worker-integrated) |
+| `abiogenesis.js` | Particle physics, dynamic bonding, molecular chemistry and capability-graph engine, exposed through the worker's opt-in abiogenesis channel |
 | `evolution.js` | Pure genome validation/mutation/crossover/compilation, speciation, regulation/statistics, experiment-analysis primitives |
 | `organism-economics.js` | Pure construction and per-step energy-cost accounting, bond normalization/capacity/cleanup helpers |
 | `genetics.js` | Ten quantitative loci, expression curves, environmental modulation, inheritance helpers |
