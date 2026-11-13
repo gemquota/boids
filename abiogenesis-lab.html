@@ -39,7 +39,7 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <span><i class="dot" style="background:#8da7e8"></i>Nitrogen</span>
 <span><i class="dot" style="background:#a4bd8d"></i>Other</span>
 </div>
-<div class="note">Particles retain their own identities. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
+<div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor without becoming rigidly attached; its contents can later be transferred, consumed or crafted into structures. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
 </section>
 </main>
 <script>
@@ -47,7 +47,7 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats');
 const worker=new Worker('abiogenesis-worker.js');
 const colors={H:'#68c8d2',C:'#d5a66c',O:'#e47e82',N:'#8da7e8',P:'#b59bd7',S:'#d5c66c',OTHER:'#a4bd8d'};
-let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;
+let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;\nconst cell={position:{x:W*.5,y:H*.5,z:0},velocity:{x:13,y:-8,z:0}},cloudIds=new Set();
 const W=canvas.width,H=canvas.height;
 function seedWorld(){
  const elements=['H','H','C','C','O','N','P','S'];
@@ -61,7 +61,7 @@ function seedWorld(){
    charge:(element==='O'?-1:element==='H'?1:0)*(Math.random()*.12),valence:element==='H'?1:element==='O'?2:element==='C'?4:3,
    position:{x,y,z:0},velocity:{x:Math.cos(angle)*speed,y:Math.sin(angle)*speed,z:0},thermalEnergy:.08});
  }
- world=null;worker.postMessage({type:'abiogenesis:init',seed:20261113,particles});
+ const cargo=particles.slice(0,42).map(p=>p.id);cloudIds.clear();cargo.forEach(id=>cloudIds.add(id));\n cell.position={x:W*.5,y:H*.5,z:0};cell.velocity={x:13,y:-8,z:0};\n world=null;worker.postMessage({type:'abiogenesis:init',seed:20261113,particles,resourceClouds:[{id:'cell-cargo',ownerId:'cell-1',particleIds:cargo,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22}]});
 }
 function draw(){
  ctx.clearRect(0,0,W,H);
@@ -73,14 +73,14 @@ function draw(){
   ctx.strokeStyle=stretch>3?'rgba(235,119,110,.8)':'rgba(111,198,190,.55)';
   ctx.beginPath();ctx.moveTo(a.position.x,a.position.y);ctx.lineTo(c.position.x,c.position.y);ctx.stroke();
  }
- for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle='rgba(230,246,250,.55)';ctx.lineWidth=.8;ctx.stroke()}
+ for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle=cloudIds.has(p.id)?'rgba(111,255,222,.9)':'rgba(230,246,250,.55)';ctx.lineWidth=cloudIds.has(p.id)?1.5:.8;ctx.stroke()}
  frame++;if(lastStats&&frame%12===0)stats.textContent=ps.length+' particles · '+bonds.length+' bonds · '+lastStats.collisions+' contacts · '+world.time.toFixed(1)+'s';
  requestAnimationFrame(draw);
 }
 function requestStep(){
  if(busy||paused&&!stepRequested)return;
  busy=true;stepRequested=false;
- worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellSize:16,captureRadius:1.5,thermalJitter:.13,electrostatic:18,softening:4,restitution:.72,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.075,bondStrength:.34,bondDamping:.24,breakStretch:2.5}});
+ cell.position.x+=cell.velocity.x/60;cell.position.y+=cell.velocity.y/60;\n if(cell.position.x<90||cell.position.x>W-90)cell.velocity.x*=-1;if(cell.position.y<90||cell.position.y>H-90)cell.velocity.y*=-1;\n worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellAnchors:{'cell-1':{position:cell.position,velocity:cell.velocity}},cellSize:16,captureRadius:1.5,thermalJitter:.13,electrostatic:18,softening:4,restitution:.72,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.075,bondStrength:.34,bondDamping:.24,breakStretch:2.5}});
 }
 worker.onmessage=e=>{
  const m=e.data;
