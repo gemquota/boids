@@ -207,7 +207,7 @@
     const cost=Math.max(0,finite(options.energyCost));if(cost>cloud.energy)throw new Error('Insufficient stored energy for reaction');
     for(const molecule of inputs)for(const id of molecule.bondIds||[]){const bond=world.bonds.find(b=>b.id===id);if(bond)breakBond(world.particles,world.bonds,id)}
     const removeIds=new Set(inputs.map(m=>m.id));world.molecules=world.molecules.filter(m=>!removeIds.has(m.id));cloud.energy-=cost;
-    const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy-cost),created=[];
+    const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy),created=[];
     for(let i=0;i<outputs.length;i++){const output=outputs[i],share=productEnergy/outputs.length;
       created.push(craftMolecule(world,cloudId,output.atomIds,output.bonds||[],{...output,energy:finite(output.energy,share)}))}
     return {occurred:true,consumed:inputs.map(m=>m.id),products:created.map(m=>m.id),atomIds:outputAtoms,energyCost:cost};
