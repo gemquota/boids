@@ -327,8 +327,11 @@ assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.
 assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationBirthTime.entries()),'structural innovation protection ages must survive snapshot restoration');
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
 assert.equal(restoredSnapshot.schemaVersion, 23);
+assert.equal(restoredSnapshot.counters.frameNo,sourceSnapshot.counters.frameNo,'deterministic frame counter must survive snapshot restoration');
+assert.equal(JSON.stringify(restoredSnapshot.maintenanceCosts),JSON.stringify(sourceSnapshot.maintenanceCosts),'cached organism upkeep must survive snapshot restoration');
+assert.equal(restoredSnapshot.counters.costCacheDirty,sourceSnapshot.counters.costCacheDirty,'upkeep cache invalidation state must survive snapshot restoration');
 assert.ok(Array.isArray(restoredSnapshot.bondLinks),'persistent organism bonds must be included in snapshots');
-assert.equal(JSON.stringify(restoredSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))),JSON.stringify(sourceSnapshot.bondLinks.map(({a,b,targetType,sideA,sideB,kind})=>({a,b,targetType,sideA,sideB,kind}))), 'organism bond topology and relationship types must survive snapshot restoration');
+assert.equal(JSON.stringify(restoredSnapshot.bondLinks),JSON.stringify(sourceSnapshot.bondLinks),'bond endpoints, attachment sides, relationship state and strength must survive snapshot restoration');
 assert.equal(JSON.stringify(BoidsEcology.serializeFields(restored.__boidsTest.environmentFields)),JSON.stringify(restoredSnapshot.environmentFields),'deterministic habitat fields must survive snapshot restoration');
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
 assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v3');
