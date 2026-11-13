@@ -31,7 +31,7 @@ class FieldGrid{
   index(x,y){return Math.max(0,Math.min(this.rows-1,Math.floor(y/this.height*this.rows)))*this.cols+Math.max(0,Math.min(this.cols-1,Math.floor(x/this.width*this.cols)))}
   sample(name,x,y){const a=this.data.get(name);return a?a[this.index(x,y)]:0}
   add(name,x,y,value){const a=this.data.get(name);if(!a)throw Error('Unknown field '+name);const i=this.index(x,y);a[i]+=finite(value);return a[i]}
-  diffuse(name,rate=0.1){const a=this.data.get(name);if(!a)throw Error('Unknown field '+name);const b=new Float32Array(a.length),r=clamp(rate);for(let y=0;y<this.rows;y++)for(let x=0;x<this.cols;x++){const i=y*this.cols+x,v=a[i],n=(x?a[i-1]:v)+(x<this.cols-1?a[i+1]:v)+(y?a[i-this.cols]:v)+(y<this.rows-1?a[i+this.cols]:v);b[i]=v+(n*.25-v)*r}this.data.set(name,b);return this}
+  diffuse(name,rate=0.1){const a=this.data.get(name);if(!a)throw Error('Unknown field '+name);const b=Float32Array.from(a),r=clamp(rate)*.25;for(let y=0;y<this.rows;y++)for(let x=0;x<this.cols;x++){const i=y*this.cols+x;for(const j of [x+1<this.cols?i+1:-1,y+1<this.rows?i+this.cols:-1])if(j>=0){const flux=(a[j]-a[i])*r;b[i]+=flux;b[j]-=flux}}this.data.set(name,b);return this}
 }
 class EnergyEngine{
   constructor(){this.ledger={input:0,output:0,transferred:0,converted:0,dissipated:0}}
@@ -68,7 +68,7 @@ class TopologyEngine{
   assemble(type,ids,properties={}){const parent=this.store.create(type,properties);for(const id of ids)this.store.compose(parent.id,id);return parent}
   divide(id,childGroups){const parent=this.store.require(id),children=[];for(const group of childGroups){const child=this.store.create(parent.type,{...parent.properties},{energy:parent.energy/childGroups.length});for(const component of group)if(parent.components.includes(component))this.store.compose(child.id,component);children.push(child)}parent.energy=0;return children}
   connectedStructures(type){return this.graph.components(type)}
-  closed(id){const members=[id,...this.store.descendants(id)],set=new Set(members),edges=this.store.links.filter(e=>set.has(e.a)&&set.has(e.b));return members.length>2&&edges.length>=members.length}
+  closed(id){const members=this.store.descendants(id),set=new Set(members),edges=this.store.links.filter(e=>set.has(e.a)&&set.has(e.b));return members.length>2&&edges.length>=members.length}
 }
 class Scheduler{
   constructor(){this.phases=[];this.time=0;this.tick=0}
