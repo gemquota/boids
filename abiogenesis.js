@@ -224,9 +224,10 @@
     }
     for(const molecule of inputs)for(const id of molecule.bondIds||[])if(world.bonds.some(b=>b.id===id))breakBond(world.particles,world.bonds,id);
     world.molecules=retained;cloud.energy-=cost;
-    const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy),created=[];
-    for(let i=0;i<outputs.length;i++){const output=outputs[i],share=productEnergy/outputs.length;
-      created.push(craftMolecule(world,cloudId,output.atomIds,output.bonds||[],{...output,id:outputIds[i],energy:finite(output.energy,share)}))}
+    const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy),created=[],plannedEnergies=outputs.map(output=>Math.max(0,finite(output.energy,productEnergy/outputs.length)));
+    if(plannedEnergies.reduce((sum,value)=>sum+value,0)>totalEnergy+1e-9)throw new Error('Reaction cannot create molecular energy');
+    for(let i=0;i<outputs.length;i++){const output=outputs[i];
+      created.push(craftMolecule(world,cloudId,output.atomIds,output.bonds||[],{...output,id:outputIds[i],energy:plannedEnergies[i]}))}
     return {occurred:true,consumed:inputs.map(m=>m.id),products:created.map(m=>m.id),atomIds:outputAtoms,energyCost:cost};
   }
   function transferResource(world,fromCloudId,toCloudId,particleId){
