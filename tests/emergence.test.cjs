@@ -95,7 +95,7 @@ test('reaction catalysts cannot be consumed as reactants and reaction energy is 
   rules.register({id:'pool',inputs:['A','B'],catalysts:['catalyst'],outputs:[{type:'AB'}],rate:100,energyCost:1});
   assert.equal(rules.run(store,1),1);
   assert.equal(store.get(catalyst.id).type,'catalyst');
-  assert.equal(Array.from(store.entities.values()).find(e=>e.type==='AB').energy,1.2);
+  assert.ok(Math.abs(Array.from(store.entities.values()).find(e=>e.type==='AB').energy-1.2)<1e-9);
   assert.equal(rules.energy.ledger.dissipated,1);
 });
 test('typed graph components do not absorb connected entities of another type',()=>{
