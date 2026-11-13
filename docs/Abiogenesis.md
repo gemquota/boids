@@ -28,7 +28,7 @@ The code represents prerequisites as a dependency graph. Observed capabilities a
 
 ## Current implementation boundary
 
-`abiogenesis.js` is a pure, testable model layer. It does not yet replace the existing worker's organism update loop or claim to simulate atomistic chemistry at a calibrated physical scale. The next integration work must add spatially indexed collision candidates, thermal motion, force/energy accounting, bond kinetics, reaction scheduling, persistence and diagnostics before enabling these mechanisms in the live world.
+`abiogenesis.js` is a pure, testable model layer. `abiogenesis-worker.js` runs it independently from the organism simulation, with fixed-step updates, seeded randomness and resumable snapshots. The standalone lab renders the resulting particle and bond state. This is still a simplified exploratory model, not calibrated atomistic chemistry: reaction kinetics, molecular energetics, membrane self-assembly, robust protocell replication and ecological coupling remain future work.
 
 ## Non-negotiable invariants
 
