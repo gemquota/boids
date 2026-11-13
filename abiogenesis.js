@@ -69,10 +69,17 @@
   }
   function normalizeMolecule(input){
     if(!input||!Array.isArray(input.atoms)||!Array.isArray(input.bonds))throw new TypeError('Molecule requires atoms and bonds');
-    const atoms=input.atoms.map(normalizeParticle),ids=new Set(atoms.map(a=>a.id));
-    if(ids.size!==atoms.length)throw new Error('Molecule atom IDs must be unique');
-    const bonds=input.bonds.map(normalizeBond);
-    for(const b of bonds)if(!ids.has(b.a)||!ids.has(b.b))throw new Error('Molecular bond endpoint is missing');
+    const atoms=input.atoms.map(normalizeParticle),byId=new Map(atoms.map(a=>[a.id,a]));
+    if(byId.size!==atoms.length)throw new Error('Molecule atom IDs must be unique');
+    const bonds=input.bonds.map(normalizeBond),pairs=new Set();
+    for(const atom of atoms)atom.bonds=[];
+    for(const bond of bonds){
+      const a=byId.get(bond.a),b=byId.get(bond.b);
+      if(!a||!b)throw new Error('Molecular bond endpoint is missing');
+      const pair=[bond.a,bond.b].sort().join('~');if(pairs.has(pair))throw new Error('Duplicate molecular bond');pairs.add(pair);
+      if(a.bonds.length>=a.valence||b.bonds.length>=b.valence)throw new Error('Molecular topology exceeds atom valence');
+      a.bonds.push(b.id);b.bonds.push(a.id);
+    }
     return {id:String(input.id===undefined?'molecule':input.id),atoms,bonds,composition:atoms.reduce((o,a)=>(o[a.element]=(o[a.element]||0)+1,o),{}),
       energy:Math.max(0,finite(input.energy)),properties:input.properties&&typeof input.properties==='object'?clone(input.properties):{}};
   }
