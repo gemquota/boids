@@ -28,7 +28,7 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <section class="panel">
 <div class="toolbar">
 <button class="primary" id="toggle">Pause</button><button id="step">Single step</button><button id="reset">Reset world</button>
-<button id="bonding">Bond formation: on</button>
+<button id="bonding">Bond formation: on</button><button id="collect">Collect nearby</button><button id="craft">Craft C-H molecule</button><button id="inventory">Inventory</button>
 <span class="stat" id="stats">Initialising worker…</span>
 </div>
 <canvas id="world" width="960" height="620" aria-label="Particle and bond simulation"></canvas>
@@ -39,7 +39,7 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <span><i class="dot" style="background:#8da7e8"></i>Nitrogen</span>
 <span><i class="dot" style="background:#a4bd8d"></i>Other</span>
 </div>
-<div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor without becoming rigidly attached; its contents can later be transferred, consumed or crafted into structures. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
+<div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor. Use Collect nearby to acquire unowned particles, Inventory to inspect its elemental stockpile, and Craft C-H molecule to bond two carried atoms while preserving their identities. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
 </section>
 </main>
 <script>
@@ -54,8 +54,8 @@ function seedWorld(){
  const particles=[];
  for(let i=0;i<76;i++){
   const a=Math.random()*Math.PI*2,r=35+Math.sqrt(Math.random())*235;
-  const x=W*.5+Math.cos(a)*r,y=H*.5+Math.sin(a)*r;
-  const element=elements[Math.floor(Math.random()*elements.length)];
+  const x=i===0?W*.5-12:i===1?W*.5+2:W*.5+Math.cos(a)*r,y=i<2?H*.5:H*.5+Math.sin(a)*r;
+  const element=i===0?'C':i===1?'H':elements[Math.floor(Math.random()*elements.length)];
   const angle=Math.random()*Math.PI*2,speed=.12+Math.random()*.42;
   particles.push({id:'atom-'+i,element,mass:element==='H'?.65:element==='O'?1.25:1,radius:element==='H'?4.3:5.5,
    charge:(element==='O'?-1:element==='H'?1:0)*(Math.random()*.12),valence:element==='H'?1:element==='O'?2:element==='C'?4:3,
@@ -74,7 +74,7 @@ function draw(){
   ctx.beginPath();ctx.moveTo(a.position.x,a.position.y);ctx.lineTo(c.position.x,c.position.y);ctx.stroke();
  }
  for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle=cloudIds.has(p.id)?'rgba(111,255,222,.9)':'rgba(230,246,250,.55)';ctx.lineWidth=cloudIds.has(p.id)?1.5:.8;ctx.stroke()}
- frame++;if(lastStats&&frame%12===0)stats.textContent=ps.length+' particles · '+bonds.length+' bonds · '+lastStats.collisions+' contacts · '+world.time.toFixed(1)+'s';
+ frame++;if(lastStats&&frame%12===0){const cargo=world.resourceClouds?.find(c=>c.id==='cell-cargo');stats.textContent=ps.length+' particles · '+(world.molecules?.length||0)+' molecules · '+bonds.length+' bonds · cargo '+(cargo?.particleIds.length||0)+' · '+(cargo?.energy||0).toFixed(1)+' energy · '+world.time.toFixed(1)+'s';}
  requestAnimationFrame(draw);
 }
 function requestStep(){
@@ -85,13 +85,18 @@ function requestStep(){
 worker.onmessage=e=>{
  const m=e.data;
  if(m.type==='abiogenesis:ready'){stats.textContent='Worker ready · '+m.particleCount+' particles';requestStep();return}
- if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;busy=false;if(!paused)requestStep();return}
+ if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;cloudIds.clear();for(const cloud of world.resourceClouds||[])for(const id of cloud.particleIds)cloudIds.add(id);busy=false;if(!paused)requestStep();return}
+ if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'){const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
+ if(m.type==='abiogenesis:transferred'){stats.textContent=m.transferred?'Resource transferred':'Transfer unavailable';return}
  if(m.type==='abiogenesis:error'){stats.textContent=m.message;busy=false}
 };
 document.getElementById('toggle').onclick=()=>{paused=!paused;document.getElementById('toggle').textContent=paused?'Resume':'Pause';if(!paused)requestStep()};
 document.getElementById('step').onclick=()=>{if(!busy){stepRequested=true;requestStep()}};
 document.getElementById('reset').onclick=seedWorld;
 document.getElementById('bonding').onclick=()=>{bonding=!bonding;document.getElementById('bonding').textContent='Bond formation: '+(bonding?'on':'off')};
+document.getElementById('collect').onclick=()=>worker.postMessage({type:'abiogenesis:collect',cloudId:'cell-cargo',anchor:cell,options:{radius:90,maxCount:10}});
+document.getElementById('craft').onclick=()=>worker.postMessage({type:'abiogenesis:craft',cloudId:'cell-cargo',atomIds:['atom-0','atom-1'],bonds:[{a:'atom-0',b:'atom-1',type:'covalent',strength:2}],options:{id:'cell-CH',type:'C-H',energy:1}});
+document.getElementById('inventory').onclick=()=>worker.postMessage({type:'abiogenesis:inventory',cloudId:'cell-cargo'});
 seedWorld();requestAnimationFrame(draw);
 </script>
 </body>
