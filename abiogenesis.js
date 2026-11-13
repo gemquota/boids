@@ -146,15 +146,17 @@
     multicellularEvolution:{allOf:['colonialOrganisation','differentiation','anatomicalDevelopment']}
   };
   function evaluateCapabilities(observed={},definitions=CAPABILITIES){
-    const enabled=new Set(Object.keys(observed).filter(k=>observed[k]===true)),unmet={};let changed=true,passes=0;
+    const enabled=new Set(),unmet={};let changed=true,passes=0;
     while(changed&&passes++<=Object.keys(definitions).length){changed=false;
-      for(const [name,rule] of Object.entries(definitions)){if(enabled.has(name))continue;
+      for(const [name,rule] of Object.entries(definitions)){
+        if(enabled.has(name)||observed[name]!==true)continue;
         const all=(rule.allOf||[]).every(dep=>enabled.has(dep));
         const any=!(rule.anyOf&&rule.anyOf.length)||rule.anyOf.some(path=>path.every(dep=>enabled.has(dep)));
         if(all&&any){enabled.add(name);changed=true}
       }
     }
     for(const [name,rule] of Object.entries(definitions))if(!enabled.has(name))unmet[name]={
+      unobserved:observed[name]!==true,
       allOf:(rule.allOf||[]).filter(dep=>!enabled.has(dep)),
       anyOf:(rule.anyOf||[]).filter(path=>!path.every(dep=>enabled.has(dep))).map(path=>path.filter(dep=>!enabled.has(dep)))};
     return {enabled:Array.from(enabled).sort(),unmet,passes};
