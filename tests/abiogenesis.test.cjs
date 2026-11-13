@@ -192,3 +192,39 @@ test('molecule construction rejects duplicate bonds and over-valent atom topolog
   const c=bio.normalizeParticle({id:'c',element:'C'}),h1=bio.normalizeParticle({id:'h1',element:'H'}),h2=bio.normalizeParticle({id:'h2',element:'H'});
   assert.throws(()=>bio.normalizeMolecule({atoms:[c,h1,h2],bonds:[{a:'c',b:'h1'},{a:'c',b:'h2'},{a:'h1',b:'h2'}]}),/valence/);
 });
+
+
+test('resource clouds remain loosely attached to a moving cell anchor',()=>{
+  const particles=[
+    {id:'cargo-a',element:'C',mass:1,radius:.2,position:{x:0,y:0},velocity:{x:0,y:0}},
+    {id:'cargo-b',element:'O',mass:2,radius:.2,position:{x:2,y:0},velocity:{x:0,y:0}},
+    {id:'free',element:'H',position:{x:0,y:0},velocity:{x:0,y:0}}
+  ];
+  const world=bio.createParticleWorld(particles);
+  const cloud=bio.createResourceCloud(world,'cell-1',['cargo-a','cargo-b'],{radius:8,followStrength:2,damping:.2});
+  assert.equal(cloud.particleIds.length,2);
+  for(let i=0;i<30;i++)bio.stepParticleWorld(world,1/60,{thermalJitter:0,cellAnchors:{'cell-1':{position:{x:20,y:0},velocity:{x:0,y:0}}}});
+  const a=world.particles.find(p=>p.id==='cargo-a'),free=world.particles.find(p=>p.id==='free');
+  assert.ok(a.position.x>0,'owned cargo should follow the cell');
+  assert.equal(free.position.x,0,'unowned particles should not be pulled along');
+  assert.ok(Math.hypot(a.position.x-20,a.position.y)<20);
+});
+test('resource cloud transfer and consumption preserve explicit material ownership',()=>{
+  const world=bio.createParticleWorld([{id:'a',element:'C'},{id:'b',element:'O'}]);
+  bio.createResourceCloud(world,'cell-a',['a']);
+  bio.createResourceCloud(world,'cell-b',['b']);
+  assert.equal(bio.transferResource(world,'cloud-cell-a','cloud-cell-b','a'),true);
+  assert.deepEqual(world.resourceClouds[0].particleIds,[]);
+  assert.deepEqual(world.resourceClouds[1].particleIds,['b','a']);
+  const consumed=bio.consumeResource(world,'cloud-cell-b','a');
+  assert.equal(consumed.id,'a');
+  assert.equal(world.particles.some(p=>p.id==='a'),false);
+  assert.deepEqual(world.resourceClouds[1].particleIds,['b']);
+});
+test('resource cloud membership survives particle-world snapshots',()=>{
+  const world=bio.createParticleWorld([{id:'cargo',element:'P'}]);
+  bio.createResourceCloud(world,'cell-7',['cargo']);
+  const restored=bio.restoreParticleWorld(bio.snapshotParticleWorld(world));
+  assert.deepEqual(restored.resourceClouds[0].particleIds,['cargo']);
+  assert.equal(restored.resourceClouds[0].ownerId,'cell-7');
+});
