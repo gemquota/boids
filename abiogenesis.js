@@ -126,6 +126,77 @@
       metabolismCapability:false,createdAt:finite(options.createdAt),metadata:options.metadata&&typeof options.metadata==='object'?clone(options.metadata):{}};
   }
 
+  function createParticleWorld(inputs=[],options={}){
+    const particles=inputs.map(normalizeParticle),ids=new Set(particles.map(p=>p.id));
+    if(ids.size!==particles.length)throw new Error('Particle IDs must be unique');
+    const bonds=(options.bonds||[]).map(normalizeBond);
+    for(const b of bonds)if(!ids.has(b.a)||!ids.has(b.b))throw new Error('Bond endpoint is missing');
+    return {particles,bonds,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0}};
+  }
+  function stepParticleWorld(world,dt,options={}){
+    dt=clamp(finite(dt),0,.05);if(!world||!Array.isArray(world.particles)||!Array.isArray(world.bonds))throw new TypeError('Invalid particle world');
+    if(dt===0)return world.stats;
+    const ps=world.particles,n=ps.length,cellSize=Math.max(.01,finite(options.cellSize,2)),captureRadius=Math.max(0,finite(options.captureRadius,.35));
+    const softening=Math.max(.001,finite(options.softening,.2)),electrostatic=finite(options.electrostatic,.015),thermal= Math.max(0,finite(options.thermalJitter,.01));
+    const restitution=clamp(finite(options.restitution,.65),0,1),breakStretch=Math.max(1,finite(options.breakStretch,3)),breakEnergy=Math.max(0,finite(options.breakEnergy,Infinity));
+    const random=typeof options.random==='function'?options.random:Math.random;
+    const cells=new Map(),forces=Array.from({length:n},()=>({x:0,y:0,z:0})),index=new Map(ps.map((p,i)=>[p.id,i]));
+    const cellKey=(x,y,z)=>Math.floor(x/cellSize)+','+Math.floor(y/cellSize)+','+Math.floor(z/cellSize);
+    for(let i=0;i<n;i++){const p=ps[i],key=cellKey(p.position.x,p.position.y,p.position.z);let bucket=cells.get(key);if(!bucket)cells.set(key,bucket=[]);bucket.push(i)}
+    const candidates=[];
+    for(let i=0;i<n;i++){
+      const a=ps[i],gx=Math.floor(a.position.x/cellSize),gy=Math.floor(a.position.y/cellSize),gz=Math.floor(a.position.z/cellSize);
+      for(let oz=-1;oz<=1;oz++)for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+        const bucket=cells.get((gx+ox)+','+(gy+oy)+','+(gz+oz));if(!bucket)continue;
+        for(const j of bucket){if(j<=i)continue;const b=ps[j],dx=b.position.x-a.position.x,dy=b.position.y-a.position.y,dz=b.position.z-a.position.z;
+          const distance=Math.hypot(dx,dy,dz)||1e-9,range=a.radius+b.radius+captureRadius+cellSize*.0;if(distance>Math.max(range,cellSize))continue;
+          candidates.push([i,j,distance,dx/distance,dy/distance,dz/distance,dx,dy,dz]);
+        }
+      }
+    }
+    let collisions=0,bondsFormed=0,bondsBroken=0;
+    for(const pair of candidates){
+      const [i,j,distance,nx,ny,nz,dx,dy,dz]=pair,a=ps[i],b=ps[j],overlap=a.radius+b.radius-distance;
+      if(overlap>0){
+        collisions++;const invA=1/a.mass,invB=1/b.mass,total=invA+invB;
+        const correction=overlap*.5; a.position.x-=nx*correction;a.position.y-=ny*correction;a.position.z-=nz*correction;
+        b.position.x+=nx*correction;b.position.y+=ny*correction;b.position.z+=nz*correction;
+        const relative=(b.velocity.x-a.velocity.x)*nx+(b.velocity.y-a.velocity.y)*ny+(b.velocity.z-a.velocity.z)*nz;
+        if(relative<0){const impulse=-(1+restitution)*relative/total;
+          a.velocity.x-=impulse*invA*nx;a.velocity.y-=impulse*invA*ny;a.velocity.z-=impulse*invA*nz;
+          b.velocity.x+=impulse*invB*nx;b.velocity.y+=impulse*invB*ny;b.velocity.z+=impulse*invB*nz;
+        }
+      }
+      const chargeForce=electrostatic*a.charge*b.charge/(distance*distance+softening*softening);
+      forces[i].x-=chargeForce*nx;forces[i].y-=chargeForce*ny;forces[i].z-=chargeForce*nz;
+      forces[j].x+=chargeForce*nx;forces[j].y+=chargeForce*ny;forces[j].z+=chargeForce*nz;
+      if(options.enableBondFormation&&distance<=a.radius+b.radius+captureRadius&&canBond(a,b)&&random()<clamp(finite(options.bondProbability,.02)*Math.exp(-Math.max(0,a.thermalEnergy+b.thermalEnergy)*finite(options.temperatureSensitivity,.1)),0,1)){
+        const bond=normalizeBond({a:a.id,b:b.id,type:options.bondType||'covalent',strength:finite(options.bondStrength,2),restLength:Math.max(a.radius+b.radius,finite(options.bondRestLength,a.radius+b.radius)),damping:finite(options.bondDamping,.15),formedAt:world.time});
+        a.bonds.push(b.id);b.bonds.push(a.id);world.bonds.push(bond);bondsFormed++;
+      }
+    }
+    const broken=[];
+    for(const bond of world.bonds){
+      const ia=index.get(bond.a),ib=index.get(bond.b);if(ia===undefined||ib===undefined){broken.push(bond.id);continue}
+      const a=ps[ia],b=ps[ib],f=bondForce(a,b,bond);
+      forces[ia].x+=f.x;forces[ia].y+=f.y;forces[ia].z+=f.z;
+      forces[ib].x-=f.x;forces[ib].y-=f.y;forces[ib].z-=f.z;
+      const distance=Math.hypot(b.position.x-a.position.x,b.position.y-a.position.y,b.position.z-a.position.z);
+      if(distance>Math.max(bond.restLength*breakStretch,bond.restLength+1)||f.energy>breakEnergy)broken.push(bond.id);
+    }
+    for(const id of broken){if(breakBond(ps,world.bonds,id))bondsBroken++}
+    let kineticEnergy=0,thermalEnergy=0;
+    for(let i=0;i<n;i++){
+      const p=ps[i],f=forces[i],invMass=1/p.mass;
+      const jitter=(random()-.5)*2*thermal*Math.sqrt(dt);
+      p.velocity.x+=(f.x*invMass)*dt+jitter;p.velocity.y+=(f.y*invMass)*dt+(random()-.5)*2*thermal*Math.sqrt(dt);p.velocity.z+=(f.z*invMass)*dt+(random()-.5)*2*thermal*Math.sqrt(dt);
+      p.position.x+=p.velocity.x*dt;p.position.y+=p.velocity.y*dt;p.position.z+=p.velocity.z*dt;
+      kineticEnergy+=.5*p.mass*(p.velocity.x**2+p.velocity.y**2+p.velocity.z**2);thermalEnergy+=p.thermalEnergy;
+    }
+    world.time+=dt;world.stats={steps:world.stats.steps+1,collisions,bondsFormed:world.stats.bondsFormed+bondsFormed,bondsBroken:world.stats.bondsBroken+bondsBroken,thermalEnergy,kineticEnergy,candidatePairs:candidates.length};
+    return world.stats;
+  }
+
   const CAPABILITIES={
     aggregation:{anyOf:[]},
     bonding:{allOf:['aggregation']},
@@ -161,6 +232,6 @@
       anyOf:(rule.anyOf||[]).filter(path=>!path.every(dep=>enabled.has(dep))).map(path=>path.filter(dep=>!enabled.has(dep)))};
     return {enabled:Array.from(enabled).sort(),unmet,passes};
   }
-  return {ELEMENTS,BOND_TYPES,CAPABILITIES,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
+  return {ELEMENTS,BOND_TYPES,CAPABILITIES,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
     normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,evaluateCapabilities};
 });
