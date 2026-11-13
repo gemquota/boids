@@ -80,7 +80,7 @@ function draw(){
 function requestStep(){
  if(busy||paused&&!stepRequested)return;
  busy=true;stepRequested=false;
- worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellSize:16,captureRadius:1.5,thermalJitter:.13,electrostatic:18,softening:4,restitution:.72,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.075,bondStrength:.34,bondRestLength:11,bondDamping:.24,breakStretch:2.5}});
+ worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellSize:16,captureRadius:1.5,thermalJitter:.13,electrostatic:18,softening:4,restitution:.72,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.075,bondStrength:.34,bondDamping:.24,breakStretch:2.5}});
 }
 worker.onmessage=e=>{
  const m=e.data;
