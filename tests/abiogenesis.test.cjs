@@ -134,3 +134,11 @@ test('seeded random streams are reproducible and expose restorable state',()=>{
   const state=a.state,restored=bio.createSeededRandom(1);restored.setState(state);
   assert.equal(restored(),a());
 });
+
+test('bounded particle worlds reflect particles without losing them outside the domain',()=>{
+  const world=bio.createParticleWorld([
+    bio.normalizeParticle({id:'wall',radius:1,position:{x:9.9,y:5,z:0},velocity:{x:10,y:0,z:0}})
+  ]);
+  bio.stepParticleWorld(world,.05,{thermalJitter:0,electrostatic:0,bounds:{width:10,height:10},restitution:1});
+  const p=world.particles[0];assert.ok(p.position.x<=9);assert.ok(p.position.x>=1);assert.ok(p.velocity.x<0);
+});
