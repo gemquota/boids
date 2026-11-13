@@ -71,7 +71,7 @@ console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore ge
 
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
-  assert.match(worker, /Math.max\(16,Math.min\(30,Math.round\(W\*H\/56000\)\)\)/);
+  assert.match(worker, /Math.max\(64,Math.min\(120,Math.round\(W\*H\/14000\)\)\)/);
   assert.match(worker, /plantGain/);
   assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
   assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
@@ -114,9 +114,10 @@ test('DNA and observatory use distinct icon tabs and reset lives in Field Operat
 });
 test('boids resolve physical body overlap and exchange collision impulse', () => {
   assert.ok(worker.includes('function collisionRadius(i)'));
-  assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
-  assert.ok(worker.includes('if(relative<0){const impulse='));
-  assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
+  assert.ok(worker.includes('function resolveAgentCollisions(updateN,dt)'));
+  assert.ok(worker.includes('BoidsPhysics.resolveCircleContact'));
+  assert.ok(worker.includes('BoidsPhysics.sweptCircleTime'));
+  assert.ok(worker.includes('resolveAgentCollisions(updateN,dt)'));
 });
 
 
@@ -189,4 +190,16 @@ test('smaller nodes grow more slowly relative to their whole plant', () => {
   assert.equal(large.ratio,1);
   assert.ok(small.ratio<large.ratio);
   assert.ok(small.scale<large.scale);
+});
+
+test('neonatal bonding can recruit distinct colony neighbours', () => {
+  assert.match(worker, /neonatalAvailableCount/);
+  assert.match(worker, /myBondStrengths\?\.has\(individualId\[j\]\)/);
+  assert.match(worker, /bondOpportunity\(individualId\[i\],individualId\[bondIndex\],frameNo\)/);
+});
+test('organism contacts use swept collision impulses and persistent tether constraints', () => {
+  assert.match(worker, /BoidsPhysics\.resolveCircleContact/);
+  assert.match(worker, /BoidsPhysics\.sweptCircleTime/);
+  assert.match(worker, /function applyBondConstraints\(updateN,dt\)/);
+  assert.match(worker, /function drawBondNetwork\(plantById\)/);
 });
