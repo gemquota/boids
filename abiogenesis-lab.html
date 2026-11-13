@@ -71,7 +71,7 @@ function seedWorld(){
 }
 function draw(){try{
  ctx.clearRect(0,0,W,H);
- if(!world){return}
+ if(!world){requestAnimationFrame(draw);return}
  const ps=world.particles,bonds=world.bonds;
  for(const [anchor,color] of [[cell,'rgba(87,211,190,.55)'],[cell2,'rgba(131,172,255,.55)']]){ctx.beginPath();ctx.arc(anchor.position.x,anchor.position.y,18,0,Math.PI*2);ctx.fillStyle=color.replace('.55','.14');ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(anchor.position.x,anchor.position.y,5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
  ctx.lineWidth=1.4;
