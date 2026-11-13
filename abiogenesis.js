@@ -167,11 +167,19 @@
     const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
     if(!anchor||!anchor.position)throw new TypeError('Collection requires a cell anchor position');
     const owned=new Set(world.resourceClouds.flatMap(c=>c.particleIds)),allowed=options.elements?new Set(options.elements):null;
-    const radius=Math.max(0,finite(options.radius,cloud.radius)),limit=Math.max(0,Math.floor(finite(options.maxCount,Infinity)));
-    const candidates=world.particles.filter(p=>!owned.has(p.id)&&(!allowed||allowed.has(p.element)))
-      .map(p=>({p,d:Math.hypot(p.position.x-finite(anchor.position.x),p.position.y-finite(anchor.position.y),p.position.z-finite(anchor.position.z))}))
-      .filter(x=>x.d<=radius).sort((a,b)=>a.d-b.d||a.p.id.localeCompare(b.p.id));
-    const collected=candidates.slice(0,limit).map(x=>x.p.id);cloud.particleIds.push(...collected);return collected;
+    const radius=Math.max(0,finite(options.radius,cloud.radius)),limit=Math.max(0,Math.floor(finite(options.maxCount,Infinity))),moleculeByAtom=new Map();
+    for(const molecule of world.molecules||[])for(const id of molecule.atomIds)moleculeByAtom.set(id,molecule);
+    const candidates=[],seenMolecules=new Set();
+    for(const p of world.particles){if(owned.has(p.id))continue;const molecule=moleculeByAtom.get(p.id);
+      if(molecule){if(seenMolecules.has(molecule.id))continue;seenMolecules.add(molecule.id);const members=molecule.atomIds.map(id=>world.particles.find(atom=>atom.id===id));
+        if(members.some(atom=>!atom||owned.has(atom.id)||(allowed&&!allowed.has(atom.element))))continue;
+        const position={x:members.reduce((n,a)=>n+a.position.x,0)/members.length,y:members.reduce((n,a)=>n+a.position.y,0)/members.length,z:members.reduce((n,a)=>n+a.position.z,0)/members.length};
+        const d=Math.hypot(position.x-finite(anchor.position.x),position.y-finite(anchor.position.y),position.z-finite(anchor.position.z));if(d<=radius)candidates.push({ids:molecule.atomIds,d,key:molecule.id});
+      }else{if(allowed&&!allowed.has(p.element))continue;const d=Math.hypot(p.position.x-finite(anchor.position.x),p.position.y-finite(anchor.position.y),p.position.z-finite(anchor.position.z));if(d<=radius)candidates.push({ids:[p.id],d,key:p.id})}
+    }
+    candidates.sort((a,b)=>a.d-b.d||String(a.key).localeCompare(String(b.key)));const collected=[];
+    for(const candidate of candidates){if(collected.length+candidate.ids.length>limit)continue;collected.push(...candidate.ids)}
+    cloud.particleIds.push(...collected);return collected;
   }
   function craftMolecule(world,cloudId,atomIds,bondSpecs=[],options={}){
     const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
