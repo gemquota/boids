@@ -17,6 +17,36 @@ onmessage=event=>{
       postMessage({type:'abiogenesis:ready',...summary()});
       return;
     }
+    if(message.type==='abiogenesis:collect'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const collected=BoidsAbiogenesis.collectResources(world,message.cloudId,message.anchor,message.options||{});
+      const inventory=BoidsAbiogenesis.resourceInventory(world,message.cloudId);
+      postMessage({type:'abiogenesis:inventory',requestId:message.requestId,collected,inventory,...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:inventory'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      postMessage({type:'abiogenesis:inventory',requestId:message.requestId,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:craft'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const molecule=BoidsAbiogenesis.craftMolecule(world,message.cloudId,message.atomIds||[],message.bonds||[],message.options||{});
+      postMessage({type:'abiogenesis:crafted',requestId:message.requestId,molecule,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:react'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const result=BoidsAbiogenesis.rearrangeMolecules(world,message.cloudId,message.inputMoleculeIds||[],message.outputs||[],message.options||{});
+      postMessage({type:'abiogenesis:reacted',requestId:message.requestId,result,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:transfer'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const transferred=BoidsAbiogenesis.transferResource(world,message.fromCloudId,message.toCloudId,message.particleId);
+      postMessage({type:'abiogenesis:transferred',requestId:message.requestId,transferred,...summary()});
+      return;
+    }
     if(message.type==='abiogenesis:step'){
       if(!world||!random)throw new Error('Abiogenesis world has not been initialized');
       const steps=clamp(Math.floor(Number(message.steps)||1),1,240);
