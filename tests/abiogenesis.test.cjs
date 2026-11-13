@@ -66,8 +66,8 @@ test('lipid compartments are variable-capability structures, not automatically l
 test('capability graph allows partial and alternative emergence without granting life wholesale',()=>{
   const partial=bio.evaluateCapabilities({aggregation:true,bonding:true,lipidAssembly:true});
   assert.ok(partial.enabled.includes('molecularFormation'));assert.ok(partial.enabled.includes('compartments'));
-  assert.ok(partial.enabled.includes('protocells'));assert.ok(!partial.enabled.includes('cellularReproduction'));
-  const later=bio.evaluateCapabilities({aggregation:true,bonding:true,lipidAssembly:true,polymerisation:true,molecularReplication:true,adhesion:true,cellularReproduction:true,differentiation:true});
+  assert.ok(!partial.enabled.includes('protocells'));assert.ok(!partial.enabled.includes('cellularReproduction'));
+  const later=bio.evaluateCapabilities({aggregation:true,bonding:true,lipidAssembly:true,compartments:true,protocells:true,polymerisation:true,molecularReplication:true,adhesion:true,cellularReproduction:true,differentiation:true,anatomicalDevelopment:true});
   assert.ok(later.enabled.includes('colonialOrganisation'));assert.ok(later.enabled.includes('multicellularEvolution'));
-  assert.ok(!later.enabled.includes('fusion'));
+  assert.ok(!later.enabled.includes('fusion'));\n  const blocked=bio.evaluateCapabilities({aggregation:true,bonding:true,molecularReplication:true});assert.ok(!blocked.enabled.includes('molecularReplication'),'an observed capability must wait for its prerequisites');
 });
