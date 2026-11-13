@@ -302,7 +302,7 @@
       if(!selected||largest<=Math.max(1,finite(options.balanceThreshold,1)))continue;
       const moleculeByAtom=new Map();for(const molecule of world.molecules||[])for(const id of molecule.atomIds)moleculeByAtom.set(id,molecule);
       const candidates=donor.particleIds.filter(id=>{const p=world.particles.find(atom=>atom.id===id);return p&&p.element===selected}).sort();
-      let moved=false;for(const id of candidates){const result=exchangeResource(world,donor.id,receiver.id,id,anchors,{...options,allowedElements:options.allowedElements||[selected]});if(result.transferred){transfers.push(result);moved=true;break}}
+      let moved=false;for(const id of candidates){const result=exchangeResource(world,donor.id,receiver.id,id,anchors,{...options,allowedElements:options.allowedElements});if(result.transferred){transfers.push(result);moved=true;break}}
       if(!moved)continue;
     }
     return transfers;
