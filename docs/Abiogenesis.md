@@ -72,4 +72,24 @@ The lab now demonstrates a moving cell anchor and an interactive stockpile:
 - Transferring one atom that belongs to a molecule transfers the entire molecule, avoiding accidental fragmentation.
 - Consuming a molecular constituent disassembles the molecule record and removes its attached bonds safely.
 
-The worker exposes `abiogenesis:collect`, `abiogenesis:inventory`, `abiogenesis:craft` and `abiogenesis:react` messages. These provide actual selective uptake, inventory and atom-conserving molecular crafting. Stored-energy harvesting, metabolism, selective membrane transport and regulated cell growth/division remain later milestones.
+The worker exposes `abiogenesis:collect`, `abiogenesis:inventory`, `abiogenesis:craft` and `abiogenesis:react` messages. These provide actual selective uptake, inventory and atom-conserving molecular crafting. ### Energy and metabolism
+
+- `createEnergySource(world, {id, type, energy, efficiency})` creates a finite environmental reservoir such as light or a chemical gradient.
+- `harvestEnergy(world, cloudId, sourceId, requested)` transfers only available energy into the cell's bounded reserve. Source depletion and conversion losses are recorded.
+- `metabolizeMolecules(world, cloudId, inputIds, outputs, options)` rearranges carried compounds, releases the difference between input and product chemical energy, captures a configurable fraction and records the remainder as dissipated heat.
+
+Energy sources, cell reserves and energy telemetry are included in snapshots.
+
+### Cell-to-cell exchange
+
+- `exchangeResource(world, fromCloudId, toCloudId, particleId, anchors, options)` requires cell proximity and applies permeability, element-selectivity and receiver-energy checks. Bonded molecules transfer as intact units.
+- `diffuseResources(world, anchors, options)` moves material down elemental composition gradients between nearby clouds, with a configurable contact radius, permeability and transfer limit.
+- The worker exposes `abiogenesis:harvest`, `abiogenesis:metabolize`, `abiogenesis:exchange` and `abiogenesis:diffuse` actions.
+
+### Compartment growth and division
+
+- `createCompartment` recruits amphiphilic lipid molecules and carried contents into a membrane-bounded compartment, removing those constituents from the mobile stockpile without deleting them.
+- `growCompartment` incorporates additional lipid molecules, increases membrane area/capacity and consumes stored energy.
+- `divideCompartment` partitions membrane molecules, contents, remaining mobile cargo and energy into two daughter compartments. Insufficient membrane, contents or energy produces an explicit failed-division record rather than free offspring.
+
+These are early mechanistic abstractions, not calibrated membrane biophysics. Membrane geometry is currently represented by membrane area and derived radius; lipid self-assembly and selective transport through a spatial membrane surface remain future refinements.
