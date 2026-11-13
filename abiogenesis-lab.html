@@ -45,7 +45,10 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <script>
 'use strict';
 const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats');
-const worker=new Worker('abiogenesis-worker.js');
+const worker=new Worker('abiogenesis-worker.js?v=20261114-lab-controls-v2');
+worker.onerror=e=>{stats.textContent='Worker failed: '+(e.message||'unknown error');console.error(e)};
+let lastMoleculeId=null,requestSerial=0;
+try{const seed=JSON.parse(sessionStorage.getItem('boids-emergence-seed')||'null');if(seed&&Array.isArray(seed.particles)&&seed.particles.length){window.__emergenceSeed=seed;}}catch(e){stats.textContent='Could not read primordial export: '+e.message}
 const colors={H:'#68c8d2',C:'#d5a66c',O:'#e47e82',N:'#8da7e8',P:'#b59bd7',S:'#d5c66c',OTHER:'#a4bd8d'};
 const W=canvas.width,H=canvas.height;
 let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;
@@ -90,23 +93,24 @@ function requestStep(){
 }
 worker.onmessage=e=>{
  const m=e.data;
- if(m.type==='abiogenesis:ready'){stats.textContent='Worker ready · '+m.particleCount+' particles';requestStep();return}
+ if(m.type==='abiogenesis:ready'){stats.textContent='Worker ready · '+m.particleCount+' particles';if(window.__emergenceSeed){stats.textContent+=' · primordial seed available ('+window.__emergenceSeed.particles.length+' constituents)'}requestStep();return}
  if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;cloudIds.clear();for(const cloud of world.resourceClouds||[])for(const id of cloud.particleIds)cloudIds.add(id);busy=false;if(!paused)requestStep();return}
- if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'||m.type==='abiogenesis:harvested'||m.type==='abiogenesis:metabolized'||m.type==='abiogenesis:diffused'){if(m.world)world=m.world;const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
+ if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'||m.type==='abiogenesis:harvested'||m.type==='abiogenesis:metabolized'||m.type==='abiogenesis:diffused'){if(m.world)world=m.world;if(m.molecule)lastMoleculeId=m.molecule.id;const result=m.result||m.collected||m.transfers;if(result!==undefined)stats.textContent=typeof result==='string'?result:JSON.stringify(result).slice(0,180);const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
  if(m.type==='abiogenesis:transferred'){stats.textContent=m.transferred?'Resource transferred':'Transfer unavailable';return}
- if(m.type==='abiogenesis:error'){stats.textContent=m.message;busy=false}
+ if(m.type==='abiogenesis:error'){stats.textContent='Action failed: '+m.message;busy=false;console.error('Abiogenesis worker:',m.message)}
 };
 document.getElementById('toggle').onclick=()=>{paused=!paused;document.getElementById('toggle').textContent=paused?'Resume':'Pause';if(!paused)requestStep()};
 document.getElementById('step').onclick=()=>{if(!busy){stepRequested=true;requestStep()}};
 document.getElementById('reset').onclick=seedWorld;
 document.getElementById('bonding').onclick=()=>{bonding=!bonding;document.getElementById('bonding').textContent='Bond formation: '+(bonding?'on':'off')};
-document.getElementById('collect').onclick=()=>worker.postMessage({type:'abiogenesis:collect',cloudId:'cell-cargo',anchor:cell,options:{radius:90,maxCount:10}});
-document.getElementById('craft').onclick=()=>worker.postMessage({type:'abiogenesis:craft',cloudId:'cell-cargo',atomIds:['atom-0','atom-1'],bonds:[{a:'atom-0',b:'atom-1',type:'covalent',strength:2}],options:{id:'cell-CH',type:'C-H',energy:1}});
+document.getElementById('collect').onclick=()=>worker.postMessage({type:'abiogenesis:collect',requestId:++requestSerial,cloudId:'cell-cargo',anchor:cell,options:{radius:260,maxCount:12}});
+document.getElementById('craft').onclick=()=>{if(!world)return;const cloud=world.resourceClouds.find(c=>c.id==='cell-cargo'),owned=new Set(cloud?.particleIds||[]),used=new Set((world.molecules||[]).flatMap(m=>m.atomIds)),atoms=world.particles.filter(p=>owned.has(p.id)&&!used.has(p.id));let c=atoms.find(p=>p.element==='C'&&!p.bonds.length),h=atoms.find(p=>p.element==='H'&&!p.bonds.length);if(!c||!h){stats.textContent='Need one unbonded carbon and hydrogen in cargo. Collect nearby first.';return}const id='CH-'+(++requestSerial);worker.postMessage({type:'abiogenesis:craft',requestId:requestSerial,cloudId:'cell-cargo',atomIds:[c.id,h.id],bonds:[{a:c.id,b:h.id,type:'covalent',strength:2,restLength:c.radius+h.radius+1}],options:{id,type:'C-H',energy:1}})};
 document.getElementById('inventory').onclick=()=>worker.postMessage({type:'abiogenesis:inventory',cloudId:'cell-cargo'});
 document.getElementById('harvest').onclick=()=>worker.postMessage({type:'abiogenesis:harvest',cloudId:'cell-cargo',sourceId:'sunlight',amount:2});
-document.getElementById('metabolize').onclick=()=>worker.postMessage({type:'abiogenesis:metabolize',cloudId:'cell-cargo',inputMoleculeIds:['cell-CH'],outputs:[{id:'spent-CH',type:'spent',atomIds:['atom-0','atom-1'],bonds:[{a:'atom-0',b:'atom-1'}],energy:.2}],options:{captureEfficiency:.65}});
-document.getElementById('share').onclick=()=>worker.postMessage({type:'abiogenesis:diffuse',anchors:{'cell-1':cell,'cell-2':cell2},options:{contactRadius:180,permeability:.65,maxTransfers:3}});
+document.getElementById('metabolize').onclick=()=>{if(!world)return;const cloud=world.resourceClouds.find(c=>c.id==='cell-cargo'),owned=new Set(cloud?.particleIds||[]),m=(world.molecules||[]).find(x=>x.atomIds.every(id=>owned.has(id)));if(!m){stats.textContent='No complete carried molecule to metabolise. Craft one first.';return}const atomSet=new Set(m.atomIds),bonds=world.bonds.filter(b=>atomSet.has(b.a)&&atomSet.has(b.b)).map(b=>({a:b.a,b:b.b,type:b.type,strength:b.strength,restLength:b.restLength}));worker.postMessage({type:'abiogenesis:metabolize',requestId:++requestSerial,cloudId:'cell-cargo',inputMoleculeIds:[m.id],outputs:[{id:'spent-'+m.id+'-'+requestSerial,type:'spent-'+m.type,atomIds:m.atomIds,bonds,energy:Math.max(0,m.energy*.2)}],options:{captureEfficiency:.65}})};
+document.getElementById('share').onclick=()=>worker.postMessage({type:'abiogenesis:diffuse',anchors:{'cell-1':cell,'cell-2':cell2},options:{contactRadius:380,permeability:.65,maxTransfers:3}});
 seedWorld();requestAnimationFrame(draw);
+const stageLabel=document.createElement('div');stageLabel.className='note';stageLabel.textContent='Developmental context: primordial substrate → chemistry → protocell → pre-boid → proto-boid → Boids. '+(window.__emergenceSeed?'Primordial export detected; current particle seed remains an independent chemistry sandbox until explicit import is enabled.':'');document.querySelector('.panel').appendChild(stageLabel);
 </script>
 </body>
 </html>
