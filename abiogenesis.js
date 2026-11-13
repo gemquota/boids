@@ -160,7 +160,7 @@
     const owned=new Set(cloud.particleIds),particles=world.particles.filter(p=>owned.has(p.id)),elements={},compounds={};
     for(const p of particles){elements[p.element]=(elements[p.element]||0)+1;const compound=p.metadata&&p.metadata.compound;if(compound)compounds[compound]=(compounds[compound]||0)+1}
     const molecules=(world.molecules||[]).filter(m=>m.atomIds.every(id=>owned.has(id)));
-    return {ownerId:cloud.ownerId,particleCount:particles.length,moleculeCount:molecules.length,mass:particles.reduce((n,p)=>n+p.mass,0),
+    return {ownerId:cloud.ownerId,particleIds:cloud.particleIds.slice(),particleCount:particles.length,moleculeCount:molecules.length,mass:particles.reduce((n,p)=>n+p.mass,0),
       energy:cloud.energy,energyCapacity:cloud.energyCapacity,elements,compounds,molecules:molecules.map(m=>({id:m.id,type:m.type,composition:m.composition,energy:m.energy}))};
   }
   function collectResources(world,cloudId,anchor,options={}){
