@@ -413,3 +413,53 @@ test('exchange transfers bonded compounds intact and refuses distant cells',()=>
   assert.deepEqual(b.particleIds.sort(),['c','h']);
   assert.equal(bio.resourceInventory(world,b.id).moleculeCount,1);
 });
+
+
+test('compartment assembly recruits amphiphilic lipids and internal contents from the cloud',()=>{
+  const particles=[];for(let i=0;i<6;i++){particles.push({id:'c'+i,element:'C'},{id:'h'+i,element:'H'})}
+  particles.push({id:'o1',element:'O'},{id:'o2',element:'O'});
+  const world=bio.createParticleWorld(particles),cloud=bio.createResourceCloud(world,'cell-1',particles.map(p=>p.id),{energy:5});
+  for(let i=0;i<6;i++)bio.craftMolecule(world,cloud.id,['c'+i,'h'+i],[{a:'c'+i,b:'h'+i}],{id:'lipid-'+i,type:'lipid',properties:{amphiphilic:true}});
+  bio.craftMolecule(world,cloud.id,['o1'],[],{id:'nutrient-1',type:'nutrient'});
+  bio.craftMolecule(world,cloud.id,['o2'],[],{id:'nutrient-2',type:'nutrient'});
+  const compartment=bio.createCompartment(world,cloud.id,{id:'proto-1',membraneMoleculeIds:['lipid-0','lipid-1','lipid-2'],contents:['nutrient-1','nutrient-2']});
+  assert.equal(compartment.membraneMoleculeIds.length,3);
+  assert.equal(compartment.contents.length,2);
+  assert.equal(cloud.particleIds.length,6);
+  assert.ok(compartment.radius>0);
+});
+test('compartment growth consumes carried lipids and stored energy',()=>{
+  const particles=[];for(let i=0;i<4;i++)particles.push({id:'c'+i,element:'C'},{id:'h'+i,element:'H'});particles.push({id:'o1',element:'O'},{id:'o2',element:'O'});
+  const world=bio.createParticleWorld(particles),cloud=bio.createResourceCloud(world,'cell-1',particles.map(p=>p.id),{energy:4});
+  for(let i=0;i<4;i++)bio.craftMolecule(world,cloud.id,['c'+i,'h'+i],[{a:'c'+i,b:'h'+i}],{id:'lipid-'+i,type:'lipid',properties:{amphiphilic:true}});
+  bio.craftMolecule(world,cloud.id,['o1'],[],{id:'n1',type:'nutrient'});bio.craftMolecule(world,cloud.id,['o2'],[],{id:'n2',type:'nutrient'});
+  const compartment=bio.createCompartment(world,cloud.id,{id:'proto',membraneMoleculeIds:['lipid-0','lipid-1','lipid-2'],contents:['n1','n2']});
+  const before=compartment.membraneArea;
+  const grown=bio.growCompartment(world,cloud.id,compartment.id,['lipid-3'],{energyCost:1});
+  assert.equal(grown.grown,true);assert.ok(compartment.membraneArea>before);
+  assert.equal(cloud.energy,3);assert.ok(!cloud.particleIds.includes('c3'));
+});
+test('compartment division partitions membrane, contents and mobile resources into viable daughters',()=>{
+  const particles=[];for(let i=0;i<6;i++)particles.push({id:'c'+i,element:'C'},{id:'h'+i,element:'H'});
+  particles.push({id:'o1',element:'O'},{id:'o2',element:'O'},{id:'free',element:'P'});
+  const world=bio.createParticleWorld(particles),cloud=bio.createResourceCloud(world,'cell-1',particles.map(p=>p.id),{energy:6});
+  for(let i=0;i<6;i++)bio.craftMolecule(world,cloud.id,['c'+i,'h'+i],[{a:'c'+i,b:'h'+i}],{id:'lipid-'+i,type:'lipid',properties:{amphiphilic:true}});
+  bio.craftMolecule(world,cloud.id,['o1'],[],{id:'n1',type:'nutrient'});bio.craftMolecule(world,cloud.id,['o2'],[],{id:'n2',type:'nutrient'});
+  const parent=bio.createCompartment(world,cloud.id,{id:'proto',membraneMoleculeIds:['lipid-0','lipid-1','lipid-2','lipid-3','lipid-4','lipid-5'],contents:['n1','n2']});
+  cloud.particleIds.push('free');
+  const result=bio.divideCompartment(world,cloud.id,parent.id,{energyCost:2,minLipidsPerDaughter:3,minContentsPerDaughter:1});
+  assert.equal(result.occurred,true);assert.equal(result.children.length,2);assert.equal(parent.state,'divided');
+  assert.equal(result.children[0].membraneMoleculeIds.length,3);assert.equal(result.children[1].contents.length,1);
+  assert.equal(world.resourceClouds.length,3);
+  assert.deepEqual(world.resourceClouds[1].particleIds.concat(world.resourceClouds[2].particleIds),['free']);
+  assert.equal(world.resourceClouds[1].energy+world.resourceClouds[2].energy,4);
+});
+test('failed compartment division records a failure without fabricating offspring',()=>{
+  const world=bio.createParticleWorld([{id:'a',element:'C'},{id:'b',element:'C'},{id:'c',element:'C'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['a','b','c'],{energy:5});
+  const compartment={id:'small',ownerId:'cell-1',membraneMoleculeIds:['m1','m2','m3'],contents:['n1','n2'],state:'active',generation:0,membraneArea:3,capacity:2,permeability:.3,stability:.5,integrity:.8};
+  world.compartments.push(compartment);
+  const result=bio.divideCompartment(world,cloud.id,compartment.id,{minLipidsPerDaughter:3});
+  assert.equal(result.occurred,false);assert.equal(result.reason,'insufficient-membrane');
+  assert.equal(world.compartments.length,1);assert.equal(world.stats.divisionFailures,1);
+});
