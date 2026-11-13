@@ -142,3 +142,14 @@ test('bounded particle worlds reflect particles without losing them outside the 
   bio.stepParticleWorld(world,.05,{thermalJitter:0,electrostatic:0,bounds:{width:10,height:10},restitution:1});
   const p=world.particles[0];assert.ok(p.position.x<=9);assert.ok(p.position.x>=1);assert.ok(p.velocity.x<0);
 });
+
+test('collision positional correction respects inverse mass and preserves centre of mass',()=>{
+  const world=bio.createParticleWorld([
+    bio.normalizeParticle({id:'heavy',mass:4,radius:1,position:{x:0,y:0,z:0}}),
+    bio.normalizeParticle({id:'light',mass:1,radius:1,position:{x:1,y:0,z:0}})
+  ]);
+  bio.stepParticleWorld(world,.001,{thermalJitter:0,electrostatic:0});
+  const [a,b]=world.particles;
+  assert.ok(Math.abs((4*a.position.x+b.position.x)-1)<1e-8);
+  assert.ok(Math.abs((b.position.x-a.position.x)-2)<1e-8);
+});
