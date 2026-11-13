@@ -42,8 +42,8 @@ That is 190 unique numeric controls. Do not hand-maintain a separate count in UI
 | File | Responsibility |
 |---|---|
 | `index.html` | UI, drawers, Observatory, browser persistence, worker messaging |
-| `boids-worker.js` | Simulation orchestration, ecology, reproduction, live telemetry, snapshot export/restore, isolated abiogenesis particle channel |
-| `abiogenesis.js` | Spatial particle physics, dynamic bonding, molecular chemistry, compartments and emergent capability graph |
+| `boids-worker.js` | Simulation orchestration, ecology, reproduction, live telemetry, snapshot export/restore |
+| `abiogenesis.js` | Spatial particle physics, dynamic bonding, molecular chemistry, compartments and emergent capability graph |\n| `abiogenesis-worker.js` | Dedicated worker for isolated particle-world stepping, deterministic random state and snapshots |
 | `evolution.js` | Pure variable-genome, NEAT, regulatory/statistical and experiment-analysis primitives |
 | `genetics.js` | Ten-locus trait schema, expression curves, inheritance and trait helpers |
 | `chromosome.js` | Typed hexadecimal gene-record codec |
