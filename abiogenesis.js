@@ -13,12 +13,13 @@
   const clone=v=>JSON.parse(JSON.stringify(v));
 
   const ELEMENTS=new Set(['H','C','N','O','P','S','OTHER']);
+  const ELEMENT_VALENCE={H:1,C:4,N:3,O:2,P:5,S:2,OTHER:1};
   const BOND_TYPES=new Set(['covalent','ionic','hydrogen','van-der-waals','adhesion','membrane']);
   function normalizeParticle(input){
     if(!input||input.id===undefined)throw new TypeError('Particle requires a stable id');
     const element=ELEMENTS.has(input.element)?input.element:'OTHER';
     return {id:String(input.id),element,mass:Math.max(.0001,finite(input.mass,1)),radius:Math.max(.0001,finite(input.radius,.5)),
-      charge:clamp(finite(input.charge),-8,8),valence:Math.max(0,Math.min(8,Math.floor(finite(input.valence,1)))),
+      charge:clamp(finite(input.charge),-8,8),valence:Math.max(0,Math.min(8,Math.floor(finite(input.valence,ELEMENT_VALENCE[element]))),
       bonds:Array.isArray(input.bonds)?input.bonds.map(String):[],position:{x:finite(input.position&&input.position.x),y:finite(input.position&&input.position.y),z:finite(input.position&&input.position.z)},
       velocity:{x:finite(input.velocity&&input.velocity.x),y:finite(input.velocity&&input.velocity.y),z:finite(input.velocity&&input.velocity.z)},
       thermalEnergy:Math.max(0,finite(input.thermalEnergy,.1)),metadata:input.metadata&&typeof input.metadata==='object'?clone(input.metadata):{}};
@@ -255,6 +256,6 @@
       anyOf:(rule.anyOf||[]).filter(path=>!path.every(dep=>enabled.has(dep))).map(path=>path.filter(dep=>!enabled.has(dep)))};
     return {enabled:Array.from(enabled).sort(),unmet,passes};
   }
-  return {ELEMENTS,BOND_TYPES,CAPABILITIES,createSeededRandom,snapshotParticleWorld,restoreParticleWorld,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
+  return {ELEMENTS,ELEMENT_VALENCE,BOND_TYPES,CAPABILITIES,createSeededRandom,snapshotParticleWorld,restoreParticleWorld,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
     normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,evaluateCapabilities};
 });
