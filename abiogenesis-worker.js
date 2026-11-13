@@ -21,24 +21,24 @@ onmessage=event=>{
       if(!world)throw new Error('Abiogenesis world has not been initialized');
       const collected=BoidsAbiogenesis.collectResources(world,message.cloudId,message.anchor,message.options||{});
       const inventory=BoidsAbiogenesis.resourceInventory(world,message.cloudId);
-      postMessage({type:'abiogenesis:inventory',requestId:message.requestId,collected,inventory,...summary()});
+      postMessage({type:'abiogenesis:inventory',requestId:message.requestId,collected,inventory,world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
       return;
     }
     if(message.type==='abiogenesis:inventory'){
       if(!world)throw new Error('Abiogenesis world has not been initialized');
-      postMessage({type:'abiogenesis:inventory',requestId:message.requestId,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),...summary()});
+      postMessage({type:'abiogenesis:inventory',requestId:message.requestId,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
       return;
     }
     if(message.type==='abiogenesis:craft'){
       if(!world)throw new Error('Abiogenesis world has not been initialized');
       const molecule=BoidsAbiogenesis.craftMolecule(world,message.cloudId,message.atomIds||[],message.bonds||[],message.options||{});
-      postMessage({type:'abiogenesis:crafted',requestId:message.requestId,molecule,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),...summary()});
+      postMessage({type:'abiogenesis:crafted',requestId:message.requestId,molecule,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
       return;
     }
     if(message.type==='abiogenesis:react'){
       if(!world)throw new Error('Abiogenesis world has not been initialized');
       const result=BoidsAbiogenesis.rearrangeMolecules(world,message.cloudId,message.inputMoleculeIds||[],message.outputs||[],message.options||{});
-      postMessage({type:'abiogenesis:reacted',requestId:message.requestId,result,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),...summary()});
+      postMessage({type:'abiogenesis:reacted',requestId:message.requestId,result,inventory:BoidsAbiogenesis.resourceInventory(world,message.cloudId),world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
       return;
     }
     if(message.type==='abiogenesis:transfer'){
