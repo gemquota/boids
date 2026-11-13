@@ -187,6 +187,7 @@
     if(!world||!Array.isArray(world.particles))throw new TypeError('Resource cloud requires a particle world');
     const ids=new Set(world.particles.map(p=>p.id)),cloud=normalizeResourceCloud({ownerId,particleIds,...options},ids);
     if(world.resourceClouds.some(c=>c.id===cloud.id))throw new Error('Resource cloud ID must be unique');
+    const alreadyOwned=new Set(world.resourceClouds.flatMap(c=>c.particleIds));if(cloud.particleIds.some(id=>alreadyOwned.has(id)))throw new Error('Particle cannot belong to multiple resource clouds');
     world.resourceClouds.push(cloud);return cloud;
   }
   function resourceInventory(world,cloudId){
@@ -271,6 +272,40 @@
     const molecule=(world.molecules||[]).find(m=>m.atomIds.includes(id)),moving=molecule?molecule.atomIds:[id];
     if(moving.some(atomId=>!from.particleIds.includes(atomId)||to.particleIds.includes(atomId)))return false;
     const movingSet=new Set(moving);from.particleIds=from.particleIds.filter(atomId=>!movingSet.has(atomId));to.particleIds.push(...moving);return true;
+  }
+  function exchangeResource(world,fromCloudId,toCloudId,particleId,anchors,options={}){
+    const from=world.resourceClouds.find(c=>c.id===String(fromCloudId)),to=world.resourceClouds.find(c=>c.id===String(toCloudId));
+    if(!from||!to)throw new Error('Resource cloud not found');
+    const a=anchors&&anchors[from.ownerId],b=anchors&&anchors[to.ownerId];if(!a||!b||!a.position||!b.position)return {transferred:false,reason:'missing-cell-anchor'};
+    const distance=Math.hypot(finite(a.position.x)-finite(b.position.x),finite(a.position.y)-finite(b.position.y),finite(a.position.z)-finite(b.position.z));
+    if(distance>Math.max(0,finite(options.contactRadius,Math.max(from.radius,to.radius))))return {transferred:false,reason:'cells-out-of-range'};
+    const permeability=Math.min(clamp(finite(options.permeability,1),0,1),clamp(finite(from.metadata.permeability,1),0,1),clamp(finite(to.metadata.permeability,1),0,1));
+    const random=typeof options.random==='function'?options.random:Math.random;if(random()>permeability)return {transferred:false,reason:'membrane-rejected'};
+    const id=String(particleId),molecule=(world.molecules||[]).find(m=>m.atomIds.includes(id)),moving=molecule?molecule.atomIds:[id];
+    const particles=moving.map(atomId=>world.particles.find(p=>p.id===atomId));
+    if(particles.some(p=>!p||!from.particleIds.includes(p.id)))return {transferred:false,reason:'incomplete-resource'};
+    const allowed=options.allowedElements?new Set(options.allowedElements):null;
+    if(allowed&&particles.some(p=>!allowed.has(p.element)))return {transferred:false,reason:'selective-transport-rejected'};
+    const cost=Math.max(0,finite(options.energyCost));if(to.energy<cost)return {transferred:false,reason:'insufficient-transport-energy'};
+    if(!transferResource(world,from.id,to.id,id))return {transferred:false,reason:'transfer-failed'};
+    to.energy-=cost;return {transferred:true,from:from.id,to:to.id,particleIds:moving.slice(),energyCost:cost,distance};
+  }
+  function diffuseResources(world,anchors,options={}){
+    const transfers=[],maxTransfers=Math.max(0,Math.floor(finite(options.maxTransfers,8))),clouds=world.resourceClouds||[];
+    for(let i=0;i<clouds.length&&transfers.length<maxTransfers;i++)for(let j=i+1;j<clouds.length&&transfers.length<maxTransfers;j++){
+      const a=clouds[i],b=clouds[j],ia=resourceInventory(world,a.id),ib=resourceInventory(world,b.id);
+      const distance=Math.hypot(finite(anchors?.[a.ownerId]?.position?.x)-finite(anchors?.[b.ownerId]?.position?.x),finite(anchors?.[a.ownerId]?.position?.y)-finite(anchors?.[b.ownerId]?.position?.y));
+      if(!anchors?.[a.ownerId]||!anchors?.[b.ownerId]||distance>Math.max(0,finite(options.contactRadius,Math.max(a.radius,b.radius))))continue;
+      const elements=new Set([...Object.keys(ia.elements),...Object.keys(ib.elements)]);
+      let selected=null,largest=0,donor=null,receiver=null;
+      for(const element of elements){const delta=(ia.elements[element]||0)-(ib.elements[element]||0);if(Math.abs(delta)>largest){largest=Math.abs(delta);selected=element;donor=delta>0?a:b;receiver=delta>0?b:a}}
+      if(!selected||largest<=Math.max(1,finite(options.balanceThreshold,1)))continue;
+      const moleculeByAtom=new Map();for(const molecule of world.molecules||[])for(const id of molecule.atomIds)moleculeByAtom.set(id,molecule);
+      const candidates=donor.particleIds.filter(id=>{const p=world.particles.find(atom=>atom.id===id);return p&&p.element===selected}).sort();
+      let moved=false;for(const id of candidates){const result=exchangeResource(world,donor.id,receiver.id,id,anchors,{...options,allowedElements:options.allowedElements||[selected]});if(result.transferred){transfers.push(result);moved=true;break}}
+      if(!moved)continue;
+    }
+    return transfers;
   }
   function consumeResource(world,cloudId,particleId){
     const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)return null;
@@ -428,5 +463,5 @@
     return {enabled:Array.from(enabled).sort(),unmet,passes};
   }
   return {ELEMENTS,ELEMENT_VALENCE,BOND_TYPES,CAPABILITIES,createSeededRandom,snapshotParticleWorld,restoreParticleWorld,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
-    normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,normalizeEnergySource,createEnergySource,harvestEnergy,metabolizeMolecules,normalizeResourceCloud,createResourceCloud,resourceInventory,collectResources,craftMolecule,rearrangeMolecules,transferResource,consumeResource,evaluateCapabilities};
+    normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,normalizeEnergySource,createEnergySource,harvestEnergy,metabolizeMolecules,normalizeResourceCloud,createResourceCloud,resourceInventory,collectResources,craftMolecule,rearrangeMolecules,transferResource,exchangeResource,diffuseResources,consumeResource,evaluateCapabilities};
 });
