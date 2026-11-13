@@ -42,3 +42,21 @@ test('dedicated worker returns useful errors for invalid message order',()=>{
   assert.equal(worker.messages.at(-1).type,'abiogenesis:error');
   assert.match(worker.messages.at(-1).message,/not been initialized/);
 });
+
+
+test('worker supports selective collection, inventory and molecular crafting actions',()=>{
+  const worker=makeWorker();
+  worker.send({type:'abiogenesis:init',seed:3,particles:[
+    {id:'c',element:'C',position:{x:0,y:0}},
+    {id:'h',element:'H',position:{x:1,y:0}},
+    {id:'o',element:'O',position:{x:3,y:0}}
+  ],resourceClouds:[{id:'cargo',ownerId:'cell',particleIds:['c','h'],energy:2}]});
+  worker.send({type:'abiogenesis:inventory',cloudId:'cargo'});
+  assert.equal(worker.messages.at(-1).inventory.particleCount,2);
+  worker.send({type:'abiogenesis:collect',cloudId:'cargo',anchor:{position:{x:0,y:0} },options:{radius:5,maxCount:1}});
+  assert.deepEqual(Array.from(worker.messages.at(-1).collected),['o']);
+  worker.send({type:'abiogenesis:craft',cloudId:'cargo',atomIds:['c','h'],bonds:[{a:'c',b:'h'}],options:{id:'CH'}});
+  assert.equal(worker.messages.at(-1).type,'abiogenesis:crafted');
+  assert.equal(worker.messages.at(-1).inventory.moleculeCount,1);
+  assert.equal(worker.messages.at(-1).world.molecules[0].id,'CH');
+});
