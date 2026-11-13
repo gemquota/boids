@@ -126,7 +126,7 @@
       metabolismCapability:false,createdAt:finite(options.createdAt),metadata:options.metadata&&typeof options.metadata==='object'?clone(options.metadata):{}};
   }
 
-  function createSeededRandom(seed=1){let state=(Number(seed)>>>0)||0x6d2b79f5;return function(){state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296}}
+  function createSeededRandom(seed=1){let state=(Number(seed)>>>0)||0x6d2b79f5;const random=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296};Object.defineProperty(random,'state',{get:()=>state>>>0});random.setState=value=>{state=(Number(value)>>>0)||0x6d2b79f5};return random}
   function snapshotParticleWorld(world){return clone({particles:world.particles,bonds:world.bonds,time:world.time,stats:world.stats})}
   function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,...(snapshot.stats||{})};return world}
   function createParticleWorld(inputs=[],options={}){
