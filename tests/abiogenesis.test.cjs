@@ -228,3 +228,86 @@ test('resource cloud membership survives particle-world snapshots',()=>{
   assert.deepEqual(restored.resourceClouds[0].particleIds,['cargo']);
   assert.equal(restored.resourceClouds[0].ownerId,'cell-7');
 });
+
+
+test('cells selectively collect nearby unowned resources and inventory their stockpile',()=>{
+  const world=bio.createParticleWorld([
+    {id:'near-C',element:'C',position:{x:1,y:0}},
+    {id:'near-O',element:'O',position:{x:2,y:0}},
+    {id:'far-N',element:'N',position:{x:30,y:0}},
+    {id:'owned-H',element:'H',position:{x:0,y:0}}
+  ]);
+  bio.createResourceCloud(world,'cell-a',['owned-H'],{energy:4,energyCapacity:10});
+  bio.createResourceCloud(world,'cell-b',[]);
+  const collected=bio.collectResources(world,'cloud-cell-a',{position:{x:0,y:0}},{radius:5,elements:['C','O'],maxCount:1});
+  assert.deepEqual(collected,['near-C']);
+  const inventory=bio.resourceInventory(world,'cloud-cell-a');
+  assert.equal(inventory.particleCount,2);
+  assert.equal(inventory.elements.H,1);
+  assert.equal(inventory.elements.C,1);
+  assert.equal(inventory.energy,4);
+  assert.deepEqual(bio.collectResources(world,'cloud-cell-b',{position:{x:0,y:0}},{radius:5}),['near-O']);
+});
+test('molecular crafting preserves atom identity and records explicit bonds',()=>{
+  const world=bio.createParticleWorld([
+    {id:'carbon',element:'C',position:{x:0,y:0}},
+    {id:'hydrogen',element:'H',position:{x:1,y:0}}
+  ]);
+  bio.createResourceCloud(world,'cell-1',['carbon','hydrogen']);
+  const molecule=bio.craftMolecule(world,'cloud-cell-1',['carbon','hydrogen'],[{a:'carbon',b:'hydrogen',type:'covalent',strength:3}],{id:'methane-fragment',type:'CH'});
+  assert.equal(molecule.type,'CH');
+  assert.deepEqual(molecule.atomIds,['carbon','hydrogen']);
+  assert.equal(world.bonds.length,1);
+  assert.equal(bio.resourceInventory(world,'cloud-cell-1').moleculeCount,1);
+});
+test('molecular reactions rearrange bonds without creating or losing atoms',()=>{
+  const world=bio.createParticleWorld([
+    {id:'c',element:'C'},{id:'h1',element:'H'},{id:'h2',element:'H'}
+  ]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['c','h1','h2'],{energy:3});
+  bio.craftMolecule(world,cloud.id,['c','h1'],[{a:'c',b:'h1'}],{id:'m1',type:'CH',energy:2});
+  bio.craftMolecule(world,cloud.id,['h2'],[],{id:'m2',type:'H',energy:1});
+  const result=bio.rearrangeMolecules(world,cloud.id,['m1','m2'],[
+    {id:'product',type:'CH2',atomIds:['c','h1','h2'],bonds:[{a:'c',b:'h1'},{a:'c',b:'h2'}]}
+  ],{energyCost:2});
+  assert.equal(result.occurred,true);
+  assert.equal(cloud.energy,1);
+  assert.deepEqual(result.atomIds.sort(),['c','h1','h2']);
+  assert.equal(world.particles.length,3);
+  assert.equal(world.molecules.length,1);
+  assert.equal(world.molecules[0].type,'CH2');
+  assert.equal(world.bonds.length,2);
+});
+test('molecular reactions reject non-conserving products before mutating state',()=>{
+  const world=bio.createParticleWorld([{id:'a',element:'C'},{id:'b',element:'H'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['a','b'],{energy:2});
+  bio.craftMolecule(world,cloud.id,['a','b'],[{a:'a',b:'b'}],{id:'input',energy:1});
+  assert.throws(()=>bio.rearrangeMolecules(world,cloud.id,['input'],[{type:'broken',atomIds:['a']}]),/conserve/i);
+  assert.equal(world.molecules.length,1);
+  assert.equal(world.bonds.length,1);
+  assert.equal(cloud.energy,2);
+});
+test('consuming a constituent safely disassembles its molecular record',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'},{id:'h',element:'H'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['c','h']);
+  bio.craftMolecule(world,cloud.id,['c','h'],[{a:'c',b:'h'}],{id:'CH'});
+  assert.ok(bio.consumeResource(world,cloud.id,'h'));
+  assert.equal(world.molecules.length,0);
+  assert.equal(world.bonds.length,0);
+  assert.deepEqual(world.particles.map(p=>p.id),['c']);
+});
+test('resource inventories and molecular records survive deterministic snapshots',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'},{id:'h',element:'H'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['c','h'],{energy:7,energyCapacity:12});
+  bio.craftMolecule(world,cloud.id,['c','h'],[{a:'c',b:'h'}],{id:'CH',energy:2});
+  const restored=bio.restoreParticleWorld(bio.snapshotParticleWorld(world));
+  const inventory=bio.resourceInventory(restored,cloud.id);
+  assert.equal(inventory.moleculeCount,1);
+  assert.equal(inventory.energy,7);
+  assert.equal(inventory.energyCapacity,12);
+});
+test('resource ownership is exclusive across cell clouds',()=>{
+  assert.throws(()=>bio.createParticleWorld([{id:'x',element:'O'}],{resourceClouds:[
+    {ownerId:'a',particleIds:['x']},{ownerId:'b',particleIds:['x']}
+  ]}),/multiple resource clouds/i);
+});
