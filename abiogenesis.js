@@ -138,8 +138,42 @@
   }
 
   function createSeededRandom(seed=1){let state=(Number(seed)>>>0)||0x6d2b79f5;const random=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296};Object.defineProperty(random,'state',{get:()=>state>>>0});random.setState=value=>{state=(Number(value)>>>0)||0x6d2b79f5};return random}
-  function snapshotParticleWorld(world){return clone({particles:world.particles,bonds:world.bonds,resourceClouds:world.resourceClouds||[],time:world.time,stats:world.stats})}
-  function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,resourceClouds:snapshot.resourceClouds||[],time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,...(snapshot.stats||{})};return world}
+  function snapshotParticleWorld(world){return clone({particles:world.particles,bonds:world.bonds,resourceClouds:world.resourceClouds||[],molecules:world.molecules||[],energySources:world.energySources||[],compartments:world.compartments||[],time:world.time,stats:world.stats})}
+  function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,resourceClouds:snapshot.resourceClouds||[],molecules:snapshot.molecules||[],energySources:snapshot.energySources||[],compartments:snapshot.compartments||[],time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,energyHarvested:0,energyDissipated:0,compartmentDivisions:0,divisionFailures:0,...(snapshot.stats||{})};return world}
+  function normalizeEnergySource(input){
+    if(!input||input.id===undefined)throw new TypeError('Energy source requires a stable ID');
+    return {id:String(input.id),type:String(input.type||'environmental'),energy:Math.max(0,finite(input.energy)),efficiency:clamp(finite(input.efficiency,.5),.001,1),metadata:input.metadata&&typeof input.metadata==='object'?clone(input.metadata):{}};
+  }
+  function createEnergySource(world,input){
+    if(!world||!Array.isArray(world.energySources))throw new TypeError('Energy source requires a particle world');
+    const source=normalizeEnergySource(input);if(world.energySources.some(s=>s.id===source.id))throw new Error('Energy source ID must be unique');
+    world.energySources.push(source);return source;
+  }
+  function harvestEnergy(world,cloudId,sourceId,requested){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId)),source=(world.energySources||[]).find(s=>s.id===String(sourceId));
+    if(!cloud||!source)throw new Error('Resource cloud or energy source not found');
+    const room=Math.max(0,cloud.energyCapacity-cloud.energy),target=Math.max(0,finite(requested));
+    const stored=Math.min(target,room,source.energy*source.efficiency),consumed=stored/source.efficiency;
+    source.energy=Math.max(0,source.energy-consumed);cloud.energy+=stored;
+    const dissipated=Math.max(0,consumed-stored);
+    world.stats.energyHarvested=(world.stats.energyHarvested||0)+stored;
+    world.stats.energyDissipated=(world.stats.energyDissipated||0)+dissipated;
+    return {stored,consumed,dissipated,remainingSourceEnergy:source.energy,cloudEnergy:cloud.energy};
+  }
+  function metabolizeMolecules(world,cloudId,inputIds,outputs,options={}){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
+    const inputs=(inputIds||[]).map(id=>(world.molecules||[]).find(m=>m.id===String(id)));
+    if(!inputs.length||inputs.some(m=>!m))throw new Error('Metabolism references missing molecules');
+    const inputEnergy=inputs.reduce((sum,m)=>sum+Math.max(0,finite(m.energy)),0);
+    const result=rearrangeMolecules(world,cloudId,inputIds,outputs,{energyCost:0});
+    const released=Math.max(0,result.energyReleased),efficiency=clamp(finite(options.captureEfficiency,.65),0,1);
+    const captured=Math.min(Math.max(0,cloud.energyCapacity-cloud.energy),released*efficiency);
+    const dissipated=Math.max(0,released-captured);
+    cloud.energy+=captured;
+    world.stats.energyHarvested=(world.stats.energyHarvested||0)+captured;
+    world.stats.energyDissipated=(world.stats.energyDissipated||0)+dissipated;
+    return {...result,inputEnergy,energyReleased:released,energyHarvested:captured,heatDissipated:dissipated,cloudEnergy:cloud.energy};
+  }
   function normalizeResourceCloud(input,particleIds){
     if(!input||input.ownerId===undefined)throw new TypeError('Resource cloud requires an ownerId');
     const ids=Array.from(new Set((input.particleIds||[]).map(String)));
@@ -147,24 +181,191 @@
     return {id:String(input.id||'cloud-'+input.ownerId),ownerId:String(input.ownerId),particleIds:ids,
       radius:Math.max(.1,finite(input.radius,28)),followStrength:clamp(finite(input.followStrength,1.8),0,100),
       damping:clamp(finite(input.damping,.16),0,1),containment:clamp(finite(input.containment,.8),0,100),
-      maxAcceleration:Math.max(.01,finite(input.maxAcceleration,18)),metadata:input.metadata&&typeof input.metadata==='object'?clone(input.metadata):{}};
+      maxAcceleration:Math.max(.01,finite(input.maxAcceleration,18)),energy:Math.max(0,finite(input.energy)),energyCapacity:Math.max(0,finite(input.energyCapacity,100)),metadata:input.metadata&&typeof input.metadata==='object'?clone(input.metadata):{}};
   }
   function createResourceCloud(world,ownerId,particleIds,options={}){
     if(!world||!Array.isArray(world.particles))throw new TypeError('Resource cloud requires a particle world');
     const ids=new Set(world.particles.map(p=>p.id)),cloud=normalizeResourceCloud({ownerId,particleIds,...options},ids);
     if(world.resourceClouds.some(c=>c.id===cloud.id))throw new Error('Resource cloud ID must be unique');
+    const alreadyOwned=new Set(world.resourceClouds.flatMap(c=>c.particleIds));if(cloud.particleIds.some(id=>alreadyOwned.has(id)))throw new Error('Particle cannot belong to multiple resource clouds');
     world.resourceClouds.push(cloud);return cloud;
+  }
+  function resourceInventory(world,cloudId){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
+    const owned=new Set(cloud.particleIds),particles=world.particles.filter(p=>owned.has(p.id)),elements={},compounds={};
+    for(const p of particles){elements[p.element]=(elements[p.element]||0)+1;const compound=p.metadata&&p.metadata.compound;if(compound)compounds[compound]=(compounds[compound]||0)+1}
+    const molecules=(world.molecules||[]).filter(m=>m.atomIds.every(id=>owned.has(id)));
+    return {ownerId:cloud.ownerId,particleIds:cloud.particleIds.slice(),particleCount:particles.length,moleculeCount:molecules.length,mass:particles.reduce((n,p)=>n+p.mass,0),
+      energy:cloud.energy,energyCapacity:cloud.energyCapacity,elements,compounds,molecules:molecules.map(m=>({id:m.id,type:m.type,composition:m.composition,energy:m.energy}))};
+  }
+  function collectResources(world,cloudId,anchor,options={}){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
+    if(!anchor||!anchor.position)throw new TypeError('Collection requires a cell anchor position');
+    const owned=new Set(world.resourceClouds.flatMap(c=>c.particleIds)),allowed=options.elements?new Set(options.elements):null;
+    const radius=Math.max(0,finite(options.radius,cloud.radius)),limit=Math.max(0,Math.floor(finite(options.maxCount,Infinity))),moleculeByAtom=new Map();
+    for(const molecule of world.molecules||[])for(const id of molecule.atomIds)moleculeByAtom.set(id,molecule);
+    const candidates=[],seenMolecules=new Set();
+    for(const p of world.particles){if(owned.has(p.id))continue;const molecule=moleculeByAtom.get(p.id);
+      if(molecule){if(seenMolecules.has(molecule.id))continue;seenMolecules.add(molecule.id);const members=molecule.atomIds.map(id=>world.particles.find(atom=>atom.id===id));
+        if(members.some(atom=>!atom||owned.has(atom.id)||(allowed&&!allowed.has(atom.element))))continue;
+        const position={x:members.reduce((n,a)=>n+a.position.x,0)/members.length,y:members.reduce((n,a)=>n+a.position.y,0)/members.length,z:members.reduce((n,a)=>n+a.position.z,0)/members.length};
+        const d=Math.hypot(position.x-finite(anchor.position.x),position.y-finite(anchor.position.y),position.z-finite(anchor.position.z));if(d<=radius)candidates.push({ids:molecule.atomIds,d,key:molecule.id});
+      }else{if(allowed&&!allowed.has(p.element))continue;const d=Math.hypot(p.position.x-finite(anchor.position.x),p.position.y-finite(anchor.position.y),p.position.z-finite(anchor.position.z));if(d<=radius)candidates.push({ids:[p.id],d,key:p.id})}
+    }
+    candidates.sort((a,b)=>a.d-b.d||String(a.key).localeCompare(String(b.key)));const collected=[];
+    for(const candidate of candidates){if(collected.length+candidate.ids.length>limit)continue;collected.push(...candidate.ids)}
+    cloud.particleIds.push(...collected);return collected;
+  }
+  function craftMolecule(world,cloudId,atomIds,bondSpecs=[],options={}){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
+    const ids=Array.from(new Set((atomIds||[]).map(String)));if(!ids.length||ids.length!==(atomIds||[]).length)throw new Error('Molecule requires unique atom IDs');
+    if(ids.some(id=>!cloud.particleIds.includes(id)))throw new Error('Molecule atoms must be carried by the owning cloud');
+    const occupied=new Set((world.molecules||[]).flatMap(m=>m.atomIds));
+    if(ids.some(id=>occupied.has(id)))throw new Error('Atom already belongs to a molecule');
+    const byId=new Map(world.particles.map(p=>[p.id,p])),atoms=ids.map(id=>byId.get(id));
+    if(atoms.some(p=>!p))throw new Error('Molecule references missing atoms');
+    const normalized=normalizeMolecule({id:options.id||'molecule-'+(world.molecules.length+1),atoms,bonds:bondSpecs,energy:options.energy,properties:options.properties});
+    if(world.molecules.some(m=>m.id===normalized.id))throw new Error('Molecule ID must be unique');
+    const bondIds=[],counts=new Map(atoms.map(p=>[p.id,p.bonds.length]));
+    for(const spec of normalized.bonds){
+      const a=byId.get(spec.a),b=byId.get(spec.b);
+      if(world.bonds.some(existing=>(existing.a===spec.a&&existing.b===spec.b)||(existing.a===spec.b&&existing.b===spec.a)))throw new Error('Molecule bond already exists in particle world');
+      const ca=counts.get(a.id),cb=counts.get(b.id);if(ca>=a.valence||cb>=b.valence)throw new Error('Molecule bond violates particle valence or topology');counts.set(a.id,ca+1);counts.set(b.id,cb+1);
+    }
+    for(const spec of normalized.bonds){const bond=formBond(world.particles,world.bonds,spec.a,spec.b,{bond:{...spec}});if(!bond)throw new Error('Molecule bond violates particle valence or topology');bondIds.push(bond.id)}
+    const molecule={id:normalized.id,type:String(options.type||'molecule'),atomIds:ids,bondIds,composition:normalized.composition,
+      energy:normalized.energy,properties:normalized.properties,metadata:options.metadata&&typeof options.metadata==='object'?clone(options.metadata):{}};
+    world.molecules.push(molecule);return molecule;
+  }
+  function rearrangeMolecules(world,cloudId,inputMoleculeIds,outputs,options={}){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
+    const inputs=(inputMoleculeIds||[]).map(id=>(world.molecules||[]).find(m=>m.id===String(id)));
+    if(!inputs.length||inputs.some(m=>!m))throw new Error('Reaction references a missing input molecule');
+    const inputAtoms=inputs.flatMap(m=>m.atomIds),inputSet=new Set(inputAtoms);
+    if(inputSet.size!==inputAtoms.length||inputAtoms.some(id=>!cloud.particleIds.includes(id)))throw new Error('Input molecules must be distinct and fully carried by this cloud');
+    if(!Array.isArray(outputs)||!outputs.length)throw new Error('Reaction requires output molecules');
+    const outputAtoms=outputs.flatMap(o=>(o.atomIds||[]).map(String));
+    if(outputAtoms.length!==inputAtoms.length||new Set(outputAtoms).size!==outputAtoms.length||outputAtoms.some(id=>!inputSet.has(id)))throw new Error('Reaction must conserve every input atom exactly once');
+    const cost=Math.max(0,finite(options.energyCost));if(cost>cloud.energy)throw new Error('Insufficient stored energy for reaction');
+    const removeIds=new Set(inputs.map(m=>m.id)),retained=(world.molecules||[]).filter(m=>!removeIds.has(m.id)),outputIds=outputs.map((o,i)=>String(o.id||'molecule-'+(retained.length+i+1)));
+    if(new Set(outputIds).size!==outputIds.length||outputIds.some(id=>retained.some(m=>m.id===id)))throw new Error('Reaction output molecule IDs must be unique');
+    const removedBonds=new Set(inputs.flatMap(m=>m.bondIds||[])),baseCounts=new Map(world.particles.map(p=>[p.id,p.bonds.filter(other=>!world.bonds.some(b=>removedBonds.has(b.id)&&((b.a===p.id&&b.b===other)||(b.b===p.id&&b.a===other)))).length]));
+    const plannedPairs=new Set();
+    for(let i=0;i<outputs.length;i++){const output=outputs[i],ids=(output.atomIds||[]).map(String),atoms=ids.map(id=>world.particles.find(p=>p.id===id));
+      if(!ids.length||atoms.some(p=>!p)||new Set(ids).size!==ids.length)throw new Error('Invalid reaction output atom set');
+      const checked=normalizeMolecule({id:outputIds[i],atoms,bonds:output.bonds||[],energy:output.energy,properties:output.properties});
+      for(const bond of checked.bonds){const pair=[bond.a,bond.b].sort().join('|');if(plannedPairs.has(pair)||world.bonds.some(b=>!removedBonds.has(b.id)&&((b.a===bond.a&&b.b===bond.b)||(b.a===bond.b&&b.b===bond.a))))throw new Error('Reaction output duplicates an existing bond');plannedPairs.add(pair);
+        for(const id of [bond.a,bond.b]){const atom=world.particles.find(p=>p.id===id),count=baseCounts.get(id)||0;if(count>=atom.valence)throw new Error('Reaction output exceeds atom valence');baseCounts.set(id,count+1)}}
+    }
+    const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy),plannedEnergies=outputs.map(output=>Math.max(0,finite(output.energy,productEnergy/outputs.length)));
+    if(plannedEnergies.reduce((sum,value)=>sum+value,0)>totalEnergy+1e-9)throw new Error('Reaction cannot create molecular energy');
+    for(const molecule of inputs)for(const id of molecule.bondIds||[])if(world.bonds.some(b=>b.id===id))breakBond(world.particles,world.bonds,id);
+    world.molecules=retained;cloud.energy-=cost;const created=[];
+    for(let i=0;i<outputs.length;i++){const output=outputs[i];
+      created.push(craftMolecule(world,cloudId,output.atomIds,output.bonds||[],{...output,id:outputIds[i],energy:plannedEnergies[i]}))}
+    return {occurred:true,consumed:inputs.map(m=>m.id),products:created.map(m=>m.id),atomIds:outputAtoms,energyCost:cost,energyReleased:Math.max(0,totalEnergy-plannedEnergies.reduce((sum,value)=>sum+value,0))};
   }
   function transferResource(world,fromCloudId,toCloudId,particleId){
     const from=world.resourceClouds.find(c=>c.id===String(fromCloudId)),to=world.resourceClouds.find(c=>c.id===String(toCloudId));
     if(!from||!to)throw new Error('Resource cloud not found');
-    const id=String(particleId),index=from.particleIds.indexOf(id);
-    if(index<0||to.particleIds.includes(id))return false;
-    from.particleIds.splice(index,1);to.particleIds.push(id);return true;
+    const id=String(particleId),index=from.particleIds.indexOf(id);if(index<0)return false;
+    const molecule=(world.molecules||[]).find(m=>m.atomIds.includes(id)),moving=molecule?molecule.atomIds:[id];
+    if(moving.some(atomId=>!from.particleIds.includes(atomId)||to.particleIds.includes(atomId)))return false;
+    const movingSet=new Set(moving);from.particleIds=from.particleIds.filter(atomId=>!movingSet.has(atomId));to.particleIds.push(...moving);return true;
+  }
+  function exchangeResource(world,fromCloudId,toCloudId,particleId,anchors,options={}){
+    const from=world.resourceClouds.find(c=>c.id===String(fromCloudId)),to=world.resourceClouds.find(c=>c.id===String(toCloudId));
+    if(!from||!to)throw new Error('Resource cloud not found');
+    const a=anchors&&anchors[from.ownerId],b=anchors&&anchors[to.ownerId];if(!a||!b||!a.position||!b.position)return {transferred:false,reason:'missing-cell-anchor'};
+    const distance=Math.hypot(finite(a.position.x)-finite(b.position.x),finite(a.position.y)-finite(b.position.y),finite(a.position.z)-finite(b.position.z));
+    if(distance>Math.max(0,finite(options.contactRadius,Math.max(from.radius,to.radius))))return {transferred:false,reason:'cells-out-of-range'};
+    const permeability=Math.min(clamp(finite(options.permeability,1),0,1),clamp(finite(from.metadata.permeability,1),0,1),clamp(finite(to.metadata.permeability,1),0,1));
+    const random=typeof options.random==='function'?options.random:Math.random;if(random()>permeability)return {transferred:false,reason:'membrane-rejected'};
+    const id=String(particleId),molecule=(world.molecules||[]).find(m=>m.atomIds.includes(id)),moving=molecule?molecule.atomIds:[id];
+    const particles=moving.map(atomId=>world.particles.find(p=>p.id===atomId));
+    if(particles.some(p=>!p||!from.particleIds.includes(p.id)))return {transferred:false,reason:'incomplete-resource'};
+    const allowed=options.allowedElements?new Set(options.allowedElements):null;
+    if(allowed&&particles.some(p=>!allowed.has(p.element)))return {transferred:false,reason:'selective-transport-rejected'};
+    const cost=Math.max(0,finite(options.energyCost));if(to.energy<cost)return {transferred:false,reason:'insufficient-transport-energy'};
+    if(!transferResource(world,from.id,to.id,id))return {transferred:false,reason:'transfer-failed'};
+    to.energy-=cost;return {transferred:true,from:from.id,to:to.id,particleIds:moving.slice(),energyCost:cost,distance};
+  }
+  function diffuseResources(world,anchors,options={}){
+    const transfers=[],maxTransfers=Math.max(0,Math.floor(finite(options.maxTransfers,8))),clouds=world.resourceClouds||[];
+    for(let i=0;i<clouds.length&&transfers.length<maxTransfers;i++)for(let j=i+1;j<clouds.length&&transfers.length<maxTransfers;j++){
+      const a=clouds[i],b=clouds[j],ia=resourceInventory(world,a.id),ib=resourceInventory(world,b.id);
+      const distance=Math.hypot(finite(anchors?.[a.ownerId]?.position?.x)-finite(anchors?.[b.ownerId]?.position?.x),finite(anchors?.[a.ownerId]?.position?.y)-finite(anchors?.[b.ownerId]?.position?.y));
+      if(!anchors?.[a.ownerId]||!anchors?.[b.ownerId]||distance>Math.max(0,finite(options.contactRadius,Math.max(a.radius,b.radius))))continue;
+      const elements=new Set([...Object.keys(ia.elements),...Object.keys(ib.elements)]);
+      let selected=null,largest=0,donor=null,receiver=null;
+      for(const element of elements){const delta=(ia.elements[element]||0)-(ib.elements[element]||0);if(Math.abs(delta)>largest){largest=Math.abs(delta);selected=element;donor=delta>0?a:b;receiver=delta>0?b:a}}
+      if(!selected||largest<=Math.max(1,finite(options.balanceThreshold,1)))continue;
+      const moleculeByAtom=new Map();for(const molecule of world.molecules||[])for(const id of molecule.atomIds)moleculeByAtom.set(id,molecule);
+      const candidates=donor.particleIds.filter(id=>{const p=world.particles.find(atom=>atom.id===id);return p&&p.element===selected}).sort();
+      let moved=false;for(const id of candidates){const result=exchangeResource(world,donor.id,receiver.id,id,anchors,{...options,allowedElements:options.allowedElements});if(result.transferred){transfers.push(result);moved=true;break}}
+      if(!moved)continue;
+    }
+    return transfers;
+  }
+  function createCompartment(world,cloudId,options={}){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)throw new Error('Resource cloud not found');
+    const membraneIds=Array.from(new Set((options.membraneMoleculeIds||[]).map(String))),contents=Array.from(new Set((options.contents||[]).map(String)));
+    if(membraneIds.length<3)throw new Error('A compartment requires at least three membrane molecules');
+    const molecules=new Map((world.molecules||[]).map(m=>[m.id,m])),used=new Set((world.compartments||[]).flatMap(c=>[...(c.membraneMoleculeIds||[]),...(c.contents||[])]));
+    for(const id of membraneIds){const m=molecules.get(id);if(!m||!cloudContainsMolecule(cloud,m))throw new Error('Membrane molecule must be carried by the cell');if(!(m.type==='lipid'||m.properties?.amphiphilic===true||m.metadata?.amphiphilic===true))throw new Error('Membrane components must be amphiphilic lipids');if(used.has(id))throw new Error('Molecule already belongs to a compartment')}
+    for(const id of contents){const m=molecules.get(id);if(!m||!cloudContainsMolecule(cloud,m))throw new Error('Compartment contents must be carried by the cell');if(used.has(id)||membraneIds.includes(id))throw new Error('Molecule already belongs to a compartment')}
+    const id=String(options.id||'compartment-'+(world.compartments.length+1));if(world.compartments.some(c=>c.id===id))throw new Error('Compartment ID must be unique');
+    const area=Math.max(1,finite(options.areaPerLipid,1))*membraneIds.length,atomIds=new Set([...membraneIds,...contents].flatMap(mid=>molecules.get(mid).atomIds));
+    cloud.particleIds=cloud.particleIds.filter(pid=>!atomIds.has(pid));
+    const compartment={id,ownerId:cloud.ownerId,membraneMoleculeIds:membraneIds,contents,permeability:clamp(finite(options.permeability,.35),0,1),
+      stability:clamp(finite(options.stability,.5),0,1),integrity:clamp(finite(options.integrity,.8),0,1),membraneArea:area,radius:Math.sqrt(area/Math.PI),
+      capacity:Math.max(contents.length,Math.floor(area*Math.max(0,finite(options.capacityPerArea,.5)))),growth:0,generation:Math.max(0,Math.floor(finite(options.generation))),
+      parentId:options.parentId||null,state:'active',metadata:options.metadata&&typeof options.metadata==='object'?clone(options.metadata):{}};
+    world.compartments.push(compartment);return compartment;
+  }
+  function cloudContainsMolecule(cloud,molecule){return molecule.atomIds.every(id=>cloud.particleIds.includes(id))}
+  function growCompartment(world,cloudId,compartmentId,lipidMoleculeIds,options={}){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId)),compartment=(world.compartments||[]).find(c=>c.id===String(compartmentId));
+    if(!cloud||!compartment||compartment.state!=='active')throw new Error('Active compartment and resource cloud are required');
+    const ids=Array.from(new Set((lipidMoleculeIds||[]).map(String))),molecules=new Map((world.molecules||[]).map(m=>[m.id,m]));
+    if(!ids.length||ids.some(id=>{const m=molecules.get(id);return !m||m.type!=='lipid'||!cloudContainsMolecule(cloud,m)||compartment.membraneMoleculeIds.includes(id)}))throw new Error('Growth requires new carried lipid molecules');
+    const cost=Math.max(0,finite(options.energyCost,ids.length*.1));if(cost>cloud.energy)throw new Error('Insufficient energy for membrane growth');
+    const atoms=new Set(ids.flatMap(id=>molecules.get(id).atomIds));cloud.particleIds=cloud.particleIds.filter(id=>!atoms.has(id));cloud.energy-=cost;
+    const addedArea=ids.length*Math.max(.01,finite(options.areaPerLipid,1));compartment.membraneMoleculeIds.push(...ids);compartment.membraneArea+=addedArea;
+    compartment.radius=Math.sqrt(compartment.membraneArea/Math.PI);compartment.capacity=Math.max(compartment.capacity,Math.floor(compartment.membraneArea*Math.max(0,finite(options.capacityPerArea,.5))));
+    compartment.growth+=addedArea;compartment.integrity=clamp(compartment.integrity+addedArea*.002,0,1);
+    return {grown:true,addedMolecules:ids,addedArea,radius:compartment.radius,capacity:compartment.capacity,energySpent:cost};
+  }
+  function divideCompartment(world,cloudId,compartmentId,options={}){
+    const cloud=world.resourceClouds.find(c=>c.id===String(cloudId)),parent=(world.compartments||[]).find(c=>c.id===String(compartmentId));
+    if(!cloud||!parent||parent.state!=='active')throw new Error('Active compartment and resource cloud are required');
+    const fail=reason=>{world.stats.divisionFailures=(world.stats.divisionFailures||0)+1;return{occurred:false,viable:false,reason,children:[]}};
+    const minLipids=Math.max(3,Math.floor(finite(options.minLipidsPerDaughter,3))),minContents=Math.max(1,Math.floor(finite(options.minContentsPerDaughter,1))),cost=Math.max(0,finite(options.energyCost,2));
+    if(parent.membraneMoleculeIds.length<minLipids*2)return fail('insufficient-membrane');
+    if(parent.contents.length<minContents*2)return fail('insufficient-contents');
+    if(cloud.energy<cost)return fail('insufficient-energy');
+    const split=(items)=>[items.filter((_,i)=>i%2===0),items.filter((_,i)=>i%2===1)];
+    const [memA,memB]=split(parent.membraneMoleculeIds),[contentA,contentB]=split(parent.contents);
+    if(memA.length<minLipids||memB.length<minLipids||contentA.length<minContents||contentB.length<minContents)return fail('unequal-daughter-allocation');
+    const resourceGroups=[],seen=new Set(),moleculeByAtom=new Map();for(const m of world.molecules||[])for(const id of m.atomIds)moleculeByAtom.set(id,m);
+    for(const id of cloud.particleIds){if(seen.has(id))continue;const m=moleculeByAtom.get(id),group=m&&m.atomIds.every(atomId=>cloud.particleIds.includes(atomId))?m.atomIds:[id];group.forEach(atomId=>seen.add(atomId));resourceGroups.push(group)}
+    const freeA=[],freeB=[];resourceGroups.forEach((group,i)=>(i%2?freeB:freeA).push(...group));
+    const remainingEnergy=Math.max(0,cloud.energy-cost),energyA=remainingEnergy*.5,energyB=remainingEnergy-energyA,generation=parent.generation+1;world.stats.energyDissipated=(world.stats.energyDissipated||0)+cost;
+    const ownerA=parent.ownerId+'-'+generation+'a',ownerB=parent.ownerId+'-'+generation+'b';
+    cloud.particleIds=[];cloud.energy=0;cloud.metadata.retired=true;
+    const childCloudA=createResourceCloud(world,ownerA,freeA,{id:'cloud-'+ownerA,energy:energyA,energyCapacity:cloud.energyCapacity,metadata:{...cloud.metadata,retired:false,permeability:parent.permeability}});
+    const childCloudB=createResourceCloud(world,ownerB,freeB,{id:'cloud-'+ownerB,energy:energyB,energyCapacity:cloud.energyCapacity,metadata:{...cloud.metadata,retired:false,permeability:parent.permeability}});
+    parent.state='divided';parent.dividedAt=world.time;parent.children=[parent.id+'-'+generation+'a',parent.id+'-'+generation+'b'];world.stats.compartmentDivisions=(world.stats.compartmentDivisions||0)+1;
+    const makeChild=(id,ownerId,membraneMoleculeIds,contents,childCloud)=>({id,ownerId,membraneMoleculeIds,contents,permeability:parent.permeability,stability:parent.stability,
+      integrity:parent.integrity,membraneArea:parent.membraneArea*.5,radius:Math.sqrt(parent.membraneArea*.5/Math.PI),capacity:Math.floor(parent.capacity*.5),
+      growth:0,generation,parentId:parent.id,state:'active',resourceCloudId:childCloud.id,metadata:clone(parent.metadata)});
+    const a=makeChild(parent.children[0],ownerA,memA,contentA,childCloudA),b=makeChild(parent.children[1],ownerB,memB,contentB,childCloudB);
+    world.compartments.push(a,b);return{occurred:true,viable:true,children:[a,b],energySpent:cost,remainingEnergy:remainingEnergy};
   }
   function consumeResource(world,cloudId,particleId){
     const cloud=world.resourceClouds.find(c=>c.id===String(cloudId));if(!cloud)return null;
     const id=String(particleId),member=cloud.particleIds.indexOf(id);if(member<0)return null;
+    const containing=(world.molecules||[]).filter(m=>m.atomIds.includes(id));for(const molecule of containing){for(const bondId of molecule.bondIds||[])if(world.bonds.some(b=>b.id===bondId))breakBond(world.particles,world.bonds,bondId);world.molecules=world.molecules.filter(m=>m.id!==molecule.id)}
     const index=world.particles.findIndex(p=>p.id===id);if(index<0)return null;
     cloud.particleIds.splice(member,1);
     for(const bond of world.bonds.filter(b=>b.a===id||b.b===id))breakBond(world.particles,world.bonds,bond.id);
@@ -195,7 +396,9 @@
     const bonds=(options.bonds||[]).map(normalizeBond);for(const p of particles)p.bonds=[];
     for(const b of bonds){if(!ids.has(b.a)||!ids.has(b.b))throw new Error('Bond endpoint is missing');const a=particles.find(p=>p.id===b.a),c=particles.find(p=>p.id===b.b);if(a.bonds.length>=a.valence||c.bonds.length>=c.valence)throw new Error('Bond topology exceeds particle valence');if(a.bonds.includes(c.id)||c.bonds.includes(a.id))throw new Error('Duplicate particle bond');a.bonds.push(c.id);c.bonds.push(a.id)}
     const resourceClouds=(options.resourceClouds||[]).map(c=>normalizeResourceCloud(c,ids));
-    return {particles,bonds,resourceClouds,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0}};
+    const owned=new Set();for(const cloud of resourceClouds)for(const id of cloud.particleIds){if(owned.has(id))throw new Error('Particle cannot belong to multiple resource clouds');owned.add(id)}
+    const molecules=(options.molecules||[]).map(m=>clone(m)),energySources=(options.energySources||[]).map(normalizeEnergySource),compartments=(options.compartments||[]).map(c=>clone(c));
+    return {particles,bonds,resourceClouds,molecules,energySources,compartments,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,energyHarvested:0,energyDissipated:0,compartmentDivisions:0,divisionFailures:0}};
   }
   function stepParticleWorld(world,dt,options={}){
     dt=clamp(finite(dt),0,.05);if(!world||!Array.isArray(world.particles)||!Array.isArray(world.bonds))throw new TypeError('Invalid particle world');
@@ -315,5 +518,5 @@
     return {enabled:Array.from(enabled).sort(),unmet,passes};
   }
   return {ELEMENTS,ELEMENT_VALENCE,BOND_TYPES,CAPABILITIES,createSeededRandom,snapshotParticleWorld,restoreParticleWorld,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
-    normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,normalizeResourceCloud,createResourceCloud,transferResource,consumeResource,evaluateCapabilities};
+    normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,normalizeEnergySource,createEnergySource,harvestEnergy,metabolizeMolecules,normalizeResourceCloud,createResourceCloud,resourceInventory,collectResources,craftMolecule,rearrangeMolecules,transferResource,exchangeResource,diffuseResources,createCompartment,growCompartment,divideCompartment,consumeResource,evaluateCapabilities};
 });
