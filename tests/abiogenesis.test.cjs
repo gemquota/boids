@@ -65,7 +65,7 @@ test('lipid compartments are variable-capability structures, not automatically l
 
 test('capability graph allows partial and alternative emergence without granting life wholesale',()=>{
   const partial=bio.evaluateCapabilities({aggregation:true,bonding:true,lipidAssembly:true});
-  assert.ok(partial.enabled.includes('molecularFormation'));assert.ok(partial.enabled.includes('compartments'));
+  assert.ok(partial.enabled.includes('aggregation'));assert.ok(partial.enabled.includes('bonding'));assert.ok(!partial.enabled.includes('molecularFormation'));assert.ok(!partial.enabled.includes('compartments'));
   assert.ok(!partial.enabled.includes('protocells'));assert.ok(!partial.enabled.includes('cellularReproduction'));
   const later=bio.evaluateCapabilities({aggregation:true,bonding:true,lipidAssembly:true,compartments:true,protocells:true,polymerisation:true,molecularReplication:true,adhesion:true,cellularReproduction:true,differentiation:true,anatomicalDevelopment:true});
   assert.ok(later.enabled.includes('colonialOrganisation'));assert.ok(later.enabled.includes('multicellularEvolution'));
