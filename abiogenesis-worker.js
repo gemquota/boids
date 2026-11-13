@@ -13,7 +13,7 @@ onmessage=event=>{
   try{
     if(message.type==='abiogenesis:init'){
       random=BoidsAbiogenesis.createSeededRandom(message.seed??1);
-      world=BoidsAbiogenesis.createParticleWorld(message.particles||[],{bonds:message.bonds||[],time:message.time||0});
+      world=BoidsAbiogenesis.createParticleWorld(message.particles||[],{bonds:message.bonds||[],resourceClouds:message.resourceClouds||[],time:message.time||0});
       postMessage({type:'abiogenesis:ready',...summary()});
       return;
     }
