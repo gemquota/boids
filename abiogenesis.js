@@ -164,8 +164,9 @@
       const [i,j,distance,nx,ny,nz,dx,dy,dz]=pair,a=ps[i],b=ps[j],overlap=a.radius+b.radius-distance;
       if(overlap>0){
         collisions++;const invA=1/a.mass,invB=1/b.mass,total=invA+invB;
-        const correction=overlap*.5; a.position.x-=nx*correction;a.position.y-=ny*correction;a.position.z-=nz*correction;
-        b.position.x+=nx*correction;b.position.y+=ny*correction;b.position.z+=nz*correction;
+        const correctionA=overlap*invA/total,correctionB=overlap*invB/total;
+        a.position.x-=nx*correctionA;a.position.y-=ny*correctionA;a.position.z-=nz*correctionA;
+        b.position.x+=nx*correctionB;b.position.y+=ny*correctionB;b.position.z+=nz*correctionB;
         const relative=(b.velocity.x-a.velocity.x)*nx+(b.velocity.y-a.velocity.y)*ny+(b.velocity.z-a.velocity.z)*nz;
         if(relative<0){const impulse=-(1+restitution)*relative/total;
           a.velocity.x-=impulse*invA*nx;a.velocity.y-=impulse*invA*ny;a.velocity.z-=impulse*invA*nz;
