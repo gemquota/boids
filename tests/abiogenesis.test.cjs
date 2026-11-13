@@ -33,7 +33,7 @@ test('bond topology resolves connected molecular components',()=>{
 
 test('molecular composition is derived from constituent atoms and bonds',()=>{
   const molecule=bio.normalizeMolecule({id:'m1',atoms:[particle('c1','C'),particle('h1','H'),particle('o1','O')],bonds:[{a:'c1',b:'h1'},{a:'c1',b:'o1'}]});
-  assert.deepEqual(molecule.composition,{C:1,H:1,O:1});
+  assert.deepEqual(molecule.composition,{C:1,H:1,O:1});assert.deepEqual(molecule.atoms[0].bonds,['h1','o1']);assert.deepEqual(molecule.atoms[1].bonds,['c1']);
   assert.throws(()=>bio.normalizeMolecule({atoms:[particle('x')],bonds:[{a:'x',b:'missing'}]}),/missing/);
 });
 
@@ -184,4 +184,11 @@ test('elemental valence defaults reflect the element identity',()=>{
   assert.equal(bio.normalizeParticle({id:'n',element:'N'}).valence,3);
   assert.equal(bio.normalizeParticle({id:'o',element:'O'}).valence,2);
   assert.equal(bio.normalizeParticle({id:'s',element:'S'}).valence,2);
+});
+
+test('molecule construction rejects duplicate bonds and over-valent atom topology',()=>{
+  const a=bio.normalizeParticle({id:'a',element:'H'}),b=bio.normalizeParticle({id:'b',element:'H'});
+  assert.throws(()=>bio.normalizeMolecule({atoms:[a,b],bonds:[{a:'a',b:'b'},{a:'b',b:'a'}]}),/Duplicate/);
+  const c=bio.normalizeParticle({id:'c',element:'C'}),h1=bio.normalizeParticle({id:'h1',element:'H'}),h2=bio.normalizeParticle({id:'h2',element:'H'});
+  assert.throws(()=>bio.normalizeMolecule({atoms:[c,h1,h2],bonds:[{a:'c',b:'h1'},{a:'c',b:'h2'},{a:'h1',b:'h2'}]}),/valence/);
 });
