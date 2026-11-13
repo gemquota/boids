@@ -139,7 +139,7 @@
 
   function createSeededRandom(seed=1){let state=(Number(seed)>>>0)||0x6d2b79f5;const random=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296};Object.defineProperty(random,'state',{get:()=>state>>>0});random.setState=value=>{state=(Number(value)>>>0)||0x6d2b79f5};return random}
   function snapshotParticleWorld(world){return clone({particles:world.particles,bonds:world.bonds,resourceClouds:world.resourceClouds||[],molecules:world.molecules||[],energySources:world.energySources||[],compartments:world.compartments||[],time:world.time,stats:world.stats})}
-  function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,resourceClouds:snapshot.resourceClouds||[],molecules:snapshot.molecules||[],energySources:snapshot.energySources||[],compartments:snapshot.compartments||[],time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,energyHarvested:0,energyDissipated:0,...(snapshot.stats||{})};return world}
+  function restoreParticleWorld(snapshot){const world=createParticleWorld(snapshot.particles,{bonds:snapshot.bonds,resourceClouds:snapshot.resourceClouds||[],molecules:snapshot.molecules||[],energySources:snapshot.energySources||[],compartments:snapshot.compartments||[],time:snapshot.time});world.stats={steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,energyHarvested:0,energyDissipated:0,compartmentDivisions:0,divisionFailures:0,...(snapshot.stats||{})};return world}
   function normalizeEnergySource(input){
     if(!input||input.id===undefined)throw new TypeError('Energy source requires a stable ID');
     return {id:String(input.id),type:String(input.type||'environmental'),energy:Math.max(0,finite(input.energy)),efficiency:clamp(finite(input.efficiency,.5),.001,1),metadata:input.metadata&&typeof input.metadata==='object'?clone(input.metadata):{}};
@@ -350,7 +350,7 @@
     const resourceGroups=[],seen=new Set(),moleculeByAtom=new Map();for(const m of world.molecules||[])for(const id of m.atomIds)moleculeByAtom.set(id,m);
     for(const id of cloud.particleIds){if(seen.has(id))continue;const m=moleculeByAtom.get(id),group=m&&m.atomIds.every(atomId=>cloud.particleIds.includes(atomId))?m.atomIds:[id];group.forEach(atomId=>seen.add(atomId));resourceGroups.push(group)}
     const freeA=[],freeB=[];resourceGroups.forEach((group,i)=>(i%2?freeB:freeA).push(...group));
-    const remainingEnergy=Math.max(0,cloud.energy-cost),energyA=remainingEnergy*.5,energyB=remainingEnergy-energyA,generation=parent.generation+1;
+    const remainingEnergy=Math.max(0,cloud.energy-cost),energyA=remainingEnergy*.5,energyB=remainingEnergy-energyA,generation=parent.generation+1;world.stats.energyDissipated=(world.stats.energyDissipated||0)+cost;
     const ownerA=parent.ownerId+'-'+generation+'a',ownerB=parent.ownerId+'-'+generation+'b';
     cloud.particleIds=[];cloud.energy=0;cloud.metadata.retired=true;
     const childCloudA=createResourceCloud(world,ownerA,freeA,{id:'cloud-'+ownerA,energy:energyA,energyCapacity:cloud.energyCapacity,metadata:{...cloud.metadata,retired:false,permeability:parent.permeability}});
@@ -398,7 +398,7 @@
     const resourceClouds=(options.resourceClouds||[]).map(c=>normalizeResourceCloud(c,ids));
     const owned=new Set();for(const cloud of resourceClouds)for(const id of cloud.particleIds){if(owned.has(id))throw new Error('Particle cannot belong to multiple resource clouds');owned.add(id)}
     const molecules=(options.molecules||[]).map(m=>clone(m)),energySources=(options.energySources||[]).map(normalizeEnergySource),compartments=(options.compartments||[]).map(c=>clone(c));
-    return {particles,bonds,resourceClouds,molecules,energySources,compartments,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,energyHarvested:0,energyDissipated:0}};
+    return {particles,bonds,resourceClouds,molecules,energySources,compartments,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0,energyHarvested:0,energyDissipated:0,compartmentDivisions:0,divisionFailures:0}};
   }
   function stepParticleWorld(world,dt,options={}){
     dt=clamp(finite(dt),0,.05);if(!world||!Array.isArray(world.particles)||!Array.isArray(world.bonds))throw new TypeError('Invalid particle world');
