@@ -86,7 +86,7 @@
     const energy=finite(reaction.energyDelta);
     if(energy>finite(options.availableEnergy,Infinity))return {occurred:false,reason:'insufficient-energy'};
     for(const [type,amount] of demand){let left=amount;for(const item of pool){if(item.type!==type||left<=0)continue;const used=Math.min(item.amount,left);item.amount-=used;left-=used}}
-    for(const output of reaction.outputs){let item=pool.find(p=>p.type===output.type);if(!item){item={type:output.type,amount:0};pool.push(item)}item.amount+=output.amount}
+    for(const output of reaction.outputs){let item=pool.find(p=>p.type===output.type);if(!item){item={type:output.type,amount:0};pool.push(item)}item.amount+=finite(output.amount)}
     return {occurred:true,energyDelta:energy,products:reaction.outputs.map(clone)};
   }
   function polymerise(monomers,bonds,sequence,options={}){
