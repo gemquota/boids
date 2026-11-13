@@ -5,6 +5,7 @@
 **Live simulation:** https://gemquota.github.io/boids/  
 **Advanced vision laboratory:** https://gemquota.github.io/boids/vision-lab.html  
 **Minimal vision laboratory:** https://gemquota.github.io/boids/vision-minimal.html  
+**Abiogenesis laboratory:** [particle physics and dynamic bonding](abiogenesis-lab.html)  
 **Repository:** https://github.com/gemquota/boids
 
 BOIDS is a deterministic, worker-driven ecosystem experiment. A single population of boids moves, forages on plant biomass, competes, chooses mates, reproduces, and experiences conspecific predation. Hunting is a behavioural strategy within the population, not a separate predator caste.
@@ -24,7 +25,7 @@ BOIDS is a deterministic, worker-driven ecosystem experiment. A single populatio
 - Population telemetry for binned trait-allele frequencies/richness, expected gene diversity, pedigree inbreeding, preliminary mid-parent heritability based on parental traits recorded at conception with sample sizes and t-based regression-slope intervals, delayed-entry Kaplan–Meier all-cause survival, provisional additive/phenotypic variance and covariance summaries, species entropy, and a reproductive-skew-adjusted effective-breeder index from inverse-Simpson parental contributions by sex, with persisted lifetime contribution and parent-sex state.
 - Plant-only basal renewable resources, clonal plant growth/spores, freshwater networks, thirst, seasonal variation, reefs/shelter, and conspecific predation.
 - Observatory panels for population, reproduction, genetics, species, neural topology, and run history.
-- Browser-local IndexedDB world snapshots. Worker snapshot schema is **22**; the browser storage envelope has its own schema version.
+- Browser-local IndexedDB world snapshots. Worker snapshot schema is **23**; the browser storage envelope has its own schema version.
 
 ## Configuration
 
@@ -41,8 +42,8 @@ That is 190 unique numeric controls. Do not hand-maintain a separate count in UI
 | File | Responsibility |
 |---|---|
 | `index.html` | UI, drawers, Observatory, browser persistence, worker messaging |
-| `boids-worker.js` | Simulation orchestration, ecology, reproduction, live telemetry, snapshot export/restore |
-| `evolution.js` | Pure variable-genome, NEAT, regulatory/statistical and experiment-analysis primitives |
+| `boids-worker.js` | Simulation orchestration, ecology, reproduction, live telemetry, snapshot export/restore, isolated abiogenesis particle channel |
+| `abiogenesis.js` | Spatial particle physics, dynamic bonding, molecular chemistry, compartments and emergent capability graph |\n| `evolution.js` | Pure variable-genome, NEAT, regulatory/statistical and experiment-analysis primitives |
 | `genetics.js` | Ten-locus trait schema, expression curves, inheritance and trait helpers |
 | `chromosome.js` | Typed hexadecimal gene-record codec |
 | `config-schema.js` | Shared control definitions, field guide and dependency normalization |
@@ -61,7 +62,7 @@ This is an exploratory agent-based artificial ecology, **not a biologically cali
 - Experiment statistics and deterministic sweep helpers exist, but isolated multi-replicate experiment-world orchestration, full replay archives, and experiment UI are not complete.
 - Habitat gradients, nutrients, fragmentation, and controlled disturbance scenarios remain limited compared with the plant/freshwater baseline.
 
-See [implementation status](docs/IMPLEMENTATION-STATUS.md), [master backlog](docs/IMPLEMENTATION-BACKLOG.md), [architecture](docs/ARCHITECTURE.md), [snapshot migration contract](docs/SNAPSHOT-MIGRATION.md), [telemetry and exports](docs/TELEMETRY-EXPORTS.md), [performance baseline](docs/PERFORMANCE-BASELINE.md), [genetics](docs/GENETICS.md), [configuration](docs/CONFIGURATION.md), and [validation](docs/VALIDATION.md).
+See [abiogenesis architecture](docs/Abiogenesis.md), [implementation status](docs/IMPLEMENTATION-STATUS.md), [master backlog](docs/IMPLEMENTATION-BACKLOG.md), [architecture](docs/ARCHITECTURE.md), [snapshot migration contract](docs/SNAPSHOT-MIGRATION.md), [telemetry and exports](docs/TELEMETRY-EXPORTS.md), [performance baseline](docs/PERFORMANCE-BASELINE.md), [genetics](docs/GENETICS.md), [configuration](docs/CONFIGURATION.md), and [validation](docs/VALIDATION.md).
 
 ## Development and validation
 
