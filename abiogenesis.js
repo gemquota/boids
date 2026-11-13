@@ -257,10 +257,10 @@
       for(const bond of checked.bonds){const pair=[bond.a,bond.b].sort().join('|');if(plannedPairs.has(pair)||world.bonds.some(b=>!removedBonds.has(b.id)&&((b.a===bond.a&&b.b===bond.b)||(b.a===bond.b&&b.b===bond.a))))throw new Error('Reaction output duplicates an existing bond');plannedPairs.add(pair);
         for(const id of [bond.a,bond.b]){const atom=world.particles.find(p=>p.id===id),count=baseCounts.get(id)||0;if(count>=atom.valence)throw new Error('Reaction output exceeds atom valence');baseCounts.set(id,count+1)}}
     }
-    for(const molecule of inputs)for(const id of molecule.bondIds||[])if(world.bonds.some(b=>b.id===id))breakBond(world.particles,world.bonds,id);
-    world.molecules=retained;cloud.energy-=cost;
-    const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy),created=[],plannedEnergies=outputs.map(output=>Math.max(0,finite(output.energy,productEnergy/outputs.length)));
+    const totalEnergy=inputs.reduce((n,m)=>n+m.energy,0),productEnergy=Math.max(0,totalEnergy),plannedEnergies=outputs.map(output=>Math.max(0,finite(output.energy,productEnergy/outputs.length)));
     if(plannedEnergies.reduce((sum,value)=>sum+value,0)>totalEnergy+1e-9)throw new Error('Reaction cannot create molecular energy');
+    for(const molecule of inputs)for(const id of molecule.bondIds||[])if(world.bonds.some(b=>b.id===id))breakBond(world.particles,world.bonds,id);
+    world.molecules=retained;cloud.energy-=cost;const created=[];
     for(let i=0;i<outputs.length;i++){const output=outputs[i];
       created.push(craftMolecule(world,cloudId,output.atomIds,output.bonds||[],{...output,id:outputIds[i],energy:plannedEnergies[i]}))}
     return {occurred:true,consumed:inputs.map(m=>m.id),products:created.map(m=>m.id),atomIds:outputAtoms,energyCost:cost,energyReleased:Math.max(0,totalEnergy-plannedEnergies.reduce((sum,value)=>sum+value,0))};
