@@ -45,7 +45,7 @@ The code represents prerequisites as a dependency graph. Observed capabilities a
 
 A dedicated `abiogenesis-worker.js` runs the particle engine independently of the organism worker:
 
-- `{type:'abiogenesis:init', seed, particles, bonds, resourceClouds}` creates the particle world.
+- `{type:'abiogenesis:init', seed, particles, bonds, resourceClouds, molecules}` creates the particle world.
 - `{type:'abiogenesis:step', steps, dt, options, includeWorld}` advances up to 240 fixed substeps (each with dt greater than 0 and no more than 0.05 seconds) and returns telemetry; set `includeWorld:true` to include a full state snapshot.
 - `{type:'abiogenesis:snapshot', requestId}` returns serialisable particle/bond state plus the deterministic random-generator state.
 - `{type:'abiogenesis:restore', world, randomState}` restores both simulation state and random stream.
@@ -64,4 +64,12 @@ At each microscopic step, pass moving cell anchors through `options.cellAnchors`
 - Particle-world snapshots preserve cloud ownership and transport settings.
 - The worker accepts `resourceClouds` during initialization; cell anchors are supplied with normal step options.
 
-The lab demonstrates a moving cell anchor with a highlighted subset of particles carried in its loose cloud. This is the transport/ownership foundation, not yet a full metabolic inventory: reaction-driven crafting, selective uptake, resource production and biologically regulated exchange remain separate follow-on systems.
+The lab now demonstrates a moving cell anchor and an interactive stockpile:
+- `collectResources(world, cloudId, anchor, options)` selectively acquires nearby unowned particles by radius, element and count. Existing molecules are collected as intact groups.
+- `resourceInventory(world, cloudId)` reports carried atom IDs, elemental composition, compound tags, molecule count, mass and stored energy.
+- `craftMolecule(world, cloudId, atomIds, bonds, options)` creates an explicit molecule record and physical bonds while retaining every atom's identity.
+- `rearrangeMolecules(world, cloudId, inputIds, outputs, options)` transforms compounds by breaking and rebuilding bonds. Every input atom must appear exactly once in the outputs, and the reaction is validated before mutation.
+- Transferring one atom that belongs to a molecule transfers the entire molecule, avoiding accidental fragmentation.
+- Consuming a molecular constituent disassembles the molecule record and removes its attached bonds safely.
+
+The worker exposes `abiogenesis:collect`, `abiogenesis:inventory`, `abiogenesis:craft` and `abiogenesis:react` messages. These provide actual selective uptake, inventory and atom-conserving molecular crafting. Stored-energy harvesting, metabolism, selective membrane transport and regulated cell growth/division remain later milestones.
