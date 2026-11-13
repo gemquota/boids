@@ -27,7 +27,7 @@
   function normalizeBond(input){
     if(!input||input.a===undefined||input.b===undefined||String(input.a)===String(input.b))throw new TypeError('Bond requires two distinct endpoints');
     const type=BOND_TYPES.has(input.type)?input.type:'covalent';
-    return {id:String(input.id===undefined?[input.a,input.b].sort().join('~'):input.id),a:String(input.a),b:String(input.b),type,
+    return {id:String(input.id===undefined?JSON.stringify([String(input.a),String(input.b)].sort()):input.id),a:String(input.a),b:String(input.b),type,
       strength:clamp(finite(input.strength,1),0,1000),elasticity:clamp(finite(input.elasticity,.5),0,1),
       damping:clamp(finite(input.damping,.1),0,1),restLength:Math.max(0,finite(input.restLength,0)),
       energy:Math.max(0,finite(input.energy)),formedAt:finite(input.formedAt),metadata:input.metadata&&typeof input.metadata==='object'?clone(input.metadata):{}};
@@ -76,7 +76,7 @@
     for(const bond of bonds){
       const a=byId.get(bond.a),b=byId.get(bond.b);
       if(!a||!b)throw new Error('Molecular bond endpoint is missing');
-      const pair=[bond.a,bond.b].sort().join('~');if(pairs.has(pair))throw new Error('Duplicate molecular bond');pairs.add(pair);
+      const pair=JSON.stringify([bond.a,bond.b].sort());if(pairs.has(pair))throw new Error('Duplicate molecular bond');pairs.add(pair);
       if(a.bonds.length>=a.valence||b.bonds.length>=b.valence)throw new Error('Molecular topology exceeds atom valence');
       a.bonds.push(b.id);b.bonds.push(a.id);
     }
