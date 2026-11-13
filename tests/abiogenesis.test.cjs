@@ -338,3 +338,41 @@ test('failed molecule crafting leaves existing particles and bonds unchanged',()
   assert.equal(world.bonds.length,before);
   assert.equal(world.molecules.length,1);
 });
+
+
+test('environmental energy harvesting conserves source energy and accounts for inefficiency',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['c'],{energy:0,energyCapacity:5});
+  const source=bio.createEnergySource(world,{id:'sunlight',type:'light',energy:20,efficiency:.5});
+  const result=bio.harvestEnergy(world,cloud.id,source.id,3);
+  assert.equal(result.stored,3);
+  assert.equal(result.consumed,6);
+  assert.equal(result.dissipated,3);
+  assert.equal(source.energy,14);
+  assert.equal(cloud.energy,3);
+  assert.equal(world.stats.energyDissipated,3);
+});
+test('metabolism converts molecular stored energy into cell energy and heat without creating energy',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'},{id:'h',element:'H'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['c','h'],{energy:0,energyCapacity:5});
+  bio.craftMolecule(world,cloud.id,['c','h'],[{a:'c',b:'h'}],{id:'fuel',type:'fuel',energy:5});
+  const result=bio.metabolizeMolecules(world,cloud.id,['fuel'],[
+    {id:'spent',type:'spent',atomIds:['c','h'],bonds:[{a:'c',b:'h'}],energy:1}
+  ],{captureEfficiency:.5});
+  assert.equal(result.energyReleased,4);
+  assert.equal(result.energyHarvested,2);
+  assert.equal(result.heatDissipated,2);
+  assert.equal(cloud.energy,2);
+  assert.equal(world.molecules[0].energy,1);
+  assert.equal(world.stats.energyHarvested,2);
+  assert.equal(world.stats.energyDissipated,2);
+});
+test('energy sources and metabolic state survive particle-world snapshots',()=>{
+  const world=bio.createParticleWorld([{id:'a',element:'N'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['a'],{energy:2,energyCapacity:9});
+  bio.createEnergySource(world,{id:'gradient',type:'chemical-gradient',energy:7,efficiency:.8});
+  bio.harvestEnergy(world,cloud.id,'gradient',1);
+  const restored=bio.restoreParticleWorld(bio.snapshotParticleWorld(world));
+  assert.equal(restored.energySources[0].energy,5.75);
+  assert.equal(restored.resourceClouds[0].energy,3);
+});
