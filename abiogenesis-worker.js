@@ -17,6 +17,24 @@ onmessage=event=>{
       postMessage({type:'abiogenesis:ready',...summary()});
       return;
     }
+    if(message.type==='abiogenesis:compartment-create'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const compartment=BoidsAbiogenesis.createCompartment(world,message.cloudId,message.options||{});
+      postMessage({type:'abiogenesis:compartment-created',requestId:message.requestId,compartment,world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:compartment-grow'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const result=BoidsAbiogenesis.growCompartment(world,message.cloudId,message.compartmentId,message.lipidMoleculeIds||[],message.options||{});
+      postMessage({type:'abiogenesis:compartment-grown',requestId:message.requestId,result,world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:compartment-divide'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const result=BoidsAbiogenesis.divideCompartment(world,message.cloudId,message.compartmentId,message.options||{});
+      postMessage({type:'abiogenesis:compartment-divided',requestId:message.requestId,result,world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
+      return;
+    }
     if(message.type==='abiogenesis:exchange'){
       if(!world)throw new Error('Abiogenesis world has not been initialized');
       const result=BoidsAbiogenesis.exchangeResource(world,message.fromCloudId,message.toCloudId,message.particleId,message.anchors,message.options||{});
