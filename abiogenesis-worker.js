@@ -5,7 +5,7 @@ let world=null,random=null;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 function summary(){
-  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,resourceCloudCount:(world.resourceClouds||[]).length};
+  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,moleculeCount:(world.molecules||[]).length,resourceCloudCount:(world.resourceClouds||[]).length,carriedParticleCount:(world.resourceClouds||[]).reduce((n,c)=>n+c.particleIds.length,0)};
 }
 
 onmessage=event=>{
@@ -13,7 +13,7 @@ onmessage=event=>{
   try{
     if(message.type==='abiogenesis:init'){
       random=BoidsAbiogenesis.createSeededRandom(message.seed??1);
-      world=BoidsAbiogenesis.createParticleWorld(message.particles||[],{bonds:message.bonds||[],resourceClouds:message.resourceClouds||[],time:message.time||0});
+      world=BoidsAbiogenesis.createParticleWorld(message.particles||[],{bonds:message.bonds||[],resourceClouds:message.resourceClouds||[],molecules:message.molecules||[],time:message.time||0});
       postMessage({type:'abiogenesis:ready',...summary()});
       return;
     }
