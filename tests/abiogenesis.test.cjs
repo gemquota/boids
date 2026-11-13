@@ -463,3 +463,16 @@ test('failed compartment division records a failure without fabricating offsprin
   assert.equal(result.occurred,false);assert.equal(result.reason,'insufficient-membrane');
   assert.equal(world.compartments.length,1);assert.equal(world.stats.divisionFailures,1);
 });
+
+
+test('reaction energy-budget rejection occurs before bonds, molecules or reserves mutate',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'},{id:'h',element:'H'}]);
+  const cloud=bio.createResourceCloud(world,'cell-1',['c','h'],{energy:4});
+  bio.craftMolecule(world,cloud.id,['c','h'],[{a:'c',b:'h'}],{id:'fuel',energy:1});
+  assert.throws(()=>bio.rearrangeMolecules(world,cloud.id,['fuel'],[
+    {id:'impossible',type:'product',atomIds:['c','h'],bonds:[{a:'c',b:'h'}],energy:5}
+  ],{energyCost:2}),/cannot create molecular energy/i);
+  assert.equal(world.molecules[0].id,'fuel');
+  assert.equal(world.bonds.length,1);
+  assert.equal(cloud.energy,4);
+});
