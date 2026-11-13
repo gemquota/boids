@@ -109,11 +109,11 @@ test('particle-world snapshots preserve identities and deterministic continuatio
     bio.normalizeParticle({id:'x',position:{x:0,y:0,z:0},velocity:{x:.1,y:0,z:0}}),
     bio.normalizeParticle({id:'y',position:{x:1,y:0,z:0},velocity:{x:-.1,y:0,z:0}})
   ],{bonds:[{a:'x',b:'y',restLength:1,strength:2}]});
-  const a=make(),b=make(),rngA=bio.createSeededRandom(123),rngB=bio.createSeededRandom(123);
+  const a=make(),b=make(),rngA=()=>.5,rngB=()=>.5;
   bio.stepParticleWorld(a,.01,{thermalJitter:.02,random:rngA});
   bio.stepParticleWorld(b,.01,{thermalJitter:.02,random:rngB});
   const restored=bio.restoreParticleWorld(bio.snapshotParticleWorld(a));
-  assert.deepEqual(restored.particles,a.particles);assert.deepEqual(restored.bonds,a.bonds);
+  assert.deepEqual(restored.particles,a.particles);assert.deepEqual(restored.bonds,a.bonds);assert.deepEqual(restored.particles[0].bonds,['y']);
   bio.stepParticleWorld(a,.01,{thermalJitter:.02,random:rngA});
   bio.stepParticleWorld(b,.01,{thermalJitter:.02,random:rngB});
   assert.deepEqual(b.particles,a.particles);assert.deepEqual(b.bonds,a.bonds);
@@ -126,4 +126,11 @@ test('spatial hash searches enough cells when particles have large radii',()=>{
   ]);
   const stats=bio.stepParticleWorld(world,.001,{cellSize:1,thermalJitter:0,electrostatic:0});
   assert.equal(stats.collisions,1);
+});
+
+test('seeded random streams are reproducible and expose restorable state',()=>{
+  const a=bio.createSeededRandom(987),b=bio.createSeededRandom(987);
+  assert.deepEqual(Array.from({length:8},()=>a()),Array.from({length:8},()=>b()));
+  const state=a.state,restored=bio.createSeededRandom(1);restored.setState(state);
+  assert.equal(restored(),a());
 });
