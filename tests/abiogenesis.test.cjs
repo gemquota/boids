@@ -198,7 +198,7 @@ test('resource clouds remain loosely attached to a moving cell anchor',()=>{
   const particles=[
     {id:'cargo-a',element:'C',mass:1,radius:.2,position:{x:0,y:0},velocity:{x:0,y:0}},
     {id:'cargo-b',element:'O',mass:2,radius:.2,position:{x:2,y:0},velocity:{x:0,y:0}},
-    {id:'free',element:'H',position:{x:0,y:0},velocity:{x:0,y:0}}
+    {id:'free',element:'H',position:{x:-10,y:0},velocity:{x:0,y:0}}
   ];
   const world=bio.createParticleWorld(particles);
   const cloud=bio.createResourceCloud(world,'cell-1',['cargo-a','cargo-b'],{radius:8,followStrength:2,damping:.2});
@@ -206,7 +206,7 @@ test('resource clouds remain loosely attached to a moving cell anchor',()=>{
   for(let i=0;i<30;i++)bio.stepParticleWorld(world,1/60,{thermalJitter:0,cellAnchors:{'cell-1':{position:{x:20,y:0},velocity:{x:0,y:0}}}});
   const a=world.particles.find(p=>p.id==='cargo-a'),free=world.particles.find(p=>p.id==='free');
   assert.ok(a.position.x>0,'owned cargo should follow the cell');
-  assert.equal(free.position.x,0,'unowned particles should not be pulled along');
+  assert.equal(free.position.x,-10,'unowned particles should not be pulled along');
   assert.ok(Math.hypot(a.position.x-20,a.position.y)<20);
 });
 test('resource cloud transfer and consumption preserve explicit material ownership',()=>{
