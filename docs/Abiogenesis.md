@@ -50,4 +50,4 @@ The existing worker exposes an isolated abiogenesis channel alongside the organi
 - `{type:'abiogenesis:snapshot', requestId}` returns serialisable particle/bond state plus the deterministic random-generator state.
 - `{type:'abiogenesis:restore', world, randomState}` restores both simulation state and random stream.
 
-This is an opt-in worker API, not yet a visible in-page laboratory. It intentionally does not apply atom-scale forces to existing organism boids.
+This is an opt-in worker API. The standalone [Abiogenesis Lab](../abiogenesis-lab.html) provides a visual test surface. It intentionally does not apply atom-scale forces to existing organism boids.
