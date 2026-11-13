@@ -46,7 +46,8 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 'use strict';
 const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats');
 const worker=new Worker('abiogenesis-worker.js?v=20261114-lab-controls-v2');
-worker.onerror=e=>{stats.textContent='Worker failed: '+(e.message||'unknown error');console.error(e)};
+worker.onerror=e=>{stats.textContent='Worker failed: '+(e.message||'unknown error')+' · '+(e.filename||'')+':'+(e.lineno||0);console.error(e)};
+worker.onmessageerror=e=>{stats.textContent='Worker message could not be decoded';console.error(e)};
 let lastMoleculeId=null,requestSerial=0;
 try{const seed=JSON.parse(sessionStorage.getItem('boids-emergence-seed')||'null');if(seed&&Array.isArray(seed.particles)&&seed.particles.length){window.__emergenceSeed=seed;}}catch(e){stats.textContent='Could not read primordial export: '+e.message}
 const colors={H:'#68c8d2',C:'#d5a66c',O:'#e47e82',N:'#8da7e8',P:'#b59bd7',S:'#d5c66c',OTHER:'#a4bd8d'};
@@ -68,9 +69,9 @@ function seedWorld(){
  cell.position={x:W*.34,y:H*.5,z:0};cell.velocity={x:13,y:-8,z:0};cell2.position={x:W*.66,y:H*.5,z:0};cell2.velocity={x:-10,y:6,z:0};
  world=null;worker.postMessage({type:'abiogenesis:init',seed:imported?.seed||20261113,particles,bonds:imported?.bonds||[],resourceClouds:[{id:'cell-cargo',ownerId:'cell-1',particleIds:cargoA,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22,energy:8,energyCapacity:30,metadata:{permeability:.65}},{id:'cell-cargo-2',ownerId:'cell-2',particleIds:cargoB,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22,energy:5,energyCapacity:30,metadata:{permeability:.65}}],energySources:[{id:'sunlight',type:'light',energy:500,efficiency:.28}]});
 }
-function draw(){
+function draw(){try{
  ctx.clearRect(0,0,W,H);
- if(!world){requestAnimationFrame(draw);return}
+ if(!world){return}
  const ps=world.particles,bonds=world.bonds;
  for(const [anchor,color] of [[cell,'rgba(87,211,190,.55)'],[cell2,'rgba(131,172,255,.55)']]){ctx.beginPath();ctx.arc(anchor.position.x,anchor.position.y,18,0,Math.PI*2);ctx.fillStyle=color.replace('.55','.14');ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(anchor.position.x,anchor.position.y,5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
  ctx.lineWidth=1.4;
@@ -81,7 +82,7 @@ function draw(){
  }
  for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle=cloudIds.has(p.id)?'rgba(111,255,222,.9)':'rgba(230,246,250,.55)';ctx.lineWidth=cloudIds.has(p.id)?1.5:.8;ctx.stroke()}
  frame++;if(lastStats&&frame%12===0){const cargo=world.resourceClouds?.find(c=>c.id==='cell-cargo'),cargo2=world.resourceClouds?.find(c=>c.id==='cell-cargo-2');stats.textContent=ps.length+' particles · '+(world.molecules?.length||0)+' molecules · '+bonds.length+' bonds · cells '+(cargo?.particleIds.length||0)+' / '+(cargo2?.particleIds.length||0)+' cargo · energy '+(cargo?.energy||0).toFixed(1)+' / '+(cargo2?.energy||0).toFixed(1)+' · '+world.time.toFixed(1)+'s';}
- requestAnimationFrame(draw);
+}catch(error){stats.textContent='Render error: '+(error&&error.message?error.message:String(error));ctx.fillStyle='#08141b';ctx.fillRect(0,0,W,H)}requestAnimationFrame(draw);
 }
 function requestStep(){
  if(busy||paused&&!stepRequested)return;
