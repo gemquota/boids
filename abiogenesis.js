@@ -252,6 +252,7 @@
       if(distance>Math.max(bond.restLength*breakStretch,bond.restLength+1)||f.energy>breakEnergy)broken.push(bond.id);
     }
     for(const id of broken){if(breakBond(ps,world.bonds,id))bondsBroken++}
+    applyResourceCloudForces(world,options.cellAnchors,forces,dt);
     let kineticEnergy=0,thermalEnergy=0;
     for(let i=0;i<n;i++){
       const p=ps[i],f=forces[i],invMass=1/p.mass;
