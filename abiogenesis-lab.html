@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BOIDS · Abiogenesis Lab</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#071018;color:#dce8ee}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#142b36 0%,#071018 65%)}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;border-bottom:1px solid #243943}
+h1{font-size:15px;letter-spacing:.16em;margin:0;font-weight:700}small,.muted{color:#8ca5b1}
+main{max-width:1200px;margin:auto;padding:18px;display:grid;gap:14px}
+.panel{border:1px solid #243943;border-radius:14px;background:#0b1921;overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px;border-bottom:1px solid #243943}
+button{background:#18323d;color:#e6f4f8;border:1px solid #35515c;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+button:hover{background:#244b58}button.primary{background:#23616a;border-color:#3b8790}
+.stat{margin-left:auto;font:12px ui-monospace,monospace;color:#9cb5c0}
+canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;background:radial-gradient(ellipse at 50% 50%,#10232c,#08141b)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;color:#91aab5;font-size:12px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.note{padding:12px 14px;color:#9bb0ba;font-size:12px;line-height:1.5}
+@media(max-width:600px){header{padding:14px}main{padding:10px}.stat{width:100%;margin-left:0}}
+</style>
+</head>
+<body>
+<header><h1>BOIDS <span style="color:#55c7c5">// ABIOGENESIS LAB</span></h1><small>Particle mechanics · dynamic bonding · molecular topology</small></header>
+<main>
+<section class="panel">
+<div class="toolbar">
+<button class="primary" id="toggle">Pause</button><button id="step">Single step</button><button id="reset">Reset world</button>
+<button id="bonding">Bond formation: on</button>
+<span class="stat" id="stats">Initialising worker…</span>
+</div>
+<canvas id="world" width="960" height="620" aria-label="Particle and bond simulation"></canvas>
+<div class="legend">
+<span><i class="dot" style="background:#68c8d2"></i>Hydrogen</span>
+<span><i class="dot" style="background:#d5a66c"></i>Carbon</span>
+<span><i class="dot" style="background:#e47e82"></i>Oxygen</span>
+<span><i class="dot" style="background:#8da7e8"></i>Nitrogen</span>
+<span><i class="dot" style="background:#a4bd8d"></i>Other</span>
+</div>
+<div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor without becoming rigidly attached; its contents can later be transferred, consumed or crafted into structures. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
+</section>
+</main>
+<script>
+'use strict';
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats');
+const worker=new Worker('abiogenesis-worker.js');
+const colors={H:'#68c8d2',C:'#d5a66c',O:'#e47e82',N:'#8da7e8',P:'#b59bd7',S:'#d5c66c',OTHER:'#a4bd8d'};
+let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;\nconst cell={position:{x:W*.5,y:H*.5,z:0},velocity:{x:13,y:-8,z:0}},cloudIds=new Set();
+const W=canvas.width,H=canvas.height;
+function seedWorld(){
+ const elements=['H','H','C','C','O','N','P','S'];
+ const particles=[];
+ for(let i=0;i<76;i++){
+  const a=Math.random()*Math.PI*2,r=35+Math.sqrt(Math.random())*235;
+  const x=W*.5+Math.cos(a)*r,y=H*.5+Math.sin(a)*r;
+  const element=elements[Math.floor(Math.random()*elements.length)];
+  const angle=Math.random()*Math.PI*2,speed=.12+Math.random()*.42;
+  particles.push({id:'atom-'+i,element,mass:element==='H'?.65:element==='O'?1.25:1,radius:element==='H'?4.3:5.5,
+   charge:(element==='O'?-1:element==='H'?1:0)*(Math.random()*.12),valence:element==='H'?1:element==='O'?2:element==='C'?4:3,
+   position:{x,y,z:0},velocity:{x:Math.cos(angle)*speed,y:Math.sin(angle)*speed,z:0},thermalEnergy:.08});
+ }
+ const cargo=particles.slice(0,42).map(p=>p.id);cloudIds.clear();cargo.forEach(id=>cloudIds.add(id));\n cell.position={x:W*.5,y:H*.5,z:0};cell.velocity={x:13,y:-8,z:0};\n world=null;worker.postMessage({type:'abiogenesis:init',seed:20261113,particles,resourceClouds:[{id:'cell-cargo',ownerId:'cell-1',particleIds:cargo,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22}]});
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ if(!world){requestAnimationFrame(draw);return}
+ const ps=world.particles,bonds=world.bonds;
+ ctx.lineWidth=1.4;
+ for(const b of bonds){const a=ps.find(p=>p.id===b.a),c=ps.find(p=>p.id===b.b);if(!a||!c)continue;
+  const stretch=Math.hypot(c.position.x-a.position.x,c.position.y-a.position.y)-b.restLength;
+  ctx.strokeStyle=stretch>3?'rgba(235,119,110,.8)':'rgba(111,198,190,.55)';
+  ctx.beginPath();ctx.moveTo(a.position.x,a.position.y);ctx.lineTo(c.position.x,c.position.y);ctx.stroke();
+ }
+ for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle=cloudIds.has(p.id)?'rgba(111,255,222,.9)':'rgba(230,246,250,.55)';ctx.lineWidth=cloudIds.has(p.id)?1.5:.8;ctx.stroke()}
+ frame++;if(lastStats&&frame%12===0)stats.textContent=ps.length+' particles · '+bonds.length+' bonds · '+lastStats.collisions+' contacts · '+world.time.toFixed(1)+'s';
+ requestAnimationFrame(draw);
+}
+function requestStep(){
+ if(busy||paused&&!stepRequested)return;
+ busy=true;stepRequested=false;
+ cell.position.x+=cell.velocity.x/60;cell.position.y+=cell.velocity.y/60;\n if(cell.position.x<90||cell.position.x>W-90)cell.velocity.x*=-1;if(cell.position.y<90||cell.position.y>H-90)cell.velocity.y*=-1;\n worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellAnchors:{'cell-1':{position:cell.position,velocity:cell.velocity}},cellSize:16,captureRadius:1.5,thermalJitter:.13,electrostatic:18,softening:4,restitution:.72,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.075,bondStrength:.34,bondDamping:.24,breakStretch:2.5}});
+}
+worker.onmessage=e=>{
+ const m=e.data;
+ if(m.type==='abiogenesis:ready'){stats.textContent='Worker ready · '+m.particleCount+' particles';requestStep();return}
+ if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;busy=false;if(!paused)requestStep();return}
+ if(m.type==='abiogenesis:error'){stats.textContent=m.message;busy=false}
+};
+document.getElementById('toggle').onclick=()=>{paused=!paused;document.getElementById('toggle').textContent=paused?'Resume':'Pause';if(!paused)requestStep()};
+document.getElementById('step').onclick=()=>{if(!busy){stepRequested=true;requestStep()}};
+document.getElementById('reset').onclick=seedWorld;
+document.getElementById('bonding').onclick=()=>{bonding=!bonding;document.getElementById('bonding').textContent='Bond formation: '+(bonding?'on':'off')};
+seedWorld();requestAnimationFrame(draw);
+</script>
+</body>
+</html>

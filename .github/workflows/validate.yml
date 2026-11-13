@@ -34,6 +34,10 @@ jobs:
           node --test tests/physics.test.js tests/development.test.js
           node --check hydrology.js
           node tests/hydrology.test.js
+          node --check abiogenesis.js
+          node --check abiogenesis-worker.js
+          node tests/abiogenesis.test.cjs
+          node tests/abiogenesis-worker.test.cjs
           node --check organism-economics.js
           node --check chromosome.js
           node --check config-registry.js
