@@ -17,6 +17,18 @@ onmessage=event=>{
       postMessage({type:'abiogenesis:ready',...summary()});
       return;
     }
+    if(message.type==='abiogenesis:exchange'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const result=BoidsAbiogenesis.exchangeResource(world,message.fromCloudId,message.toCloudId,message.particleId,message.anchors,message.options||{});
+      postMessage({type:'abiogenesis:exchange-result',requestId:message.requestId,result,world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
+      return;
+    }
+    if(message.type==='abiogenesis:diffuse'){
+      if(!world)throw new Error('Abiogenesis world has not been initialized');
+      const transfers=BoidsAbiogenesis.diffuseResources(world,message.anchors,message.options||{});
+      postMessage({type:'abiogenesis:diffused',requestId:message.requestId,transfers,world:BoidsAbiogenesis.snapshotParticleWorld(world),...summary()});
+      return;
+    }
     if(message.type==='abiogenesis:harvest'){
       if(!world)throw new Error('Abiogenesis world has not been initialized');
       const result=BoidsAbiogenesis.harvestEnergy(world,message.cloudId,message.sourceId,message.amount);
