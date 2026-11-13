@@ -5,7 +5,9 @@
 **Live simulation:** https://gemquota.github.io/boids/  
 **Advanced vision laboratory:** https://gemquota.github.io/boids/vision-lab.html  
 **Minimal vision laboratory:** https://gemquota.github.io/boids/vision-minimal.html  
+**Emergence pathway:** [pre-chemical origins through proto-boids](emergence-lab.html)  
 **Abiogenesis laboratory:** [particle physics and dynamic bonding](abiogenesis-lab.html)  
+**Emergence architecture:** [developmental stages and integration](docs/Emergence.md)  
 **Unified emergence engine:** [shared compositional substrate](docs/EMERGENCE-ENGINE.md)  
 **Repository:** https://github.com/gemquota/boids
 

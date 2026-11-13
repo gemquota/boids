@@ -25,6 +25,11 @@ jobs:
           if not vision_match:
               raise SystemExit('Vision lab inline script not found')
           open('/tmp/boids-vision-lab.js', 'w', encoding='utf-8').write(vision_match.group(1))
+          emergence = open('emergence-lab.html', encoding='utf-8').read()
+          emergence_match = re.search(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', emergence, re.S)
+          if not emergence_match:
+              raise SystemExit('Emergence lab inline script not found')
+          open('/tmp/boids-emergence-lab.js', 'w', encoding='utf-8').write(emergence_match.group(1))
           lab = open('abiogenesis-lab.html', encoding='utf-8').read()
           lab_match = re.search(r'<script>(.*?)</script>', lab, re.S)
           if not lab_match:
@@ -34,10 +39,12 @@ jobs:
           node --check /tmp/boids-app.js
           node --check /tmp/boids-vision-lab.js
           node --check /tmp/abiogenesis-lab.js
+          node --check /tmp/boids-emergence-lab.js
+          node --check emergence-pipeline.js
           node --check boids-worker.js
           node --check physics.js
           node --check emergence.js
-          node --test tests/emergence.test.cjs
+          node --test tests/emergence.test.cjs tests/emergence-pipeline.test.cjs
           node --check development.js
           node --test tests/physics.test.js tests/development.test.js
           node --check hydrology.js
