@@ -153,3 +153,13 @@ test('collision positional correction respects inverse mass and preserves centre
   assert.ok(Math.abs((4*a.position.x+b.position.x)-1)<1e-8);
   assert.ok(Math.abs((b.position.x-a.position.x)-2)<1e-8);
 });
+
+test('reaction stoichiometry aggregates repeated reactants before consuming anything',()=>{
+  const pool=[{type:'A',amount:3},{type:'A',amount:.5}];
+  const reaction={inputs:[{type:'A',amount:2},{type:'A',amount:2}],outputs:[{type:'B',amount:1}]};
+  assert.equal(bio.applyReaction(pool,reaction).reason,'insufficient-reactants');
+  assert.equal(pool.reduce((n,p)=>n+p.amount,0),3.5);
+  pool[1].amount=.5;pool.push({type:'A',amount:1});
+  const ok=bio.applyReaction(pool,reaction);assert.equal(ok.occurred,true);
+  assert.equal(pool.filter(p=>p.type==='A').reduce((n,p)=>n+p.amount,0),.5);
+});
