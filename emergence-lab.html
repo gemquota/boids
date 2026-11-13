@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#06111a"><title>BOIDS · Emergence</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#06111a;color:#e3eef1}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#12313c,#06111a 68%)}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #29414b}
+h1{font-size:14px;letter-spacing:.18em;margin:0}a{color:#82e9d3;text-decoration:none}main{max-width:1200px;margin:auto;padding:14px;display:grid;gap:12px}
+.panel{border:1px solid #29414b;border-radius:14px;background:#0a1b24;overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;gap:7px;padding:11px;border-bottom:1px solid #29414b}
+button{background:#17333e;color:#e5f4f7;border:1px solid #365661;border-radius:8px;padding:9px 12px;font:inherit;font-size:12px;cursor:pointer}
+button:hover{background:#24515c}button:disabled{opacity:.4;cursor:not-allowed}.primary{background:#1d5a60;border-color:#3e9691}
+canvas{display:block;width:100%;height:min(60vh,620px);min-height:340px;background:#07131a}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;padding:10px}
+.metric{padding:8px;background:#ffffff08;border:1px solid #ffffff10;border-radius:8px}.metric b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.metric small{color:#91a9b3;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.stages{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px}
+.stage{padding:10px;border:1px solid #ffffff16;border-radius:9px;background:#ffffff05;min-width:0}.stage.active{border-color:#6ce4c5;background:#6ce4c510}.stage.done{border-color:#7cae9a}.stage strong{display:block;font-size:10px;letter-spacing:.1em}.stage small{display:block;color:#90a7b1;font-size:9px;line-height:1.4;margin-top:5px}
+.log{max-height:140px;overflow:auto;padding:10px 14px;font:11px ui-monospace,monospace;color:#a8c2c9;white-space:pre-wrap}
+.note{padding:12px 14px;color:#92aab4;font-size:11px;line-height:1.55}
+#error{color:#ffaaa4;padding:8px 14px;min-height:20px;font-size:11px}
+@media(max-width:650px){header{padding:12px}main{padding:8px}.stats{grid-template-columns:repeat(3,1fr)}.stages{grid-template-columns:repeat(2,1fr)}canvas{height:48vh;min-height:300px}}
+</style></head><body>
+<header><h1>BOIDS <span style="color:#73e5ce">// EMERGENCE</span></h1><small><a href="./">← Return to evolutionary field</a></small></header>
+<main>
+<section class="panel">
+<div class="toolbar">
+<button id="toggle" class="primary">Pause</button><button id="step">Step</button><button id="reset">Reset primordial world</button>
+<button id="aggregate">Aggregation pulse</button><button id="catalyse">Mineral catalysis</button><button id="release">Desorb</button>
+<button id="chemistry" disabled>Advance to chemistry</button><button id="main">Open Boids field</button>
+</div>
+<canvas id="world" width="960" height="620" aria-label="Pre-chemical primordial particle world"></canvas>
+<div class="stats">
+<div class="metric"><b id="count">0</b><small>entities</small></div><div class="metric"><b id="bonds">0</b><small>adhesions</small></div><div class="metric"><b id="clusters">0</b><small>clusters</small></div><div class="metric"><b id="largest">0</b><small>largest aggregate</small></div><div class="metric"><b id="adsorbed">0</b><small>surface bound</small></div><div class="metric"><b id="energy">0</b><small>energy reserve</small></div>
+</div>
+<div class="stages">
+<div class="stage active" id="s0"><strong>01 · PRE-CHEMISTRY</strong><small>Diffusion, thermal motion, mineral adsorption, aggregation and energy gradients</small></div>
+<div class="stage" id="s1"><strong>02 · CHEMISTRY</strong><small>Atom identity, valence, bonds, molecules, reactions and metabolism</small></div>
+<div class="stage" id="s2"><strong>03 · PROTOCELL</strong><small>Amphiphile compartments, selective exchange and division</small></div>
+<div class="stage" id="s3"><strong>04 · PRE-BOID</strong><small>Persistent compartments with internal state and rudimentary sensing</small></div>
+<div class="stage" id="s4"><strong>05 · PROTO-BOID</strong><small>Motility, resource-seeking and heritable behavioural variation</small></div>
+</div>
+<div id="error" role="status" aria-live="polite"></div>
+<div class="note">This is the early emergence layer for BOIDS, not a claim that life appeared through one fixed ladder. The primordial stage models pre-chemical physical organisation. Advancing exports its constituents into the existing atom-and-molecule engine. Later stages require demonstrated structures and capabilities, not merely a stage label. Microscopic forces remain isolated from the macroscopic boid worker.</div>
+<div class="log" id="log">Initialising primordial substrate…</div>
+</section>
+</main>
+<script src="./emergence-pipeline.js?v=20261114-prechem-v1"></script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),canvas=$('world'),ctx=canvas.getContext('2d');
+if(!ctx){$('error').textContent='Canvas 2D context unavailable.';return}
+let world,paused=false,last=0,raf=0,stage=0,chemistrySeed=null;
+const colors={monomer:'#75cbd0',amphiphile:'#e3bb78',mineral:'#9a9fe0',catalyst:'#c18cce',energy:'#f2d779'};
+function log(s){const el=$('log');el.textContent=(s+'\n'+el.textContent).slice(0,2500)}
+function reset(){if(raf)cancelAnimationFrame(raf);world=new BoidsEmergencePipeline.PrimordialWorld({width:960,height:620,seed:20261114,count:180});stage=0;chemistrySeed=null;update();$('error').textContent='';$('chemistry').disabled=true;for(let i=0;i<5;i++)$('s'+i).classList.toggle('active',i===0);$('s0').classList.remove('done');log('Primordial substrate reset.');last=0;if(!paused)raf=requestAnimationFrame(loop)}
+function update(){const m=world.metrics();for(const [id,value] of Object.entries({count:m.count,bonds:m.bonds,clusters:m.clusters,largest:m.largestCluster,adsorbed:m.adsorbed,energy:m.energy.toFixed(1)}))$(id).textContent=value;
+ctx.clearRect(0,0,canvas.width,canvas.height);
+for(const e of world.entities){if(e.adsorbed){const parent=world.entities.find(p=>p.id===e.adsorbed);if(parent){ctx.strokeStyle='#ffffff45';ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(parent.x,parent.y);ctx.stroke()}}
+ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fillStyle=colors[e.kind];ctx.globalAlpha=e.kind==='energy'?.45:.88;ctx.fill();ctx.globalAlpha=1;if(e.bonds.length){ctx.strokeStyle='#9af0d4';ctx.lineWidth=1;ctx.stroke()}}
+for(const c of world.clusters){if(c.size<4)continue;const members=c.members.map(id=>world.entities.find(e=>e.id===id)).filter(Boolean);if(!members.length)continue;const x=members.reduce((n,e)=>n+e.x,0)/members.length,y=members.reduce((n,e)=>n+e.y,0)/members.length;ctx.strokeStyle='rgba(126,235,202,.25)';ctx.beginPath();ctx.arc(x,y,Math.max(...members.map(e=>Math.hypot(e.x-x,e.y-y)))+8,0,Math.PI*2);ctx.stroke()}
+}
+function loop(now){if(paused)return;const dt=Math.min(.05,(now-(last||now))/1000);last=now;world.step(dt);update();raf=requestAnimationFrame(loop)}
+function act(fn,label){try{const result=fn();update();log(label+': '+result);$('error').textContent='';$('chemistry').disabled=world.metrics().largestCluster<4}catch(e){$('error').textContent=e.message||String(e)}}
+$('toggle').onclick=()=>{paused=!paused;$('toggle').textContent=paused?'Resume':'Pause';if(!paused){last=0;raf=requestAnimationFrame(loop)}else cancelAnimationFrame(raf)};
+$('step').onclick=()=>{paused=true;$('toggle').textContent='Resume';world.step(1/30);update()};
+$('reset').onclick=reset;
+$('aggregate').onclick=()=>act(()=>world.aggregate(),'Aggregation pulse');
+$('catalyse').onclick=()=>act(()=>world.catalyse(),'Mineral catalysis');
+$('release').onclick=()=>act(()=>world.release(),'Desorption');
+$('chemistry').onclick=()=>{chemistrySeed=world.chemistrySeed();try{sessionStorage.setItem('boids-emergence-seed',JSON.stringify(chemistrySeed))}catch(e){}log('Exported '+chemistrySeed.particles.length+' persistent constituents to the chemistry stage.');location.href='./abiogenesis-lab.html?from=emergence'};
+$('main').onclick=()=>location.href='./';
+function resize(){const dpr=Math.min(devicePixelRatio||1,1.5),rect=canvas.getBoundingClientRect();canvas.width=Math.max(1,Math.floor(rect.width*dpr));canvas.height=Math.max(1,Math.floor(rect.height*dpr));ctx.setTransform(canvas.width/960,0,0,canvas.height/620,0,0);update()}
+addEventListener('resize',resize);reset();resize();
+})();
+</script></body></html>
