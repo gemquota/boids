@@ -65,7 +65,7 @@ function seedWorld(){
   const angle=Math.random()*Math.PI*2,speed=.12+Math.random()*.42;
   particles.push({id:'atom-'+i,element,mass:element==='H'?.65:element==='O'?1.25:1,radius:element==='H'?4.3:5.5,charge:(element==='O'?-1:element==='H'?1:0)*(Math.random()*.12),valence:element==='H'?1:element==='O'?2:element==='C'?4:3,position:{x,y,z:0},velocity:{x:Math.cos(angle)*speed,y:Math.sin(angle)*speed,z:0},thermalEnergy:.08});
  }
- const split=Math.max(1,Math.floor(particles.length*.22)),cargoA=particles.slice(0,split).map(p=>p.id),cargoB=particles.slice(split,split*2).map(p=>p.id);cloudIds.clear();[...cargoA,...cargoB].forEach(id=>cloudIds.add(id));
+ const split=Math.max(1,Math.floor(particles.length*.4)),cargoA=particles.slice(0,split).map(p=>p.id),cargoB=particles.slice(split,split*2).map(p=>p.id);cloudIds.clear();[...cargoA,...cargoB].forEach(id=>cloudIds.add(id));
  cell.position={x:W*.34,y:H*.5,z:0};cell.velocity={x:13,y:-8,z:0};cell2.position={x:W*.66,y:H*.5,z:0};cell2.velocity={x:-10,y:6,z:0};
  world=null;worker.postMessage({type:'abiogenesis:init',seed:imported?.seed||20261113,particles,bonds:imported?.bonds||[],resourceClouds:[{id:'cell-cargo',ownerId:'cell-1',particleIds:cargoA,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22,energy:8,energyCapacity:30,metadata:{permeability:.65}},{id:'cell-cargo-2',ownerId:'cell-2',particleIds:cargoB,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22,energy:5,energyCapacity:30,metadata:{permeability:.65}}],energySources:[{id:'sunlight',type:'light',energy:500,efficiency:.28}]});
 }
