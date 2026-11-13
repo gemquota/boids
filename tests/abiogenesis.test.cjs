@@ -376,3 +376,40 @@ test('energy sources and metabolic state survive particle-world snapshots',()=>{
   assert.equal(restored.energySources[0].energy,5.75);
   assert.equal(restored.resourceClouds[0].energy,3);
 });
+
+
+test('cell-to-cell exchange is gated by contact, permeability, selectivity and receiver energy',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'},{id:'o',element:'O'}]);
+  const a=bio.createResourceCloud(world,'cell-a',['c']);
+  const b=bio.createResourceCloud(world,'cell-b',['o'],{energy:2,metadata:{permeability:.4}});
+  const anchors={'cell-a':{position:{x:0,y:0}},'cell-b':{position:{x:5,y:0}}};
+  assert.equal(bio.exchangeResource(world,a.id,b.id,'c',anchors,{contactRadius:10,permeability:1,random:()=>0,allowedElements:['H']}).reason,'selective-transport-rejected');
+  const result=bio.exchangeResource(world,a.id,b.id,'c',anchors,{contactRadius:10,permeability:1,random:()=>0,energyCost:1});
+  assert.equal(result.transferred,true);
+  assert.deepEqual(a.particleIds,[]);
+  assert.deepEqual(b.particleIds.sort(),['c','o']);
+  assert.equal(b.energy,1);
+});
+test('resource diffusion moves materials down composition gradients between nearby cells',()=>{
+  const world=bio.createParticleWorld([
+    {id:'c1',element:'C'},{id:'c2',element:'C'},{id:'c3',element:'C'},{id:'c4',element:'C'}
+  ]);
+  const a=bio.createResourceCloud(world,'cell-a',['c1','c2','c3']);
+  const b=bio.createResourceCloud(world,'cell-b',['c4']);
+  const transfers=bio.diffuseResources(world,{'cell-a':{position:{x:0,y:0}},'cell-b':{position:{x:8,y:0}}},{contactRadius:20,permeability:1,random:()=>0,maxTransfers:4});
+  assert.equal(transfers.length,1);
+  assert.equal(a.particleIds.length,2);
+  assert.equal(b.particleIds.length,2);
+});
+test('exchange transfers bonded compounds intact and refuses distant cells',()=>{
+  const world=bio.createParticleWorld([{id:'c',element:'C'},{id:'h',element:'H'}]);
+  const a=bio.createResourceCloud(world,'cell-a',['c','h']),b=bio.createResourceCloud(world,'cell-b',[]);
+  bio.craftMolecule(world,a.id,['c','h'],[{a:'c',b:'h'}],{id:'CH'});
+  const far={'cell-a':{position:{x:0,y:0}},'cell-b':{position:{x:100,y:0}}};
+  assert.equal(bio.exchangeResource(world,a.id,b.id,'c',far,{contactRadius:10}).reason,'cells-out-of-range');
+  const near={'cell-a':{position:{x:0,y:0}},'cell-b':{position:{x:4,y:0}}};
+  const result=bio.exchangeResource(world,a.id,b.id,'h',near,{contactRadius:10,random:()=>0});
+  assert.equal(result.transferred,true);
+  assert.deepEqual(b.particleIds.sort(),['c','h']);
+  assert.equal(bio.resourceInventory(world,b.id).moleculeCount,1);
+});
