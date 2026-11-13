@@ -72,3 +72,22 @@ test('worker exposes finite energy harvesting and metabolic conversion',()=>{
   assert.equal(worker.messages.at(-1).inventory.energy,2);
   assert.equal(worker.messages.at(-1).world.energySources[0].energy,6);
 });
+
+
+test('worker can assemble, grow and divide a membrane compartment',()=>{
+  const worker=makeWorker(),particles=[];
+  for(let i=0;i<6;i++)particles.push({id:'c'+i,element:'C'},{id:'h'+i,element:'H'});
+  particles.push({id:'n1',element:'O'},{id:'n2',element:'O'},{id:'free',element:'P'});
+  const molecules=[];
+  for(let i=0;i<6;i++)molecules.push({id:'lipid-'+i,type:'lipid',atomIds:['c'+i,'h'+i],bondIds:[],composition:{C:1,H:1},energy:0,properties:{amphiphilic:true}});
+  molecules.push({id:'nutrient-1',type:'nutrient',atomIds:['n1'],bondIds:[],composition:{O:1},energy:0,properties:{}});
+  molecules.push({id:'nutrient-2',type:'nutrient',atomIds:['n2'],bondIds:[],composition:{O:1},energy:0,properties:{}});
+  worker.send({type:'abiogenesis:init',seed:9,particles,molecules,resourceClouds:[{id:'cargo',ownerId:'cell',particleIds:particles.map(p=>p.id),energy:5}]});
+  worker.send({type:'abiogenesis:compartment-create',cloudId:'cargo',options:{id:'proto',membraneMoleculeIds:['lipid-0','lipid-1','lipid-2','lipid-3','lipid-4','lipid-5'],contents:['nutrient-1','nutrient-2']}});
+  assert.equal(worker.messages.at(-1).type,'abiogenesis:compartment-created');
+  worker.send({type:'abiogenesis:compartment-divide',cloudId:'cargo',compartmentId:'proto',options:{energyCost:1,minLipidsPerDaughter:3,minContentsPerDaughter:1}});
+  const divided=worker.messages.at(-1);
+  assert.equal(divided.type,'abiogenesis:compartment-divided');
+  assert.equal(divided.result.occurred,true);
+  assert.equal(divided.compartmentCount,3);
+});
