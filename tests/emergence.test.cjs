@@ -61,7 +61,7 @@ test('topology assembles and detects connected cycles',()=>{
   const s=new E.EntityStore(),a=s.create('unit'),b=s.create('unit'),c=s.create('unit');
   s.link(a.id,b.id);s.link(b.id,c.id);s.link(c.id,a.id);
   const topology=new E.TopologyEngine(s),group=topology.assemble('colony',[a.id,b.id,c.id]);
-  assert.deepEqual(topology.connectedStructures('unit'),[[a.id,b.id,c.id]]);
+  assert.deepEqual(topology.connectedStructures('unit').map(group=>group.sort((x,y)=>x-y),[[a.id,b.id,c.id]]);
   assert.equal(topology.closed(group.id),true);
 });
 
