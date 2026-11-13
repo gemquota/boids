@@ -29,6 +29,9 @@ jobs:
           node --check /tmp/boids-app.js
           node --check /tmp/boids-vision-lab.js
           node --check boids-worker.js
+          node --check physics.js
+          node --check development.js
+          node --test tests/physics.test.js tests/development.test.js
           node --check hydrology.js
           node tests/hydrology.test.js
           node --check organism-economics.js
@@ -89,7 +92,7 @@ jobs:
               raise SystemExit('Food patches or their hidden stock must not exist in the worker')
           if 'plantGain' not in worker or 'plantEatingFlag[i]=1' not in worker or 'plantBiomass' not in worker:
               raise SystemExit('Plant grazing and biomass telemetry are required')
-          if 'Math.min(bestPlant.biomass,.00008*dt*60)' not in worker:
+          if 'Math.min(bestPlant.biomass,.0009*dt*60*(1+graspLoad*.08))' not in worker:
               raise SystemExit('Plant grazing rate must remain bounded')
           if 'Math.max(64,Math.min(120,Math.round(W*H/14000)))' not in worker:
               raise SystemExit('Initial spore bank must support plant-only ecology')
@@ -100,9 +103,10 @@ jobs:
               raise SystemExit('Large Observatory histories must be throttled')
           if "panel==='analysis'&&Date.now()-lastChartRender>3500" not in html:
               raise SystemExit('Charts must not redraw while the Observatory drawer is closed')
+          if "new Worker('./boids-worker.js?v=20261112-organism-economics-v1')" not in html:
           if "new Worker('./boids-worker.js?v=20261113-watershed-hydrology-v1')" not in html:
               raise SystemExit('Updated worker cache-bust missing')
-          if 'r=2.8+Math.min(3.4,p.size*2.7)' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
+          if 'r=(2.8+Math.min(3.4,p.size*2.7))*.25' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
               raise SystemExit('Faceted hexagonal plant crowns must remain visibly sized')
           if 'function drawWaterways()' not in worker or 'function nearestFreshwater(' not in worker:
               raise SystemExit('Shared river and freshwater geometry is missing')

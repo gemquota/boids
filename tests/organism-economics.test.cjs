@@ -11,6 +11,13 @@ test('energy accounting separates basal, tissue, brain, vision, limbs, bonding a
   assert.equal(complex.total,complex.maintenance+complex.movement);
 });
 
+test('reusable upkeep output matches the allocating calculation',()=>{
+  const input={bodyMass:1.3,speed:.35,maxSpeed:.8,acceleration:.12,limbLoad:3.4,brainNodes:28,brainConnections:64,visionRange:75,visionArc:Math.PI*1.4,visionRays:8,pollingHz:10,bondLoad:.6,aggression:.5,reproductiveLoad:1,basalCost:.00005,environmentalMultiplier:1.2};
+  const settings={metabolicRate:1.1,adultMaintenance:.9,brainActivity:2,attackCost:.12};
+  const out={};assert.equal(eco.calculateEnergyCostsInto(out,input,settings),out);
+  assert.deepEqual(out,eco.calculateEnergyCosts(input,settings));
+});
+
 test('construction cost increases with body, neural, sensory, limb and bonding investment',()=>{
   const base=eco.calculateConstructionCost({});
   const developed=eco.calculateConstructionCost({bodyMass:2,limbLoad:8,brainNodes:40,brainConnections:100,visionLoad:2,bondingSites:4});

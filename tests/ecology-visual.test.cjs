@@ -54,9 +54,11 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
   const end = worker.indexOf('function drawWaterways()', start);
   assert.ok(start >= 0 && end > start);
   const renderer = worker.slice(start, end);
-  assert.match(renderer, /scale=\(6\+p\.size\*8\.5\)\*\(mature\?1\.24:\.82\)\*\(senescent\?\.68:1\)\*\.5\*\(p\.waterVariant==='riparian'\?\.68:1\)/);
+  assert.match(renderer, /scale=\(6\+p\.size\*8\.5\)\*\(mature\?1\.24:\.82\)\*\(senescent\?\.68:1\)\*\.5/);
   assert.match(renderer, /quadraticCurveTo/);
-  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25\*\(p\.waterVariant==='riparian'\?1\.3:1\)\*\(p\.waterVariant==='long'\?\.5:1\)/);
+  assert.match(renderer, /length=scale\*\(\.72\+\.28\*Math\.cos\(spread\*Math\.PI\)\)\*\(p\.branchLengthScale\|\|1\)/);
+  assert.match(renderer, /width=Math\.max\(\.65,\(\.9\+p\.size\*\.32\)\*\(p\.branchThicknessScale\|\|1\)\)/);
+  assert.match(renderer, /r=\(2\.8\+Math\.min\(3\.4,p\.size\*2\.7\)\)\*\.25\*\(p\.nodeScale\|\|1\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r,p\.angle\)/);
   assert.match(renderer, /hexPath\(p\.x,p\.y,r\*\.56/);
   assert.match(renderer, /flowerCount/);
@@ -69,7 +71,7 @@ console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore ge
 
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
-  assert.match(worker, /Math.max\(16,Math.min\(30,Math.round\(W\*H\/56000\)\)\)/);
+  assert.match(worker, /Math.max\(64,Math.min\(120,Math.round\(W\*H\/14000\)\)\)/);
   assert.match(worker, /plantGain/);
   assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
   assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
@@ -112,12 +114,10 @@ test('DNA and observatory use distinct icon tabs and reset lives in Field Operat
 });
 test('boids resolve physical body overlap and exchange collision impulse', () => {
   assert.ok(worker.includes('function collisionRadius(i)'));
-  assert.ok(worker.includes('function resolveAgentCollisions(updateN)'));
-  assert.ok(worker.includes('const massI=Math.max(.1,phenotype(i,1))'));
-  assert.ok(worker.includes('normalImpulse=-(1+.22)*relative/invTotal'));
-  assert.ok(worker.includes('normalAfter=rvx*nx+rvy*ny'));
-  assert.ok(worker.includes('collisionPressureByAgent[i]'));
-  assert.ok(worker.includes('resolveAgentCollisions(updateN)'));
+  assert.ok(worker.includes('function resolveAgentCollisions(updateN,dt)'));
+  assert.ok(worker.includes('BoidsPhysics.resolveCircleContact'));
+  assert.ok(worker.includes('BoidsPhysics.sweptCircleTime'));
+  assert.ok(worker.includes('resolveAgentCollisions(updateN,dt)'));
 });
 
 
@@ -211,16 +211,47 @@ test('founder limb counts follow the requested weighted distribution and descend
   assert.doesNotMatch(worker, /Math\.floor\(random\(\)\*5\)/);
 });
 
-test('plant ecotypes respond independently to freshwater distance, salt exposure and latitude', () => {
-  assert.match(worker, /function nearestSaltwater\(px,py\)/);
-  assert.match(worker, /function plantHabitat\(px,py\)/);
-  assert.match(worker, /waterVariant:fresh<66\?'riparian':fresh>175\?'long':'standard'/);
-  assert.match(worker, /saltSpines:salt<fresh/);
-  assert.match(worker, /latitudeScale=1\.22-\.44\*latitude/);
-  assert.match(worker, /childLimit=p\.waterVariant==='long'\?4:2/);
-  assert.match(worker, /connectionScale=p\.waterVariant==='long'\?2:1/);
-  assert.match(worker, /bestPlant\.saltSpines\?\.32:1/);
-  assert.match(worker, /energy\[i\]=Math\.max\(0,energy\[i\]-\.0022\*dt\*60\)/);
-  assert.match(worker, /if\(p\.saltSpines&&!senescent\)/);
-  assert.match(worker, /const \[northWest,southEast\]=network\.coasts/);
+test('plant morphology continuously responds to freshwater distance and latitude', () => {
+  const start=worker.indexOf('function plantMorphologyFromGradients('),end=worker.indexOf('function plantNodeGrowthScale',start);
+  assert.ok(start>=0&&end>start,'pure morphology gradient helper must exist');
+  const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
+  vm.runInNewContext(worker.slice(start,end)+';this.morph=plantMorphologyFromGradients;',context);
+  const near=context.morph(1,0),far=context.morph(0,1);
+  assert.ok(near.nodeScale>far.nodeScale,'near-water nodes should be larger');
+  assert.ok(near.branchLimit<far.branchLimit,'near-water plants should produce fewer nodes');
+  assert.ok(near.branchLengthScale<far.branchLengthScale,'near-water branches should be shorter');
+  assert.ok(near.branchThicknessScale>far.branchThicknessScale,'near-water branches should be thicker');
+  assert.ok(Math.abs(near.latitudeScale-1.05)<1e-9,'equator should receive only a slight 5% bonus');
+  assert.ok(Math.abs(far.latitudeScale-.95)<1e-9,'poles should receive only a slight 5% penalty');
+  assert.match(worker,/p\.biomass\+cfg\.plantGrowth\*dt[\s\S]*?nodeGrowth\.scale\*p\.latitudeScale/);
+  assert.match(worker,/\.5\*p\.nodeScale\*p\.latitudeScale/);
+  assert.match(worker,/len=\(4\.8\+p\.size\*7\)\*\.5\*p\.branchLengthScale/);
+  assert.match(worker,/width=Math\.max\(\.65,\(\.9\+p\.size\*\.32\)\*\(p\.branchThicknessScale\|\|1\)\)/);
+  assert.match(worker,/function nearestSaltwater\(px,py\)/);
+  assert.match(worker,/saltSpines:salt<fresh/);
+  assert.match(worker,/if\(p\.saltSpines&&!senescent\)/);
+  assert.match(worker,/const \[northWest,southEast\]=network\.coasts/);
+});
+
+test('smaller nodes grow more slowly relative to their whole plant', () => {
+  const start=worker.indexOf('function plantNodeGrowthScale('),end=worker.indexOf('function applyPlantMorphology',start);
+  assert.ok(start>=0&&end>start);
+  const context={clamp:(v,lo,hi)=>Math.max(lo,Math.min(hi,v))};
+  vm.runInNewContext(worker.slice(start,end)+';this.scale=plantNodeGrowthScale;',context);
+  const large=context.scale(.8,.8),small=context.scale(.2,.8);
+  assert.equal(large.ratio,1);
+  assert.ok(small.ratio<large.ratio);
+  assert.ok(small.scale<large.scale);
+});
+
+test('neonatal bonding can recruit distinct colony neighbours', () => {
+  assert.match(worker, /neonatalAvailableCount/);
+  assert.match(worker, /myBondStrengths\?\.has\(individualId\[j\]\)/);
+  assert.match(worker, /bondOpportunity\(individualId\[i\],individualId\[bondIndex\],frameNo\)/);
+});
+test('organism contacts use swept collision impulses and persistent tether constraints', () => {
+  assert.match(worker, /BoidsPhysics\.resolveCircleContact/);
+  assert.match(worker, /BoidsPhysics\.sweptCircleTime/);
+  assert.match(worker, /function applyBondConstraints\(updateN,dt\)/);
+  assert.match(worker, /function drawBondNetwork\(plantById\)/);
 });
