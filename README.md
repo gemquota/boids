@@ -61,7 +61,7 @@ This is an exploratory agent-based artificial ecology, **not a biologically cali
 - Experiment statistics and deterministic sweep helpers exist, but isolated multi-replicate experiment-world orchestration, full replay archives, and experiment UI are not complete.
 - Habitat gradients, nutrients, fragmentation, and controlled disturbance scenarios remain limited compared with the plant/freshwater baseline.
 
-See [implementation status](docs/IMPLEMENTATION-STATUS.md), [master backlog](docs/IMPLEMENTATION-BACKLOG.md), [architecture](docs/ARCHITECTURE.md), [snapshot migration contract](docs/SNAPSHOT-MIGRATION.md), [telemetry and exports](docs/TELEMETRY-EXPORTS.md), [performance baseline](docs/PERFORMANCE-BASELINE.md), [genetics](docs/GENETICS.md), [configuration](docs/CONFIGURATION.md), and [validation](docs/VALIDATION.md).
+See [unified emergence engine](docs/EMERGENCE-ENGINE.md) for the recursive data-driven substrate and migration boundary.\n\nSee [implementation status](docs/IMPLEMENTATION-STATUS.md), [master backlog](docs/IMPLEMENTATION-BACKLOG.md), [architecture](docs/ARCHITECTURE.md), [snapshot migration contract](docs/SNAPSHOT-MIGRATION.md), [telemetry and exports](docs/TELEMETRY-EXPORTS.md), [performance baseline](docs/PERFORMANCE-BASELINE.md), [genetics](docs/GENETICS.md), [configuration](docs/CONFIGURATION.md), and [validation](docs/VALIDATION.md).
 
 ## Development and validation
 
