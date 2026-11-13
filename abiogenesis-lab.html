@@ -47,8 +47,9 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats');
 const worker=new Worker('abiogenesis-worker.js');
 const colors={H:'#68c8d2',C:'#d5a66c',O:'#e47e82',N:'#8da7e8',P:'#b59bd7',S:'#d5c66c',OTHER:'#a4bd8d'};
-let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;\nconst cell={position:{x:W*.5,y:H*.5,z:0},velocity:{x:13,y:-8,z:0}},cloudIds=new Set();
 const W=canvas.width,H=canvas.height;
+let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;
+const cell={position:{x:W*.5,y:H*.5,z:0},velocity:{x:13,y:-8,z:0}},cloudIds=new Set();
 function seedWorld(){
  const elements=['H','H','C','C','O','N','P','S'];
  const particles=[];
@@ -61,7 +62,9 @@ function seedWorld(){
    charge:(element==='O'?-1:element==='H'?1:0)*(Math.random()*.12),valence:element==='H'?1:element==='O'?2:element==='C'?4:3,
    position:{x,y,z:0},velocity:{x:Math.cos(angle)*speed,y:Math.sin(angle)*speed,z:0},thermalEnergy:.08});
  }
- const cargo=particles.slice(0,42).map(p=>p.id);cloudIds.clear();cargo.forEach(id=>cloudIds.add(id));\n cell.position={x:W*.5,y:H*.5,z:0};cell.velocity={x:13,y:-8,z:0};\n world=null;worker.postMessage({type:'abiogenesis:init',seed:20261113,particles,resourceClouds:[{id:'cell-cargo',ownerId:'cell-1',particleIds:cargo,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22}]});
+ const cargo=particles.slice(0,42).map(p=>p.id);cloudIds.clear();cargo.forEach(id=>cloudIds.add(id));
+ cell.position={x:W*.5,y:H*.5,z:0};cell.velocity={x:13,y:-8,z:0};
+ world=null;worker.postMessage({type:'abiogenesis:init',seed:20261113,particles,resourceClouds:[{id:'cell-cargo',ownerId:'cell-1',particleIds:cargo,radius:72,followStrength:1.45,damping:.34,containment:1.1,maxAcceleration:22}]});
 }
 function draw(){
  ctx.clearRect(0,0,W,H);
@@ -80,7 +83,9 @@ function draw(){
 function requestStep(){
  if(busy||paused&&!stepRequested)return;
  busy=true;stepRequested=false;
- cell.position.x+=cell.velocity.x/60;cell.position.y+=cell.velocity.y/60;\n if(cell.position.x<90||cell.position.x>W-90)cell.velocity.x*=-1;if(cell.position.y<90||cell.position.y>H-90)cell.velocity.y*=-1;\n worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellAnchors:{'cell-1':{position:cell.position,velocity:cell.velocity}},cellSize:16,captureRadius:1.5,thermalJitter:.13,electrostatic:18,softening:4,restitution:.72,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.075,bondStrength:.34,bondDamping:.24,breakStretch:2.5}});
+ cell.position.x+=cell.velocity.x/60;cell.position.y+=cell.velocity.y/60;
+ if(cell.position.x<90||cell.position.x>W-90)cell.velocity.x*=-1;if(cell.position.y<90||cell.position.y>H-90)cell.velocity.y*=-1;
+ worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellAnchors:{'cell-1':{position:cell.position,velocity:cell.velocity}},cellSize:16,captureRadius:1.5,thermalJitter:.13,electrostatic:18,softening:4,restitution:.72,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.075,bondStrength:.34,bondDamping:.24,breakStretch:2.5}});
 }
 worker.onmessage=e=>{
  const m=e.data;
