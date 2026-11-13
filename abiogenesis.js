@@ -103,7 +103,20 @@
       }
     }
     const productive=reactions.filter(r=>(r.outputs||[]).some(o=>reachable.has(String(o.type)))&&(r.inputs||[]).every(i=>reachable.has(String(i.type))));
-    return {reachableTypes:Array.from(reachable).sort(),productiveReactionIds:productive.map(r=>String(r.id)),closed:productive.length>0&&productive.some(r=>(r.outputs||[]).some(o=>(r.inputs||[]).some(i=>i.type===o.type)))};
+    const graph=new Map();
+    for(const r of productive)for(const input of r.inputs||[])for(const output of r.outputs||[]){
+      const from=String(input.type),to=String(output.type);
+      if(!graph.has(from))graph.set(from,[]);graph.get(from).push(to);
+    }
+    const visiting=new Set(),visited=new Set();let closed=false;
+    function visit(node){
+      if(visiting.has(node)){closed=true;return}
+      if(visited.has(node)||closed)return;
+      visiting.add(node);for(const next of graph.get(node)||[])visit(next);
+      visiting.delete(node);visited.add(node);
+    }
+    for(const node of graph.keys())visit(node);
+    return {reachableTypes:Array.from(reachable).sort(),productiveReactionIds:productive.map(r=>String(r.id)),closed};
   }
   function assembleCompartment(lipids,contents,options={}){
     if(!Array.isArray(lipids)||lipids.length<3)throw new RangeError('A compartment requires at least three lipid components');
