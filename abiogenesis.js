@@ -132,8 +132,8 @@
   function createParticleWorld(inputs=[],options={}){
     const particles=inputs.map(normalizeParticle),ids=new Set(particles.map(p=>p.id));
     if(ids.size!==particles.length)throw new Error('Particle IDs must be unique');
-    const bonds=(options.bonds||[]).map(normalizeBond);
-    for(const b of bonds)if(!ids.has(b.a)||!ids.has(b.b))throw new Error('Bond endpoint is missing');
+    const bonds=(options.bonds||[]).map(normalizeBond);for(const p of particles)p.bonds=[];
+    for(const b of bonds){if(!ids.has(b.a)||!ids.has(b.b))throw new Error('Bond endpoint is missing');const a=particles.find(p=>p.id===b.a),c=particles.find(p=>p.id===b.b);if(a.bonds.length>=a.valence||c.bonds.length>=c.valence)throw new Error('Bond topology exceeds particle valence');if(a.bonds.includes(c.id)||c.bonds.includes(a.id))throw new Error('Duplicate particle bond');a.bonds.push(c.id);c.bonds.push(a.id)}
     return {particles,bonds,time:Math.max(0,finite(options.time)),stats:{steps:0,collisions:0,bondsFormed:0,bondsBroken:0,thermalEnergy:0,kineticEnergy:0}};
   }
   function stepParticleWorld(world,dt,options={}){
