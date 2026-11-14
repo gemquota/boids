@@ -70,6 +70,14 @@ test('plant renderer combines ribbon fronds with visible faceted hexagonal growt
 console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore germination and ribbon-plant rendering passed.');
 
 
+test('plant feeding builds a decaying, persistent craving that can sustain further foraging', () => {
+  assert.ok(worker.includes('let plantCraving=plantCravingById.get(individualId[i])||0'));
+  assert.ok(worker.includes('plantCraving=Math.max(0,plantCraving-dt*.018)'));
+  assert.ok(worker.includes('plantCraving>.16'));
+  assert.ok(worker.includes('plantCraving=Math.min(1,plantCraving+.22+(phenotype(i,9)-.55)*.08)'));
+  assert.ok(worker.includes('plantCravings:Array.from(plantCravingById.entries())'));
+});
+
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
   assert.match(worker, /initialSporeCount=Math.max\(16,Math.min\(30,Math.round\(W\*H\/56000\)\)\)/);
