@@ -6,7 +6,7 @@
 |---|---:|---|
 | Worker world snapshot | `schemaVersion: 24` | Simulation state and deterministic continuation |
 | Browser IndexedDB envelope | `storageSchemaVersion: 2` | Browser storage wrapper and latest/previous snapshot slots |
-| Hexadecimal chromosome codec | `boids-hex-gene-v3` | Typed hexadecimal records for quantitative traits, 32-bit structural topology, neural nodes/connections, regulatory nodes/edges and cis modifiers; full variable-length objects remain the runtime authority |
+| Hexadecimal chromosome codec | `boids-hex-gene-v4` | Typed hexadecimal records for quantitative traits, 32-bit structural topology, neural nodes/connections, regulatory nodes/edges and cis modifiers; full variable-length objects remain the runtime authority |
 
 These versions are independent. Never overwrite the worker's `schemaVersion` with the IndexedDB envelope version, and do not treat the chromosome codec version as a world snapshot version.
 
