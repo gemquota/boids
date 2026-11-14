@@ -4,15 +4,17 @@
 
 | Layer | Current version | Meaning |
 |---|---:|---|
-| Worker world snapshot | `schemaVersion: 23` | Simulation state and deterministic continuation |
+| Worker world snapshot | `schemaVersion: 24` | Simulation state and deterministic continuation |
 | Browser IndexedDB envelope | `storageSchemaVersion: 2` | Browser storage wrapper and latest/previous snapshot slots |
 | Hexadecimal chromosome codec | `boids-hex-gene-v3` | Typed hexadecimal records for quantitative traits, 32-bit structural topology, neural nodes/connections, regulatory nodes/edges and cis modifiers; full variable-length objects remain the runtime authority |
 
 These versions are independent. Never overwrite the worker's `schemaVersion` with the IndexedDB envelope version, and do not treat the chromosome codec version as a world snapshot version.
 
+| Neonatal attachment anatomy (schema 24) | Persist four temporary neonatal bonding sites, their conversion progress/role, and the independently maturing adult attachment capacity/progress. Restore older morphologies with newly initialized neonatal sites and neutral adult maturation progress. |
+
 ## Restore policy
 
-The worker accepts snapshots with no version marker or a `schemaVersion` no newer than 23. It rejects snapshots newer than the runtime. Migration is primarily field-presence-based rather than a chain of one function per historical schema: older records are hydrated with explicit defaults where safe, and unavailable historical information is not fabricated.
+The worker accepts snapshots with no version marker or a `schemaVersion` no newer than 24. It rejects snapshots newer than the runtime. Migration is primarily field-presence-based rather than a chain of one function per historical schema: older records are hydrated with explicit defaults where safe, and unavailable historical information is not fabricated.
 
 | Missing or legacy state | Restore behaviour |
 | Variable-length per-agent eligibility traces (schema 19) | Persist traces aligned to each agent's innovation-identified connections; older snapshots reconstruct available trace slots from the legacy fixed-size eligibility array and initialize remaining entries to zero |
