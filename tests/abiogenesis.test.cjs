@@ -97,7 +97,7 @@ test('bond kinetics form a persistent spring and break when overstretched',()=>{
     bio.normalizeParticle({id:'a',valence:1,radius:.5,position:{x:0,y:0,z:0}}),
     bio.normalizeParticle({id:'b',valence:1,radius:.5,position:{x:.9,y:0,z:0}})
   ]);
-  const formed=bio.stepParticleWorld(world,.001,{cellSize:2,thermalJitter:0,electrostatic:0,enableBondFormation:true,bondProbability:1,bondStrength:4});
+  const formed=bio.stepParticleWorld(world,.001,{cellSize:2,thermalJitter:0,electrostatic:0,enableBondFormation:true,bondProbability:1,bondStrength:4,random:()=>0});
   assert.equal(formed.bondsFormed,1);assert.equal(world.bonds.length,1);
   world.particles[1].position.x=5;
   const broken=bio.stepParticleWorld(world,.001,{cellSize:2,thermalJitter:0,electrostatic:0,breakStretch:2});

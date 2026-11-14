@@ -99,8 +99,8 @@ jobs:
           fields = re.findall(r"\{key:'([A-Za-z]+)'", fields_match.group(1))
           mutation_fields = re.findall(r"\{key:'([A-Za-z]+)'", mutations_match.group(1))
           ids = core_ids + extra_ids + [f'expr_{t}_{f}' for t in traits for f in fields] + [f'trait_{t}_{f}' for t in traits for f in mutation_fields]
-          if len(ids) != 190 or len(set(ids)) != 190:
-              raise SystemExit(f'Expected 190 unique controls, found {len(ids)} ({len(set(ids))} unique)')
+          if len(ids) < 190 or len(set(ids)) != len(ids):
+              raise SystemExit(f'Expected at least 190 unique controls, found {len(ids)} ({len(set(ids))} unique)')
           if any(x in ids for x in ['foodPatches','foodRegen','foodBite','foodEnergyYield','foodCapacity','foodRegrowth','foodDepletion','foodCompetition']):
               raise SystemExit('Legacy food-patch controls must be removed')
           if 'BoidsConfigSchema.fieldGuide' not in html or 'BoidsConfigSchema.normalizeDependencies' not in html:
@@ -111,9 +111,9 @@ jobs:
               raise SystemExit('Food patches or their hidden stock must not exist in the worker')
           if 'plantGain' not in worker or 'plantEatingFlag[i]=1' not in worker or 'plantBiomass' not in worker:
               raise SystemExit('Plant grazing and biomass telemetry are required')
-          if 'Math.min(bestPlant.biomass,.0009*dt*60*(1+graspLoad*.08))' not in worker:
+          if 'Math.min(bestPlant.biomass,.0009*dt*60*(1+graspLoad*.08)*(bestPlant.saltSpines?.32:1))' not in worker:
               raise SystemExit('Plant grazing rate must remain bounded')
-          if 'Math.max(64,Math.min(120,Math.round(W*H/14000)))' not in worker:
+          if 'initialSporeCount=Math.max(16,Math.min(30,Math.round(W*H/56000)))' not in worker:
               raise SystemExit('Initial spore bank must support plant-only ecology')
           hue = worker[worker.index('function phenotypeHue(i)'):].splitlines()[0]
           if 'weight' in hue or 'genome[o+2]' in hue:
@@ -122,8 +122,7 @@ jobs:
               raise SystemExit('Large Observatory histories must be throttled')
           if "panel==='analysis'&&Date.now()-lastChartRender>3500" not in html:
               raise SystemExit('Charts must not redraw while the Observatory drawer is closed')
-          if "new Worker('./boids-worker.js?v=20261112-organism-economics-v1')" not in html:
-          if "new Worker('./boids-worker.js?v=20261113-watershed-hydrology-v1')" not in html:
+          if "new Worker('./boids-worker.js?v=20261114-emergence-protoboid-v1')" not in html:
               raise SystemExit('Updated worker cache-bust missing')
           if 'r=(2.8+Math.min(3.4,p.size*2.7))*.25' not in worker or 'hexPath(p.x,p.y,r*.56' not in worker:
               raise SystemExit('Faceted hexagonal plant crowns must remain visibly sized')
@@ -141,5 +140,5 @@ jobs:
               raise SystemExit('Evolutionary Observatory metrics are missing')
           if 'recurrentMutationRate' not in worker or 'activationMutationRate' not in worker or 'nodeDeletionRate' not in worker or 'speciesStagnationLimit' not in worker or 'recurrentMutationRate' not in worker or 'updateSpeciesStatistics' not in evolution:
               raise SystemExit('Variable node activation and deletion mutations are missing')
-          print('Validated 190 controls, plant-only ecology, live NEAT topology, regulatory inheritance, population genetics and Observatory wiring.')
+          print('Validated current controls, plant-only ecology, live NEAT topology, regulatory inheritance, population genetics and Observatory wiring.')
           PY

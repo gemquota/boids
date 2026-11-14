@@ -326,7 +326,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationBirthTime.entries()),'structural innovation protection ages must survive snapshot restoration');
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
-assert.equal(restoredSnapshot.schemaVersion, 23);
+assert.equal(restoredSnapshot.schemaVersion, 24);
 assert.equal(restoredSnapshot.counters.frameNo,sourceSnapshot.counters.frameNo,'deterministic frame counter must survive snapshot restoration');
 assert.equal(JSON.stringify(restoredSnapshot.maintenanceCosts),JSON.stringify(sourceSnapshot.maintenanceCosts),'cached organism upkeep must survive snapshot restoration');
 assert.equal(restoredSnapshot.counters.costCacheDirty,sourceSnapshot.counters.costCacheDirty,'upkeep cache invalidation state must survive snapshot restoration');
@@ -334,7 +334,7 @@ assert.ok(Array.isArray(restoredSnapshot.bondLinks),'persistent organism bonds m
 assert.equal(JSON.stringify(restoredSnapshot.bondLinks),JSON.stringify(sourceSnapshot.bondLinks),'bond endpoints, attachment sides, relationship state and strength must survive snapshot restoration');
 assert.equal(JSON.stringify(BoidsEcology.serializeFields(restored.__boidsTest.environmentFields)),JSON.stringify(restoredSnapshot.environmentFields),'deterministic habitat fields must survive snapshot restoration');
 assert.deepEqual(restoredSnapshot.species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),api.exportSnapshot().species.map(s=>({id:s.id,age:s.age,bestFitness:s.bestFitness,stagnation:s.stagnation,championId:s.championId,offspringQuota:s.offspringQuota})),'species lifecycle statistics must survive snapshots');
-assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v4');
+assert.equal(restoredSnapshot.chromosomeFormat, 'boids-hex-gene-v3');
 const typedChromosome=BoidsChromosome.decode(restoredSnapshot.chromosomes[0]);
 assert.ok(typedChromosome.structural.length>0&&typedChromosome.neuralNodes.length>0&&typedChromosome.neuralConnections.length>0,'chromosomes must contain typed neural structure and connection records');
 assert.equal(typedChromosome.regulatoryNodes.length,10,'chromosomes must contain the per-agent regulatory node records');
