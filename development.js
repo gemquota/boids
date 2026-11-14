@@ -3,6 +3,18 @@
 'use strict';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ROLES=['locomotor','grasping','sensory','defensive','striking','adhesive'];
+const ORGAN_BLUEPRINTS=[
+{organType:'vision',x:.29,y:-.12,radius:.075,role:'sensory'},{organType:'vision',x:.29,y:.12,radius:.075,role:'sensory'},
+{organType:'neuralGanglion',x:.015,y:0,radius:.105,role:'coordination'},{organType:'digestive',x:-.16,y:0,radius:.17,role:'digestion'},
+{organType:'contractilePump',x:-.015,y:.13,radius:.095,role:'transport'},
+{organType:'exchangeMembrane',x:-.08,y:-.19,radius:.065,role:'respiration'},{organType:'exchangeMembrane',x:-.08,y:.19,radius:.065,role:'respiration'}];
+function ensureStructures(m){
+ if(!m)return m;
+ const organs=Array.isArray(m.structures)?m.structures.filter(s=>s&&s.kind==='organ').map(s=>({...s})):[];
+ if(!organs.length)for(let i=0;i<ORGAN_BLUEPRINTS.length;i++)organs.push({id:'organ-'+i,kind:'organ',health:1,efficiency:1,...ORGAN_BLUEPRINTS[i]});
+ const appendages=(m.limbs||[]).map((limb,index)=>({id:'appendage-'+index,kind:'appendage',organType:'limb',...limb}));
+ m.structures=[...organs,...appendages];return m;
+}
 function createState(morphology,random=Math.random){
   const m=morphology||{};
   m.neonatalBondSites=Array.from({length:4},(_,index)=>({index,state:'available',progress:0,role:null}));
@@ -12,7 +24,7 @@ function createState(morphology,random=Math.random){
   m.adultBondingPotential=m.adultBondingPotential??(1+(random()<.42?1:0));
   m.adultBondingProgress=m.adultBondingProgress??0;
   m.bondingSites=0;m.bondingSitesLeft=0;m.bondingSitesRight=0;
-  return m;
+  return ensureStructures(m);
 }
 function advance(m,age,dt,random=Math.random,traits={}){
   if(!m)return m;
@@ -39,11 +51,11 @@ function advance(m,age,dt,random=Math.random,traits={}){
   const total=Math.floor(m.adultBondingProgress+1e-6);
   const bias=clamp(m.bondingBias||0,-1,1),right=Math.round(total*(.5+bias*.5));
   m.bondingSites=total;m.bondingSitesRight=right;m.bondingSitesLeft=total-right;
-  return m;
+  return ensureStructures(m);
 }
 function availableNeonatalSite(m,occupied=()=>false){
   for(const site of m?.neonatalBondSites||[])if(site.state==='available'&&!occupied('neonatal'+site.index))return 'neonatal'+site.index;
   return null;
 }
-return Object.freeze({createState,advance,availableNeonatalSite});
+return Object.freeze({createState,advance,availableNeonatalSite,ensureStructures});
 });
