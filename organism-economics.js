@@ -21,7 +21,8 @@
     const metabolic=Math.max(0,finite(settings.metabolicRate,1)),adult=Math.max(0,finite(settings.adultMaintenance,1));
     const brainActivity=Math.max(0,finite(settings.brainActivity,1)),speedRatio=clamp(speed/maxSpeed,0,1),basal=Math.max(0,finite(input.basalCost,.00004));
     const tissue=mass**.75*.0000018,brain=(nodes*.000000055+edges*.000000018)*brainActivity;
-    const organLoad=Math.max(0,finite(input.organLoad,0));const organs=organLoad*.00000135;\n    const vision=(visionRange/90)*(visionArc/(Math.PI*2))*(rays/16)*(pollingHz/10)*.0000011;
+    const organLoad=Math.max(0,finite(input.organLoad,0));const organs=organLoad*.00000135;
+    const vision=(visionRange/90)*(visionArc/(Math.PI*2))*(rays/16)*(pollingHz/10)*.0000011;
     const limbs=limbLoad*.0000016,bonding=bondLoad*.00000125;
     const aggressionCost=aggression*Math.max(0,finite(settings.attackCost,.1))*.000003,reproduction=reproductiveLoad*.0000025;
     const locomotion=(speed*speed*.000012+acceleration*acceleration*.0000007)*mass*(1+5*speedRatio**3)*(1+limbLoad*.025);
