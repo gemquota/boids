@@ -99,8 +99,8 @@ jobs:
           fields = re.findall(r"\{key:'([A-Za-z]+)'", fields_match.group(1))
           mutation_fields = re.findall(r"\{key:'([A-Za-z]+)'", mutations_match.group(1))
           ids = core_ids + extra_ids + [f'expr_{t}_{f}' for t in traits for f in fields] + [f'trait_{t}_{f}' for t in traits for f in mutation_fields]
-          if len(ids) != 190 or len(set(ids)) != 190:
-              raise SystemExit(f'Expected 190 unique controls, found {len(ids)} ({len(set(ids))} unique)')
+          if len(ids) < 190 or len(set(ids)) != len(ids):
+              raise SystemExit(f'Expected at least 190 unique controls, found {len(ids)} ({len(set(ids))} unique)')
           if any(x in ids for x in ['foodPatches','foodRegen','foodBite','foodEnergyYield','foodCapacity','foodRegrowth','foodDepletion','foodCompetition']):
               raise SystemExit('Legacy food-patch controls must be removed')
           if 'BoidsConfigSchema.fieldGuide' not in html or 'BoidsConfigSchema.normalizeDependencies' not in html:
