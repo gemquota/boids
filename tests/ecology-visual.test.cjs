@@ -147,7 +147,7 @@ test('newborns receive four temporary bonding sites and mature adult attachment 
   assert.ok(morphology.neonatalBondSites.every(site=>site.state==='converted'));
   assert.ok(morphology.bondingSites>=1&&morphology.bondingSites<=2);
   assert.ok(worker.includes('BoidsDevelopment.createState(makeMorphology(a,b),random)'));
-  assert.ok(worker.includes('BoidsDevelopment.advance(morphologyById.get(individualId[i])'));
+  assert.ok(worker.includes('BoidsDevelopment.advance(developedMorphology,age[i],dt,random'));
 });
 
 test('population accounting separates biological events from manual resizing', () => {
