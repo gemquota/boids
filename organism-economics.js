@@ -21,6 +21,7 @@
     const metabolic=Math.max(0,finite(settings.metabolicRate,1)),adult=Math.max(0,finite(settings.adultMaintenance,1));
     const brainActivity=Math.max(0,finite(settings.brainActivity,1)),speedRatio=clamp(speed/maxSpeed,0,1),basal=Math.max(0,finite(input.basalCost,.00004));
     const tissue=mass**.75*.0000018,brain=(nodes*.000000055+edges*.000000018)*brainActivity;
+    const organLoad=Math.max(0,finite(input.organLoad,0));const organs=organLoad*.00000135;
     const vision=(visionRange/90)*(visionArc/(Math.PI*2))*(rays/16)*(pollingHz/10)*.0000011;
     const limbs=limbLoad*.0000016,bonding=bondLoad*.00000125;
     const aggressionCost=aggression*Math.max(0,finite(settings.attackCost,.1))*.000003,reproduction=reproductiveLoad*.0000025;
@@ -29,8 +30,8 @@
     const brainTotal=brain*metabolic*adult*environmental,visionTotal=vision*metabolic*adult*environmental;
     const limbTotal=limbs*metabolic*adult*environmental,bondingTotal=bonding*metabolic*adult*environmental;
     const aggressionTotal=aggressionCost*metabolic*adult*environmental,reproductionTotal=reproduction*metabolic*adult*environmental;
-    const maintenance=basalTotal+tissueTotal+brainTotal+visionTotal+limbTotal+bondingTotal+aggressionTotal+reproductionTotal,movement=locomotion*metabolic;
-    out.basal=basalTotal;out.tissue=tissueTotal;out.brain=brainTotal;out.vision=visionTotal;out.limbs=limbTotal;
+    const organTotal=organs*metabolic*adult*environmental;const maintenance=basalTotal+tissueTotal+brainTotal+visionTotal+limbTotal+organTotal+bondingTotal+aggressionTotal+reproductionTotal,movement=locomotion*metabolic;
+    out.basal=basalTotal;out.tissue=tissueTotal;out.brain=brainTotal;out.vision=visionTotal;out.limbs=limbTotal;out.organs=organTotal;
     out.bonding=bondingTotal;out.aggression=aggressionTotal;out.reproduction=reproductionTotal;
     out.locomotion=movement;out.maintenance=maintenance;out.movement=movement;out.total=maintenance+movement;
     return out;
