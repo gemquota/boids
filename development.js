@@ -8,6 +8,9 @@ const ORGAN_BLUEPRINTS=[
 {organType:'neuralGanglion',x:.015,y:0,radius:.105,role:'coordination'},{organType:'digestive',x:-.16,y:0,radius:.17,role:'digestion'},
 {organType:'contractilePump',x:-.015,y:.13,radius:.095,role:'transport'},
 {organType:'exchangeMembrane',x:-.08,y:-.19,radius:.065,role:'respiration'},{organType:'exchangeMembrane',x:-.08,y:.19,radius:.065,role:'respiration'}];
+function organMean(m,type){const list=(m?.structures||[]).filter(s=>s&&s.kind==='organ'&&s.organType===type);if(!list.length)return 1;return list.reduce((sum,s)=>sum+clamp((s.health??1)*(s.efficiency??1),0,1),0)/list.length}
+function getOrganEffects(m){return{vision:organMean(m,'vision'),neural:organMean(m,'neuralGanglion'),digestion:organMean(m,'digestive'),transport:organMean(m,'contractilePump'),exchange:organMean(m,'exchangeMembrane')}}
+function updateOrganCondition(m,dt,energy,thirst){if(!m)return getOrganEffects(m);const energyStress=clamp((.42-energy)/.42,0,1),waterStress=clamp((thirst-.58)/.42,0,1);for(const s of m.structures||[]){if(s.kind!=='organ')continue;const sensitivity=s.organType==='exchangeMembrane'?.0009:s.organType==='digestive'?.0007:.0005,stress=energyStress*.65+waterStress*(s.organType==='exchangeMembrane'?1.25:.35),repair=energy>.58&&thirst<.38?.00035:0;s.health=clamp((s.health??1)+dt*(repair-sensitivity*stress),.08,1)}return getOrganEffects(m)}
 function ensureStructures(m){
  if(!m)return m;
  const organs=Array.isArray(m.structures)?m.structures.filter(s=>s&&s.kind==='organ').map(s=>({...s})):[];
@@ -57,5 +60,5 @@ function availableNeonatalSite(m,occupied=()=>false){
   for(const site of m?.neonatalBondSites||[])if(site.state==='available'&&!occupied('neonatal'+site.index))return 'neonatal'+site.index;
   return null;
 }
-return Object.freeze({createState,advance,availableNeonatalSite,ensureStructures});
+return Object.freeze({createState,advance,availableNeonatalSite,ensureStructures,getOrganEffects,updateOrganCondition});
 });
