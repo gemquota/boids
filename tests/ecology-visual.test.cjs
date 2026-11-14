@@ -134,7 +134,7 @@ test('colony bonds persist through ordinary separation and only lose endpoints o
   assert.ok(!worker.includes('near?.035:-.012'));
   assert.ok(worker.includes("recordPopulationEvent('bond_broken',{a:bond.a,b:bond.b,reason:'organism_death'})"));
   assert.ok(worker.includes('function applyBondConstraints(updateN,dt)'));
-  assert.ok(worker.includes('cfg.bondFormationRate*dt*60*Math.max(1,bondCapacity(individualId[i]))'));
+  assert.ok(worker.includes('bondOpportunity(individualId[i],individualId[bondIndex],frameNo)<.0015*dt*60*Math.max(1,bondCapacity(individualId[i]))'));
   assert.ok(worker.includes('bond.restLength'));
   assert.ok(worker.includes('resolveBondConstraints(updateN,dt)'));
 });
