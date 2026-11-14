@@ -113,7 +113,7 @@ jobs:
               raise SystemExit('Plant grazing and biomass telemetry are required')
           if 'Math.min(bestPlant.biomass,.0009*dt*60*(1+graspLoad*.08)*(bestPlant.saltSpines?.32:1))' not in worker:
               raise SystemExit('Plant grazing rate must remain bounded')
-          if 'Math.max(64,Math.min(120,Math.round(W*H/14000)))' not in worker:
+          if 'initialSporeCount=Math.max(16,Math.min(30,Math.round(W*H/56000)))' not in worker:
               raise SystemExit('Initial spore bank must support plant-only ecology')
           hue = worker[worker.index('function phenotypeHue(i)'):].splitlines()[0]
           if 'weight' in hue or 'genome[o+2]' in hue:
@@ -140,5 +140,5 @@ jobs:
               raise SystemExit('Evolutionary Observatory metrics are missing')
           if 'recurrentMutationRate' not in worker or 'activationMutationRate' not in worker or 'nodeDeletionRate' not in worker or 'speciesStagnationLimit' not in worker or 'recurrentMutationRate' not in worker or 'updateSpeciesStatistics' not in evolution:
               raise SystemExit('Variable node activation and deletion mutations are missing')
-          print('Validated 190 controls, plant-only ecology, live NEAT topology, regulatory inheritance, population genetics and Observatory wiring.')
+          print('Validated current controls, plant-only ecology, live NEAT topology, regulatory inheritance, population genetics and Observatory wiring.')
           PY
