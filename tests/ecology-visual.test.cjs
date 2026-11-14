@@ -136,7 +136,7 @@ test('colony bonds persist through ordinary separation and only lose endpoints o
   assert.ok(worker.includes('function applyBondConstraints(updateN,dt)'));
   assert.ok(worker.includes('bondOpportunity(individualId[i],individualId[bondIndex],frameNo)<.0015*dt*60*Math.max(1,bondCapacity(individualId[i]))'));
   assert.ok(worker.includes('bond.restLength'));
-  assert.ok(worker.includes('resolveBondConstraints(updateN,dt)'));
+  assert.ok(worker.includes('applyBondConstraints(updateN,dt)'));
 });
 
 test('newborns receive four temporary bonding sites and mature adult attachment anatomy', () => {
