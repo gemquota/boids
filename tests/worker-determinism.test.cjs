@@ -326,7 +326,7 @@ assert.deepEqual(Array.from(restoredSnapshot.arrays.innovation), Array.from(api.
 assert.equal(restoredSnapshot.innovationRegistry.length, api.innovationRegistry.size);
 assert.deepEqual(restoredSnapshot.innovationBirthTime,Array.from(api.innovationBirthTime.entries()),'structural innovation protection ages must survive snapshot restoration');
 assert.deepEqual(restored.__boidsTest.exportSnapshot().innovationBirthTime,restoredSnapshot.innovationBirthTime);
-assert.equal(restoredSnapshot.schemaVersion, 23);
+assert.equal(restoredSnapshot.schemaVersion, 24);
 assert.equal(restoredSnapshot.counters.frameNo,sourceSnapshot.counters.frameNo,'deterministic frame counter must survive snapshot restoration');
 assert.equal(JSON.stringify(restoredSnapshot.maintenanceCosts),JSON.stringify(sourceSnapshot.maintenanceCosts),'cached organism upkeep must survive snapshot restoration');
 assert.equal(restoredSnapshot.counters.costCacheDirty,sourceSnapshot.counters.costCacheDirty,'upkeep cache invalidation state must survive snapshot restoration');
