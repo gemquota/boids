@@ -10,7 +10,7 @@ Do not conflate them:
 - The full variable-length NEAT genome stores node type, activation, bias, connection innovation, endpoints, weight, enabled state and recurrent state.
 - Schema-21 world snapshots preserve full NEAT genome objects and the additional learned-weight/recurrent state required to resume execution. Hexadecimal chromosome arrays are a compact typed representation/projection, not a lossless substitute for every NEAT field.
 
-## Hexadecimal codec v1
+## Hexadecimal codec v4
 
 Each gene is an independently typed byte record encoded as uppercase hexadecimal.
 
@@ -46,9 +46,9 @@ The codec rejects malformed hexadecimal, odd-length byte strings, unknown record
 
 ## World snapshot schema
 
-The worker snapshot schema is **21**. It persists full variable-length genomes, innovation registry and species state, inherited cis modifiers and variable-length trans-regulatory gene networks, learned-weight overlays, recurrent activations, pedigree, delayed-entry survival history, stable-ID entry ages, lifetime reproductive-success and parent-sex identity state, per-agent variable-length plasticity traces, structural-innovation protection ages, and relevant ecological/RNG state. Restore supports older schema versions through explicit migration/defaulting logic.
+The worker snapshot schema is **24**. It persists full variable-length genomes, innovation registry and species state, inherited cis modifiers and variable-length trans-regulatory gene networks, learned-weight overlays, recurrent activations, pedigree, delayed-entry survival history, stable-ID entry ages, lifetime reproductive-success and parent-sex identity state, per-agent variable-length plasticity traces, structural-innovation protection ages, and relevant ecological/RNG state. Restore supports older schema versions through explicit migration/defaulting logic.
 
-The browser IndexedDB envelope uses `storageSchemaVersion: 2`; the worker's `schemaVersion: 21` remains intact. The two fields are distinct and must never overwrite one another.
+The browser IndexedDB envelope uses `storageSchemaVersion: 2`; the worker's `schemaVersion: 24` remains intact. The two fields are distinct and must never overwrite one another.
 
 ## Compatibility rules
 
