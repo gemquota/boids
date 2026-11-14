@@ -143,7 +143,7 @@ test('newborns receive four temporary bonding sites and mature adult attachment 
   const morphology=development.createState({},()=>0);
   assert.equal(morphology.neonatalBondSites.length,4);
   assert.equal(morphology.neonatalAvailableCount,4);
-  development.advance(morphology,20,4,()=>0);
+  development.advance(morphology,20,8,()=>0);
   assert.ok(morphology.neonatalBondSites.every(site=>site.state==='converted'));
   assert.ok(morphology.bondingSites>=1&&morphology.bondingSites<=2);
   assert.ok(worker.includes('BoidsDevelopment.createState(makeMorphology(a,b),random)'));
