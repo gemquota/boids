@@ -170,10 +170,13 @@ test('run telemetry records changing watershed conditions rather than only stati
   assert.ok(worker.includes('...summarizeHydrology()'));
 });
 
-test('current neural interface has eight bounded sensory inputs and eight outputs', () => {
-  assert.ok(worker.includes('for(let k=0;k<8;k++)inputs[k]=(cfg.sensorMask&(1<<k))?sense[k]:0'));
-  assert.ok(worker.includes('for(let si=0;si<8;si++)sense[si]=clamp(sense[si]+rand(-cfg.sensoryNoise,cfg.sensoryNoise),0,1)'));
-  assert.ok(worker.includes('brainOut[i*8+k]'));
+test('evolved neural interface retains eight core plus four named ecological sensors and outputs', () => {
+  assert.ok(worker.includes("waterProximity:8,thirst:9,bondTension:10,contactPressure:11"));
+  assert.ok(worker.includes("forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11"));
+  assert.ok(worker.includes('sense[10]=clamp(bondTensionByAgent[i]||0,0,1)'));
+  assert.ok(worker.includes('sense[11]=clamp(collisionPressureByAgent[i]||0,0,1)'));
+  assert.ok(worker.includes('for(let si=0;si<12;si++)sense[si]=clamp'));
+  assert.ok(worker.includes('extraBrainOut.fill(0,i*4,i*4+4)'));
   assert.ok(worker.includes('contributionPenalty=Math.log1p(reproductiveSuccess.get(individualId[j])||0)*.08'));
 });
 
