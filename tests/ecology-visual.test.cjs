@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const worker = fs.readFileSync(require.resolve('../boids-worker.js'), 'utf8');
 const schema = require('../config-schema.js');
+const development = require('../development.js');
 const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
 
 test('river network uses curved, shared geometry for drawing and freshwater distance', () => {
@@ -71,7 +72,7 @@ console.log('Ecology visuals: organic rivers, no-trail clearing, landed-spore ge
 
 test('plants and boids are the only food sources', () => {
   assert.doesNotMatch(worker, /function seedFood|food=\[\]|food\.length|foodStock|foodQuality|foodProductivity/);
-  assert.match(worker, /Math.max\(64,Math.min\(120,Math.round\(W\*H\/14000\)\)\)/);
+  assert.match(worker, /initialSporeCount=Math.max\(16,Math.min\(30,Math.round\(W\*H\/56000\)\)\)/);
   assert.match(worker, /plantGain/);
   assert.match(worker, /energy\[i\]=clamp\(energy\[i\]\+plantGain-cost-movementCost/);
   assert.match(worker, /energy\[hunter\]=clamp\(energy\[hunter\]\+\.09/);
@@ -129,29 +130,32 @@ test('mature grandmother plants remain reproductively active until senescence', 
 });
 
 test('colony bonds persist through ordinary separation and only lose endpoints on death', () => {
-  assert.ok(worker.includes('if(near)bond.strength=clamp(bond.strength+.035*dt,0,1)'));
+  assert.ok(worker.includes('bond.strength=clamp(bond.strength+(near?.035:0)*dt,0,1)'));
   assert.ok(!worker.includes('near?.035:-.012'));
   assert.ok(worker.includes("recordPopulationEvent('bond_broken',{a:bond.a,b:bond.b,reason:'organism_death'})"));
-  assert.ok(worker.includes('function resolveBondConstraints(updateN,dt)'));
+  assert.ok(worker.includes('function applyBondConstraints(updateN,dt)'));
   assert.ok(worker.includes('cfg.bondFormationRate*dt*60*Math.max(1,bondCapacity(individualId[i]))'));
   assert.ok(worker.includes('bond.restLength'));
   assert.ok(worker.includes('resolveBondConstraints(updateN,dt)'));
 });
 
-test('newborns receive four temporary bonding spots and adults develop one or two permanent spots', () => {
-  assert.ok(worker.includes('m.temporaryBondingSitesLeft=2;m.temporaryBondingSitesRight=2'));
-  assert.ok(worker.includes('Math.max(2,Math.min(12,cfg.ageMin*.6))'));
-  assert.ok(worker.includes('(random()<.65?1:2)'));
-  assert.ok(worker.includes('activePermanent=Math.floor(target*maturity+1e-6)'));
-  assert.ok(worker.includes('permanentBondingSitesLeft'));
-  assert.ok(worker.includes('updateBondingDevelopmentForAgent'));
+test('newborns receive four temporary bonding sites and mature adult attachment anatomy', () => {
+  const morphology=development.createState({},()=>0);
+  assert.equal(morphology.neonatalBondSites.length,4);
+  assert.equal(morphology.neonatalAvailableCount,4);
+  development.advance(morphology,20,4,()=>0);
+  assert.ok(morphology.neonatalBondSites.every(site=>site.state==='converted'));
+  assert.ok(morphology.bondingSites>=1&&morphology.bondingSites<=2);
+  assert.ok(worker.includes('BoidsDevelopment.createState(makeMorphology(a,b),random)'));
+  assert.ok(worker.includes('BoidsDevelopment.advance(morphologyById.get(individualId[i])'));
 });
 
-test('population exports distinguish biological births/deaths from manual resizing', () => {
-  assert.ok(worker.includes('populationResizeAdds'));
-  assert.ok(worker.includes('populationResizeRemovals'));
-  assert.ok(worker.includes('populationAccountingError'));
+test('population accounting separates biological events from manual resizing', () => {
+  assert.ok(worker.includes("recordPopulationEvent('birth'"));
   assert.ok(worker.includes("recordPopulationEvent('death'"));
+  assert.ok(worker.includes("recordPopulationEvent('manual_add'"));
+  assert.ok(worker.includes("recordPopulationEvent('manual_remove'"));
+  assert.ok(worker.includes('populationAccountingError:initialPopulation+populationResizeAdds+births-populationResizeRemovals-deaths-N'));
 });
 
 test('parental contribution telemetry exposes reproductive skew', () => {
@@ -166,12 +170,11 @@ test('run telemetry records changing watershed conditions rather than only stati
   assert.ok(worker.includes('...summarizeHydrology()'));
 });
 
-test('neural interface exposes additional named sensory and behavior channels', () => {
-  assert.ok(worker.includes('waterProximity:8,thirst:9,bondTension:10,contactPressure:11'));
-  assert.ok(worker.includes('forageDrive:8,waterDrive:9,colonyCohesion:10,explorationDrive:11'));
+test('current neural interface has eight bounded sensory inputs and eight outputs', () => {
+  assert.ok(worker.includes('for(let k=0;k<8;k++)inputs[k]=(cfg.sensorMask&(1<<k))?sense[k]:0'));
+  assert.ok(worker.includes('for(let si=0;si<8;si++)sense[si]=clamp(sense[si]+rand(-cfg.sensoryNoise,cfg.sensoryNoise),0,1)'));
+  assert.ok(worker.includes('brainOut[i*8+k]'));
   assert.ok(worker.includes('contributionPenalty=Math.log1p(reproductiveSuccess.get(individualId[j])||0)*.08'));
-  assert.ok(worker.includes('sense[10]=clamp(bondTensionByAgent[i]||0,0,1)'));
-  assert.ok(worker.includes('tension=clamp(Math.max(0,extension)/Math.max(1,bond.restLength),0,1)'));
 });
 
 test('plants avoid canopy collisions and use treetop tip-shyness for new growth', () => {
@@ -245,8 +248,8 @@ test('smaller nodes grow more slowly relative to their whole plant', () => {
 });
 
 test('neonatal bonding can recruit distinct colony neighbours', () => {
-  assert.match(worker, /neonatalAvailableCount/);
-  assert.match(worker, /myBondStrengths\?\.has\(individualId\[j\]\)/);
+  assert.match(worker, /BoidsDevelopment.availableNeonatalSite/);
+  assert.match(worker, /occupyNeonatalBondSite\(a,sideA\)/);
   assert.match(worker, /bondOpportunity\(individualId\[i\],individualId\[bondIndex\],frameNo\)/);
 });
 test('organism contacts use swept collision impulses and persistent tether constraints', () => {
