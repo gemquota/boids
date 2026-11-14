@@ -8,7 +8,7 @@ Do not conflate them:
 
 - The hexadecimal codec encodes ten stable trait-locus records and compact connection records.
 - The full variable-length NEAT genome stores node type, activation, bias, connection innovation, endpoints, weight, enabled state and recurrent state.
-- Schema-21 world snapshots preserve full NEAT genome objects and the additional learned-weight/recurrent state required to resume execution. Hexadecimal chromosome arrays are a compact typed representation/projection, not a lossless substitute for every NEAT field.
+- Schema-24 world snapshots preserve full NEAT genome objects and the additional learned-weight/recurrent state required to resume execution. Hexadecimal chromosome arrays are a compact typed representation/projection, not a lossless substitute for every NEAT field.
 
 ## Hexadecimal codec v4
 
