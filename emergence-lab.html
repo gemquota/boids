@@ -133,7 +133,7 @@ document.getElementById('pReset').onclick=()=>{primordial=new BoidsEmergencePipe
 document.getElementById('pAggregate').onclick=()=>{primordial.aggregate();drawPrimordial()};
 document.getElementById('pCatalyse').onclick=()=>{primordial.catalyse();drawPrimordial()};
 document.getElementById('pRelease').onclick=()=>{primordial.release();drawPrimordial()};
-document.getElementById('pAdvance').onclick=()=>{const seed=primordial.chemistrySeed();try{sessionStorage.setItem('boids-emergence-seed',JSON.stringify(seed))}catch(e){pStats.textContent='Could not transfer primordial state: '+e.message;return}document.getElementById('primordialStage').style.display='none';document.getElementById('chemistryStage').style.display='block';seedWorld();window.scrollTo({top:0,behavior:'smooth'})};
+document.getElementById('pAdvance').onclick=()=>{const seed=primordial.chemistrySeed();try{sessionStorage.setItem('boids-emergence-seed',JSON.stringify(seed));window.__emergenceSeed=seed}catch(e){pStats.textContent='Could not transfer primordial state: '+e.message;return}document.getElementById('primordialStage').style.display='none';document.getElementById('chemistryStage').style.display='block';seedWorld();window.scrollTo({top:0,behavior:'smooth'})};
 drawPrimordial();pRaf=requestAnimationFrame(pLoop);
 const stageLabel=document.createElement('div');stageLabel.className='note';stageLabel.textContent='Developmental context: primordial substrate → chemistry → protocell → pre-boid → proto-boid → Boids. '+(window.__emergenceSeed?'Imported '+window.__emergenceSeed.particles.length+' primordial constituents and '+(window.__emergenceSeed.bonds||[]).length+' pre-chemical adhesions.':'');document.querySelector('.panel').appendChild(stageLabel);
 </script>
