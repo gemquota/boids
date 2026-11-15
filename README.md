@@ -5,7 +5,7 @@
 **Live simulation:** https://gemquota.github.io/boids/  
 **Advanced vision laboratory:** https://gemquota.github.io/boids/vision-lab.html  
 **Minimal vision laboratory:** https://gemquota.github.io/boids/vision-minimal.html  
-**Unified emergence laboratory:** [prebiotic substrate through atoms, molecules, protocells and proto-boids](https://gemquota.github.io/boids/emergence-lab.html)  
+**Unified emergence laboratory:** [atoms, emergent molecules and molecular assemblies](https://gemquota.github.io/boids/emergence-lab.html)  
 **Emergence architecture:** [developmental stages and integration](https://gemquota.github.io/boids/docs/Emergence.md)  
 **Unified emergence engine:** [shared compositional substrate](https://gemquota.github.io/boids/docs/EMERGENCE-ENGINE.md)  
 **Repository:** https://github.com/gemquota/boids
