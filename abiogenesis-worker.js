@@ -1,11 +1,11 @@
 'use strict';
-importScripts('abiogenesis.js?v=20261113-resource-clouds-v1');
+importScripts('abiogenesis.js?v=20261116-molecular-assembly');
 
 let world=null,random=null;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 function summary(){
-  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,moleculeCount:(world.molecules||[]).length,resourceCloudCount:(world.resourceClouds||[]).length,carriedParticleCount:(world.resourceClouds||[]).reduce((n,c)=>n+c.particleIds.length,0),energySourceCount:(world.energySources||[]).length,compartmentCount:(world.compartments||[]).length};
+  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,moleculeCount:BoidsAbiogenesis.deriveMolecularGraph(world).molecules.length,assemblyCount:BoidsAbiogenesis.deriveMolecularGraph(world).assemblies.length,declaredMoleculeCount:(world.molecules||[]).length,resourceCloudCount:(world.resourceClouds||[]).length,carriedParticleCount:(world.resourceClouds||[]).reduce((n,c)=>n+c.particleIds.length,0),energySourceCount:(world.energySources||[]).length,compartmentCount:(world.compartments||[]).length};
 }
 
 onmessage=event=>{
@@ -95,8 +95,8 @@ onmessage=event=>{
       const dt=clamp(Number(message.dt)||1/60,.0001,.05);
       const options={...(message.options||{}),random};
       let stats=world.stats;
-      for(let i=0;i<steps;i++)stats=BoidsAbiogenesis.stepParticleWorld(world,dt,options);
-      postMessage({type:'abiogenesis:frame',...summary(),randomState:random.state,
+      let chemistry=null;for(let i=0;i<steps;i++){chemistry=BoidsAbiogenesis.stepMolecularAssemblies(world,dt,options);stats=BoidsAbiogenesis.stepParticleWorld(world,dt,{...options,chemicalRules:true});}
+      postMessage({type:'abiogenesis:frame',...summary(),chemistry,randomState:random.state,
         world:message.includeWorld?BoidsAbiogenesis.snapshotParticleWorld(world):undefined});
       return;
     }
