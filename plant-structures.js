@@ -42,13 +42,13 @@ function createConnection(s,a,b,type,cfg){
  s.connections.push(c);return c;
 }
 function rootFusion(s,cfg){
- const tips=s.roots.filter(r=>r.health>.25&&r.length>r.targetLength*.55),cell=Math.max(4,cfg.rootFusionDistance),bins=new Map();
+ const tips=s.roots.filter(r=>r.health>.25&&r.length>r.targetLength*.55),cell=Math.max(4,cfg.rootFusionDistance),bins=new Map(),degree=new Map();for(const c of s.connections)if(c.type==='root'){degree.set(c.a,(degree.get(c.a)||0)+1);degree.set(c.b,(degree.get(c.b)||0)+1)}
  for(const r of tips){const x=Math.floor(r.tipX/cell),y=Math.floor(r.tipY/cell),key=x+','+y;if(!bins.has(key))bins.set(key,[]);bins.get(key).push(r)}
  for(const r of tips){const x=Math.floor(r.tipX/cell),y=Math.floor(r.tipY/cell);for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)for(const other of bins.get((x+ox)+','+(y+oy))||[]){
-  if(other.id<=r.id||other.plantId===r.plantId&&other.nodeId===r.nodeId)continue;
+  if(other.id<=r.id||other.plantId===r.plantId&&other.nodeId===r.nodeId||(degree.get(r.id)||0)>=2||(degree.get(other.id)||0)>=2)continue;
   const d=dist({x:r.tipX,y:r.tipY},{x:other.tipX,y:other.tipY});if(d>cfg.rootFusionDistance)continue;
   if(Math.random()>Math.max(0,Math.min(.08,Number(cfg.simulationStep)||.05))*cfg.rootFusionProbability*.8)continue;
-  if(createConnection(s,r,other,'root',cfg)){r.health=Math.min(1,r.health+.025);other.health=Math.min(1,other.health+.025)}
+  if(createConnection(s,r,other,'root',cfg)){degree.set(r.id,(degree.get(r.id)||0)+1);degree.set(other.id,(degree.get(other.id)||0)+1);r.health=Math.min(1,r.health+.025);other.health=Math.min(1,other.health+.025)}
  }}}
 function dtScale(cfg){return Math.max(.001,Math.min(.08,Number(cfg.simulationStep)||.05))*Math.max(0,Number(cfg.rootFusionProbability)||0)*.8}
 function surfaceFusion(s,plants,cfg,dt){
@@ -72,7 +72,7 @@ function step(s,plants,dt,env,cfg){
  // Root maintenance is charged to the node that owns the root system.
  for(const p of plants){const count=s.roots.filter(r=>r.nodeId===p.id&&r.health>.2).length;p.rootMaintenance=count*cfg.rootMaintenance*dt;p.biomass=Math.max(0,p.biomass-p.rootMaintenance);p.rootConnectionCount=s.connections.filter(c=>c.type==='root'&&(s.roots.find(r=>r.id===c.a)?.nodeId===p.id||s.roots.find(r=>r.id===c.b)?.nodeId===p.id)).length}
  rootFusion(s,cfg);surfaceFusion(s,plants,cfg,dt);
- for(const c of s.connections){c.age+=dt;c.health=Math.max(0,c.health-dt*.00015);const a=s.roots.find(r=>r.id===c.a),b=s.roots.find(r=>r.id===c.b);if(c.type==='root'&&a&&b){c.transport=clamp((a.health+b.health)*.5*c.strength);const pa=byId.get(a.nodeId),pb=byId.get(b.nodeId);if(pa&&pb&&pa.id!==pb.id){const transfer=Math.min(pa.rootWaterReserve||0,pb.rootWaterReserve||0)*.0005*c.transport;pa.rootWaterReserve=Math.max(0,(pa.rootWaterReserve||0)-transfer);pb.rootWaterReserve=(pb.rootWaterReserve||0)+transfer}}}
+ for(const c of s.connections){c.age+=dt;c.health=Math.max(0,c.health-dt*.00015);const a=s.roots.find(r=>r.id===c.a),b=s.roots.find(r=>r.id===c.b);if(c.type==='root'&&a&&b){c.transport=clamp((a.health+b.health)*.5*c.strength);const pa=byId.get(a.nodeId),pb=byId.get(b.nodeId);if(pa&&pb&&pa.id!==pb.id){const delta=(pa.rootWaterReserve||0)-(pb.rootWaterReserve||0),transfer=Math.min(Math.abs(delta)*.02,.000002*c.transport);if(delta>0){pa.rootWaterReserve=Math.max(0,pa.rootWaterReserve-transfer);pb.rootWaterReserve=(pb.rootWaterReserve||0)+transfer}else{pb.rootWaterReserve=Math.max(0,(pb.rootWaterReserve||0)-transfer);pa.rootWaterReserve=(pa.rootWaterReserve||0)+transfer}}}}
  s.roots=s.roots.filter(r=>byId.has(r.nodeId)&&r.health>.08);
  s.connections=s.connections.filter(c=>c.health>.05&&(c.type!=='root'||(s.roots.some(r=>r.id===c.a)&&s.roots.some(r=>r.id===c.b))));
  s.stats.rootTips=s.roots.filter(r=>r.children===0).length;s.stats.rootConnections=s.connections.filter(c=>c.type==='root').length;s.stats.surfaceConnections=s.connections.filter(c=>c.type==='surface').length;s.stats.rootBiomass=s.roots.reduce((n,r)=>n+r.length*.00008,0);
