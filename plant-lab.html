@@ -134,7 +134,7 @@ body.parameter-expert .subgroup>summary{padding-left:0}
  group('Tools',[randomize,resetValues,resetBounds,exportButton]);
  document.body.append(bar);
  const oldToggle=document.querySelector('#drawerToggle');if(oldToggle)oldToggle.remove();
- const toggle=document.createElement('button');toggle.className='drawerCollapse';toggle.type='button';toggle.textContent='⌄';toggle.setAttribute('aria-label','Collapse controls');drawer.append(toggle);
+ const toggle=document.createElement('button');toggle.className='drawerCollapse';toggle.type='button';toggle.textContent='⌄';toggle.setAttribute('aria-label','Collapse controls');document.body.append(toggle);
  toggle.addEventListener('click',()=>{drawer.classList.toggle('closed');toggle.textContent=drawer.classList.contains('closed')?'⌃':'⌄';toggle.setAttribute('aria-label',drawer.classList.contains('closed')?'Open controls':'Collapse controls')});
  const setHeight=v=>{const h=Math.max(150,Math.min(innerHeight*.72,v));drawer.style.setProperty('--drawer-height',h+'px');};
  setHeight(Math.min(innerHeight*.43,390));
