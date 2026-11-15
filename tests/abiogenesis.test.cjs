@@ -496,3 +496,19 @@ test('molecular graph derives formulas and spatial assemblies from persistent at
   assert.equal(world.bonds.length,bondCount,'non-covalent assembly must not consume atomic valence or invent covalent bonds');
   assert.ok(world.particles.find(p=>p.id==='c').velocity.x>0,'the first molecule should be weakly attracted toward the second');
 });
+
+test('automatic bond formation respects elemental compatibility and valence',()=>{
+  const compatible=bio.createParticleWorld([
+    {id:'c',element:'C',radius:5,position:{x:0,y:0}},
+    {id:'h',element:'H',radius:3.6,position:{x:9,y:0}}
+  ]);
+  bio.stepParticleWorld(compatible,.01,{cellSize:12,captureRadius:1,thermalJitter:0,electrostatic:0,enableBondFormation:true,chemicalRules:true,bondProbability:1,random:()=>0});
+  assert.equal(compatible.bonds.length,1);
+  assert.equal(compatible.bonds[0].type,'covalent');
+  const incompatible=bio.createParticleWorld([
+    {id:'o1',element:'O',radius:5,position:{x:0,y:0}},
+    {id:'o2',element:'O',radius:5,position:{x:9,y:0}}
+  ]);
+  bio.stepParticleWorld(incompatible,.01,{cellSize:12,captureRadius:1,thermalJitter:0,electrostatic:0,enableBondFormation:true,chemicalRules:true,bondProbability:1,random:()=>0});
+  assert.equal(incompatible.bonds.length,0,'unsupported element pairs must not acquire covalent bonds');
+});
