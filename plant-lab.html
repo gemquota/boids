@@ -105,6 +105,7 @@ body.parameter-expert .subgroup>summary{padding-left:0}
  const ecologyNodes=children.filter(n=>n.matches('.hint'));
  const observatoryNodes=children.filter(n=>n.matches('.stats,#germinationDiagnostics,.note'));
  const actionSource=drawer.querySelector('.drawerActionGrid');
+ if(actionSource)actionSource.remove();
  const get=id=>actionSource.querySelector('#'+id);
  const pause=get('pause'),reset=get('reset'),water=get('water'),zoomOut=get('zoomOut'),zoomIn=get('zoomIn'),home=get('home'),randomize=get('randomize'),resetValues=get('resetValues'),resetBounds=get('resetBounds'),exportButton=get('export');
  const lockHint=drawer.querySelector('#lockModeHint');
