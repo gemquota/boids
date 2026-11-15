@@ -307,7 +307,16 @@ for(const [group,items] of Object.entries(controlGroups)){
 function applyParameterLevel(level){
  parameterLevel=levelRank[level]===undefined?'basic':level;
  document.body.classList.remove('parameter-basic','parameter-advanced','parameter-expert');document.body.classList.add('parameter-'+parameterLevel);
- function showConfirm(button,action){if(activeConfirm)activeConfirm.remove();const pair=document.createElement('span');pair.className='confirmPair';button.parentElement.style.position='relative';pair.style.left=(button.offsetLeft+button.offsetWidth/2)+'px';const yes=document.createElement('button'),no=document.createElement('button');yes.type=no.type='button';yes.textContent='✓';no.textContent='×';no.className='cancel';pair.append(yes,no);button.parentElement.append(pair);activeConfirm=pair;yes.onclick=()=>{pair.remove();activeConfirm=null;action()};no.onclick=()=>{pair.remove();activeConfirm=null};}
+ document.querySelectorAll('.levelToggle button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.level===parameterLevel)));
+ document.querySelectorAll('.control[data-level]').forEach(control=>{control.hidden=levelRank[control.dataset.level]>levelRank[parameterLevel]});
+ document.querySelectorAll('.group,.subgroup').forEach(section=>{section.open=true});
+ const levelDescriptions={basic:'Essential controls, shown without group or subgroup accordions.',advanced:'Basic and advanced controls, organised into main groups.',expert:'All controls, organised into groups and nested subgroups.'};
+ document.querySelector('#levelDescription').textContent=levelDescriptions[parameterLevel];
+ try{localStorage.setItem('boids.plant-lab.parameter-level',parameterLevel)}catch(e){}
+}
+document.querySelectorAll('.levelToggle button').forEach(button=>button.addEventListener('click',()=>applyParameterLevel(button.dataset.level)));
+loadParameters();for(const key of Object.keys(sliderState))syncControl(key);applyEnvironmentParameters();renderLockState();applyParameterLevel(parameterLevel);
+function showConfirm(button,action){if(activeConfirm)activeConfirm.remove();const pair=document.createElement('span');pair.className='confirmPair';button.parentElement.style.position='relative';pair.style.left=(button.offsetLeft+button.offsetWidth/2)+'px';const yes=document.createElement('button'),no=document.createElement('button');yes.type=no.type='button';yes.textContent='✓';no.textContent='×';no.className='cancel';pair.append(yes,no);button.parentElement.append(pair);activeConfirm=pair;yes.onclick=()=>{pair.remove();activeConfirm=null;action()};no.onclick=()=>{pair.remove();activeConfirm=null};}
 function resetCurrentValues(){Object.assign(cfg,DEFAULT_CFG);for(const key of Object.keys(sliderState))syncControl(key);applyEnvironmentParameters();saveParameters()}
 function resetSliderBounds(){for(const key of Object.keys(sliderDefaults)){sliderState[key]={...sliderDefaults[key]};cfg[key]=clamp(cfg[key],sliderState[key].min,sliderState[key].max);syncControl(key)}applyEnvironmentParameters();saveParameters()}
 document.querySelector('#resetValues').onclick=e=>showConfirm(e.currentTarget,resetCurrentValues);
