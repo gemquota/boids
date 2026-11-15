@@ -517,7 +517,7 @@
   }
   function chemicallyCompatible(a,b){
     const pair=[a.element,b.element].sort().join('-');
-    const allowed=new Set(['C-C','C-H','C-N','C-O','C-P','C-S','H-H','H-N','H-O','H-P','H-S','N-N','N-O','N-P','N-S','O-P','O-S','P-S','S-S']);
+    const allowed=new Set(['C-C','C-H','C-N','C-O','C-P','C-S','H-H','H-N','H-O','H-P','H-S','N-N','N-O','N-P','N-S','O-O','O-P','O-S','P-S','S-S']);
     if(!allowed.has(pair))return false;
     if(a.element==='H'&&a.bonds.length>=1||b.element==='H'&&b.bonds.length>=1)return false;
     return true;
