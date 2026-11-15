@@ -43,3 +43,14 @@
 - [x] Add nested subcategory accordions within the existing parameter groups.
 - [x] Add a fractal node maturity control: daughter nodes must reach the core-size benchmark before producing their own daughter nodes; the core remains able to initiate the first generation.
 - [ ] Verify visual layout and long-running fractal growth in the deployed browser.
+
+
+## Pass 5: Recursive roots and staged fusion
+- [x] Add recursive primary, lateral and deeper root segments attached to individual plant nodes.
+- [x] Steer root tips toward moisture and nutrient gradients while preserving downward growth bias.
+- [x] Charge root maintenance biomass and deplete local water/nutrient fields through root-tip uptake.
+- [x] Add explicit root graft connections with strength, health, age and resource transport metadata.
+- [x] Add surface-node fusion with gradual positional alignment before junction completion.
+- [x] Preserve plant node IDs, parentage and root genealogy; connections do not merge node objects.
+- [x] Add Expert controls for root architecture, root fusion and surface fusion.
+- [ ] Run module-level simulation tests and verify long-running growth, network stability and mobile rendering in a deployed browser.
