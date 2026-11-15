@@ -21,7 +21,7 @@ jobs:
           python3 - <<'PY'
           import re
           html = open('emergence-lab.html', encoding='utf-8').read()
-          match = re.search(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>', html, re.S)
+          match = re.search(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
           if not match:
               raise SystemExit('Unified emergence lab inline script not found')
           open('/tmp/emergence-lab.js', 'w', encoding='utf-8').write(match.group(1))
