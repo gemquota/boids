@@ -487,7 +487,7 @@
       for(const p of atoms){center.x+=p.position.x*p.mass/mass;center.y+=p.position.y*p.mass/mass;center.z+=p.position.z*p.mass/mass}
       const composition=atoms.reduce((o,p)=>(o[p.element]=(o[p.element]||0)+1,o),{});
       const formula=Object.keys(composition).sort((a,b)=>['C','H','N','O','P','S','OTHER'].indexOf(a)-['C','H','N','O','P','S','OTHER'].indexOf(b)).map(k=>k+(composition[k]>1?composition[k]:'')).join('');
-      return{id:'mol:'+ids.slice().sort().join('.'),atomIds:ids.slice(),bondIds:bonds.map(b=>b.id),composition,formula,mass,center,radius:atoms.reduce((n,p)=>n+Math.hypot(p.position.x-center.x,p.position.y-center.y,p.position.z-center.z),0)/atoms.length,charge:atoms.reduce((n,p)=>n+p.charge,0)};
+      return{id:'mol:'+ids.slice().sort().join('.'),atomIds:ids.slice(),bondIds:bonds.map(b=>b.id),composition,formula,mass,center,radius:Math.max(0,...atoms.map(p=>Math.hypot(p.position.x-center.x,p.position.y-center.y,p.position.z-center.z))),charge:atoms.reduce((n,p)=>n+p.charge,0)};
     });
     const range=Math.max(1,finite(options.assemblyRange,46)),parent=new Map(molecules.map(m=>[m.id,m.id]));
     const find=id=>{let p=parent.get(id);while(p!==parent.get(p))p=parent.get(p);let q=id;while(parent.get(q)!==p){const n=parent.get(q);parent.set(q,p);q=n}return p};
