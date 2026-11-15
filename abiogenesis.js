@@ -440,7 +440,7 @@
       const chargeForce=electrostatic*a.charge*b.charge/(distance*distance+softening*softening);
       forces[i].x-=chargeForce*nx;forces[i].y-=chargeForce*ny;forces[i].z-=chargeForce*nz;
       forces[j].x+=chargeForce*nx;forces[j].y+=chargeForce*ny;forces[j].z+=chargeForce*nz;
-      if(options.enableBondFormation&&distance<=a.radius+b.radius+captureRadius&&canBond(a,b)&&random()<clamp(finite(options.bondProbability,.02)*Math.exp(-Math.max(0,a.thermalEnergy+b.thermalEnergy)*finite(options.temperatureSensitivity,.1)),0,1)){
+      if(options.enableBondFormation&&distance<=a.radius+b.radius+captureRadius&&canBond(a,b,options.chemicalRules?{compatibility:chemicallyCompatible}: {})&&random()<clamp(finite(options.bondProbability,.02)*Math.exp(-Math.max(0,a.thermalEnergy+b.thermalEnergy)*finite(options.temperatureSensitivity,.1)),0,1)){
         const bond=normalizeBond({a:a.id,b:b.id,type:options.bondType||'covalent',strength:finite(options.bondStrength,2),restLength:Math.max(a.radius+b.radius,finite(options.bondRestLength,a.radius+b.radius)),damping:finite(options.bondDamping,.15),formedAt:world.time});
         a.bonds.push(b.id);b.bonds.push(a.id);world.bonds.push(bond);bondsFormed++;
       }
@@ -475,6 +475,52 @@
     }
     world.time+=dt;world.stats={steps:world.stats.steps+1,collisions,bondsFormed:world.stats.bondsFormed+bondsFormed,bondsBroken:world.stats.bondsBroken+bondsBroken,thermalEnergy,kineticEnergy,candidatePairs:candidates.length};
     return world.stats;
+  }
+
+  // Derived molecular topology: molecules are connected atom/bond components, not manually assigned labels.
+  function deriveMolecularGraph(world,options={}){
+    if(!world||!Array.isArray(world.particles)||!Array.isArray(world.bonds))throw new TypeError('Invalid particle world');
+    const byId=new Map(world.particles.map(p=>[p.id,p])),groups=connectedComponents(world.particles,world.bonds);
+    const molecules=groups.filter(ids=>ids.length>1).map(ids=>{
+      const atoms=ids.map(id=>byId.get(id)),atomSet=new Set(ids),bonds=world.bonds.filter(b=>atomSet.has(b.a)&&atomSet.has(b.b));
+      const mass=atoms.reduce((n,p)=>n+p.mass,0)||1,center={x:0,y:0,z:0};
+      for(const p of atoms){center.x+=p.position.x*p.mass/mass;center.y+=p.position.y*p.mass/mass;center.z+=p.position.z*p.mass/mass}
+      const composition=atoms.reduce((o,p)=>(o[p.element]=(o[p.element]||0)+1,o),{});
+      const formula=Object.keys(composition).sort((a,b)=>['C','H','N','O','P','S','OTHER'].indexOf(a)-['C','H','N','O','P','S','OTHER'].indexOf(b)).map(k=>k+(composition[k]>1?composition[k]:'')).join('');
+      return{id:'mol:'+ids.slice().sort().join('.'),atomIds:ids.slice(),bondIds:bonds.map(b=>b.id),composition,formula,mass,center,radius:atoms.reduce((n,p)=>n+Math.hypot(p.position.x-center.x,p.position.y-center.y,p.position.z-center.z),0)/atoms.length,charge:atoms.reduce((n,p)=>n+p.charge,0)};
+    });
+    const range=Math.max(1,finite(options.assemblyRange,46)),parent=new Map(molecules.map(m=>[m.id,m.id]));
+    const find=id=>{let p=parent.get(id);while(p!==parent.get(p))p=parent.get(p);let q=id;while(parent.get(q)!==p){const n=parent.get(q);parent.set(q,p);q=n}return p};
+    for(let i=0;i<molecules.length;i++)for(let j=i+1;j<molecules.length;j++){
+      const a=molecules[i],b=molecules[j],d=Math.hypot(a.center.x-b.center.x,a.center.y-b.center.y,a.center.z-b.center.z);
+      if(d<=range){const x=find(a.id),y=find(b.id);if(x!==y)parent.set(y,x)}
+    }
+    const sets=new Map();for(const m of molecules){const key=find(m.id);if(!sets.has(key))sets.set(key,[]);sets.get(key).push(m.id)}
+    const assemblies=Array.from(sets.values()).filter(ids=>ids.length>1).map(ids=>({id:'assembly:'+ids.slice().sort().join('|'),moleculeIds:ids,memberCount:ids.length}));
+    return{molecules,assemblies,atomCount:world.particles.length,bondCount:world.bonds.length};
+  }
+  // Weak, non-covalent attraction between molecular components. It never consumes valence or creates atom bonds.
+  function stepMolecularAssemblies(world,dt,options={}){
+    const graph=deriveMolecularGraph(world,options),strength=Math.max(0,finite(options.assemblyStrength,.018)),range=Math.max(1,finite(options.assemblyRange,46)),soft=Math.max(1,finite(options.assemblySoftening,8));
+    const byId=new Map(world.particles.map(p=>[p.id,p])),impulses=new Map();
+    for(const m of graph.molecules)for(const id of m.atomIds)impulses.set(id,{x:0,y:0,z:0});
+    for(let i=0;i<graph.molecules.length;i++)for(let j=i+1;j<graph.molecules.length;j++){
+      const a=graph.molecules[i],b=graph.molecules[j],dx=b.center.x-a.center.x,dy=b.center.y-a.center.y,dz=b.center.z-a.center.z,d=Math.hypot(dx,dy,dz)||1e-6;
+      if(d>range)continue;
+      const surface=d-a.radius-b.radius,falloff=Math.max(0,1-d/range),repel=surface<soft?Math.min(.12,(soft-surface)*.012):0;
+      const magnitude=strength*falloff-repel;
+      for(const id of a.atomIds){const p=byId.get(id),f=impulses.get(id),share=1/a.atomIds.length/p.mass;f.x+=dx/d*magnitude*share;f.y+=dy/d*magnitude*share;f.z+=dz/d*magnitude*share}
+      for(const id of b.atomIds){const p=byId.get(id),f=impulses.get(id),share=1/b.atomIds.length/p.mass;f.x-=dx/d*magnitude*share;f.y-=dy/d*magnitude*share;f.z-=dz/d*magnitude*share}
+    }
+    for(const [id,f] of impulses){const p=byId.get(id);p.velocity.x+=f.x*dt;p.velocity.y+=f.y*dt;p.velocity.z+=f.z*dt}
+    return graph;
+  }
+  function chemicallyCompatible(a,b){
+    const pair=[a.element,b.element].sort().join('-');
+    const allowed=new Set(['C-C','C-H','C-N','C-O','C-P','C-S','H-H','H-N','H-O','H-P','H-S','N-N','N-O','N-P','N-S','O-P','O-S','P-S','S-S']);
+    if(!allowed.has(pair))return false;
+    if(a.element==='H'&&a.bonds.length>=1||b.element==='H'&&b.bonds.length>=1)return false;
+    return true;
   }
 
   const CAPABILITIES={
@@ -518,5 +564,5 @@
     return {enabled:Array.from(enabled).sort(),unmet,passes};
   }
   return {ELEMENTS,ELEMENT_VALENCE,BOND_TYPES,CAPABILITIES,createSeededRandom,snapshotParticleWorld,restoreParticleWorld,createParticleWorld,stepParticleWorld,normalizeParticle,normalizeBond,canBond,formBond,breakBond,bondForce,connectedComponents,
-    normalizeMolecule,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,normalizeEnergySource,createEnergySource,harvestEnergy,metabolizeMolecules,normalizeResourceCloud,createResourceCloud,resourceInventory,collectResources,craftMolecule,rearrangeMolecules,transferResource,exchangeResource,diffuseResources,createCompartment,growCompartment,divideCompartment,consumeResource,evaluateCapabilities};
+    normalizeMolecule,deriveMolecularGraph,stepMolecularAssemblies,applyReaction,polymerise,autocatalyticClosure,assembleCompartment,normalizeEnergySource,createEnergySource,harvestEnergy,metabolizeMolecules,normalizeResourceCloud,createResourceCloud,resourceInventory,collectResources,craftMolecule,rearrangeMolecules,transferResource,exchangeResource,diffuseResources,createCompartment,growCompartment,divideCompartment,consumeResource,evaluateCapabilities};
 });
