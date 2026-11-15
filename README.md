@@ -91,7 +91,7 @@ All standalone browser components are published under the same GitHub Pages orig
 - [Plant laboratory](https://gemquota.github.io/boids/plant-lab.html)
 - [Advanced vision laboratory](https://gemquota.github.io/boids/vision-lab.html)
 - [Minimal vision laboratory](https://gemquota.github.io/boids/vision-minimal.html)
-- Vision audio sequencer moved into `gemquota/hz` (`public/vision-audio.html`); it is served at `/vision-audio.html` by the hz deployment.  
+- Vision audio sequencer moved into `gemquota/hz/public/vision-audio.html`; its public URL awaits an hz deployment connection.  
 - [Unified emergence laboratory](https://gemquota.github.io/boids/emergence-lab.html)
 
 ## Documentation directory
