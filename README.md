@@ -83,4 +83,40 @@ A passing Node test suite does not replace browser/device smoke tests. Before re
 GitHub Pages serves the static application from the repository. The deployment workflow is `.github/workflows/pages.yml`. The published URL is https://gemquota.github.io/boids/.
 
 
+
+## Applications and laboratories
+
+All standalone browser components are published under the same GitHub Pages origin:
+
+- [Main ecosystem](https://gemquota.github.io/boids/)
+- [Plant laboratory](https://gemquota.github.io/boids/plant-lab.html)
+- [Advanced vision laboratory](https://gemquota.github.io/boids/vision-lab.html)
+- [Minimal vision laboratory](https://gemquota.github.io/boids/vision-minimal.html)
+- [Vision audio](https://gemquota.github.io/boids/vision-audio.html)
+- [Emergence laboratory](https://gemquota.github.io/boids/emergence-lab.html)
+- [Abiogenesis laboratory](https://gemquota.github.io/boids/abiogenesis-lab.html)
+- [Research interface](https://gemquota.github.io/boids/research/)
+
+## Documentation directory
+
+- [Architecture](https://gemquota.github.io/boids/docs/ARCHITECTURE.md)
+- [Abiogenesis](https://gemquota.github.io/boids/docs/Abiogenesis.md)
+- [Emergence](https://gemquota.github.io/boids/docs/Emergence.md)
+- [Unified emergence engine](https://gemquota.github.io/boids/docs/EMERGENCE-ENGINE.md)
+- [Chromosome format](https://gemquota.github.io/boids/docs/CHROMOSOME_FORMAT.md)
+- [Configuration](https://gemquota.github.io/boids/docs/CONFIGURATION.md)
+- [Genetics](https://gemquota.github.io/boids/docs/GENETICS.md)
+- [Genetics roadmap](https://gemquota.github.io/boids/docs/GENETICS_ROADMAP.md)
+- [Implementation backlog](https://gemquota.github.io/boids/docs/IMPLEMENTATION-BACKLOG.md)
+- [Implementation status](https://gemquota.github.io/boids/docs/IMPLEMENTATION-STATUS.md)
+- [Model calibration](https://gemquota.github.io/boids/docs/MODEL-CALIBRATION.md)
+- [Model roadmap](https://gemquota.github.io/boids/docs/MODEL-ROADMAP.md)
+- [Organism economics](https://gemquota.github.io/boids/docs/ORGANISM-ECONOMICS.md)
+- [Performance baseline](https://gemquota.github.io/boids/docs/PERFORMANCE-BASELINE.md)
+- [Run 16 remediation and experiments](https://gemquota.github.io/boids/docs/RUN16-REMEDIATION-AND-EXPERIMENTS.md)
+- [Snapshot migration](https://gemquota.github.io/boids/docs/SNAPSHOT-MIGRATION.md)
+- [Telemetry and exports](https://gemquota.github.io/boids/docs/TELEMETRY-EXPORTS.md)
+- [Validation](https://gemquota.github.io/boids/docs/VALIDATION.md)
+
+
 The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.md) and the [standalone lab](https://gemquota.github.io/boids/abiogenesis-lab.html).
