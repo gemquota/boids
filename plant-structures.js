@@ -31,7 +31,7 @@ function makeTip(s,p,r,env,cfg,dt){
  const demand=dt*.00018*cfg.rootWaterUptake*(.35+habitat.moisture)*r.health;
  let water=0,nutrient=0;
  if(env.hydrology&&env.hydrology.consumeWater)water=env.hydrology.consumeWater(env.hydrologyFields,r.tipX,r.tipY,demand);
- if(env.ecology&&env.ecology.consumeNutrients)nutrient=env.ecology.consumeNutrients(env.ecology,r.tipX,r.tipY,dt*.00012*cfg.rootNutrientUptake);
+ if(env.ecology&&env.ecology.consumeNutrients)nutrient=env.ecology.consumeNutrients(env.ecologyFields,r.tipX,r.tipY,dt*.00012*cfg.rootNutrientUptake);
  p.rootWaterReserve=Math.min(.025,(p.rootWaterReserve||0)+demand*water);
  p.rootNutrientReserve=Math.min(.025,(p.rootNutrientReserve||0)+dt*.00012*cfg.rootNutrientUptake*nutrient);
 }
