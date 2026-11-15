@@ -49,7 +49,7 @@ function step(s,dt,time=s.time+dt){
   const evaporation=(.00025+Math.max(0,.5-e)*.0002)*dt;
   let groundwater=clamp(s.groundwater[i]+infiltration*.42*dt-evaporation);
   const down=s.downhill[i],slope=down>=0?Math.max(0,e-s.elevation[down]):0;
-  const drainage=Math.min(surface, surface*(.08+slope*1.8)*dt*s.watershedDrainage);
+  const drainage=Math.min(surface, surface*(.08+slope*1.8)*dt*s.watershedDrainage*s.watershedDrainage);
   surface-=drainage;
   nextSurface[i]=surface;nextGround[i]=groundwater;
   s.soil[i]=saturation;
