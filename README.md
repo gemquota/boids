@@ -5,8 +5,7 @@
 **Live simulation:** https://gemquota.github.io/boids/  
 **Advanced vision laboratory:** https://gemquota.github.io/boids/vision-lab.html  
 **Minimal vision laboratory:** https://gemquota.github.io/boids/vision-minimal.html  
-**Emergence pathway:** [pre-chemical origins through proto-boids](https://gemquota.github.io/boids/emergence-lab.html)  
-**Abiogenesis laboratory:** [particle physics and dynamic bonding](https://gemquota.github.io/boids/abiogenesis-lab.html)  
+**Unified emergence laboratory:** [prebiotic substrate through atoms, molecules, protocells and proto-boids](https://gemquota.github.io/boids/emergence-lab.html)  
 **Emergence architecture:** [developmental stages and integration](https://gemquota.github.io/boids/docs/Emergence.md)  
 **Unified emergence engine:** [shared compositional substrate](https://gemquota.github.io/boids/docs/EMERGENCE-ENGINE.md)  
 **Repository:** https://github.com/gemquota/boids
@@ -92,10 +91,8 @@ All standalone browser components are published under the same GitHub Pages orig
 - [Plant laboratory](https://gemquota.github.io/boids/plant-lab.html)
 - [Advanced vision laboratory](https://gemquota.github.io/boids/vision-lab.html)
 - [Minimal vision laboratory](https://gemquota.github.io/boids/vision-minimal.html)
-- [Vision audio](https://gemquota.github.io/boids/vision-audio.html)
-- [Emergence laboratory](https://gemquota.github.io/boids/emergence-lab.html)
-- [Abiogenesis laboratory](https://gemquota.github.io/boids/abiogenesis-lab.html)
-- [Research interface](https://gemquota.github.io/boids/research/)
+- Vision audio sequencer moved to the [hz application](https://github.com/gemquota/hz)  
+- [Unified emergence laboratory](https://gemquota.github.io/boids/emergence-lab.html)
 
 ## Documentation directory
 
@@ -119,4 +116,4 @@ All standalone browser components are published under the same GitHub Pages orig
 - [Validation](https://gemquota.github.io/boids/docs/VALIDATION.md)
 
 
-The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.md) and the [standalone lab](https://gemquota.github.io/boids/abiogenesis-lab.html).
+The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.md) and the [unified emergence lab](https://gemquota.github.io/boids/emergence-lab.html).
