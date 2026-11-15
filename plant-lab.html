@@ -133,10 +133,11 @@ body.parameter-expert .subgroup>summary{padding-left:0}
  if(overlayGrid)view.append(overlayGrid);if(legend)view.append(legend);if(overlayHint)view.append(overlayHint);
  group('Tools',[randomize,resetValues,resetBounds,exportButton]);
  document.body.append(bar);
+ bar.querySelectorAll('.actionGroup').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)bar.querySelectorAll('.actionGroup').forEach(other=>{if(other!==d)other.open=false})}));
  const oldToggle=document.querySelector('#drawerToggle');if(oldToggle)oldToggle.remove();
  const toggle=document.createElement('button');toggle.className='drawerCollapse';toggle.type='button';toggle.textContent='⌄';toggle.setAttribute('aria-label','Collapse controls');document.body.append(toggle);
  toggle.addEventListener('click',()=>{drawer.classList.toggle('closed');toggle.textContent=drawer.classList.contains('closed')?'⌃':'⌄';toggle.setAttribute('aria-label',drawer.classList.contains('closed')?'Open controls':'Collapse controls')});
- const setHeight=v=>{const h=Math.max(150,Math.min(innerHeight*.72,v));drawer.style.setProperty('--drawer-height',h+'px');};
+ const setHeight=v=>{const h=Math.max(150,Math.min(innerHeight*.72,v));document.documentElement.style.setProperty('--drawer-height',h+'px');drawer.style.setProperty('--drawer-height',h+'px');};
  setHeight(Math.min(innerHeight*.43,390));
  let resizing=false,startY=0,startH=0;
  handle.addEventListener('pointerdown',e=>{resizing=true;startY=e.clientY;startH=drawer.getBoundingClientRect().height;handle.setPointerCapture(e.pointerId);e.preventDefault()});
