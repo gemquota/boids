@@ -75,7 +75,6 @@ function draw(){try{
  if(!world){requestAnimationFrame(draw);return}
  const ps=world.particles,bonds=world.bonds;
  if(showAssemblies)for(const group of chemistryGraph.assemblies||[]){const ms=(chemistryGraph.molecules||[]).filter(m=>group.moleculeIds.includes(m.id));if(ms.length<2)continue;const x=ms.reduce((n,m)=>n+m.center.x,0)/ms.length,y=ms.reduce((n,m)=>n+m.center.y,0)/ms.length,r=Math.max(20,...ms.map(m=>Math.hypot(m.center.x-x,m.center.y-y)+m.radius))+12;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle='rgba(194,150,255,.55)';ctx.setLineDash([5,5]);ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([])}
- if(showMolecules)for(const m of chemistryGraph.molecules||[]){ctx.beginPath();ctx.arc(m.center.x,m.center.y,Math.max(9,m.radius+7),0,Math.PI*2);ctx.strokeStyle='rgba(103,221,193,.7)';ctx.lineWidth=1.3;ctx.stroke();ctx.fillStyle='rgba(210,245,237,.9)';ctx.font='10px ui-monospace';ctx.fillText(m.formula,m.center.x+8,m.center.y-8)}
 
  ctx.lineWidth=1.4;
  for(const b of bonds){const a=ps.find(p=>p.id===b.a),c=ps.find(p=>p.id===b.b);if(!a||!c)continue;
@@ -84,6 +83,7 @@ function draw(){try{
   ctx.beginPath();ctx.moveTo(a.position.x,a.position.y);ctx.lineTo(c.position.x,c.position.y);ctx.stroke();
  }
  for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle='rgba(230,246,250,.55)';ctx.lineWidth=.8;ctx.stroke()}
+ if(showMolecules)for(const m of chemistryGraph.molecules||[]){ctx.beginPath();ctx.arc(m.center.x,m.center.y,Math.max(9,m.radius+7),0,Math.PI*2);ctx.strokeStyle='rgba(103,221,193,.7)';ctx.lineWidth=1.3;ctx.stroke();ctx.fillStyle='rgba(210,245,237,.9)';ctx.font='10px ui-monospace';ctx.fillText(m.formula,m.center.x+8,m.center.y-8)}
  frame++;if(lastStats&&frame%12===0){stats.textContent=ps.length+' atoms · '+(chemistryGraph.molecules?.length||0)+' molecules · '+(chemistryGraph.assemblies?.length||0)+' assemblies · '+bonds.length+' bonds · '+world.time.toFixed(1)+'s';}
 }catch(error){stats.textContent='Render error: '+(error&&error.message?error.message:String(error));ctx.fillStyle='#08141b';ctx.fillRect(0,0,W,H)}requestAnimationFrame(draw);
 }
