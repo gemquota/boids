@@ -476,3 +476,23 @@ test('reaction energy-budget rejection occurs before bonds, molecules or reserve
   assert.equal(world.bonds.length,1);
   assert.equal(cloud.energy,4);
 });
+
+test('molecular graph derives formulas and spatial assemblies from persistent atom bonds',()=>{
+  const world=bio.createParticleWorld([
+    {id:'c',element:'C',position:{x:0,y:0}},
+    {id:'h',element:'H',position:{x:1,y:0}},
+    {id:'o',element:'O',position:{x:34,y:0}},
+    {id:'h2',element:'H',position:{x:35,y:0}}
+  ]);
+  bio.formBond(world.particles,world.bonds,'c','h',{bond:{type:'covalent',strength:2,restLength:1}});
+  bio.formBond(world.particles,world.bonds,'o','h2',{bond:{type:'covalent',strength:2,restLength:1}});
+  const graph=bio.deriveMolecularGraph(world,{assemblyRange:50});
+  assert.equal(graph.molecules.length,2);
+  assert.deepEqual(graph.molecules.map(m=>m.formula).sort(),['CH','HO']);
+  assert.equal(graph.assemblies.length,1);
+  assert.equal(graph.assemblies[0].memberCount,2);
+  const bondCount=world.bonds.length;
+  bio.stepMolecularAssemblies(world,1,{assemblyRange:50,assemblyStrength:.5});
+  assert.equal(world.bonds.length,bondCount,'non-covalent assembly must not consume atomic valence or invent covalent bonds');
+  assert.ok(world.particles.find(p=>p.id==='c').velocity.x>0,'the first molecule should be weakly attracted toward the second');
+});
