@@ -507,8 +507,8 @@ test('automatic bond formation respects elemental compatibility and valence',()=
   assert.equal(compatible.bonds[0].type,'covalent');
   const incompatible=bio.createParticleWorld([
     {id:'o1',element:'O',radius:5,position:{x:0,y:0}},
-    {id:'o2',element:'O',radius:5,position:{x:9,y:0}}
+    {id:'x',element:'OTHER',radius:5,position:{x:9,y:0}}
   ]);
   bio.stepParticleWorld(incompatible,.01,{cellSize:12,captureRadius:1,thermalJitter:0,electrostatic:0,enableBondFormation:true,chemicalRules:true,bondProbability:1,random:()=>0});
-  assert.equal(incompatible.bonds.length,0,'unsupported element pairs must not acquire covalent bonds');
+  assert.equal(incompatible.bonds.length,0,'unknown element identities must not acquire covalent bonds');
 });
