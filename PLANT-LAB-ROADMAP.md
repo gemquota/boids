@@ -56,3 +56,15 @@
 - [x] Updated tier totals after root controls: 9 Basic (10.8%), 21 Advanced (25.3%), and 53 Expert (63.9%) across 83 sliders.
 - [x] Run module-level simulation tests for recursive branching, resource depletion, bounded root connection degree, surface alignment and fusion, and syntax-check the integrated lab.
 - [ ] Verify long-running growth and mobile rendering in the deployed browser.
+
+
+## Pass 6: Environmental overlays, solar cycle and watershed resolution
+- [x] Repair and harden overlay rendering so a failed layer is isolated instead of stopping the world render.
+- [x] Increase overlay sampling to a high-resolution square-cell grid and support up to three simultaneous visual channels: colour, contours and detail marks.
+- [x] Add a moving day/night cycle, seasonal solar declination, changing sunrise/sunset and real-time solar availability used by plant growth and the solar overlay.
+- [x] Increase watershed grid resolution to 144 × 96 and replace sink-prone local drainage with priority-flood depression filling and directed catchments.
+- [x] Add flow accumulation, floodplain tendency and richer tributary/feeder networks with floodplain rendering.
+- [x] Add world, latitude-band and local-10%-neighbourhood reference averages for environmental and plant measurements.
+- [x] Divide inspection into Environment, Plant, Roots and History tabs, with field tooltips.
+- [x] Keep one fixed drawer handle at the left edge, one-third down the screen; world taps dismiss open interfaces.
+- [ ] Verify live browser performance and visual layout on mobile and desktop.
