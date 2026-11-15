@@ -69,3 +69,15 @@
 - [x] Keep one fixed drawer handle at the left edge, one-third down the screen; world taps dismiss open interfaces.
 - [x] Run script syntax checks, exercise all overlay modes across the three visual channels, test hydrology stepping/serialization and recursive root integration, and verify seasonal daylight variation (15.42 h summer vs 8.58 h winter at 45°N).
 - [ ] Verify live browser performance and visual layout on mobile and desktop.
+
+
+## Pass 7: Overlay channel controls and drawer ergonomics
+- [x] Replace three independent dropdowns with an 8-item, four-column-by-two-row overlay grid.
+- [x] Make each overlay cycle through Off, Colours, Contours and Details; each display channel is globally exclusive and occupied channels are skipped while cycling other overlays.
+- [x] Remove the per-sample contour rectangles that created a persistent visible grid over the world.
+- [x] Replace tiled day/night shading with continuous vertical gradients driven by local solar position.
+- [x] Remove borders from overlay tiles and keep the channel legend separate from the grid.
+- [x] Condense the upper drawer actions into Simulation, World view, and Parameters & recovery meta-groups.
+- [x] Move the drawer handle to the drawer's right edge and animate it with the drawer open/closed transition.
+- [x] Parse-check the integrated inline script; verify eight overlay controls, unique HTML IDs, removed grid strokes, smooth day/night gradients, and drawer-handle placement.
+- [ ] Verify the deployed layout and touch behaviour in a real mobile and desktop browser.
