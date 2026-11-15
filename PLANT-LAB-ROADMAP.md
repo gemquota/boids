@@ -53,4 +53,5 @@
 - [x] Add surface-node fusion with gradual positional alignment before junction completion.
 - [x] Preserve plant node IDs, parentage and root genealogy; connections do not merge node objects.
 - [x] Add Expert controls for root architecture, root fusion and surface fusion.
-- [ ] Run module-level simulation tests and verify long-running growth, network stability and mobile rendering in a deployed browser.
+- [x] Run module-level simulation tests for recursive branching, resource depletion, bounded root connection degree, surface alignment and fusion, and syntax-check the integrated lab.
+- [ ] Verify long-running growth and mobile rendering in the deployed browser.
