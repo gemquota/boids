@@ -40,7 +40,7 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <span><i class="dot" style="background:#8da7e8"></i>Nitrogen</span>
 <span><i class="dot" style="background:#a4bd8d"></i>Other</span>
 </div>
-<div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor. Two moving cells each carry their own loose material cloud. Collect nearby to acquire resources, Inventory to inspect a stockpile, Craft C-H molecule to bond atoms, Harvest energy to draw from a finite light reservoir, Metabolise CH to release chemical energy, and Share resources to diffuse materials between nearby cells. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
+<div class="note"><strong>01 · Atoms:</strong> persistent elemental particles with mass, radius, charge, valence, momentum and thermal motion. <strong>02 · Molecules:</strong> discovered automatically as connected components of actual atom bonds. Formula, composition, topology and centre of mass are derived from their constituent atoms. <strong>03 · Molecular assemblies:</strong> nearby molecules experience weak non-covalent attraction and form transient spatial assemblies without consuming atomic valence or inventing covalent bonds. This is a coarse-grained educational model, not calibrated quantum chemistry.</div>
 </section>
 </main>
 
@@ -105,9 +105,6 @@ document.getElementById('bonding').onclick=()=>{bonding=!bonding;document.getEle
 document.getElementById('showMolecules').onclick=()=>{showMolecules=!showMolecules;document.getElementById('showMolecules').textContent='Molecules: '+(showMolecules?'on':'off')};
 document.getElementById('showAssemblies').onclick=()=>{showAssemblies=!showAssemblies;document.getElementById('showAssemblies').textContent='Assemblies: '+(showAssemblies?'on':'off')};
 requestAnimationFrame(draw);
-seedWorld();
-;window.scrollTo({top:0,behavior:'smooth'})};
-drawPrimordial();
 seedWorld();
 </script>
 </body>
