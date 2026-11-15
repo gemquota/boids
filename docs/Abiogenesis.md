@@ -64,7 +64,7 @@ At each microscopic step, pass moving cell anchors through `options.cellAnchors`
 - Particle-world snapshots preserve cloud ownership and transport settings.
 - The worker accepts `resourceClouds` during initialization; cell anchors are supplied with normal step options.
 
-The lab now demonstrates a moving cell anchor and an interactive stockpile:
+These higher-level resource-cloud APIs remain available in the worker model for later stages; they are intentionally outside the current first-three-level laboratory focus:
 - `collectResources(world, cloudId, anchor, options)` selectively acquires nearby unowned particles by radius, element and count. Existing molecules are collected as intact groups.
 - `resourceInventory(world, cloudId)` reports carried atom IDs, elemental composition, compound tags, molecule count, mass and stored energy.
 - `craftMolecule(world, cloudId, atomIds, bonds, options)` creates an explicit molecule record and physical bonds while retaining every atom's identity.
