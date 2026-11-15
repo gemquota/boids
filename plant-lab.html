@@ -24,7 +24,7 @@ h1{font-size:14px;letter-spacing:.12em;margin:0 0 4px;color:var(--accent)}.sub{f
 .rangeBounds{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;margin:-2px 0 -4px}
 .rangeBound{border:0;background:#ffffff08;color:var(--muted);padding:5px 8px;border-radius:6px;font:inherit;font-size:9px;min-width:44px;touch-action:pan-y}
 .rangeBound:active{color:var(--accent);background:#70f5d21a}
-.groupHeading{display:flex;align-items:center;gap:8px}.groupHeading summary{flex:1}
+summary.groupHeading{display:flex;align-items:center;gap:8px;list-style:none}summary.groupHeading::marker{display:none}summary.groupHeading{cursor:pointer}summary.groupHeading .groupLock{margin-left:auto}
 .groupLock{border:1px solid #ffffff20;background:#ffffff08;color:#829aa6;border-radius:6px;padding:3px 7px;font-size:12px}
 .lockMode .controlName,.lockMode .groupLock,.lockMode .sliderLock{cursor:pointer}.sliderLock{display:none;grid-column:1/-1;justify-self:end;border:1px solid #ffffff20;border-radius:6px;background:#ffffff08;color:#70f5d2;padding:2px 8px;font-size:10px}.lockMode .sliderLock{display:block}.sliderLock.locked{color:#ffd17c}
 .lockMode .controlName:after{content:'  ◇';color:#70f5d2}.lockMode .controlName.locked:after{content:'  🔒';color:#ffd17c}
@@ -210,7 +210,7 @@ function closeParameterHelp(){document.querySelector('#parameterTooltip').classL
 function longPress(el,callback){let timer=null,fired=false;el.addEventListener('pointerdown',()=>{fired=false;timer=setTimeout(()=>{fired=true;callback()},650)});for(const ev of ['pointerup','pointerleave','pointercancel'])el.addEventListener(ev,()=>{if(timer)clearTimeout(timer);timer=null});return()=>fired}
 function askSliderBound(key,which){const state=sliderState[key],value=prompt('Set slider '+which+' for '+key+' (current '+state[which]+')',String(state[which]));if(value===null)return;const n=Number(value);if(!Number.isFinite(n)|| (which==='min'?n>=state.max:n<=state.min)){alert('Enter a number that keeps the minimum below the maximum.');return}state[which]=n;cfg[key]=clamp(cfg[key],state.min,state.max);syncControl(key);saveParameters()}
 for(const [group,items] of Object.entries(controlGroups)){
- const host=document.getElementById(group+'Controls'),summary=host.parentElement.querySelector('summary'),heading=document.createElement('span');heading.className='groupHeading';summary.parentNode.insertBefore(heading,summary);heading.append(summary);const groupLock=document.createElement('button');groupLock.type='button';groupLock.className='groupLock';groupLock.dataset.groupLock=group;groupLock.title='Lock or unlock this entire parameter group';groupLock.setAttribute('aria-label','Lock parameter group');heading.append(groupLock);
+ const host=document.getElementById(group+'Controls'),summary=host.parentElement.querySelector('summary');summary.classList.add('groupHeading');const groupLock=document.createElement('button');groupLock.type='button';groupLock.className='groupLock';groupLock.dataset.groupLock=group;groupLock.title='Lock or unlock this entire parameter group';groupLock.setAttribute('aria-label','Lock parameter group');summary.append(groupLock);
  groupLock.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(!lockMode){lockedGroups[group]=!lockedGroups[group]}else lockedGroups[group]=!lockedGroups[group];renderLockState();saveParameters()});
  for(const [key,label,min,max,step] of items){
   sliderDefaults[key]={min,max,step};sliderState[key]={min,max,step};lockedParameters[key]=false;
