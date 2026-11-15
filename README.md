@@ -67,7 +67,7 @@ This is an exploratory agent-based artificial ecology, **not a biologically cali
 - Experiment statistics and deterministic sweep helpers exist, but isolated multi-replicate experiment-world orchestration, full replay archives, and experiment UI are not complete.
 - Habitat gradients, nutrients, fragmentation, and controlled disturbance scenarios remain limited compared with the plant/freshwater baseline.
 
-See [abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.html), [implementation status](https://gemquota.github.io/boids/docs/IMPLEMENTATION-STATUS.html), [master backlog](https://gemquota.github.io/boids/docs/IMPLEMENTATION-BACKLOG.html), [architecture](https://gemquota.github.io/boids/docs/ARCHITECTURE.html), [snapshot migration contract](https://gemquota.github.io/boids/docs/SNAPSHOT-MIGRATION.html), [telemetry and exports](https://gemquota.github.io/boids/docs/TELEMETRY-EXPORTS.html), [performance baseline](https://gemquota.github.io/boids/docs/PERFORMANCE-BASELINE.html), [genetics](https://gemquota.github.io/boids/docs/GENETICS.html), [configuration](https://gemquota.github.io/boids/docs/CONFIGURATION.html), and [validation](https://gemquota.github.io/boids/docs/VALIDATION.html).
+See [abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.md), [implementation status](https://gemquota.github.io/boids/docs/IMPLEMENTATION-STATUS.md), [master backlog](https://gemquota.github.io/boids/docs/IMPLEMENTATION-BACKLOG.md), [architecture](https://gemquota.github.io/boids/docs/ARCHITECTURE.md), [snapshot migration contract](https://gemquota.github.io/boids/docs/SNAPSHOT-MIGRATION.md), [telemetry and exports](https://gemquota.github.io/boids/docs/TELEMETRY-EXPORTS.md), [performance baseline](https://gemquota.github.io/boids/docs/PERFORMANCE-BASELINE.md), [genetics](https://gemquota.github.io/boids/docs/GENETICS.md), [configuration](https://gemquota.github.io/boids/docs/CONFIGURATION.md), and [validation](https://gemquota.github.io/boids/docs/VALIDATION.md).
 
 ## Development and validation
 
@@ -82,4 +82,4 @@ A passing Node test suite does not replace browser/device smoke tests. Before re
 
 GitHub Pages serves the static application from the repository. The deployment workflow is `.github/workflows/pages.yml`. The published URL is https://gemquota.github.io/boids/.
 
-The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.html) and the [standalone lab](https://gemquota.github.io/boids/abiogenesis-lab.html).
+The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.md) and the [standalone lab](https://gemquota.github.io/boids/abiogenesis-lab.md).
