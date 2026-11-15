@@ -5,7 +5,11 @@ let world=null,random=null;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 function summary(){
-  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,moleculeCount:BoidsAbiogenesis.deriveMolecularGraph(world).molecules.length,assemblyCount:BoidsAbiogenesis.deriveMolecularGraph(world).assemblies.length,declaredMoleculeCount:(world.molecules||[]).length,resourceCloudCount:(world.resourceClouds||[]).length,carriedParticleCount:(world.resourceClouds||[]).reduce((n,c)=>n+c.particleIds.length,0),energySourceCount:(world.energySources||[]).length,compartmentCount:(world.compartments||[]).length};
+  const chemistry=BoidsAbiogenesis.deriveMolecularGraph(world);
+  return {time:world.time,stats:world.stats,particleCount:world.particles.length,bondCount:world.bonds.length,
+    moleculeCount:(world.molecules||[]).length,derivedMoleculeCount:chemistry.molecules.length,assemblyCount:chemistry.assemblies.length,
+    resourceCloudCount:(world.resourceClouds||[]).length,carriedParticleCount:(world.resourceClouds||[]).reduce((n,c)=>n+c.particleIds.length,0),
+    energySourceCount:(world.energySources||[]).length,compartmentCount:(world.compartments||[]).length};
 }
 
 onmessage=event=>{
