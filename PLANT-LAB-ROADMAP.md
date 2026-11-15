@@ -65,6 +65,7 @@
 - [x] Increase watershed grid resolution to 144 × 96 and replace sink-prone local drainage with priority-flood depression filling and directed catchments.
 - [x] Add flow accumulation, floodplain tendency and richer tributary/feeder networks with floodplain rendering.
 - [x] Add world, latitude-band and local-10%-neighbourhood reference averages for environmental and plant measurements.
-- [x] Divide inspection into Environment, Plant, Roots and History tabs, with field tooltips.
+- [x] Divide inspection into Terrain, Climate, Benchmarks, Population, Plant, Roots and History tabs, with field tooltips.
 - [x] Keep one fixed drawer handle at the left edge, one-third down the screen; world taps dismiss open interfaces.
+- [x] Run script syntax checks, exercise all overlay modes across the three visual channels, test hydrology stepping/serialization and recursive root integration, and verify seasonal daylight variation (15.42 h summer vs 8.58 h winter at 45°N).
 - [ ] Verify live browser performance and visual layout on mobile and desktop.
