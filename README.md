@@ -5,10 +5,10 @@
 **Live simulation:** https://gemquota.github.io/boids/  
 **Advanced vision laboratory:** https://gemquota.github.io/boids/vision-lab.html  
 **Minimal vision laboratory:** https://gemquota.github.io/boids/vision-minimal.html  
-**Emergence pathway:** https://gemquota.github.io/boids/emergence-lab.html  
-**Abiogenesis laboratory:** https://gemquota.github.io/boids/abiogenesis-lab.html  
-**Emergence architecture:** https://gemquota.github.io/boids/docs/Emergence.md  
-**Unified emergence engine:** https://gemquota.github.io/boids/docs/EMERGENCE-ENGINE.md  
+**Emergence pathway:** [pre-chemical origins through proto-boids](https://gemquota.github.io/boids/emergence-lab.html)  
+**Abiogenesis laboratory:** [particle physics and dynamic bonding](https://gemquota.github.io/boids/abiogenesis-lab.html)  
+**Emergence architecture:** [developmental stages and integration](https://gemquota.github.io/boids/docs/Emergence.md)  
+**Unified emergence engine:** [shared compositional substrate](https://gemquota.github.io/boids/docs/EMERGENCE-ENGINE.md)  
 **Repository:** https://github.com/gemquota/boids
 
 BOIDS is a deterministic, worker-driven ecosystem experiment. A single population of boids moves, forages on plant biomass, competes, chooses mates, reproduces, and experiences conspecific predation. Hunting is a behavioural strategy within the population, not a separate predator caste.
@@ -82,4 +82,5 @@ A passing Node test suite does not replace browser/device smoke tests. Before re
 
 GitHub Pages serves the static application from the repository. The deployment workflow is `.github/workflows/pages.yml`. The published URL is https://gemquota.github.io/boids/.
 
-The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.md) and the [standalone lab](https://gemquota.github.io/boids/abiogenesis-lab.md).
+
+The abiogenesis particle worker also supports cell-carried resource clouds. See [Abiogenesis architecture](https://gemquota.github.io/boids/docs/Abiogenesis.md) and the [standalone lab](https://gemquota.github.io/boids/abiogenesis-lab.html).
