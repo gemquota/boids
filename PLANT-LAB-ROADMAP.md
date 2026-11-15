@@ -53,5 +53,6 @@
 - [x] Add surface-node fusion with gradual positional alignment before junction completion.
 - [x] Preserve plant node IDs, parentage and root genealogy; connections do not merge node objects.
 - [x] Add Expert controls for root architecture, root fusion and surface fusion.
+- [x] Updated tier totals after root controls: 9 Basic (10.8%), 21 Advanced (25.3%), and 53 Expert (63.9%) across 83 sliders.
 - [x] Run module-level simulation tests for recursive branching, resource depletion, bounded root connection degree, surface alignment and fusion, and syntax-check the integrated lab.
 - [ ] Verify long-running growth and mobile rendering in the deployed browser.
