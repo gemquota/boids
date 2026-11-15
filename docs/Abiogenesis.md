@@ -8,7 +8,7 @@ The implementation is deliberately split between **physical mechanisms** and **e
 
 ## Conceptual progression
 
-Aggregation → Bonding → Molecular Formation → Chemical Reactions → Polymerisation → Autocatalytic Networks → Lipid Assembly → Protocells → Molecular Replication → Cellular Reproduction → Fusion and Adhesion → Colonial Organisation → Differentiation → Anatomical Development → Multicellular Evolution.
+Atoms → Molecular Bonding → Molecules → Molecular Assemblies → Chemical Reactions → Polymerisation → Autocatalytic Networks → Lipid Assembly → Protocells → Molecular Replication → Cellular Reproduction → Fusion and Adhesion → Colonial Organisation → Differentiation → Anatomical Development → Multicellular Evolution.
 
 This is a conceptual map, not a rigid execution pipeline. Chemical reactions, lipid assembly, replication and compartment formation can develop along different paths. Metabolic activity, molecular replication, membrane stability, material exchange, compartment growth and environmental responsiveness are separately evidenced capabilities. Capabilities can be partial, independent, lost, or emerge in alternative orders.
 
@@ -28,7 +28,7 @@ The code represents prerequisites as a dependency graph. Observed capabilities a
 
 ## Current implementation boundary
 
-`abiogenesis.js` is a pure, testable model layer. `abiogenesis-worker.js` runs it independently from the organism simulation, with fixed-step updates, seeded randomness and resumable snapshots. The standalone lab renders the resulting particle and bond state. This is still a simplified exploratory model, not calibrated atomistic chemistry: reaction kinetics, molecular energetics, membrane self-assembly, robust protocell replication and ecological coupling remain future work.
+`abiogenesis.js` is a pure, testable model layer. `abiogenesis-worker.js` runs it independently from the organism simulation, with fixed-step updates, seeded randomness and resumable snapshots. The unified emergence lab now starts directly with persistent elemental particles. Chemically constrained bond formation creates molecular connected components automatically; formulas, composition, centres of mass and topology are derived from the atom graph. A separate non-covalent interaction layer attracts nearby molecules into transient spatial assemblies without creating covalent bonds or consuming atomic valence. This is a coarse-grained exploratory model, not calibrated atomistic or quantum chemistry: orbital structure, bond-order energetics, solvent effects, reaction kinetics and molecular conformational dynamics remain future work.
 
 ## Non-negotiable invariants
 
@@ -50,7 +50,7 @@ A dedicated `abiogenesis-worker.js` runs the particle engine independently of th
 - `{type:'abiogenesis:snapshot', requestId}` returns serialisable particle/bond state plus the deterministic random-generator state.
 - `{type:'abiogenesis:restore', world, randomState}` restores both simulation state and random stream.
 
-This is an opt-in worker API. The standalone [Abiogenesis Lab](../abiogenesis-lab.html) provides a visual test surface. It intentionally does not apply atom-scale forces to existing organism boids.
+This is an opt-in worker API. The [Unified Emergence Lab](../emergence-lab.html) provides the visual test surface for atoms, molecules and molecular assemblies. It intentionally does not apply atom-scale forces to existing organism boids.
 
 
 ## Cell-carried resource clouds
