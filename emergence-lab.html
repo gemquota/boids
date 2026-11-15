@@ -20,20 +20,16 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
 .note{padding:12px 14px;color:#9bb0ba;font-size:12px;line-height:1.5}
 @media(max-width:600px){header{padding:14px}main{padding:10px}.stat{width:100%;margin-left:0}}
-#collect,#craft,#inventory,#harvest,#metabolize,#share,#lipid,#protocell,#preboid,#proto{display:none!important}</style>
+</style>
 </head>
 <body>
 <header><h1>BOIDS <span style="color:#55c7c5">// UNIFIED EMERGENCE LAB</span></h1><small>01 Atoms → 02 Molecules → 03 Molecular assemblies</small></header>
 <main>
-<section class="panel" id="primordialStage" style="display:none">
-<div class="toolbar"><strong>01 · PRIMORDIAL SUBSTRATE</strong><button id="pToggle" class="primary">Pause</button><button id="pStep">Step</button><button id="pReset">Reset</button><button id="pAggregate">Aggregation pulse</button><button id="pCatalyse">Mineral catalysis</button><button id="pRelease">Desorb</button><button id="pAdvance" class="primary">Advance to atoms →</button><span class="stat" id="pStats">Initialising…</span></div>
-<canvas id="primordialWorld" width="960" height="620" aria-label="Primordial particle and aggregate simulation"></canvas>
-<div class="note">A coarse-grained prebiotic substrate: diffusion, thermal motion, mineral adsorption, aggregation and energy gradients. The model begins with atoms as persistent chemical constituents: no quark-to-proton/neutron assembly or nuclear physics is simulated. Atoms form molecules; molecules can assemble into larger complexes and compartments; compartments exchange resources, grow, divide and can develop into interacting living systems.</div>
-</section>
+
 <section class="panel" id="chemistryStage">
 <div class="toolbar">
 <strong>01 · ATOMS</strong><button class="primary" id="toggle">Pause</button><button id="step">Single step</button><button id="reset">Reset atom field</button>
-<button id="bonding">Chemical bonding: on</button><button id="showMolecules">Molecules: on</button><button id="showAssemblies">Assemblies: on</button><button id="collect">Collect nearby</button><button id="craft">Craft C-H molecule</button><button id="inventory">Inventory</button><button id="harvest">Harvest energy</button><button id="metabolize">Metabolise CH</button><button id="share">Share resources</button><button id="lipid">Craft amphiphile</button><button id="protocell">Form protocell</button><button id="preboid">Develop pre-boid</button><button id="proto" disabled>Graduate proto-boid</button>
+<button id="bonding">Chemical bonding: on</button><button id="showMolecules">Molecules: on</button><button id="showAssemblies">Assemblies: on</button>
 <span class="stat" id="stats">Initialising worker…</span>
 </div>
 <canvas id="world" width="960" height="620" aria-label="Particle and bond simulation"></canvas>
@@ -47,19 +43,19 @@ canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;backgrou
 <div class="note">Particles retain their own identities. The highlighted cargo particles form a loose resource cloud that follows a moving cell anchor. Two moving cells each carry their own loose material cloud. Collect nearby to acquire resources, Inventory to inspect a stockpile, Craft C-H molecule to bond atoms, Harvest energy to draw from a finite light reservoir, Metabolise CH to release chemical energy, and Share resources to diffuse materials between nearby cells. Collisions exchange momentum; bonds are elastic, exert forces and can break. The display is a deliberately simplified 2D projection of the worker's 3D-capable particle state.</div>
 </section>
 </main>
-<script src="./emergence-pipeline.js?v=20261116-unified"></script>
+
 <script>
 'use strict';
 const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats');
 const worker=new Worker('abiogenesis-worker.js?v=20261116-molecular-assembly');
 worker.onerror=e=>{stats.textContent='Worker failed: '+(e.message||'unknown error')+' · '+(e.filename||'')+':'+(e.lineno||0);console.error(e)};
 worker.onmessageerror=e=>{stats.textContent='Worker message could not be decoded';console.error(e)};
-let lastMoleculeId=null,requestSerial=0,chemistryGraph={molecules:[],assemblies:[]},showMolecules=true,showAssemblies=true;
+let chemistryGraph={molecules:[],assemblies:[]},showMolecules=true,showAssemblies=true;
 
 const colors={H:'#68c8d2',C:'#d5a66c',O:'#e47e82',N:'#8da7e8',P:'#b59bd7',S:'#d5c66c',OTHER:'#a4bd8d'};
 const W=canvas.width,H=canvas.height;
 let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;
-const cell={position:{x:W*.34,y:H*.5,z:0},velocity:{x:13,y:-8,z:0}},cell2={position:{x:W*.66,y:H*.5,z:0},velocity:{x:-10,y:6,z:0}},cloudIds=new Set();
+
 function seedWorld(){
  const elements=['H','H','H','H','H','C','C','O','O','N','P','S'],particles=[];
  for(let i=0;i<180;i++){
@@ -87,7 +83,7 @@ function draw(){try{
   ctx.strokeStyle=stretch>3?'rgba(235,119,110,.8)':'rgba(111,198,190,.55)';
   ctx.beginPath();ctx.moveTo(a.position.x,a.position.y);ctx.lineTo(c.position.x,c.position.y);ctx.stroke();
  }
- for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle=cloudIds.has(p.id)?'rgba(111,255,222,.9)':'rgba(230,246,250,.55)';ctx.lineWidth=cloudIds.has(p.id)?1.5:.8;ctx.stroke()}
+ for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle='rgba(230,246,250,.55)';ctx.lineWidth=.8;ctx.stroke()}
  frame++;if(lastStats&&frame%12===0){stats.textContent=ps.length+' atoms · '+(chemistryGraph.molecules?.length||0)+' molecules · '+(chemistryGraph.assemblies?.length||0)+' assemblies · '+bonds.length+' bonds · '+world.time.toFixed(1)+'s';}
 }catch(error){stats.textContent='Render error: '+(error&&error.message?error.message:String(error));ctx.fillStyle='#08141b';ctx.fillRect(0,0,W,H)}requestAnimationFrame(draw);
 }
@@ -99,11 +95,8 @@ function requestStep(){
 worker.onmessage=e=>{
  const m=e.data;
  if(m.type==='abiogenesis:ready'){stats.textContent='Atomic field ready · '+m.particleCount+' atoms';requestStep();return}
- if(m.type==='abiogenesis:compartment-created'){world=m.world;stats.textContent='Protocell formed: '+m.compartment.id+' · membrane '+m.compartment.membraneMoleculeIds.length+' lipids · contents '+m.compartment.contents.length;return}
  if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;chemistryGraph=m.chemistry||chemistryGraph;busy=false;if(!paused)requestStep();return}
- if(m.type==='abiogenesis:inventory'||m.type==='abiogenesis:crafted'||m.type==='abiogenesis:reacted'||m.type==='abiogenesis:harvested'||m.type==='abiogenesis:metabolized'||m.type==='abiogenesis:diffused'){if(m.world)world=m.world;if(m.molecule)lastMoleculeId=m.molecule.id;const result=m.result||m.collected||m.transfers;if(result!==undefined)stats.textContent=typeof result==='string'?result:JSON.stringify(result).slice(0,180);const inventory=m.inventory;if(inventory){cloudIds.clear();inventory.particleIds.forEach(id=>cloudIds.add(id));stats.textContent=inventory.particleCount+' carried particles · '+inventory.moleculeCount+' molecules · '+Object.entries(inventory.elements).map(([e,n])=>e+':'+n).join(' ')+' · energy '+inventory.energy.toFixed(1)}return}
- if(m.type==='abiogenesis:transferred'){stats.textContent=m.transferred?'Resource transferred':'Transfer unavailable';return}
- if(m.type==='abiogenesis:error'){stats.textContent='Action failed: '+m.message;busy=false;console.error('Abiogenesis worker:',m.message)}
+ if(m.type==='abiogenesis:error'){stats.textContent='Simulation error: '+m.message;busy=false;console.error('Abiogenesis worker:',m.message)}
 };
 document.getElementById('toggle').onclick=()=>{paused=!paused;document.getElementById('toggle').textContent=paused?'Resume':'Pause';if(!paused)requestStep()};
 document.getElementById('step').onclick=()=>{if(!busy){stepRequested=true;requestStep()}};
@@ -111,30 +104,9 @@ document.getElementById('reset').onclick=seedWorld;
 document.getElementById('bonding').onclick=()=>{bonding=!bonding;document.getElementById('bonding').textContent='Bond formation: '+(bonding?'on':'off')};
 document.getElementById('showMolecules').onclick=()=>{showMolecules=!showMolecules;document.getElementById('showMolecules').textContent='Molecules: '+(showMolecules?'on':'off')};
 document.getElementById('showAssemblies').onclick=()=>{showAssemblies=!showAssemblies;document.getElementById('showAssemblies').textContent='Assemblies: '+(showAssemblies?'on':'off')};
-document.getElementById('collect').onclick=()=>worker.postMessage({type:'abiogenesis:collect',requestId:++requestSerial,cloudId:'cell-cargo',anchor:cell,options:{radius:260,maxCount:12}});
-document.getElementById('craft').onclick=()=>{if(!world)return;const cloud=world.resourceClouds.find(c=>c.id==='cell-cargo'),owned=new Set(cloud?.particleIds||[]),used=new Set((world.molecules||[]).flatMap(m=>m.atomIds)),atoms=world.particles.filter(p=>owned.has(p.id)&&!used.has(p.id));let pair=null;for(const c of atoms.filter(p=>p.element==='C'&&p.valence-p.bonds.length>=1)){const h=atoms.find(p=>p.element==='H'&&p.valence-p.bonds.length>=1&&!c.bonds.includes(p.id));if(h){pair=[c,h];break}}const [c,h]=pair||[];if(!c||!h){stats.textContent='Need one carbon and one hydrogen with available valence in cargo. Collect nearby first.';return}const id='CH-'+(++requestSerial);worker.postMessage({type:'abiogenesis:craft',requestId:requestSerial,cloudId:'cell-cargo',atomIds:[c.id,h.id],bonds:[{a:c.id,b:h.id,type:'covalent',strength:2,restLength:c.radius+h.radius+1}],options:{id,type:'C-H',energy:1}})};
-document.getElementById('inventory').onclick=()=>worker.postMessage({type:'abiogenesis:inventory',cloudId:'cell-cargo'});
-document.getElementById('harvest').onclick=()=>worker.postMessage({type:'abiogenesis:harvest',cloudId:'cell-cargo',sourceId:'sunlight',amount:2});
-document.getElementById('metabolize').onclick=()=>{if(!world)return;const cloud=world.resourceClouds.find(c=>c.id==='cell-cargo'),owned=new Set(cloud?.particleIds||[]),m=(world.molecules||[]).find(x=>x.atomIds.every(id=>owned.has(id)));if(!m){stats.textContent='No complete carried molecule to metabolise. Craft one first.';return}const atomSet=new Set(m.atomIds),bonds=world.bonds.filter(b=>atomSet.has(b.a)&&atomSet.has(b.b)).map(b=>({a:b.a,b:b.b,type:b.type,strength:b.strength,restLength:b.restLength}));worker.postMessage({type:'abiogenesis:metabolize',requestId:++requestSerial,cloudId:'cell-cargo',inputMoleculeIds:[m.id],outputs:[{id:'spent-'+m.id+'-'+requestSerial,type:'spent-'+m.type,atomIds:m.atomIds,bonds,energy:Math.max(0,m.energy*.2)}],options:{captureEfficiency:.65}})};
-document.getElementById('share').onclick=()=>worker.postMessage({type:'abiogenesis:diffuse',anchors:{'cell-1':cell,'cell-2':cell2},options:{contactRadius:380,permeability:.65,maxTransfers:3}});
-function craftLipid(){if(!world)return;const cloud=world.resourceClouds.find(c=>c.id==='cell-cargo'),owned=new Set(cloud?.particleIds||[]),used=new Set((world.molecules||[]).flatMap(m=>m.atomIds)),free=world.particles.filter(p=>owned.has(p.id)&&!used.has(p.id)),cs=free.filter(p=>p.element==='C'),os=free.filter(p=>p.element==='O'&&p.valence-p.bonds.length>=2),hs=free.filter(p=>p.element==='H'&&p.valence-p.bonds.length>=1);let chosen=null;for(const cTwo of cs.filter(p=>p.valence-p.bonds.length>=2)){for(const cOne of cs.filter(p=>p.id!==cTwo.id&&p.valence-p.bonds.length>=1&&!p.bonds.includes(cTwo.id))){for(const o of os.filter(p=>!p.bonds.includes(cTwo.id))){const h=hs.find(p=>!o.bonds.includes(p.id));if(h){chosen={cOne,cTwo,o,h};break}}if(chosen)break}if(chosen)break}if(!chosen){stats.textContent='Lipid assembly needs two compatible C, one O and one H with available valence. Collect more resources.';return}const {cOne,cTwo,o,h}=chosen,id='lipid-'+(++requestSerial);worker.postMessage({type:'abiogenesis:craft',requestId:requestSerial,cloudId:'cell-cargo',atomIds:[cOne.id,cTwo.id,o.id,h.id],bonds:[{a:cOne.id,b:cTwo.id,type:'covalent',strength:1.5},{a:cTwo.id,b:o.id,type:'covalent',strength:1.5},{a:o.id,b:h.id,type:'covalent',strength:1.2}],options:{id,type:'lipid',energy:1,metadata:{amphiphilic:true},properties:{amphiphilic:true,head:'polar',tail:'nonpolar'}}})}
-function formProtocell(){const used=new Set((world?.compartments||[]).flatMap(c=>[...(c.membraneMoleculeIds||[]),...(c.contents||[])])),lipids=(world?.molecules||[]).filter(m=>m.type==='lipid'&&!used.has(m.id)),contents=(world?.molecules||[]).filter(m=>m.type!=='lipid'&&!used.has(m.id));if(lipids.length<3||!contents.length){stats.textContent='Need at least 3 amphiphilic lipid molecules and 1 carried contents molecule.';return}worker.postMessage({type:'abiogenesis:compartment-create',requestId:++requestSerial,cloudId:'cell-cargo',options:{id:'protocell-'+requestSerial,membraneMoleculeIds:lipids.slice(0,3).map(m=>m.id),contents:[contents[0].id],permeability:.35,stability:.55,integrity:.8}})}
-document.getElementById('lipid').onclick=craftLipid;document.getElementById('protocell').onclick=formProtocell;
-document.getElementById('preboid').onclick=()=>{const comp=world?.compartments?.find(c=>c.state==='active');if(!comp){stats.textContent='Build a protocell first.';return}const pre={stage:'pre-boid',seed:20261114+Math.floor(world.time*1000),compartment:{id:comp.id,integrity:comp.integrity,permeability:comp.permeability,radius:comp.radius,capacity:comp.capacity},traits:[.18,Math.max(.55,Math.min(1.65,.65+comp.radius*.08)),.55,.55,.25,Math.max(.55,Math.min(1.65,.7+comp.radius*.04)),.65,.7,.2,.4]};sessionStorage.setItem('boids-preboid',JSON.stringify(pre));stats.textContent='Pre-boid state recorded: persistent compartment + energy reserve + environmental sensitivity.';document.getElementById('proto').disabled=false};
-document.getElementById('proto').onclick=()=>{const pre=JSON.parse(sessionStorage.getItem('boids-preboid')||'null');if(!pre){stats.textContent='Develop the pre-boid first.';return}pre.stage='proto-boid';pre.traits[2]=.72;pre.traits[5]=.9;pre.traits[6]=.82;pre.traits[7]=.88;sessionStorage.setItem('boids-proto-boid',JSON.stringify(pre));stats.textContent='Proto-boid ready. Opening the evolutionary field with inherited founding traits…';setTimeout(()=>location.href='./?emergence=proto',350)};
 requestAnimationFrame(draw);
-const pCanvas=document.getElementById('primordialWorld'),pCtx=pCanvas.getContext('2d'),pStats=document.getElementById('pStats');
-let primordial=new BoidsEmergencePipeline.PrimordialWorld({width:960,height:620,seed:20261116,count:180}),pPaused=false,pLast=0,pRaf=0;
-const pColors={monomer:'#75cbd0',amphiphile:'#e3bb78',mineral:'#9a9fe0',catalyst:'#c18cce',energy:'#f2d779'};
-function drawPrimordial(){pCtx.clearRect(0,0,960,620);for(const e of primordial.entities){if(e.adsorbed){const parent=primordial.entities.find(p=>p.id===e.adsorbed);if(parent){pCtx.strokeStyle='#ffffff45';pCtx.beginPath();pCtx.moveTo(e.x,e.y);pCtx.lineTo(parent.x,parent.y);pCtx.stroke()}}pCtx.beginPath();pCtx.arc(e.x,e.y,e.r,0,Math.PI*2);pCtx.fillStyle=pColors[e.kind]||'#fff';pCtx.globalAlpha=e.kind==='energy'?.45:.88;pCtx.fill();pCtx.globalAlpha=1;if(e.bonds.length){pCtx.strokeStyle='#9af0d4';pCtx.stroke()}}const m=primordial.metrics();pStats.textContent=m.count+' constituents · '+m.bonds+' adhesions · '+m.clusters+' clusters · largest '+m.largestCluster+' · energy '+m.energy.toFixed(1)}
-function pLoop(now){if(pPaused)return;const dt=Math.min(.05,(now-(pLast||now))/1000);pLast=now;primordial.step(dt);drawPrimordial();pRaf=requestAnimationFrame(pLoop)}
-document.getElementById('pToggle').onclick=()=>{pPaused=!pPaused;document.getElementById('pToggle').textContent=pPaused?'Resume':'Pause';if(!pPaused){pLast=0;pRaf=requestAnimationFrame(pLoop)}else cancelAnimationFrame(pRaf)};
-document.getElementById('pStep').onclick=()=>{pPaused=true;document.getElementById('pToggle').textContent='Resume';primordial.step(1/30);drawPrimordial()};
-document.getElementById('pReset').onclick=()=>{primordial=new BoidsEmergencePipeline.PrimordialWorld({width:960,height:620,seed:20261116,count:180});drawPrimordial()};
-document.getElementById('pAggregate').onclick=()=>{primordial.aggregate();drawPrimordial()};
-document.getElementById('pCatalyse').onclick=()=>{primordial.catalyse();drawPrimordial()};
-document.getElementById('pRelease').onclick=()=>{primordial.release();drawPrimordial()};
-document.getElementById('pAdvance').onclick=()=>{const seed=primordial.chemistrySeed();try{sessionStorage.setItem('boids-emergence-seed',JSON.stringify(seed));window.__emergenceSeed=seed}catch(e){pStats.textContent='Could not transfer primordial state: '+e.message;return}document.getElementById('primordialStage').style.display='none';document.getElementById('chemistryStage').style.display='block';seedWorld();window.scrollTo({top:0,behavior:'smooth'})};
+seedWorld();
+;window.scrollTo({top:0,behavior:'smooth'})};
 drawPrimordial();
 seedWorld();
 </script>
