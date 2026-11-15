@@ -10,7 +10,7 @@ function addRoot(s,p,parent,x,y,angle,depth){
  s.roots.push(r);if(parent)parent.children++;return r;
 }
 function gradient(fields,x,y,key){
- if(!fields||!fields[key])return{x:0,y:0};const d=8,a=fields.sampleFields(fields,x-d,y,{}),b=fields.sampleFields(fields,x+d,y,{}),c=fields.sampleFields(fields,x,y-d,{}),e=fields.sampleFields(fields,x,y+d,{});
+ if(!fields||!fields.ecologyFields||!fields.ecologyFields[key])return{x:0,y:0};const d=8,a=fields.ecology.sampleFields(fields.ecologyFields,x-d,y,{}),b=fields.ecology.sampleFields(fields.ecologyFields,x+d,y,{}),c=fields.ecology.sampleFields(fields.ecologyFields,x,y-d,{}),e=fields.ecology.sampleFields(fields.ecologyFields,x,y+d,{});
  return{x:(b[key]-a[key])/(2*d),y:(e[key]-c[key])/(2*d)};
 }
 function makeTip(s,p,r,env,cfg,dt){
@@ -19,7 +19,7 @@ function makeTip(s,p,r,env,cfg,dt){
  let vy=Math.sin(r.angle)*.48+moisture.y*strength*110+nutrients.y*strength*38+.42;
  const mag=Math.hypot(vx,vy)||1,desired=Math.atan2(vy/mag,vx/mag),delta=Math.atan2(Math.sin(desired-r.angle),Math.cos(desired-r.angle));
  r.angle+=clamp(delta,-dt*1.8,dt*1.8);
- const habitat=env.sampleFields?env.sampleFields(env,r.tipX,r.tipY,{}):{moisture:.4,nutrients:.4};
+ const habitat=env.ecology&&env.ecology.sampleFields?env.ecology.sampleFields(env.ecologyFields,r.tipX,r.tipY,{}):{moisture:.4,nutrients:.4};
  const growth=cfg.rootGrowthRate*dt*(.42+habitat.moisture*.48+habitat.nutrients*.22)*r.health;
  r.length+=growth;r.tipX=r.x+Math.cos(r.angle)*r.length;r.tipY=r.y+Math.sin(r.angle)*r.length;r.age+=dt;
  if(r.tipY>env.height*.985||r.tipX<3||r.tipX>env.width-3)r.health=Math.max(.2,r.health-dt*.025);
@@ -47,18 +47,18 @@ function rootFusion(s,cfg){
  for(const r of tips){const x=Math.floor(r.tipX/cell),y=Math.floor(r.tipY/cell);for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++)for(const other of bins.get((x+ox)+','+(y+oy))||[]){
   if(other.id<=r.id||other.plantId===r.plantId&&other.nodeId===r.nodeId)continue;
   const d=dist({x:r.tipX,y:r.tipY},{x:other.tipX,y:other.tipY});if(d>cfg.rootFusionDistance)continue;
-  if(Math.random()>cfg.rootFusionProbability*.035)continue;
+  if(Math.random()>Math.max(0,Math.min(.08,Number(cfg.simulationStep)||.05))*cfg.rootFusionProbability*.8)continue;
   if(createConnection(s,r,other,'root',cfg)){r.health=Math.min(1,r.health+.025);other.health=Math.min(1,other.health+.025)}
  }}}
+function dtScale(cfg){return Math.max(.001,Math.min(.08,Number(cfg.simulationStep)||.05))*Math.max(0,Number(cfg.rootFusionProbability)||0)*.8}
 function surfaceFusion(s,plants,cfg,dt){
  const candidates=plants.filter(p=>!p.senescent&&p.size>=cfg.surfaceFusionMaturity);
  for(let i=0;i<candidates.length;i++)for(let j=i+1;j<candidates.length;j++){
   const a=candidates[i],b=candidates[j],d=dist(a,b);if(d>cfg.surfaceFusionDistance)continue;
   const already=s.connections.some(c=>c.type==='surface'&&((c.a===a.id&&c.b===b.id)||(c.a===b.id&&c.b===a.id)));if(already)continue;
-  if(Math.random()>cfg.surfaceFusionProbability*.025)continue;
-  const mx=(a.x+b.x)*.5,my=(a.y+b.y)*.5,move=Math.min(cfg.surfaceAlignment*dt*2,Math.max(0,(d-2)*.5));
-  if(d>0){const ax=(mx-a.x)/d,ay=(my-a.y)/d,bx=(mx-b.x)/d,by=(my-b.y)/d;a.x+=ax*move;a.y+=ay*move;b.x+=bx*move;b.y+=by*move}
-  createConnection(s,a,b,'surface',cfg);
+  const mx=(a.x+b.x)*.5,my=(a.y+b.y)*.5,move=Math.min(cfg.surfaceAlignment*dt*18,Math.max(0,(d-cfg.surfaceFusionDistance*.28)*.5));
+  if(d>0&&move>0){const ax=(mx-a.x)/d,ay=(my-a.y)/d,bx=(mx-b.x)/d,by=(my-b.y)/d;a.x+=ax*move;a.y+=ay*move;b.x+=bx*move;b.y+=by*move}
+  if(d<=Math.max(2.5,cfg.surfaceFusionDistance*.28)&&Math.random()<=cfg.surfaceFusionProbability*dt*0.7)createConnection(s,a,b,'surface',cfg);
  }
 }
 function step(s,plants,dt,env,cfg){
