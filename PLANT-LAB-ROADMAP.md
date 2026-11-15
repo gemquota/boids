@@ -35,3 +35,11 @@
 - [x] Check that all parameter controls have help text and that HTML IDs are unique.
 - [ ] Verify the deployed GitHub Pages build in a real browser, including touch interactions and canvas rendering.
 - [ ] Tune ecological rates against observed long-running plant growth and resource depletion.
+
+## Pass 4: Parameter hierarchy and fractal colony growth
+- [x] Add a Basic / Advanced / Expert three-way selector at the top-right of the parameter section.
+- [x] Basic shows only essential controls; Advanced includes Basic plus intermediate controls; Expert exposes the full parameter set.
+- [x] Tier the current 68 sliders: 8 Basic (11.8%), 22 Advanced (32.4%), and 38 Expert (55.9%).
+- [x] Add nested subcategory accordions within the existing parameter groups.
+- [x] Add a fractal node maturity control: daughter nodes must reach the core-size benchmark before producing their own daughter nodes; the core remains able to initiate the first generation.
+- [ ] Verify visual layout and long-running fractal growth in the deployed browser.
