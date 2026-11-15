@@ -69,6 +69,7 @@ function sample(s,x,y,out={}){
  out.tidalDepth=out.coastDistance<.2?Math.max(0,.09+Math.sin(s.time*Math.PI*2/s.tidePeriod)*s.tideAmplitude-out.elevation+.045)*clamp(1-out.coastDistance/.2):0;
  out.wetness=clamp(out.soil*.65+out.groundwater*.45+out.surface*2+out.flood*.3);return out;
 }
+function consumeWater(s,x,y,amount){const gx=clamp(x/s.width*(s.cols-1),0,s.cols-1),gy=clamp(y/s.height*(s.rows-1),0,s.rows-1),ix=Math.round(gx),iy=Math.round(gy),i=iy*s.cols+ix,need=Math.max(0,Number(amount)||0),available=s.soil[i]*.65+s.groundwater[i]*.3+s.surface[i]*2,taken=Math.min(need,available);if(need>0&&taken>0){const soilTake=Math.min(s.soil[i],taken*.72);s.soil[i]-=soilTake;const remain=taken-soilTake,groundTake=Math.min(s.groundwater[i],remain*.8);s.groundwater[i]-=groundTake;s.surface[i]=Math.max(0,s.surface[i]-Math.max(0,remain-groundTake)*.5)}return need>0?taken/need:1}
 function streamSegments(s){
  const out=[],threshold=s.streamThreshold;
  for(let i=0;i<s.downhill.length;i++){const j=s.downhill[i];if(j<0||s.accumulation[i]<threshold||s.surface[i]<.0008)continue;const x=i%s.cols,y=(i/s.cols)|0,xx=j%s.cols,yy=(j/s.cols)|0;out.push({x:x*s.cellW,y:y*s.cellH,x2:xx*s.cellW,y2:yy*s.cellH,width:Math.min(3.2,.65+s.accumulation[i]/(threshold*3))})}
@@ -76,5 +77,5 @@ function streamSegments(s){
 }
 function serialize(s){if(!s)return null;const o={width:s.width,height:s.height,cols:s.cols,rows:s.rows,seed:s.seed,time:s.time,tidePeriod:s.tidePeriod,tideAmplitude:s.tideAmplitude,stormPeriod:s.stormPeriod,reliefScale:s.reliefScale,coastDepth:s.coastDepth,channelIncision:s.channelIncision,terrainNoise:s.terrainNoise,rainfallScale:s.rainfallScale,infiltrationRate:s.infiltrationRate,watershedDrainage:s.watershedDrainage,streamSensitivity:s.streamSensitivity};for(const k of ['elevation','soil','groundwater','surface','rainfall','salinity','flood','accumulation','coastDistance','downhill'])o[k]=Array.from(s[k]);return o}
 function restore(d,width,height,seed=1){if(!d||d.width!==width||d.height!==height||!Number.isInteger(d.cols)||!Array.isArray(d.elevation))return create(width,height,seed);const s=create(width,height,seed,{cols:d.cols,rows:d.rows,tidePeriod:d.tidePeriod,tideAmplitude:d.tideAmplitude,stormPeriod:d.stormPeriod,reliefScale:d.reliefScale,coastDepth:d.coastDepth,channelIncision:d.channelIncision,terrainNoise:d.terrainNoise,rainfallScale:d.rainfallScale,infiltrationRate:d.infiltrationRate,watershedDrainage:d.watershedDrainage,streamSensitivity:d.streamSensitivity});for(const k of ['elevation','soil','groundwater','surface','rainfall','salinity','flood','accumulation','coastDistance','downhill'])if(Array.isArray(d[k])&&d[k].length===s[k].length)s[k].set(d[k]);s.time=Number(d.time)||0;return s}
-return Object.freeze({create,step,sample,streamSegments,serialize,restore});
+return Object.freeze({create,step,sample,consumeWater,streamSegments,serialize,restore});
 });
