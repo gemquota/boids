@@ -1,0 +1,31 @@
+name: Emergence chemistry tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  chemistry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check chemistry model and worker syntax
+        run: |
+          node --check abiogenesis.js
+          node --check abiogenesis-worker.js
+          python3 - <<'PY'
+          import re
+          html = open('emergence-lab.html', encoding='utf-8').read()
+          match = re.search(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>', html, re.S)
+          if not match:
+              raise SystemExit('Unified emergence lab inline script not found')
+          open('/tmp/emergence-lab.js', 'w', encoding='utf-8').write(match.group(1))
+          PY
+          node --check /tmp/emergence-lab.js
+      - name: Test atom bonding, molecular topology and assemblies
+        run: node --test tests/abiogenesis.test.cjs tests/abiogenesis-worker.test.cjs
