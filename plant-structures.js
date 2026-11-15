@@ -54,7 +54,7 @@ function dtScale(cfg){return Math.max(.001,Math.min(.08,Number(cfg.simulationSte
 function surfaceFusion(s,plants,cfg,dt){
  const candidates=plants.filter(p=>!p.senescent&&p.size>=cfg.surfaceFusionMaturity);
  for(let i=0;i<candidates.length;i++)for(let j=i+1;j<candidates.length;j++){
-  const a=candidates[i],b=candidates[j],d=dist(a,b);if(d>cfg.surfaceFusionDistance)continue;
+  const a=candidates[i],b=candidates[j],d=dist(a,b);if(a.parent===b.id||b.parent===a.id||d>cfg.surfaceFusionDistance)continue;
   const already=s.connections.some(c=>c.type==='surface'&&((c.a===a.id&&c.b===b.id)||(c.a===b.id&&c.b===a.id)));if(already)continue;
   const mx=(a.x+b.x)*.5,my=(a.y+b.y)*.5,move=Math.min(cfg.surfaceAlignment*dt*18,Math.max(0,(d-cfg.surfaceFusionDistance*.28)*.5));
   if(d>0&&move>0){const ax=(mx-a.x)/d,ay=(my-a.y)/d,bx=(mx-b.x)/d,by=(my-b.y)/d,adx=ax*move,ady=ay*move,bdx=bx*move,bdy=by*move;a.x+=adx;a.y+=ady;b.x+=bdx;b.y+=bdy;for(const r of s.roots){if(r.nodeId===a.id){r.x+=adx;r.tipX+=adx;r.y+=ady;r.tipY+=ady}else if(r.nodeId===b.id){r.x+=bdx;r.tipX+=bdx;r.y+=bdy;r.tipY+=bdy}}}
@@ -65,7 +65,8 @@ function step(s,plants,dt,env,cfg){
  if(!s||!plants||!cfg)return s;dt=clamp(dt,0,.1);s.time+=dt;
  const byId=new Map(plants.map(p=>[p.id,p]));
  for(const p of plants){
-  if(!p.rootSystem&&p.age>=1.5&&p.biomass>.24){p.rootSystem=true;const spread=.24+((p.id%5)*.09);addRoot(s,p,null,p.x,p.y,Math.PI/2-spread,0);addRoot(s,p,null,p.x,p.y,Math.PI/2+spread,0);p.history?.push({time:s.time,event:'Established primary root system'})}
+  if(p.senescent)for(const r of s.roots)if(r.nodeId===p.id)r.health=Math.max(0,r.health-dt*.004);
+  if(!p.senescent&&!p.rootSystem&&p.age>=1.5&&p.biomass>.24){p.rootSystem=true;const spread=.24+((p.id%5)*.09);addRoot(s,p,null,p.x,p.y,Math.PI/2-spread,0);addRoot(s,p,null,p.x,p.y,Math.PI/2+spread,0);p.history?.push({time:s.time,event:'Established primary root system'})}
  }
  const rootsAtStart=s.roots.length;
  for(let i=0;i<rootsAtStart;i++){const r=s.roots[i],p=byId.get(r.nodeId);if(!p)continue;makeTip(s,p,r,env,cfg,dt)}
