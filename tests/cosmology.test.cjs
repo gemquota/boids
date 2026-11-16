@@ -38,7 +38,7 @@ test('mass-dependent endings distinguish white dwarfs, neutron stars and black h
  for(const item of endings){
   const w=cosmos.createWorld({seed:5,particleCount:40});
   w.bodies=[{id:'star',kind:'star',x:100,y:100,vx:0,vy:0,mass:item.mass,radius:5,initialMass:item.mass,age:1000,lifeExpectancy:20,fuel:1,windClock:0,composition:{H:1,He:1,C:1,O:1,Fe:1},metallicity:.2}];
-  cosmos.step(w,1/60,{timeScale:4});
+  cosmos.resolveStellarDeath(w,w.bodies[0]);
   const remnant=w.bodies.find(b=>b.kind==='remnant');
   assert.equal(remnant&&remnant.remnant,item.kind);
  }
