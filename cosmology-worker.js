@@ -1,5 +1,5 @@
 'use strict';
-importScripts('cosmology.js?v=20261116-stellar-era');
+importScripts('cosmology.js?v=20261116-slow-primordial-v2');
 let world=null;
 onmessage=e=>{const m=e.data||{};try{
  if(m.type==='cosmos:init'){world=BoidsCosmology.createWorld(m.options||{});postMessage({type:'cosmos:ready',summary:BoidsCosmology.summary(world),world:BoidsCosmology.snapshot(world)});return}
