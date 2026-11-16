@@ -1,5 +1,5 @@
 'use strict';
-importScripts('physics.js?v=20261113-contact-v1','development.js?v=20261113-neonatal-v1','hydrology.js?v=20261113-watershed-v1','organism-economics.js?v=20261113-bond-sites-v2','ecology.js?v=20261111-habitat-fields-v1','config-schema.js?v=20261111-habitat-controls-v8','genetics.js?v=20261111-epistatic-phenotypes-v3','chromosome.js?v=20261111-typed-gene-records-v6','evolution.js?v=neat-live-runtime-v18-pedigree-cache','emergence.js?v=20261114-recursive-substrate-v1');
+importScripts('physics.js?v=20261113-contact-v1','development.js?v=20261113-neonatal-v1','hydrology.js?v=20261116-catchment-routing-v2','organism-economics.js?v=20261113-bond-sites-v2','ecology.js?v=20261111-habitat-fields-v1','config-schema.js?v=20261111-habitat-controls-v8','genetics.js?v=20261111-epistatic-phenotypes-v3','chromosome.js?v=20261111-typed-gene-records-v6','evolution.js?v=neat-live-runtime-v18-pedigree-cache','emergence.js?v=20261114-recursive-substrate-v1');
 let hydrologyFields=null,hydrologyClock=0,environmentFields=null,environmentFieldScratch={temperature:0,moisture:0,nutrients:0,currentX:0,currentY:0,shelter:0,suitability:0},plantGrid=[];let canvas,ctx,W=1,H=1,viewW=1,viewH=1,dpr=1,cap=12000,N=0,frameNo=0,selectedAgent=-1;
 let xNext,yNext,vxNext,vyNext,individualId,paternalId,innovation,paternalInnovation,coverByAgent,currentSeasonalFactor=1,nextInnovationId=1,innovationRegistry=new Map(),innovationBirthTime=new Map(),nextIndividualId=1,rngState=20261110,updateOrder=new Uint32Array(0),plantEatingFlag=new Uint8Array(0),huntingFlag=new Uint8Array(0),attackTarget=new Int32Array(0),attackScore=new Float32Array(0),attackWinner=new Int32Array(0),attackWinnerScore=new Float32Array(0),pedigree=new Map(),pedigreeTruncated=0,kinshipMemo=new Map(),parentSexById=new Map();
 let decodedChromosomeNeat=[],decodedChromosomeRegulatory=[],agentGenomes=[],compiledBrains=[],agentNeuralStates=[],agentLearnedWeights=[],agentEligibility=[],agentGeneIndex=[],agentRegulatoryGenomes=[],compiledRegulatoryGenomes=[],paternalRegulatoryGenomes=[],regulatoryExpressionByAgent=[],regulatoryRegistry={nextGene:11,nextEdge:11},paternalNeatGenomes=[],paternalLearnedWeights=[],paternalFitness=new Float32Array(0),neatRegistry=BoidsEvolution.createInnovationRegistry({nextInnovation:100000,nextNode:128});let neuralInputScratch=new Float32Array(16),neuralWorkspace={values:new Float32Array(128),state:new Float32Array(128),outputs:new Float32Array(16),result:{}};let birthCohort,chromosomes,paternalChromosomes,connectionSource,connectionDestination,paternalConnectionSource,paternalConnectionDestination;let x,y,vx,vy,age,energy,thirst,preg,pregnant,sex,fitness,lineage,parentA,parentB,paternalGenome,paternalLineage,genome,brainOut,extraBrainOut,collisionPressureByAgent,bondTensionByAgent,brainState,eligibility,reward,hueCache,hueDirty,localCount,traitGenes,paternalTraits,regulatoryGenes,paternalRegulatoryGenes,phenotypeCache,cellHead,link,cols=1,rows=1,cellSize=42,phenotypeCacheReady=false;
@@ -75,36 +75,21 @@ function organicPath(start,end,seed,amplitude,cycles=2.2,samples=112){
 function pointOnPath(path,t){const index=clamp(t,0,1)*(path.length-1),i=Math.floor(index),f=index-i,a=path[i],b=path[Math.min(path.length-1,i+1)];return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f}}
 function buildRiverNetwork(){
  if(riverNetworkCache&&riverNetworkCache.width===W&&riverNetworkCache.height===H)return riverNetworkCache;
- const scale=Math.min(W,H),main=organicPath({x:W*.055,y:H*.105},{x:W*.965,y:H*.86},31,scale*.052,2.35,192);
- const specs=[[.12,-1,-1,.035,.20],[.30,1,1,.025,.22],[.49,-1,-1,.03,.24],[.68,1,1,.025,.22],[.84,-1,-1,.02,.18]],tributaries=[],feeders=[];
- const bankOffset=Math.max(7.5,H*.022)*.72;
- for(let i=0;i<specs.length;i++){
-  const [t,side,horizontal,dx,dy]=specs[i],center=pointOnPath(main,t),
-   before=pointOnPath(main,Math.max(0,t-.012)),after=pointOnPath(main,Math.min(1,t+.012)),
-   tx=after.x-before.x,ty=after.y-before.y,len=Math.hypot(tx,ty)||1,
-   normalX=-ty/len,normalY=tx/len,outX=normalX*side,outY=normalY*side,
-   start={x:center.x+outX*bankOffset,y:center.y+outY*bankOffset},
-   end={x:clamp(start.x+outX*H*dy+tx/len*W*horizontal*dx,W*.025,W*.975),
-        y:clamp(start.y+outY*H*dy+ty/len*W*horizontal*dx,H*.025,H*.975)},
-   creek=organicPath(start,end,51+i,scale*(.035+(i%2)*.007),2.9+(i%3)*.42,160);
-  tributaries.push(creek);
-  for(let j=0;j<3;j++){
-   const branchT=[.24,.53,.79][j],at=pointOnPath(creek,branchT),
-    before=pointOnPath(creek,Math.max(0,branchT-.018)),after=pointOnPath(creek,Math.min(1,branchT+.018)),
-    fx=after.x-before.x,fy=after.y-before.y,fl=Math.hypot(fx,fy)||1,
-    normalX=-fy/fl,normalY=fx/fl,sign=(i+j)%2?1:-1,distance=scale*(.052+j*.014),
-    tip={x:clamp(at.x+normalX*sign*distance,W*.02,W*.98),y:clamp(at.y+normalY*sign*distance,H*.02,H*.98)};
-   feeders.push(organicPath(at,tip,91+i*3+j,scale*(.012+j*.002),2.05+j*.38,84));
-  }
- }
- const coasts=[organicPath({x:-W*.035,y:H*.11},{x:W*.14,y:-H*.018},17,scale*.012,1.8,56),organicPath({x:W*.86,y:H*1.018},{x:W*1.018,y:H*.82},23,scale*.012,1.8,56)];
- riverNetworkCache={width:W,height:H,main,tributaries,feeders,coasts};return riverNetworkCache;
+ const channels=BoidsHydrology.channelNetwork(W,H),scale=Math.min(W,H),coasts=[
+  organicPath({x:-W*.035,y:H*.11},{x:W*.14,y:-H*.018},17,scale*.012,1.8,48),
+  organicPath({x:W*.86,y:H*1.018},{x:W*1.018,y:H*.82},23,scale*.012,1.8,48)
+ ];
+ const makePath=paths=>{if(typeof Path2D!=='function')return null;const path=new Path2D();for(const points of paths){if(!points.length)continue;path.moveTo(points[0].x,points[0].y);for(let i=1;i<points.length;i++)path.lineTo(points[i].x,points[i].y)}return path};
+ riverNetworkCache={width:W,height:H,main:channels.main,tributaries:channels.tributaries,feeders:channels.feeders,lakes:channels.lakes,coasts,
+  mainPath:makePath([channels.main]),tributariesPath:makePath(channels.tributaries),feedersPath:makePath(channels.feeders),coastsPath:makePath(coasts)};
+ return riverNetworkCache;
 }
 function buildFreshwaterField(network){
  if(network.field)return network.field;
  const cellSize=Math.max(12,Math.min(24,Math.min(W,H)/32)),cols=Math.max(1,Math.ceil(W/cellSize)),rows=Math.max(1,Math.ceil(H/cellSize)),segments=[];
  const addSegments=path=>{const stride=Math.max(1,Math.ceil((path.length-1)/12));for(let i=0;i<path.length-1;i+=stride){const a=path[i],b=path[Math.min(path.length-1,i+stride)],dx=b.x-a.x,dy=b.y-a.y;segments.push({x:a.x,y:a.y,dx,dy,len2:dx*dx+dy*dy||1})}};
  addSegments(network.main);for(const path of network.tributaries)addSegments(path);for(const path of network.feeders)addSegments(path);
+ for(const lake of network.lakes){const ring=[];for(let i=0;i<=24;i++){const a=i/24*Math.PI*2,c=Math.cos(lake.rotation),sn=Math.sin(lake.rotation),u=Math.cos(a)*lake.rx,v=Math.sin(a)*lake.ry;ring.push({x:lake.x+u*c-v*sn,y:lake.y+u*sn+v*c})}addSegments(ring)}
  const distance=new Float32Array(cols*rows),nearestX=new Float32Array(cols*rows),nearestY=new Float32Array(cols*rows);
  for(let gy=0;gy<rows;gy++)for(let gx=0;gx<cols;gx++){
   const px=Math.min(W,(gx+.5)*cellSize),py=Math.min(H,(gy+.5)*cellSize),index=gy*cols+gx;let best=Infinity,bx=px,by=py;
@@ -264,22 +249,22 @@ function drawPlantNode(p){
  drawPlantFronds(p);ctx.save();ctx.globalAlpha=senescent?.45:.9;ctx.fillStyle=senescent?'#89958f':palette.accent;ctx.strokeStyle=senescent?'#bdc6bf':palette.edge;ctx.lineWidth=.7;hexPath(p.x,p.y,r,p.angle);ctx.fill();ctx.stroke();ctx.save();ctx.globalAlpha=senescent?.28:.52;ctx.strokeStyle=palette.deep;ctx.lineWidth=.65;hexPath(p.x,p.y,r*.56,p.angle+Math.PI/6);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-r*.82,p.y);ctx.lineTo(p.x+r*.82,p.y);ctx.moveTo(p.x-r*.42,p.y-r*.72);ctx.lineTo(p.x+r*.42,p.y+r*.72);ctx.stroke();ctx.restore();if(p.saltSpines&&!senescent){ctx.save();ctx.strokeStyle=palette.edge;ctx.fillStyle=palette.accent;ctx.lineWidth=.8;for(let spike=0;spike<8;spike++){const a=p.angle+spike*Math.PI/4,sx=p.x+Math.cos(a)*r*.72,sy=p.y+Math.sin(a)*r*.72,ex=p.x+Math.cos(a)*r*1.75,ey=p.y+Math.sin(a)*r*1.75;ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.lineTo(p.x+Math.cos(a+.22)*r*.65,p.y+Math.sin(a+.22)*r*.65);ctx.closePath();ctx.fill();ctx.stroke()}ctx.restore()}ctx.restore();
 }
 function drawWaterways(){
- const network=buildRiverNetwork(),trace=pts=>{ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y)};
- const strokeWater=(pts,width,outer,inner)=>{trace(pts);ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=outer;ctx.lineWidth=width*1.32;ctx.stroke();trace(pts);ctx.strokeStyle=inner;ctx.lineWidth=width;ctx.stroke();trace(pts);ctx.strokeStyle='rgba(130,211,216,.22)';ctx.lineWidth=Math.max(.8,H*.0012);ctx.stroke()};
+ const network=buildRiverNetwork(),hs=hydrologyFields;
+ const trace=pts=>{ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y)};
+ const strokeWater=(paths,path,width,outer,inner)=>{ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=outer;ctx.lineWidth=width*1.32;if(path)ctx.stroke(path);else{ctx.beginPath();for(const pts of paths)trace(pts);ctx.stroke()}ctx.strokeStyle=inner;ctx.lineWidth=width;if(path)ctx.stroke(path);else{ctx.beginPath();for(const pts of paths)trace(pts);ctx.stroke()}ctx.strokeStyle='rgba(130,211,216,.22)';ctx.lineWidth=Math.max(.65,H*.0008);if(path)ctx.stroke(path);else{ctx.beginPath();for(const pts of paths)trace(pts);ctx.stroke()}};
  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
- if(hydrologyFields){
-  const hs=hydrologyFields,cw=W/hs.cols,ch=H/hs.rows;
-  const tideLevel=.09+Math.sin(hs.time*Math.PI*2/hs.tidePeriod)*hs.tideAmplitude;
-  ctx.beginPath();for(let gy=0;gy<hs.rows;gy++)for(let gx=0;gx<hs.cols;gx++){const i=gy*hs.cols+gx;if(hs.flood[i]>.075)ctx.rect(gx*cw,gy*ch,cw+1,ch+1)}ctx.fillStyle='rgba(55,151,164,.075)';ctx.fill();
-  ctx.beginPath();for(let gy=0;gy<hs.rows;gy++)for(let gx=0;gx<hs.cols;gx++){const i=gy*hs.cols+gx;if(hs.elevation[i]>.62)ctx.rect(gx*cw,gy*ch,cw+1,ch+1)}ctx.fillStyle='rgba(137,164,125,.045)';ctx.fill();
-  ctx.beginPath();for(let gy=0;gy<hs.rows;gy++)for(let gx=0;gx<hs.cols;gx++){const i=gy*hs.cols+gx;if(hs.coastDistance[i]<.2&&tideLevel-hs.elevation[i]>-.035)ctx.rect(gx*cw,gy*ch,cw+1,ch+1)}ctx.fillStyle='rgba(42,151,185,.075)';ctx.fill();
-  const streams=BoidsHydrology.streamSegments(hs);ctx.beginPath();for(const seg of streams){ctx.moveTo(seg.x,seg.y);ctx.lineTo(seg.x2,seg.y2)}ctx.strokeStyle='rgba(66,178,201,.62)';ctx.lineWidth=1.15;ctx.stroke();
+ if(hs){
+  const cw=W/hs.cols,ch=H/hs.rows;
+  ctx.beginPath();for(let k=0;k<hs.floodCount;k++){const i=hs.floodIndices[k];ctx.rect((i%hs.cols)*cw,((i/hs.cols)|0)*ch,cw+1,ch+1)}ctx.fillStyle='rgba(55,151,164,.075)';ctx.fill();
+  const high=hs.highlandIndices;ctx.beginPath();for(let k=0;k<high.length;k++){const i=high[k];ctx.rect((i%hs.cols)*cw,((i/hs.cols)|0)*ch,cw+1,ch+1)}ctx.fillStyle='rgba(137,164,125,.045)';ctx.fill();
+  const coast=hs.coastalIndices,tide=.09+Math.sin(hs.time*Math.PI*2/hs.tidePeriod)*hs.tideAmplitude;ctx.beginPath();for(let k=0;k<coast.length;k++){const i=coast[k];if(tide-hs.elevation[i]>-.035)ctx.rect((i%hs.cols)*cw,((i/hs.cols)|0)*ch,cw+1,ch+1)}ctx.fillStyle='rgba(42,151,185,.075)';ctx.fill();
+  const streams=BoidsHydrology.streamSegments(hs);ctx.beginPath();for(const seg of streams){ctx.moveTo(seg.x,seg.y);ctx.lineTo(seg.x2,seg.y2)}ctx.strokeStyle='rgba(66,178,201,.52)';ctx.lineWidth=.8;ctx.stroke();
  }
- const [northWest,southEast]=network.coasts;
- strokeWater(northWest,Math.max(9,H*.018),'rgba(5,34,49,.94)','rgba(16,91,123,.9)');strokeWater(southEast,Math.max(9,H*.018),'rgba(5,34,49,.94)','rgba(16,91,123,.9)');
- strokeWater(network.main,Math.max(7.5,H*.022),'rgba(9,43,57,.9)','rgba(24,107,137,.88)');
- for(const creek of network.tributaries)strokeWater(creek,Math.max(1.8,H*.0032),'rgba(10,49,63,.84)','rgba(34,126,151,.82)');
- for(const branch of network.feeders)strokeWater(branch,Math.max(1,H*.00165),'rgba(10,49,63,.72)','rgba(39,132,153,.68)');
+ for(const lake of network.lakes){ctx.beginPath();ctx.ellipse(lake.x,lake.y,lake.rx,lake.ry,lake.rotation,0,TAU);ctx.fillStyle='rgba(20,105,132,.84)';ctx.fill();ctx.strokeStyle='rgba(100,194,204,.42)';ctx.lineWidth=Math.max(.65,H*.0009);ctx.stroke()}
+ strokeWater(network.coasts,network.coastsPath,Math.max(8,H*.016),'rgba(5,34,49,.94)','rgba(16,91,123,.9)');
+ strokeWater([network.main],network.mainPath,Math.max(5.5,H*.012),'rgba(9,43,57,.9)','rgba(24,107,137,.88)');
+ strokeWater(network.tributaries,network.tributariesPath,Math.max(1.5,H*.0028),'rgba(10,49,63,.84)','rgba(34,126,151,.82)');
+ strokeWater(network.feeders,network.feedersPath,Math.max(.9,H*.00145),'rgba(10,49,63,.72)','rgba(39,132,153,.68)');
  ctx.restore();
 }
 function drawAtmosphere(){
