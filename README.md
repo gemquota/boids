@@ -7,6 +7,7 @@
 **Minimal vision laboratory:** https://gemquota.github.io/boids/vision-minimal.html  
 **Unified emergence laboratory:** [atoms, emergent molecules and molecular assemblies](https://gemquota.github.io/boids/emergence-lab.html)  
 **Emergence architecture:** [developmental stages and integration](https://gemquota.github.io/boids/docs/Emergence.md)  
+**Design philosophy:** [an observable, deliberately abstract universe of emergence](https://gemquota.github.io/boids/docs/DESIGN-PHILOSOPHY.md)  
 **Unified emergence engine:** [shared compositional substrate](https://gemquota.github.io/boids/docs/EMERGENCE-ENGINE.md)  
 **Repository:** https://github.com/gemquota/boids
 
