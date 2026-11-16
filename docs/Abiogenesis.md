@@ -1,95 +1,21 @@
-# Abiogenesis and hierarchical biological organisation
+# Emergent cosmology and stellar evolution
 
-## Purpose
+The unified Emergence Lab begins with independently distributed protons, neutrons and electrons. It does not seed pre-labelled carbon, oxygen or other later-generation elements.
 
-This model extends BOIDS downward from organismal evolution into physical and chemical organisation. It must preserve continuity: molecules, compartments, cells, colonies and organisms are assemblies of persistent constituents, not unrelated entity types that replace one another.
+## Accelerated progression
 
-The implementation is deliberately split between **physical mechanisms** and **emergent capabilities**. A stage label never grants a bundle of biological functions.
+1. **Primordial plasma:** free subatomic particles undergo simplified stochastic encounters.
+2. **Primordial nucleosynthesis:** proton-neutron capture creates deuterium-like nuclei; subsequent captures produce helium and trace light nuclei.
+3. **Recombination:** electrons bind to nuclei to form neutral atoms.
+4. **Gas-cloud formation:** nearby atoms aggregate into diffuse, composition-bearing gas parcels.
+5. **Gravitational collapse:** an accelerated 2D N-body approximation gathers gas into collapsing cores and stars.
+6. **Stellar nucleosynthesis:** stars accumulate helium-burning and later-stage element yields according to their mass and age.
+7. **Stellar winds:** stars continuously return small composition-bearing parcels to their surroundings.
+8. **Stellar death:** low-mass stars leave white dwarfs; intermediate/high-mass stars eject supernova clouds and leave neutron stars or black holes depending on initial mass. The highest-mass direct-collapse branch is represented with weaker ejecta.
+9. **Enrichment:** ejected parcels retain their elemental composition and momentum and remain in the gravitational environment for later mixing and collapse.
 
-## Conceptual progression
+## Model boundaries
 
-Atoms → Molecular Bonding → Molecules → Molecular Assemblies → Chemical Reactions → Polymerisation → Autocatalytic Networks → Lipid Assembly → Protocells → Molecular Replication → Cellular Reproduction → Fusion and Adhesion → Colonial Organisation → Differentiation → Anatomical Development → Multicellular Evolution.
+This is an accelerated, two-dimensional, coarse-grained teaching model, not a calibrated Big Bang, quantum nuclear, stellar-structure or hydrodynamics solver. Nucleon capture is stochastic and simplified; nuclear binding energies and detailed reaction networks are not solved. Gas parcels are coarse-grained mass carriers. Gravity uses softened pairwise forces at the current population scale rather than a Barnes-Hut tree. Stellar yields are illustrative, not precision yield tables. The implementation keeps composition spatially attached to matter rather than adding elements to a global counter.
 
-This is a conceptual map, not a rigid execution pipeline. Chemical reactions, lipid assembly, replication and compartment formation can develop along different paths. Metabolic activity, molecular replication, membrane stability, material exchange, compartment growth and environmental responsiveness are separately evidenced capabilities. Capabilities can be partial, independent, lost, or emerge in alternative orders.
-
-## Capability graph
-
-The code represents prerequisites as a dependency graph. Observed capabilities are explicit facts; the graph only enables an observed capability when its prerequisites are satisfied. Prerequisites never manufacture downstream capabilities by themselves. The graph is intentionally conservative and is not a claim that abiogenesis followed one known historical sequence. In particular, protocellular compartments do not imply metabolism or replication, and fusion is independent of adhesion.
-
-## Physical and chemical primitives
-
-- Particles retain stable IDs, elemental identity, mass, radius, charge, valence, thermal energy, position and velocity.
-- Bonds are explicit dynamic connections with type, strength, elasticity, damping, rest length and energy. Valence and duplicate constraints are checked when forming bonds.
-- Molecules retain constituent particles and explicit bond topology. Composition is derived from atoms, never separately asserted.
-- Reactions consume and produce typed quantities according to stoichiometry, can require catalysts and account for energy availability.
-- Polymers retain ordered monomer identity and explicit links.
-- Autocatalytic closure reports reachable products and whether the reaction set contains a regenerative loop. Reachability alone is not proof of a self-sustaining metabolism.
-- Lipid compartments retain their contents and membrane properties. Metabolism, molecular replication, growth and environmental responsiveness remain independent capabilities. Membrane stability and permeability are separately represented physical properties.
-
-## Current implementation boundary
-
-`abiogenesis.js` is a pure, testable model layer. `abiogenesis-worker.js` runs it independently from the organism simulation, with fixed-step updates, seeded randomness and resumable snapshots. The unified emergence lab now starts directly with persistent elemental particles. Chemically constrained bond formation creates molecular connected components automatically; formulas, composition, centres of mass and topology are derived from the atom graph. A separate non-covalent interaction layer attracts nearby molecules into transient spatial assemblies without creating covalent bonds or consuming atomic valence. This is a coarse-grained exploratory model, not calibrated atomistic or quantum chemistry: orbital structure, bond-order energetics, solvent effects, reaction kinetics and molecular conformational dynamics remain future work.
-
-## Non-negotiable invariants
-
-1. Constituents retain identity when grouped into higher-order structures.
-2. Bonds can form, deform, break and transfer forces; they are not decorative lines.
-3. Molecular composition and connectivity are derived from constituents.
-4. Compartments do not automatically possess metabolism, replication or reproduction.
-5. Fusion, adhesion and horizontal transfer remain distinct processes.
-6. Higher-level anatomy is physically instantiated and developmentally constructed.
-7. Capability prerequisites form a graph, not a single hard-coded stage counter.
-8. Every stateful addition requires snapshot migration, deterministic replay tests and observable telemetry.
-
-## Worker interface
-
-A dedicated `abiogenesis-worker.js` runs the particle engine independently of the organism worker:
-
-- `{type:'abiogenesis:init', seed, particles, bonds, resourceClouds, molecules}` creates the particle world.
-- `{type:'abiogenesis:step', steps, dt, options, includeWorld}` advances up to 240 fixed substeps (each with dt greater than 0 and no more than 0.05 seconds) and returns telemetry; set `includeWorld:true` to include a full state snapshot.
-- `{type:'abiogenesis:snapshot', requestId}` returns serialisable particle/bond state plus the deterministic random-generator state.
-- `{type:'abiogenesis:restore', world, randomState}` restores both simulation state and random stream.
-
-This is an opt-in worker API. The [Unified Emergence Lab](../emergence-lab.html) provides the visual test surface for atoms, molecules and molecular assemblies. It intentionally does not apply atom-scale forces to existing organism boids.
-
-
-## Cell-carried resource clouds
-
-A cell can own a loose cloud of actual particle-world constituents through `createResourceCloud(world, ownerId, particleIds, options)`. The particles keep their stable identities, masses, positions, velocities and molecular bonds; cloud membership is a separate ownership/transport relationship, not a rigid attachment or a replacement for particle physics.
-
-At each microscopic step, pass moving cell anchors through `options.cellAnchors`, keyed by owner ID. The cloud applies a bounded spring-like drift toward its owner's position and velocity, with a soft containment response outside its preferred radius. Individual particles remain free to collide, bond, drift and exchange momentum. The cloud therefore trails and swirls around the cell instead of forming a fixed halo.
-
-- `transferResource(world, fromCloudId, toCloudId, particleId)` transfers ownership between nearby cells.
-- `consumeResource(world, cloudId, particleId)` removes a carried constituent from the world and returns its particle record for a reaction or crafting operation; attached bonds are safely broken first.
-- Particle-world snapshots preserve cloud ownership and transport settings.
-- The worker accepts `resourceClouds` during initialization; cell anchors are supplied with normal step options.
-
-These higher-level resource-cloud APIs remain available in the worker model for later stages; they are intentionally outside the current first-three-level laboratory focus:
-- `collectResources(world, cloudId, anchor, options)` selectively acquires nearby unowned particles by radius, element and count. Existing molecules are collected as intact groups.
-- `resourceInventory(world, cloudId)` reports carried atom IDs, elemental composition, compound tags, molecule count, mass and stored energy.
-- `craftMolecule(world, cloudId, atomIds, bonds, options)` creates an explicit molecule record and physical bonds while retaining every atom's identity.
-- `rearrangeMolecules(world, cloudId, inputIds, outputs, options)` transforms compounds by breaking and rebuilding bonds. Every input atom must appear exactly once in the outputs, and the reaction is validated before mutation.
-- Transferring one atom that belongs to a molecule transfers the entire molecule, avoiding accidental fragmentation.
-- Consuming a molecular constituent disassembles the molecule record and removes its attached bonds safely.
-
-The worker exposes `abiogenesis:collect`, `abiogenesis:inventory`, `abiogenesis:craft` and `abiogenesis:react` messages. These provide actual selective uptake, inventory and atom-conserving molecular crafting. ### Energy and metabolism
-
-- `createEnergySource(world, {id, type, energy, efficiency})` creates a finite environmental reservoir such as light or a chemical gradient.
-- `harvestEnergy(world, cloudId, sourceId, requested)` transfers only available energy into the cell's bounded reserve. Source depletion and conversion losses are recorded.
-- `metabolizeMolecules(world, cloudId, inputIds, outputs, options)` rearranges carried compounds, releases the difference between input and product chemical energy, captures a configurable fraction and records the remainder as dissipated heat.
-
-Energy sources, cell reserves and energy telemetry are included in snapshots.
-
-### Cell-to-cell exchange
-
-- `exchangeResource(world, fromCloudId, toCloudId, particleId, anchors, options)` requires cell proximity and applies permeability, element-selectivity and receiver-energy checks. Bonded molecules transfer as intact units.
-- `diffuseResources(world, anchors, options)` moves material down elemental composition gradients between nearby clouds, with a configurable contact radius, permeability and transfer limit.
-- The worker exposes `abiogenesis:harvest`, `abiogenesis:metabolize`, `abiogenesis:exchange` and `abiogenesis:diffuse` actions.
-
-### Compartment growth and division
-
-- `createCompartment` recruits amphiphilic lipid molecules and carried contents into a membrane-bounded compartment, removing those constituents from the mobile stockpile without deleting them.
-- `growCompartment` incorporates additional lipid molecules, increases membrane area/capacity and consumes stored energy.
-- `divideCompartment` partitions membrane molecules, contents, remaining mobile cargo and energy into two daughter compartments. Insufficient membrane, contents or energy produces an explicit failed-division record rather than free offspring.
-
-These are early mechanistic abstractions, not calibrated membrane biophysics. Membrane geometry is currently represented by membrane area and derived radius; lipid self-assembly and selective transport through a spatial membrane surface remain future refinements.
+The prior molecular chemistry primitives remain available in abiogenesis.js; coupling stellar-enriched atoms into the molecular reaction engine is a subsequent integration boundary. Cosmology snapshots preserve bodies, composition, ages, stellar stages, counters and deterministic world state.

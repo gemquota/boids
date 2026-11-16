@@ -85,6 +85,9 @@ GitHub Pages serves the static application from the repository. The deployment w
 
 ## Applications and laboratories
 
+- [Unified emergence and cosmology lab](https://gemquota.github.io/boids/emergence-lab.html): subatomic origins, primordial nuclei, gas collapse, stellar evolution, supernovae and enriched stellar generations.
+
+
 All standalone browser components are published under the same GitHub Pages origin:
 
 - [Main ecosystem](https://gemquota.github.io/boids/)
