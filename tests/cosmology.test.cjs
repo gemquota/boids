@@ -13,8 +13,8 @@ test('nucleosynthesis and recombination produce nuclei and atoms from subatomic 
 });
 test('world advances through recombination into gas and stellar eras',()=>{
  const w=cosmos.createWorld({seed:19,particleCount:300});
- for(let i=0;i<300;i++)cosmos.step(w,1/60,{timeScale:4});
- assert.ok(['primordial-gas','stellar-era'].includes(w.phase));
+ for(let i=0;i<7;i++)cosmos.step(w,.05,{timeScale:200});
+ assert.equal(w.phase,'stellar-era');
  assert.ok(w.bodies.some(b=>['atom','gas','star'].includes(b.kind)));
 });
 test('stellar wind and supernova ejecta retain composition and outward momentum',()=>{
@@ -46,9 +46,20 @@ test('mass-dependent endings distinguish white dwarfs, neutron stars and black h
 test('recombination converts leftover free nucleons into hydrogen-1 and conserves baryon count',()=>{
  const w=cosmos.createWorld({seed:17,particleCount:100});
  const before=cosmos.totalBaryons(w.bodies);
- for(let i=0;i<8;i++)cosmos.step(w,1/60,{timeScale:4});
+ for(let i=0;i<3;i++)cosmos.step(w,.05,{timeScale:200});
  const after=cosmos.totalBaryons(w.bodies);
  assert.equal(after,before);
  assert.ok(w.bodies.some(b=>b.kind==='atom'&&b.isotope==='hydrogen-1'));
  assert.ok(w.bodies.every(b=>b.kind!=='neutron'),'free neutrons should decay during recombination');
+});
+
+test('primordial particles remain the visible opening era instead of being skipped',()=>{
+ const w=cosmos.createWorld({seed:23,particleCount:250});
+ assert.equal(w.phase,'primordial-plasma');
+ assert.ok(w.bodies.some(b=>b.kind==='proton'));
+ assert.ok(w.bodies.some(b=>b.kind==='neutron'));
+ assert.ok(w.bodies.some(b=>b.kind==='electron'));
+ for(let i=0;i<20;i++)cosmos.step(w,1/60,{timeScale:4});
+ assert.equal(w.phase,'primordial-plasma');
+ assert.ok(w.bodies.some(b=>['proton','neutron','electron','nucleus'].includes(b.kind)));
 });

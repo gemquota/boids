@@ -146,9 +146,9 @@
     if(!world)throw new TypeError('Cosmology world required');
     const random=rng(world.seed+Math.floor(world.time*100000)+1),scale=clamp(finite(options.timeScale,4),1,200),elapsed=clamp(dt,0,.05)*scale;
     world.time+=elapsed;
-    if(world.time<.35){world.phase='primordial-plasma';mergeNucleons(world,random);if(world.time>.16)combineNuclei(world,random)}
-    else if(world.time<.7){world.phase='recombination';recombine(world)}
-    else if(world.time<1.1){world.phase='primordial-gas';if(world.time>.85)formClouds(world,random)}
+    if(world.time<20){world.phase='primordial-plasma';mergeNucleons(world,random);if(world.time>8)combineNuclei(world,random)}
+    else if(world.time<40){world.phase='recombination';recombine(world)}
+    else if(world.time<60){world.phase='primordial-gas';if(world.time>48)formClouds(world,random)}
     else{world.phase='stellar-era';if(world.time%1.4<elapsed)formStars(world,random);gravityStep(world,dt,options);nucleosynthesis(world,random);stellarEvolution(world,elapsed,random)}
     world.bodies=world.bodies.filter(b=>b.mass>.00001&&Number.isFinite(b.x)&&Number.isFinite(b.y));
     if(world.bodies.length>900)world.bodies=world.bodies.slice(-900);
