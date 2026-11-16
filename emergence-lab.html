@@ -1,111 +1,23 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BOIDS · Unified Emergence Lab</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BOIDS · Emergence Lab</title>
 <style>
-:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#071018;color:#dce8ee}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#142b36 0%,#071018 65%)}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;border-bottom:1px solid #243943}
-h1{font-size:15px;letter-spacing:.16em;margin:0;font-weight:700}small,.muted{color:#8ca5b1}
-main{max-width:1200px;margin:auto;padding:18px;display:grid;gap:14px}
-.panel{border:1px solid #243943;border-radius:14px;background:#0b1921;overflow:hidden}
-.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px;border-bottom:1px solid #243943}
-button{background:#18323d;color:#e6f4f8;border:1px solid #35515c;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
-button:hover{background:#244b58}button.primary{background:#23616a;border-color:#3b8790}
-.stat{margin-left:auto;font:12px ui-monospace,monospace;color:#9cb5c0}
-canvas{display:block;width:100%;height:min(66vh,680px);min-height:360px;background:radial-gradient(ellipse at 50% 50%,#10232c,#08141b)}
-.legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;color:#91aab5;font-size:12px}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
-.note{padding:12px 14px;color:#9bb0ba;font-size:12px;line-height:1.5}
-@media(max-width:600px){header{padding:14px}main{padding:10px}.stat{width:100%;margin-left:0}}
-</style>
-</head>
-<body>
-<header><h1>BOIDS <span style="color:#55c7c5">// UNIFIED EMERGENCE LAB</span></h1><small>01 Atoms → 02 Molecules → 03 Molecular assemblies</small></header>
-<main>
-
-<section class="panel" id="chemistryStage">
-<div class="toolbar">
-<strong>01 · ATOMS</strong><button class="primary" id="toggle">Pause</button><button id="step">Single step</button><button id="reset">Reset atom field</button>
-<button id="bonding">Chemical bonding: on</button><button id="showMolecules">Molecules: on</button><button id="showAssemblies">Assemblies: on</button>
-<span class="stat" id="stats">Initialising worker…</span>
-</div>
-<canvas id="world" width="960" height="620" aria-label="Particle and bond simulation"></canvas>
-<div class="legend">
-<span><i class="dot" style="background:#68c8d2"></i>Hydrogen</span>
-<span><i class="dot" style="background:#d5a66c"></i>Carbon</span>
-<span><i class="dot" style="background:#e47e82"></i>Oxygen</span>
-<span><i class="dot" style="background:#8da7e8"></i>Nitrogen</span>
-<span><i class="dot" style="background:#a4bd8d"></i>Other</span>
-</div>
-<div class="note"><strong>01 · Atoms:</strong> persistent elemental particles with mass, radius, charge, valence, momentum and thermal motion. <strong>02 · Molecules:</strong> discovered automatically as connected components of actual atom bonds. Formula, composition, topology and centre of mass are derived from their constituent atoms. <strong>03 · Molecular assemblies:</strong> nearby molecules experience weak non-covalent attraction and form transient spatial assemblies without consuming atomic valence or inventing covalent bonds. This is a coarse-grained educational model, not calibrated quantum chemistry.</div>
-</section>
-</main>
-
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#050b14;color:#e3edf5}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#172b42,#050b14 68%)}header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #263b50}h1{font-size:14px;letter-spacing:.14em;margin:0}small,.muted{color:#8fa8bd}main{max-width:1240px;margin:auto;padding:14px;display:grid;gap:12px}.panel{border:1px solid #263b50;border-radius:13px;background:#091522;overflow:hidden}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:11px;border-bottom:1px solid #263b50}button,select{background:#183149;color:#e8f2fa;border:1px solid #38536b;border-radius:8px;padding:8px 11px;font:inherit}button{cursor:pointer}button.primary{background:#246176;border-color:#438fa2}.stat{margin-left:auto;color:#a9c2d5;font:12px ui-monospace,monospace}canvas{display:block;width:100%;height:min(70vh,720px);min-height:380px;background:radial-gradient(ellipse at center,#0d2034,#050d17)}.legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;color:#9bb3c7;font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}.note{padding:12px 14px;color:#9bb3c7;font-size:12px;line-height:1.55}.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:#263b50;border-top:1px solid #263b50}.metric{background:#0a1724;padding:10px 12px}.metric b{display:block;font:18px ui-monospace,monospace;color:#e7f5ff}.metric span{font-size:10px;color:#8fa8bd;text-transform:uppercase;letter-spacing:.08em}@media(max-width:600px){header{padding:12px}main{padding:8px}.stat{width:100%;margin:0}}
+</style></head><body>
+<header><h1>BOIDS <span style="color:#70c9e6">// EMERGENCE LAB</span></h1><small>Subatomic matter → stars → stellar remnants → enriched generations</small></header>
+<main><section class="panel">
+<div class="toolbar"><strong id="phase">PRIMORDIAL PLASMA</strong><button class="primary" id="toggle">Pause</button><button id="step">Step</button><button id="reset">Reset universe</button><label class="muted">Time acceleration <select id="speed"><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option><option value="16">16×</option><option value="32">32×</option></select></label><span class="stat" id="stats">Creating primordial particles…</span></div>
+<canvas id="world" width="960" height="620" aria-label="Emergent cosmology simulation"></canvas>
+<div class="readout"><div class="metric"><b id="nuclei">0</b><span>Nuclei / atoms</span></div><div class="metric"><b id="clouds">0</b><span>Gas / ejecta</span></div><div class="metric"><b id="stars">0</b><span>Living stars</span></div><div class="metric"><b id="remnants">0</b><span>Stellar remnants</span></div><div class="metric"><b id="supernovae">0</b><span>Supernovae</span></div><div class="metric"><b id="metals">0%</b><span>Heavy elements</span></div></div>
+<div class="legend"><span><i class="dot" style="background:#5fd5ef"></i>Protons</span><span><i class="dot" style="background:#b5a5e8"></i>Neutrons</span><span><i class="dot" style="background:#fff0a3"></i>Electrons</span><span><i class="dot" style="background:#80c8ed"></i>Hydrogen / helium gas</span><span><i class="dot" style="background:#ffcf72"></i>Stars</span><span><i class="dot" style="background:#a8b6c9"></i>White dwarfs / neutron stars</span><span><i class="dot" style="background:#050609"></i>Black holes</span><span><i class="dot" style="background:#fa806b"></i>Supernova ejecta</span></div>
+<div class="note"><b>One continuous material history.</b> Protons, neutrons and electrons begin independently distributed. Nuclear binding creates primordial nuclei; recombination creates atoms; gravity gathers gas into collapsing clouds and stars. Stars synthesise heavier elements, slowly shed enriched winds, then follow mass-dependent evolutionary paths. Supernovae launch spatially explicit ejecta clouds; remnants continue gravitating. This is an accelerated, 2D educational model, not a calibrated cosmological or stellar-structure solver.</div>
+</section></main>
 <script>
 'use strict';
-const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats');
-const worker=new Worker('abiogenesis-worker.js?v=20261116-molecular-assembly');
-worker.onerror=e=>{stats.textContent='Worker failed: '+(e.message||'unknown error')+' · '+(e.filename||'')+':'+(e.lineno||0);console.error(e)};
-worker.onmessageerror=e=>{stats.textContent='Worker message could not be decoded';console.error(e)};
-let chemistryGraph={molecules:[],assemblies:[]},showMolecules=true,showAssemblies=true;
-
-const colors={H:'#68c8d2',C:'#d5a66c',O:'#e47e82',N:'#8da7e8',P:'#b59bd7',S:'#d5c66c',OTHER:'#a4bd8d'};
-const W=canvas.width,H=canvas.height;
-let world=null,paused=false,bonding=true,busy=false,stepRequested=false,frame=0,lastStats=null;
-
-function seedWorld(){
- const elements=['H','H','H','H','H','C','C','O','O','N','P','S'],particles=[];
- for(let i=0;i<180;i++){
-  const a=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*175,x=W*.5+Math.cos(a)*r,y=H*.5+Math.sin(a)*r;
-  const element=elements[Math.floor(Math.random()*elements.length)],angle=Math.random()*Math.PI*2,speed=3+Math.random()*7;
-  const charge=element==='O'?-0.12:element==='N'?-0.06:element==='H'?.035:element==='P'?.08:0;
-  particles.push({id:'atom-'+i,element,mass:element==='H'?.65:element==='O'?1.25:element==='P'?1.8:1,
-   radius:element==='H'?3.6:element==='C'?4.6:5,charge:charge*(.7+Math.random()*.6),
-   valence:element==='H'?1:element==='O'?2:element==='C'?4:element==='N'?3:element==='P'?5:2,
-   position:{x,y,z:0},velocity:{x:Math.cos(angle)*speed,y:Math.sin(angle)*speed,z:0},thermalEnergy:.08});
- }
- world=null;chemistryGraph={molecules:[],assemblies:[]};
- worker.postMessage({type:'abiogenesis:init',seed:20261116,particles,bonds:[],resourceClouds:[],energySources:[]});
-}
-function draw(){try{
- ctx.clearRect(0,0,W,H);
- if(!world){requestAnimationFrame(draw);return}
- const ps=world.particles,bonds=world.bonds;
- if(showAssemblies)for(const group of chemistryGraph.assemblies||[]){const ms=(chemistryGraph.molecules||[]).filter(m=>group.moleculeIds.includes(m.id));if(ms.length<2)continue;const x=ms.reduce((n,m)=>n+m.center.x,0)/ms.length,y=ms.reduce((n,m)=>n+m.center.y,0)/ms.length,r=Math.max(20,...ms.map(m=>Math.hypot(m.center.x-x,m.center.y-y)+m.radius))+12;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.strokeStyle='rgba(194,150,255,.55)';ctx.setLineDash([5,5]);ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([])}
-
- ctx.lineWidth=1.4;
- for(const b of bonds){const a=ps.find(p=>p.id===b.a),c=ps.find(p=>p.id===b.b);if(!a||!c)continue;
-  const stretch=Math.hypot(c.position.x-a.position.x,c.position.y-a.position.y)-b.restLength;
-  ctx.strokeStyle=stretch>3?'rgba(235,119,110,.8)':'rgba(111,198,190,.55)';
-  ctx.beginPath();ctx.moveTo(a.position.x,a.position.y);ctx.lineTo(c.position.x,c.position.y);ctx.stroke();
- }
- for(const p of ps){ctx.beginPath();ctx.arc(p.position.x,p.position.y,p.radius,0,Math.PI*2);ctx.fillStyle=colors[p.element]||colors.OTHER;ctx.fill();ctx.strokeStyle='rgba(230,246,250,.55)';ctx.lineWidth=.8;ctx.stroke()}
- if(showMolecules)for(const m of chemistryGraph.molecules||[]){ctx.beginPath();ctx.arc(m.center.x,m.center.y,Math.max(9,m.radius+7),0,Math.PI*2);ctx.strokeStyle='rgba(103,221,193,.7)';ctx.lineWidth=1.3;ctx.stroke();ctx.fillStyle='rgba(210,245,237,.9)';ctx.font='10px ui-monospace';ctx.fillText(m.formula,m.center.x+8,m.center.y-8)}
- frame++;if(lastStats&&frame%12===0){stats.textContent=ps.length+' atoms · '+(chemistryGraph.molecules?.length||0)+' molecules · '+(chemistryGraph.assemblies?.length||0)+' assemblies · '+bonds.length+' bonds · '+world.time.toFixed(1)+'s';}
-}catch(error){stats.textContent='Render error: '+(error&&error.message?error.message:String(error));ctx.fillStyle='#08141b';ctx.fillRect(0,0,W,H)}requestAnimationFrame(draw);
-}
-function requestStep(){
- if(busy||paused&&!stepRequested)return;
- busy=true;stepRequested=false;
- worker.postMessage({type:'abiogenesis:step',steps:1,dt:1/60,includeWorld:true,options:{cellSize:12,captureRadius:2.2,thermalJitter:.035,electrostatic:1.8,softening:5,restitution:.78,bounds:{width:W,height:H},enableBondFormation:bonding,bondProbability:.16,bondStrength:2.1,bondDamping:.38,breakStretch:2.2,assemblyRange:58,assemblyStrength:.022}});
-}
-worker.onmessage=e=>{
- const m=e.data;
- if(m.type==='abiogenesis:ready'){stats.textContent='Atomic field ready · '+m.particleCount+' atoms';requestStep();return}
- if(m.type==='abiogenesis:frame'){world=m.world;lastStats=m.stats;chemistryGraph=m.chemistry||chemistryGraph;busy=false;if(!paused)requestStep();return}
- if(m.type==='abiogenesis:error'){stats.textContent='Simulation error: '+m.message;busy=false;console.error('Abiogenesis worker:',m.message)}
-};
-document.getElementById('toggle').onclick=()=>{paused=!paused;document.getElementById('toggle').textContent=paused?'Resume':'Pause';if(!paused)requestStep()};
-document.getElementById('step').onclick=()=>{if(!busy){stepRequested=true;requestStep()}};
-document.getElementById('reset').onclick=seedWorld;
-document.getElementById('bonding').onclick=()=>{bonding=!bonding;document.getElementById('bonding').textContent='Bond formation: '+(bonding?'on':'off')};
-document.getElementById('showMolecules').onclick=()=>{showMolecules=!showMolecules;document.getElementById('showMolecules').textContent='Molecules: '+(showMolecules?'on':'off')};
-document.getElementById('showAssemblies').onclick=()=>{showAssemblies=!showAssemblies;document.getElementById('showAssemblies').textContent='Assemblies: '+(showAssemblies?'on':'off')};
-requestAnimationFrame(draw);
-seedWorld();
-</script>
-</body>
-</html>
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),stats=document.getElementById('stats'),phase=document.getElementById('phase');
+const worker=new Worker('cosmology-worker.js?v=20261116-stellar-era');let world=null,summary=null,paused=false,busy=false,oneStep=false,frame=0;
+const colors={proton:'#5fd5ef',neutron:'#b5a5e8',electron:'#fff0a3',nucleus:'#9bd8d4',atom:'#80c8ed',gas:'#6c9fc7',ejecta:'#fa806b',star:'#ffcf72',remnant:'#a8b6c9',wind:'#d49de9'};
+function draw(){ctx.clearRect(0,0,960,620);if(!world){requestAnimationFrame(draw);return}for(const b of world.bodies){if(b.kind==='ejecta'||b.kind==='gas'||b.kind==='wind'){ctx.beginPath();ctx.arc(b.x,b.y,Math.max(2,b.radius*(b.kind==='ejecta'?1.5:1)),0,Math.PI*2);ctx.fillStyle=b.kind==='ejecta'?'rgba(250,128,107,.23)':b.kind==='wind'?'rgba(212,157,233,.17)':'rgba(108,159,199,.15)';ctx.fill();continue}if(b.kind==='star'){const glow=ctx.createRadialGradient(b.x,b.y,1,b.x,b.y,b.radius*5);glow.addColorStop(0,'rgba(255,220,145,.8)');glow.addColorStop(1,'rgba(255,190,90,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(b.x,b.y,b.radius*5,0,Math.PI*2);ctx.fill()}ctx.beginPath();ctx.arc(b.x,b.y,b.kind==='star'?Math.max(4,b.radius):b.kind==='remnant'?Math.max(3,b.radius):b.radius,0,Math.PI*2);ctx.fillStyle=b.kind==='remnant'&&b.remnant==='black-hole'?'#030407':colors[b.kind]||colors.nucleus;ctx.fill();if(b.kind==='remnant'&&b.remnant==='black-hole'){ctx.strokeStyle='#b79cff';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(b.x,b.y,b.radius+4,0,Math.PI*2);ctx.stroke()}}if(summary&&frame++%8===0){phase.textContent=summary.phase.replace(/-/g,' ').toUpperCase();stats.textContent=summary.bodyCount+' bodies · '+summary.time.toFixed(1)+' accelerated years · '+summary.stats.starsBorn+' stars formed';document.getElementById('nuclei').textContent=summary.nuclei+summary.atoms;document.getElementById('clouds').textContent=summary.gas+summary.ejecta;document.getElementById('stars').textContent=summary.stars;document.getElementById('remnants').textContent=summary.remnants;document.getElementById('supernovae').textContent=summary.stats.supernovae;const el=summary.elements,total=Object.values(el).reduce((a,b)=>a+b,0),heavy=Object.entries(el).filter(([k])=>!['H','He'].includes(k)).reduce((n,[,v])=>n+v,0);document.getElementById('metals').textContent=(total?100*heavy/total:0).toFixed(1)+'%'}requestAnimationFrame(draw)}
+function requestStep(){if(busy||paused&&!oneStep)return;busy=true;oneStep=false;worker.postMessage({type:'cosmos:step',steps:1,dt:1/60,options:{timeScale:Number(document.getElementById('speed').value)}})}
+worker.onmessage=e=>{const m=e.data;if(m.type==='cosmos:ready'||m.type==='cosmos:frame'){world=m.world;summary=m.summary;busy=false;if(!paused)requestStep();return}if(m.type==='cosmos:error'){stats.textContent='Simulation error: '+m.message;busy=false;console.error(m.message)}};worker.onerror=e=>{stats.textContent='Worker failed: '+e.message;busy=false};
+document.getElementById('toggle').onclick=()=>{paused=!paused;document.getElementById('toggle').textContent=paused?'Resume':'Pause';if(!paused)requestStep()};document.getElementById('step').onclick=()=>{if(!busy){oneStep=true;requestStep()}};document.getElementById('reset').onclick=()=>{paused=false;document.getElementById('toggle').textContent='Pause';busy=true;worker.postMessage({type:'cosmos:init',options:{seed:20261116,particleCount:250}})};worker.postMessage({type:'cosmos:init',options:{seed:20261116,particleCount:250}});requestAnimationFrame(draw);
+</script></body></html>
