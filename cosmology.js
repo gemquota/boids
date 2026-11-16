@@ -125,7 +125,7 @@
   function dtSafe(m){return Math.max(.1,Math.min(10,m))}
   function step(world,dt=1/60,options={}){
     if(!world)throw new TypeError('Cosmology world required');
-    const random=rng(world.seed+Math.floor(world.time*100000)+1),scale=clamp(finite(options.timeScale,22),1,200),elapsed=clamp(dt,0,.05)*scale;
+    const random=rng(world.seed+Math.floor(world.time*100000)+1),scale=clamp(finite(options.timeScale,4),1,200),elapsed=clamp(dt,0,.05)*scale;
     world.time+=elapsed;
     if(world.time<.35){world.phase='primordial-plasma';mergeNucleons(world,random);if(world.time>.16)combineNuclei(world,random)}
     else if(world.time<.7){world.phase='recombination';recombine(world)}
