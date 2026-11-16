@@ -7,17 +7,18 @@ const vm = require('node:vm');
 const worker = fs.readFileSync(require.resolve('../boids-worker.js'), 'utf8');
 const schema = require('../config-schema.js');
 const development = require('../development.js');
+const hydrology = require('../hydrology.js');
 const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
 
 test('river network uses curved, shared geometry for drawing and freshwater distance', () => {
   const start = worker.indexOf('let riverNetworkCache=null;');
   const end = worker.indexOf('\nfunction plantStage', start);
   assert.ok(start >= 0 && end > start, 'river geometry helpers must be present');
-  const context = { W: 1200, H: 800, TAU: Math.PI * 2, clamp: (v, lo, hi) => Math.max(lo, Math.min(hi, v)) };
+  const context = { W: 1200, H: 800, TAU: Math.PI * 2, BoidsHydrology: hydrology, clamp: (v, lo, hi) => Math.max(lo, Math.min(hi, v)) };
   vm.runInNewContext(worker.slice(start, end) + ';this.network=buildRiverNetwork();this.nearest=nearestFreshwater;', context);
   const network = context.network;
-  assert.equal(network.tributaries.length, 5);
-  assert.equal(network.feeders.length, 15);
+  assert.equal(network.tributaries.length, 6);
+  assert.equal(network.feeders.length, 14);
   const sinuosity = path => {
     const chord = Math.hypot(path.at(-1).x - path[0].x, path.at(-1).y - path[0].y);
     let length = 0;
