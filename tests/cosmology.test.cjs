@@ -42,3 +42,13 @@ test('mass-dependent endings distinguish white dwarfs, neutron stars and black h
   assert.equal(remnant.remnant,item.kind);
  }
 });
+
+test('recombination converts leftover free nucleons into hydrogen-1 and conserves baryon count',()=>{
+ const w=cosmos.createWorld({seed:17,particleCount:100});
+ const before=cosmos.totalBaryons(w);
+ for(let i=0;i<8;i++)cosmos.step(w,1/60,{timeScale:4});
+ const after=cosmos.totalBaryons(w);
+ assert.equal(after,before);
+ assert.ok(w.bodies.some(b=>b.kind==='atom'&&b.isotope==='hydrogen-1'));
+ assert.ok(w.bodies.every(b=>b.kind!=='neutron'),'free neutrons should decay during recombination');
+});
