@@ -55,7 +55,7 @@ function step(s,dt,time=s.time+dt){
   s.flood[i]=clamp(Math.max(channelWet,floodplain*clamp(.12+rain*28+surface*3)*.72));if(s.flood[i]>.075)s.floodIndices[s.floodCount++]=i;
  }
  // Route runoff one cell downhill in elevation order; preserve water volume at closed depressions.
- for(let k=0;k<s.order.length;k++){const i=s.order[k],down=s.downhill[i];if(down<0){nextSurface[i]*=Math.max(0,1-dt*.8*s.watershedDrainage);continue}const flow=nextSurface[i]*clamp(s.routingRate[i]*dt*s.watershedDrainage,0,.95);if(flow>0){nextSurface[i]-=flow;nextSurface[down]+=flow}}
+ for(let k=0;k<s.order.length;k++){const i=s.order[k],down=s.downhill[i];if(down<0){nextSurface[i]=Math.min(1,nextSurface[i]*Math.max(0,1-dt*.8*s.watershedDrainage));continue}const stored=nextSurface[i],overflow=Math.max(0,stored-1),runoff=stored*clamp(s.routingRate[i]*dt*s.watershedDrainage,0,.95),flow=Math.min(stored,Math.max(overflow,runoff));if(flow>0){nextSurface[i]-=flow;nextSurface[down]+=flow}}
  // Groundwater slowly follows the same watershed, feeding channels and floodplain soils.
  for(const i of s.order){const down=s.downhill[i];if(down<0)continue;const flow=Math.max(0,nextGround[i]-.22)*.018*dt;if(flow>0){nextGround[i]-=flow;nextGround[down]=clamp(nextGround[down]+flow*.92)}}
  s.surface.set(nextSurface);s.groundwater.set(nextGround);
