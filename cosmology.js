@@ -14,7 +14,7 @@
   function body(id,kind,x,y,mass,extra={}){return {id,kind,x,y,vx:0,vy:0,mass:Math.max(.0001,mass),radius:Math.max(1,Math.sqrt(Math.max(.0001,mass))*1.5),composition:composition(),age:0,temperature:1,metallicity:0,...extra}}
   function createWorld(options={}){
     const random=rng(options.seed||20261116),bodies=[];let id=0;
-    const count=clamp(Math.floor(finite(options.particleCount,170)),40,600),protons=Math.floor(count*.46),neutrons=Math.floor(count*.09),electrons=count-protons-neutrons;
+    const count=clamp(Math.floor(finite(options.particleCount,250)),40,600),protons=Math.floor(count*.46),neutrons=Math.floor(count*.09),electrons=count-protons-neutrons;
     for(const [kind,n,mass] of [['proton',protons,.08],['neutron',neutrons,.08],['electron',electrons,.00008]]){
       for(let i=0;i<n;i++){const a=random()*Math.PI*2,r=Math.sqrt(random())*170,p=body('p'+id++,kind,480+Math.cos(a)*r,310+Math.sin(a)*r,mass,{charge:kind==='proton'?1:kind==='electron'?-1:0,temperature:.9+random()*.2});p.vx=(random()-.5)*7;p.vy=(random()-.5)*7;bodies.push(p)}
     }
@@ -23,9 +23,9 @@
   function totalBaryons(bodies){return bodies.reduce((n,b)=>n+(b.kind==='proton'||b.kind==='neutron'?1:b.kind==='nucleus'||b.kind==='atom'?finite(b.baryons,1):0),0)}
   function mergeNucleons(world,random){
     const free=world.bodies.filter(b=>b.kind==='proton'||b.kind==='neutron'),used=new Set(),made=[];
-    for(const p of free){if(used.has(p.id))continue;let best=null,bd=34;
+    for(const p of free){if(used.has(p.id))continue;let best=null,bd=58;
       for(const q of free){if(q===p||used.has(q.id)||q.kind===p.kind)continue;const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=q}}
-      if(!best||random()>clamp(.32+(.34-bd/100),.12,.55))continue;
+      if(!best||random()>clamp(.68+(.58-bd/100),.45,.9))continue;
       used.add(p.id);used.add(best.id);const proton=p.kind==='proton'?p:best,neutron=p.kind==='neutron'?p:best;
       const n=body('p'+world.nextId++,'nucleus',(p.x+best.x)/2,(p.y+best.y)/2,2,{baryons:2,protons:1,neutrons:1,element:'H',isotope:'deuterium',composition:{...composition(),H:2},temperature:(p.temperature+best.temperature)*.5});
       n.vx=(p.vx+best.vx)/2;n.vy=(p.vy+best.vy)/2;made.push(n);
@@ -36,7 +36,7 @@
     const nuclei=world.bodies.filter(b=>b.kind==='nucleus'),used=new Set(),made=[];
     for(const a of nuclei){if(used.has(a.id))continue;let partner=null,dist=26;
       for(const b of nuclei){if(a===b||used.has(b.id))continue;const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<dist){dist=d;partner=b}}
-      if(!partner||random()>.035)continue;
+      if(!partner||random()>.24)continue;
       const p=a.protons+partner.protons,n=a.neutrons+partner.neutrons;
       if(p>3||n>3||p+n>4)continue;
       used.add(a.id);used.add(partner.id);
@@ -79,7 +79,7 @@
   function formStars(world,random){
     const gas=world.bodies.filter(b=>b.kind==='gas'),used=new Set(),stars=[];
     for(const a of gas){if(used.has(a.id))continue;const nearby=gas.filter(b=>!used.has(b.id)&&Math.hypot(a.x-b.x,a.y-b.y)<105);
-      if(nearby.length<3||random()>.018)continue;
+      if(nearby.length<2||random()>.08)continue;
       const group=nearby.slice(0,Math.min(nearby.length,12));group.forEach(b=>used.add(b.id));
       const mass=group.reduce((n,b)=>n+b.mass,0),c=group.reduce((o,b)=>addComposition(o,b.composition),composition());
       const star=body('p'+world.nextId++,'star',group.reduce((n,b)=>n+b.x*b.mass,0)/mass,group.reduce((n,b)=>n+b.y*b.mass,0)/mass,mass,{composition:c,initialMass:mass,luminosity:Math.pow(mass,.8),temperature:Math.pow(mass,.35),metallicity:(c.C+c.O+c.Fe)/Math.max(1,mass),stage:mass<1.2?'red-dwarf':'main-sequence',fuel:mass*1.2,lifeExpectancy:clamp(180/Math.pow(Math.max(.5,mass),1.7),12,420),windClock:0,remnant:null});
