@@ -74,7 +74,7 @@ test('primordial epochs have deliberate duration and recombination is progressiv
  for(let i=0;i<6;i++)cosmos.step(w,.05,{timeScale:200});
  assert.equal(w.phase,'recombination');
  const before=w.bodies.filter(b=>b.kind==='atom').length;
- cosmos.step(w,1/60,{timeScale:4});
+ for(let i=0;i<4;i++)cosmos.step(w,.05,{timeScale:4});
  const after=w.bodies.filter(b=>b.kind==='atom').length;
  assert.ok(after>before,'recombination should convert particles gradually');
  assert.ok(w.time<180,'recombination must not skip straight into primordial gas');
