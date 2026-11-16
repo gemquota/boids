@@ -95,19 +95,22 @@
     }
     world.stats.ejectedMass+=amount;
   }
+  function resolveStellarDeath(world,s){
+    const mass=finite(s.initialMass,s.mass),base=composition();
+    for(const k of Object.keys(base))base[k]=finite(s.composition&&s.composition[k]);
+    if(mass<2.2){s.kind='remnant';s.remnant='white-dwarf';s.stage='white-dwarf';s.radius=3;s.mass=Math.max(.4,mass*.55);world.stats.whiteDwarfs++;world.stats.starsDead++;}
+    else if(mass<8){s.kind='remnant';s.remnant='neutron-star';s.stage='neutron-star';s.radius=4;s.mass=1.4;world.stats.neutronStars++;world.stats.starsDead++;eject(world,s,Math.max(0,mass-1.4),base,3,'supernova');world.stats.supernovae++;}
+    else if(mass<19){s.kind='remnant';s.remnant='black-hole';s.stage='black-hole';s.radius=6;s.mass=Math.max(3,mass*.35);world.stats.blackHoles++;world.stats.starsDead++;eject(world,s,Math.max(0,mass-s.mass),base,4,'supernova');world.stats.supernovae++;}
+    else{s.kind='remnant';s.remnant='black-hole';s.stage='black-hole';s.radius=7;s.mass=Math.max(5,mass*.65);world.stats.blackHoles++;world.stats.starsDead++;eject(world,s,Math.max(0,mass-s.mass),base,1.4,'wind');}
+    return s;
+  }
   function stellarEvolution(world,dt,random){
     const additions=[];
     for(const s of world.bodies.filter(b=>b.kind==='star')){
       s.age+=dt;s.fuel=Math.max(0,s.fuel-dt*s.initialMass*.012);s.windClock+=dt;
       if(s.windClock>4){s.windClock=0;const amount=Math.min(s.mass*.003,s.mass*.08);if(amount>.001){const wind=composition();wind.He=amount*.35;wind.C=amount*.08;wind.O=amount*.04;wind.H=amount*.53;eject(world,s,amount,wind,1.1,'wind');s.mass-=amount}}
       if(s.age>s.lifeExpectancy*.55)s.stage='giant';
-      if(s.age>=s.lifeExpectancy){
-        const mass=s.initialMass,base=composition();for(const k of Object.keys(base))base[k]=s.composition[k];
-        if(mass<2.2){s.kind='remnant';s.remnant='white-dwarf';s.stage='white-dwarf';s.radius=3;s.mass=Math.max(.4,mass*.55);world.stats.whiteDwarfs++;world.stats.starsDead++;}
-        else if(mass<8){s.kind='remnant';s.remnant='neutron-star';s.stage='neutron-star';s.radius=4;s.mass=1.4;world.stats.neutronStars++;world.stats.starsDead++;eject(world,s,mass-1.4,base,3,'supernova');world.stats.supernovae++;}
-        else if(mass<19){s.kind='remnant';s.remnant='black-hole';s.stage='black-hole';s.radius=6;s.mass=Math.max(3,mass*.35);world.stats.blackHoles++;world.stats.starsDead++;eject(world,s,mass-s.mass,base,4,'supernova');world.stats.supernovae++;}
-        else{s.kind='remnant';s.remnant='black-hole';s.stage='black-hole';s.radius=7;s.mass=Math.max(5,mass*.65);world.stats.blackHoles++;world.stats.starsDead++;eject(world,s,mass-s.mass,base,1.4,'wind');}
-      }
+      if(s.age>=s.lifeExpectancy)resolveStellarDeath(world,s);
     }
   }
   function nucleosynthesis(world,random){
@@ -141,5 +144,5 @@
   }
   function snapshot(w){return clone(w)}
   function restore(s){if(!s||!Array.isArray(s.bodies))throw new TypeError('Invalid cosmology snapshot');return clone(s)}
-  return {createWorld,step,summary,snapshot,restore,totalBaryons,addComposition,massOf};
+  return {createWorld,step,summary,snapshot,restore,totalBaryons,addComposition,massOf,resolveStellarDeath};
 });
