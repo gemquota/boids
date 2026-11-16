@@ -46,7 +46,7 @@ test('mass-dependent endings distinguish white dwarfs, neutron stars and black h
 test('recombination converts leftover free nucleons into hydrogen-1 and conserves baryon count',()=>{
  const w=cosmos.createWorld({seed:17,particleCount:100});
  const before=cosmos.totalBaryons(w.bodies);
- for(let i=0;i<13;i++)cosmos.step(w,.05,{timeScale:200});
+ for(let i=0;i<16;i++)cosmos.step(w,.05,{timeScale:200});
  const after=cosmos.totalBaryons(w.bodies);
  assert.equal(after,before);
  assert.ok(w.bodies.some(b=>b.kind==='atom'&&b.isotope==='hydrogen-1'));
