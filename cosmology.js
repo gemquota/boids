@@ -38,17 +38,33 @@
       for(const b of nuclei){if(a===b||used.has(b.id))continue;const d=Math.hypot(a.x-b.x,a.y-b.y);if(d<dist){dist=d;partner=b}}
       if(!partner||random()>.24)continue;
       const p=a.protons+partner.protons,n=a.neutrons+partner.neutrons;
-      if(p>3||n>3||p+n>4)continue;
+      if(!((p===2&&(n===1||n===2))||(p===3&&(n===3||n===4))))continue;
       used.add(a.id);used.add(partner.id);
-      const el=p===2&&n===2?'He':p===2?'He':p===3?'Li':'H';
+      const el=p===2?'He':'Li';
       const c=composition();c[el]=(a.baryons+partner.baryons);
-      const nu=body('p'+world.nextId++,'nucleus',(a.x+partner.x)/2,(a.y+partner.y)/2,a.mass+partner.mass,{baryons:a.baryons+partner.baryons,protons:p,neutrons:n,element:el,isotope:el==='He'?(n===2?'helium-4':'helium-3'):el==='Li'?'lithium-7':'deuterium',composition:c,temperature:(a.temperature+partner.temperature)*.5});
+      const nu=body('p'+world.nextId++,'nucleus',(a.x+partner.x)/2,(a.y+partner.y)/2,a.mass+partner.mass,{baryons:a.baryons+partner.baryons,protons:p,neutrons:n,element:el,isotope:el==='He'?(n===2?'helium-4':'helium-3'):(n===4?'lithium-7':'lithium-6'),composition:c,temperature:(a.temperature+partner.temperature)*.5});
       nu.vx=(a.vx+partner.vx)/2;nu.vy=(a.vy+partner.vy)/2;made.push(nu);
     }
     world.bodies=world.bodies.filter(b=>!used.has(b.id)).concat(made);
   }
   function recombine(world){
-    for(const b of world.bodies){if(b.kind==='nucleus'){b.kind='atom';b.electrons=Math.max(0,b.protons);b.charge=b.protons-b.electrons;b.radius+=1;world.stats.atoms++;}}
+    const electrons=world.bodies.filter(b=>b.kind==='electron'),consumed=new Set();let cursor=0;
+    const matter=[];
+    for(const b of world.bodies){
+      if(b.kind==='electron')continue;
+      if(b.kind==='nucleus'){
+        b.kind='atom';b.electrons=Math.min(Math.max(0,b.protons),electrons.length-cursor);
+        for(let i=0;i<b.electrons;i++)consumed.add(electrons[cursor++].id);
+        b.charge=b.protons-b.electrons;b.radius+=1;world.stats.atoms++;matter.push(b);
+      }else if(b.kind==='proton'||b.kind==='neutron'){
+        // Free neutrons decay into protons before neutral-atom formation; neutrinos are outside this model.
+        const atom=body(b.id,'atom',b.x,b.y,b.mass,{baryons:1,protons:1,neutrons:0,electrons:cursor<electrons.length?1:0,
+          element:'H',isotope:'hydrogen-1',composition:{...composition(),H:1},temperature:b.temperature});
+        if(atom.electrons)consumed.add(electrons[cursor++].id);
+        atom.charge=1-atom.electrons;atom.vx=b.vx;atom.vy=b.vy;matter.push(atom);world.stats.atoms++;
+      }else matter.push(b);
+    }
+    world.bodies=matter.concat(electrons.filter(e=>!consumed.has(e.id)));
     world.phase='primordial-gas';
   }
   function gravityStep(world,dt){
