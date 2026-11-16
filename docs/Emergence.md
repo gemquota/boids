@@ -22,3 +22,18 @@ BOIDS now has an explicit lower-level origin pathway rather than treating the fi
 ## Boundaries
 
 The pre-chemical layer is a coarse-grained exploratory model, not a simulation of a known historical abiogenesis pathway. Adhesion, adsorption and catalysis are simplified. The lipid membrane is still an abstract compartment, and pre-boid sensing is represented as a capability/trait transition rather than a detailed cell signalling network. The existing Boids ecology and organism physics are not replaced by atom-scale mechanics.
+
+## Interpretation and player experience
+
+The sequence above describes current integration boundaries, not a mandatory ladder of scientific stages or a promise that every future form of organisation must occur in that order. The intended product is an abstract, interactive philosophy of emergence: players should be able to observe how simple components and local interactions can produce increasingly organised behaviour.
+
+Scientific fidelity is subordinate to conceptual clarity. Scale, time and mechanisms may be compressed, exaggerated or deliberately invented when that produces a coherent and inspectable demonstration. Such approximations must be labelled honestly and their rules must remain internally consistent.
+
+The player-facing experience has two complementary depths:
+
+- **Observe:** compelling visual behaviour, intuitive controls, clear cause-and-effect and accessible summaries.
+- **Investigate:** inspect components, relationships, material and energy flows, parameters, histories and the causes of outcomes.
+
+Both depths operate on the same world. Later systems should inherit or exchange meaningful state through explicit integration boundaries rather than appearing as unrelated demonstrations. Domain labels such as cosmological, chemical, biological and cognitive describe useful lenses, not isolated game modes.
+
+See [Design philosophy](DESIGN-PHILOSOPHY.md) for the complete principles, scale strategy, presentation guidance and feature evaluation test.
