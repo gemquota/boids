@@ -47,6 +47,8 @@ That is 192 unique numeric controls. Do not hand-maintain a separate count in UI
 | `boids-worker.js` | Simulation orchestration, ecology, reproduction, live telemetry, snapshot export/restore |
 | `abiogenesis.js` | Spatial particle physics, dynamic bonding, molecular chemistry, compartments and emergent capability graph |
 | `abiogenesis-worker.js` | Dedicated worker for isolated particle-world stepping, deterministic random state and snapshots |
+| `cosmology.js` | Subatomic origins, primordial nucleosynthesis, recombination, gas collapse, stellar evolution and spatially explicit enrichment |
+| `cosmology-worker.js` | Dedicated accelerated cosmology and N-body worker with resumable world snapshots |
 | `evolution.js` | Pure variable-genome, NEAT, regulatory/statistical and experiment-analysis primitives |
 | `genetics.js` | Ten-locus trait schema, expression curves, inheritance and trait helpers |
 | `chromosome.js` | Typed hexadecimal gene-record codec |
@@ -101,6 +103,7 @@ All standalone browser components are published under the same GitHub Pages orig
 
 - [Architecture](https://gemquota.github.io/boids/docs/ARCHITECTURE.md)
 - [Abiogenesis](https://gemquota.github.io/boids/docs/Abiogenesis.md)
+- [Cosmological and stellar evolution model](https://gemquota.github.io/boids/docs/Cosmology.md)
 - [Emergence](https://gemquota.github.io/boids/docs/Emergence.md)
 - [Unified emergence engine](https://gemquota.github.io/boids/docs/EMERGENCE-ENGINE.md)
 - [Chromosome format](https://gemquota.github.io/boids/docs/CHROMOSOME_FORMAT.md)
