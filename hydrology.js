@@ -32,7 +32,7 @@ function create(width,height,seed=1,options={}){
  for(const lake of network.lakes)for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const dx=x*s.cellW-lake.x,dy=y*s.cellH-lake.y,c=Math.cos(lake.rotation),sn=Math.sin(lake.rotation),u=(dx*c+dy*sn)/lake.rx,v=(-dx*sn+dy*c)/lake.ry,d2=u*u+v*v;if(d2<9){const i=y*cols+x;s.elevation[i]=Math.max(.025,s.elevation[i]-.035*Math.exp(-.5*d2))}}
  buildDrainage(s);rebuildDerived(s);
  s.rainPotential=new Float32Array(n);s.nextSurface=new Float32Array(n);s.nextGround=new Float32Array(n);
- for(let i=0;i<n;i++){const e=s.elevation[i],a=s.accumulation[i]/n,down=s.downhill[i],slope=down>=0?Math.max(0,s.filledElevation[i]-s.filledElevation[down]):0;s.rainPotential[i]=clamp(.58+e*.9+Math.max(0,e-.42)*1.5,.45,2.1)*(.55+.45*hash(s.seed,i%s.cols,(i/s.cols)|0,3));s.floodplain[i]=clamp(Math.log1p(s.accumulation[i])/Math.log1p(n)*1.8)*clamp(1-slope*18)*clamp((.62-e)*2.2);s.flow[i]=clamp(a*8)*(0.35+clamp(slope*35)*.65)}
+ for(let i=0;i<n;i++){const e=s.elevation[i];s.rainPotential[i]=clamp(.58+e*.9+Math.max(0,e-.42)*1.5,.45,2.1)*(.55+.45*hash(s.seed,i%s.cols,(i/s.cols)|0,3))}
  return s;
 }
 function step(s,dt,time=s.time+dt){
@@ -55,7 +55,7 @@ function step(s,dt,time=s.time+dt){
   s.flood[i]=clamp(Math.max(channelWet,floodplain*clamp(.12+rain*28+surface*3)*.72));if(s.flood[i]>.075)s.floodIndices[s.floodCount++]=i;
  }
  // Route runoff one cell downhill in elevation order; preserve water volume at closed depressions.
- for(let k=0;k<s.order.length;k++){const i=s.order[k],down=s.downhill[i];if(down<0)continue;const flow=nextSurface[i]*clamp(s.routingRate[i]*dt*s.watershedDrainage,0,.95);if(flow>0){nextSurface[i]-=flow;nextSurface[down]+=flow}}
+ for(let k=0;k<s.order.length;k++){const i=s.order[k],down=s.downhill[i];if(down<0){nextSurface[i]*=Math.max(0,1-dt*.8*s.watershedDrainage);continue}const flow=nextSurface[i]*clamp(s.routingRate[i]*dt*s.watershedDrainage,0,.95);if(flow>0){nextSurface[i]-=flow;nextSurface[down]+=flow}}
  // Groundwater slowly follows the same watershed, feeding channels and floodplain soils.
  for(const i of s.order){const down=s.downhill[i];if(down<0)continue;const flow=Math.max(0,nextGround[i]-.22)*.018*dt;if(flow>0){nextGround[i]-=flow;nextGround[down]=clamp(nextGround[down]+flow*.92)}}
  s.surface.set(nextSurface);s.groundwater.set(nextGround);
@@ -75,6 +75,7 @@ function restore(d,width,height,seed=1){
  const state=create(width,height,seed,{cols:d.cols,rows:d.rows,tidePeriod:d.tidePeriod,tideAmplitude:d.tideAmplitude,stormPeriod:d.stormPeriod,reliefScale:d.reliefScale,coastDepth:d.coastDepth,channelIncision:d.channelIncision,terrainNoise:d.terrainNoise,rainfallScale:d.rainfallScale,infiltrationRate:d.infiltrationRate,watershedDrainage:d.watershedDrainage,streamSensitivity:d.streamSensitivity});
  for(const k of ['elevation','soil','groundwater','surface','rainfall','salinity','flood','floodplain','flow','accumulation','coastDistance','downhill','filledElevation'])if(Array.isArray(d[k])&&d[k].length===state[k].length)state[k].set(d[k]);
  if(!Array.isArray(d.filledElevation)||d.filledElevation.length!==state.filledElevation.length)buildDrainage(state);
+ for(let i=0;i<state.elevation.length;i++){const e=state.elevation[i];state.rainPotential[i]=clamp(.58+e*.9+Math.max(0,e-.42)*1.5,.45,2.1)*(.55+.45*hash(state.seed,i%state.cols,(i/state.cols)|0,3))}
  rebuildDerived(state);state.floodCount=0;for(let i=0;i<state.flood.length;i++)if(state.flood[i]>.075)state.floodIndices[state.floodCount++]=i;state.time=Number(d.time)||0;return state;
 }
 return Object.freeze({create,step,sample,consumeWater,streamSegments,channelNetwork,serialize,restore});
