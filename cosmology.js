@@ -47,25 +47,28 @@
     }
     world.bodies=world.bodies.filter(b=>!used.has(b.id)).concat(made);
   }
-  function recombine(world){
-    const electrons=world.bodies.filter(b=>b.kind==='electron'),consumed=new Set();let cursor=0;
-    const matter=[];
+  function recombine(world,limit=1){
+    const electrons=world.bodies.filter(b=>b.kind==='electron'),consumed=new Set(),matter=[];
+    let cursor=0,converted=0;
     for(const b of world.bodies){
-      if(b.kind==='electron')continue;
-      if(b.kind==='nucleus'){
-        b.kind='atom';b.electrons=Math.min(Math.max(0,b.protons),electrons.length-cursor);
-        for(let i=0;i<b.electrons;i++)consumed.add(electrons[cursor++].id);
-        b.charge=b.protons-b.electrons;b.radius+=1;world.stats.atoms++;matter.push(b);
-      }else if(b.kind==='proton'||b.kind==='neutron'){
-        // Free neutrons decay into protons before neutral-atom formation; neutrinos are outside this model.
-        const atom=body(b.id,'atom',b.x,b.y,b.mass,{baryons:1,protons:1,neutrons:0,electrons:cursor<electrons.length?1:0,
-          element:'H',isotope:'hydrogen-1',composition:{...composition(),H:1},temperature:b.temperature});
-        if(atom.electrons)consumed.add(electrons[cursor++].id);
-        atom.charge=1-atom.electrons;atom.vx=b.vx;atom.vy=b.vy;matter.push(atom);world.stats.atoms++;
+      if(b.kind==='electron'){matter.push(b);continue}
+      if((b.kind==='nucleus'||b.kind==='proton'||b.kind==='neutron')&&converted<limit){
+        const isNucleus=b.kind==='nucleus';
+        const protons=isNucleus?b.protons:1,neutrons=isNucleus?b.neutrons:0;
+        const baryons=isNucleus?b.baryons:1;
+        const c=isNucleus?b.composition:{...composition(),H:1};
+        const bound=Math.min(Math.max(0,protons),electrons.length-cursor);
+        for(let i=0;i<bound;i++)consumed.add(electrons[cursor++].id);
+        const atom=body(b.id,'atom',b.x,b.y,b.mass,{baryons,protons,neutrons,electrons:bound,
+          element:isNucleus?(b.element||'H'):'H',
+          isotope:isNucleus?(b.isotope||'hydrogen-1'):'hydrogen-1',
+          composition:c,temperature:b.temperature});
+        atom.charge=protons-bound;atom.vx=b.vx;atom.vy=b.vy;atom.radius=b.radius+1;
+        matter.push(atom);world.stats.atoms++;converted++;
       }else matter.push(b);
     }
-    world.bodies=matter.concat(electrons.filter(e=>!consumed.has(e.id)));
-    world.phase='primordial-gas';
+    world.bodies=matter.filter(b=>b.kind!=='electron'||!consumed.has(b.id));
+    return converted;
   }
   function gravityStep(world,dt){
     const bodies=world.bodies,ax=new Float64Array(bodies.length),ay=new Float64Array(bodies.length),G=8,soft=18;
@@ -146,10 +149,28 @@
     if(!world)throw new TypeError('Cosmology world required');
     const random=rng(world.seed+Math.floor(world.time*100000)+1),scale=clamp(finite(options.timeScale,4),1,200),elapsed=clamp(dt,0,.05)*scale;
     world.time+=elapsed;
-    if(world.time<20){world.phase='primordial-plasma';mergeNucleons(world,random);if(world.time>8)combineNuclei(world,random)}
-    else if(world.time<40){world.phase='recombination';recombine(world)}
-    else if(world.time<60){world.phase='primordial-gas';if(world.time>48)formClouds(world,random)}
-    else{world.phase='stellar-era';if(world.time%1.4<elapsed)formStars(world,random);gravityStep(world,dt,options);nucleosynthesis(world,random);stellarEvolution(world,elapsed,random)}
+    // Give each primordial epoch real screen time at the default 4× playback rate.
+    // The later stellar clock is deliberately unchanged.
+    if(world.time<60){world.phase='primordial-plasma'}
+    else if(world.time<120){
+      world.phase='primordial-nucleosynthesis';
+      mergeNucleons(world,random);combineNuclei(world,random);
+    }else if(world.time<180){
+      world.phase='recombination';
+      world.recombinationProgress=finite(world.recombinationProgress)+elapsed;
+      while(world.recombinationProgress>=.25){
+        const converted=recombine(world,1);
+        world.recombinationProgress-=.25;
+        if(!converted)break;
+      }
+    }else if(world.time<240){
+      world.phase='primordial-gas';
+      if(world.time>210)formClouds(world,random);
+    }else{
+      world.phase='stellar-era';
+      if(world.time%1.4<elapsed)formStars(world,random);
+      gravityStep(world,dt,options);nucleosynthesis(world,random);stellarEvolution(world,elapsed,random);
+    }
     world.bodies=world.bodies.filter(b=>b.mass>.00001&&Number.isFinite(b.x)&&Number.isFinite(b.y));
     if(world.bodies.length>900)world.bodies=world.bodies.slice(-900);
     return summary(world);
