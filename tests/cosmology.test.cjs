@@ -7,13 +7,13 @@ test('primordial world starts with independently distributed subatomic particles
 });
 test('nucleosynthesis and recombination produce nuclei and atoms from subatomic constituents',()=>{
  const w=cosmos.createWorld({seed:11,particleCount:240});
- for(let i=0;i<10;i++)cosmos.step(w,1/60,{timeScale:4});
+ for(let i=0;i<7;i++)cosmos.step(w,.05,{timeScale:200});
  assert.ok(w.bodies.some(b=>b.kind==='nucleus'||b.kind==='atom'));
  assert.ok(w.bodies.every(b=>Number.isFinite(b.mass)&&b.mass>0));
 });
 test('world advances through recombination into gas and stellar eras',()=>{
  const w=cosmos.createWorld({seed:19,particleCount:300});
- for(let i=0;i<7;i++)cosmos.step(w,.05,{timeScale:200});
+ for(let i=0;i<25;i++)cosmos.step(w,.05,{timeScale:200});
  assert.equal(w.phase,'stellar-era');
  assert.ok(w.bodies.some(b=>['atom','gas','star'].includes(b.kind)));
 });
@@ -46,7 +46,7 @@ test('mass-dependent endings distinguish white dwarfs, neutron stars and black h
 test('recombination converts leftover free nucleons into hydrogen-1 and conserves baryon count',()=>{
  const w=cosmos.createWorld({seed:17,particleCount:100});
  const before=cosmos.totalBaryons(w.bodies);
- for(let i=0;i<3;i++)cosmos.step(w,.05,{timeScale:200});
+ for(let i=0;i<13;i++)cosmos.step(w,.05,{timeScale:200});
  const after=cosmos.totalBaryons(w.bodies);
  assert.equal(after,before);
  assert.ok(w.bodies.some(b=>b.kind==='atom'&&b.isotope==='hydrogen-1'));
@@ -62,4 +62,20 @@ test('primordial particles remain the visible opening era instead of being skipp
  for(let i=0;i<20;i++)cosmos.step(w,1/60,{timeScale:4});
  assert.equal(w.phase,'primordial-plasma');
  assert.ok(w.bodies.some(b=>['proton','neutron','electron','nucleus'].includes(b.kind)));
+});
+
+test('primordial epochs have deliberate duration and recombination is progressive',()=>{
+ const w=cosmos.createWorld({seed:29,particleCount:250});
+ for(let i=0;i<5;i++)cosmos.step(w,.05,{timeScale:200});
+ assert.equal(w.phase,'primordial-plasma');
+ assert.ok(w.bodies.every(b=>['proton','neutron','electron'].includes(b.kind)));
+ cosmos.step(w,.05,{timeScale:200});
+ assert.equal(w.phase,'primordial-nucleosynthesis');
+ for(let i=0;i<6;i++)cosmos.step(w,.05,{timeScale:200});
+ assert.equal(w.phase,'recombination');
+ const before=w.bodies.filter(b=>b.kind==='atom').length;
+ cosmos.step(w,1/60,{timeScale:4});
+ const after=w.bodies.filter(b=>b.kind==='atom').length;
+ assert.ok(after>before,'recombination should convert particles gradually');
+ assert.ok(w.time<180,'recombination must not skip straight into primordial gas');
 });
