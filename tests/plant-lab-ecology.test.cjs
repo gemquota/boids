@@ -20,9 +20,10 @@ test('spore landings and germinations are separately observable', () => {
   assert.match(source, /' · landed '\+plantCounters\.sporesLanded\+' · germinated '\+plantCounters\.sporesGerminated/);
 });
 
-test('Plant Lab surface network has one trunk and one tributary, without feeder branches', () => {
-  assert.match(source, /specs=\[\[\.24,-1,-1,\.03,\.18\]\],tributaries=\[\],feeders=\[\]/);
-  assert.match(source, /main=buildRiverNetwork\(\)\.main,sourceT=\[\.18,\.5,\.82\]/);
+test('Plant Lab displays only the main river and coastal edges, not minor tributaries or streams', () => {
+  assert.match(source, /specs=\[\],tributaries=\[\],feeders=\[\]/);
+  assert.match(source, /const paths=\[\{points:network\.main/);
+  assert.doesNotMatch(source, /BoidsHydrology\.streamSegments\(hydrologyFields\)/);
 });
 
 test('Plant Lab uses a floating emoji launcher and three title-labelled bubble menus', () => {
@@ -32,4 +33,19 @@ test('Plant Lab uses a floating emoji launcher and three title-labelled bubble m
   assert.match(source, /group\('Tools','🧰'/);
   assert.match(source, /className='actionMenuTitle';heading\.textContent=name/);
   assert.doesNotMatch(source, /className='actionBar'/);
+});
+
+
+test('Plants render on a dedicated canvas and visible starter seedlings exist immediately', () => {
+  assert.match(source, /<canvas id="plantLayer"/);
+  assert.match(source, /plantCanvas\.width=Math\.round\(W\*dpr\)/);
+  assert.match(source, /originKind:'starter-seedling'/);
+  assert.match(source, /ctx=plantCtx;ctx\.setTransform/);
+});
+
+test('Plant Lab uses pinch gestures instead of zoom buttons', () => {
+  assert.match(source, /const activePointers=new Map\(\);let pinchState=null/);
+  assert.match(source, /pinchState\.zoom\*Math\.hypot\(dx,dy\)\/pinchState\.distance/);
+  assert.doesNotMatch(source, /document\.querySelector\('#zoom(In|Out)'\)\.onclick/);
+  assert.doesNotMatch(source, /label\(zoom(Out|In),/);
 });
