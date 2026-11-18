@@ -41,7 +41,7 @@ function rootFusion(s,cfg,keys){
   if(createConnection(s,r,other,'root',cfg,keys)){degree.set(r.id,(degree.get(r.id)||0)+1);degree.set(other.id,(degree.get(other.id)||0)+1);r.health=Math.min(1,r.health+.025);other.health=Math.min(1,other.health+.025)}
  }}
 }
-function surfaceFusion(s,plants,cfg,dt,keys){
+function surfaceFusion(s,plants,cfg,dt,keys,rootsByNode){
  const cell=Math.max(4,cfg.surfaceFusionDistance),bins=new Map(),candidates=[];
  for(const p of plants)if(!p.senescent&&p.size>=cfg.surfaceFusionMaturity){candidates.push(p);const x=Math.floor(p.x/cell),y=Math.floor(p.y/cell),key=x+','+y;let bin=bins.get(key);if(!bin)bins.set(key,bin=[]);bin.push(p)}
  const maxD=cfg.surfaceFusionDistance,limit=maxD*maxD,moveRate=cfg.surfaceAlignment*dt*18,threshold=Math.max(2.5,maxD*.28)+.1;
@@ -49,7 +49,7 @@ function surfaceFusion(s,plants,cfg,dt,keys){
   if(b.id<=a.id||a.parent===b.id||b.parent===a.id||keys.has(pairKey('surface',a.id,b.id)))continue;
   const dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>limit)continue;const d=Math.sqrt(d2);
   const mx=(a.x+b.x)*.5,my=(a.y+b.y)*.5,move=Math.min(moveRate,Math.max(0,(d-maxD*.28)*.5));
-  if(d>0&&move>0){const adx=(mx-a.x)/d*move,ady=(my-a.y)/d*move,bdx=(mx-b.x)/d*move,bdy=(my-b.y)/d*move;a.x+=adx;a.y+=ady;b.x+=bdx;b.y+=bdy}
+  if(d>0&&move>0){const adx=(mx-a.x)/d*move,ady=(my-a.y)/d*move,bdx=(mx-b.x)/d*move,bdy=(my-b.y)/d*move;a.x+=adx;a.y+=ady;b.x+=bdx;b.y+=bdy;for(const r of rootsByNode.get(a.id)||[]){r.x+=adx;r.tipX+=adx;r.y+=ady;r.tipY+=ady}for(const r of rootsByNode.get(b.id)||[]){r.x+=bdx;r.tipX+=bdx;r.y+=bdy;r.tipY+=bdy}}
   if(d<=threshold&&Math.random()<=cfg.surfaceFusionProbability*dt*.7)createConnection(s,a,b,'surface',cfg,keys);
  }}
 }
@@ -62,11 +62,11 @@ function step(s,plants,dt,env,cfg){
  for(const p of plants){if(p.senescent){for(const r of s.roots)if(r.nodeId===p.id)r.health=Math.max(0,r.health-dt*.004)}else if(!p.rootSystem&&p.age>=1.5&&p.biomass>.24){p.rootSystem=true;const spread=.24+((p.id%5)*.09);addRoot(s,p,null,p.x,p.y,Math.PI/2-spread,0);addRoot(s,p,null,p.x,p.y,Math.PI/2+spread,0);rootsByNode.set(p.id,2);}}
  const rootsAtStart=s.roots.length;
  for(let i=0;i<rootsAtStart;i++){const r=s.roots[i],p=byId.get(r.nodeId);if(p)makeTip(s,p,r,env,cfg,dt)}
- // Count living roots once, rather than filtering the entire root array per plant.
- rootsByNode.clear();for(const r of s.roots)if(r.health>.2)rootsByNode.set(r.nodeId,(rootsByNode.get(r.nodeId)||0)+1);
+ // Rebuild per-node root lists once; they also keep surface fusion's root anchors aligned.
+ rootsByNode.clear();for(const r of s.roots){let list=rootsByNode.get(r.nodeId);if(!list)rootsByNode.set(r.nodeId,list=[]);list.push(r);rootById.set(r.id,r)}
  for(const p of plants){const count=rootsByNode.get(p.id)||0;p.rootMaintenance=count*cfg.rootMaintenance*dt;p.biomass=Math.max(0,p.biomass-p.rootMaintenance);p.rootConnectionCount=rootConnectionCounts.get(p.id)||0}
  const previousConnectionCount=s.connections.length;
- rootFusion(s,cfg,keys);surfaceFusion(s,plants,cfg,dt,keys);
+ rootFusion(s,cfg,keys);surfaceFusion(s,plants,cfg,dt,keys,rootsByNode);
  for(let i=previousConnectionCount;i<s.connections.length;i++){const c=s.connections[i];if(c.type==='surface'){const a=byId.get(c.a),b=byId.get(c.b);a?.history?.push({time:s.time,event:'Formed surface fusion with node #'+c.b});b?.history?.push({time:s.time,event:'Formed surface fusion with node #'+c.a})}else{const ra=rootById.get(c.a),rb=rootById.get(c.b),a=ra&&byId.get(ra.nodeId),b=rb&&byId.get(rb.nodeId);a?.history?.push({time:s.time,event:'Established subsurface root graft'});if(b&&b!==a)b.history?.push({time:s.time,event:'Established subsurface root graft'})}}
  // Update connections in one pass. Root lookup is constant-time.
  const liveRootIds=new Set();for(const r of s.roots)liveRootIds.add(r.id);
