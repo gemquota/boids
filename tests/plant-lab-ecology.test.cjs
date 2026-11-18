@@ -20,9 +20,12 @@ test('spore landings and germinations are separately observable', () => {
   assert.match(source, /' · landed '\+plantCounters\.sporesLanded\+' · germinated '\+plantCounters\.sporesGerminated/);
 });
 
-test('Plant Lab surface network has one trunk and one tributary, without feeder branches', () => {
-  assert.match(source, /specs=\[\[\.24,-1,-1,\.03,\.18\]\],tributaries=\[\],feeders=\[\]/);
-  assert.match(source, /main=buildRiverNetwork\(\)\.main,sourceT=\[\.18,\.5,\.82\]/);
+test('Plant Lab uses a restrained hierarchy of one river, four tributaries and three fine streaks', () => {
+  assert.match(source, /specs=\[\[\.2,-1,-1,\.035,\.14\],\[\.42,1,-1,\.045,\.17\],\[\.66,-1,-1,\.035,\.16\],\[\.82,1,-1,\.025,\.12\]\]/);
+  assert.match(source, /streakSpecs=\[\[\.31,1,-1,\.018,\.075\],\[\.55,-1,-1,\.022,\.085\],\[\.74,1,-1,\.016,\.065\]\]/);
+  assert.match(source, /network\.tributaries\.map/);
+  assert.match(source, /network\.feeders\.map/);
+  assert.match(source, /width:Math\.max\(1\.2,H\*\.0022\),alpha:\.48/);
 });
 
 test('Plant Lab uses a floating emoji launcher and three title-labelled bubble menus', () => {
@@ -32,4 +35,19 @@ test('Plant Lab uses a floating emoji launcher and three title-labelled bubble m
   assert.match(source, /group\('Tools','🧰'/);
   assert.match(source, /className='actionMenuTitle';heading\.textContent=name/);
   assert.doesNotMatch(source, /className='actionBar'/);
+});
+
+
+test('Plants render on a dedicated canvas and visible starter seedlings exist immediately', () => {
+  assert.match(source, /<canvas id="plantLayer"/);
+  assert.match(source, /plantCanvas\.width=Math\.round\(W\*dpr\)/);
+  assert.match(source, /originKind:'starter-seedling'/);
+  assert.match(source, /ctx=plantCtx;ctx\.setTransform/);
+});
+
+test('Plant Lab uses pinch gestures instead of zoom buttons', () => {
+  assert.match(source, /const activePointers=new Map\(\);let pinchState=null/);
+  assert.match(source, /pinchState\.zoom\*Math\.hypot\(dx,dy\)\/pinchState\.distance/);
+  assert.doesNotMatch(source, /document\.querySelector\('#zoom(In|Out)'\)\.onclick/);
+  assert.doesNotMatch(source, /label\(zoom(Out|In),/);
 });
