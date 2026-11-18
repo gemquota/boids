@@ -55,6 +55,7 @@ jobs:
           for script in /tmp/plant-lab-*.js; do node --check "$script"; done
           node --test tests/plant-structures.test.cjs
           node tests/hydrology.test.js
+          node --test tests/plant-lab-ecology.test.cjs
           node --check abiogenesis.js
           node --check abiogenesis-worker.js
           node tests/abiogenesis.test.cjs
