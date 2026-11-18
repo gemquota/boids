@@ -42,6 +42,18 @@ jobs:
           node --check development.js
           node --test tests/physics.test.js tests/development.test.js
           node --check hydrology.js
+          node --check plant-structures.js
+          python3 - <<'PY'
+          import re
+          html = open('plant-lab.html', encoding='utf-8').read()
+          scripts = re.findall(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>', html, re.S)
+          if not scripts:
+              raise SystemExit('Plant Lab inline scripts not found')
+          for index, script in enumerate(scripts):
+              open(f'/tmp/plant-lab-{index}.js', 'w', encoding='utf-8').write(script)
+          PY
+          for script in /tmp/plant-lab-*.js; do node --check "$script"; done
+          node --test tests/plant-structures.test.cjs
           node tests/hydrology.test.js
           node --check abiogenesis.js
           node --check abiogenesis-worker.js
