@@ -57,14 +57,14 @@ function step(s,plants,dt,env,cfg){
  if(!s||!plants||!cfg)return s;dt=clamp(dt,0,.1);s.time+=dt;
  const byId=new Map(),rootsByNode=new Map(),rootById=new Map(),rootCounts=new Map(),rootConnectionCounts=new Map(),surfaceSupport=new Map(),keys=new Set();
  for(const p of plants)byId.set(p.id,p);
- for(const r of s.roots){rootById.set(r.id,r);rootsByNode.set(r.nodeId,(rootsByNode.get(r.nodeId)||0)+1)}
+ for(const r of s.roots){rootById.set(r.id,r);let list=rootsByNode.get(r.nodeId);if(!list)rootsByNode.set(r.nodeId,list=[]);list.push(r)}
  for(const c of s.connections){keys.add(pairKey(c.type,c.a,c.b));if(c.type==='root'){const a=rootById.get(c.a),b=rootById.get(c.b);if(a)rootConnectionCounts.set(a.nodeId,(rootConnectionCounts.get(a.nodeId)||0)+1);if(b)rootConnectionCounts.set(b.nodeId,(rootConnectionCounts.get(b.nodeId)||0)+1)}else{surfaceSupport.set(c.a,(surfaceSupport.get(c.a)||0)+c.strength);surfaceSupport.set(c.b,(surfaceSupport.get(c.b)||0)+c.strength)}}
- for(const p of plants){if(p.senescent){for(const r of s.roots)if(r.nodeId===p.id)r.health=Math.max(0,r.health-dt*.004)}else if(!p.rootSystem&&p.age>=1.5&&p.biomass>.24){p.rootSystem=true;const spread=.24+((p.id%5)*.09);addRoot(s,p,null,p.x,p.y,Math.PI/2-spread,0);addRoot(s,p,null,p.x,p.y,Math.PI/2+spread,0);rootsByNode.set(p.id,2);}}
+ for(const p of plants){if(p.senescent){for(const r of rootsByNode.get(p.id)||[])r.health=Math.max(0,r.health-dt*.004)}else if(!p.rootSystem&&p.age>=1.5&&p.biomass>.24){p.rootSystem=true;const spread=.24+((p.id%5)*.09);addRoot(s,p,null,p.x,p.y,Math.PI/2-spread,0);addRoot(s,p,null,p.x,p.y,Math.PI/2+spread,0);rootsByNode.set(p.id,2);}}
  const rootsAtStart=s.roots.length;
  for(let i=0;i<rootsAtStart;i++){const r=s.roots[i],p=byId.get(r.nodeId);if(p)makeTip(s,p,r,env,cfg,dt)}
  // Rebuild per-node root lists once; they also keep surface fusion's root anchors aligned.
- rootsByNode.clear();for(const r of s.roots){let list=rootsByNode.get(r.nodeId);if(!list)rootsByNode.set(r.nodeId,list=[]);list.push(r);rootById.set(r.id,r)}
- for(const p of plants){const count=(rootsByNode.get(p.id)||[]).reduce((n,r)=>n+(r.health>.2?1:0),0);p.rootMaintenance=count*cfg.rootMaintenance*dt;p.biomass=Math.max(0,p.biomass-p.rootMaintenance);p.rootConnectionCount=rootConnectionCounts.get(p.id)||0}
+ rootsByNode.clear();const livingRootCounts=new Map();for(const r of s.roots){let list=rootsByNode.get(r.nodeId);if(!list)rootsByNode.set(r.nodeId,list=[]);list.push(r);rootById.set(r.id,r);if(r.health>.2)livingRootCounts.set(r.nodeId,(livingRootCounts.get(r.nodeId)||0)+1)}
+ for(const p of plants){const count=livingRootCounts.get(p.id)||0;p.rootMaintenance=count*cfg.rootMaintenance*dt;p.biomass=Math.max(0,p.biomass-p.rootMaintenance);p.rootConnectionCount=rootConnectionCounts.get(p.id)||0}
  const previousConnectionCount=s.connections.length;
  rootFusion(s,cfg,keys);surfaceFusion(s,plants,cfg,dt,keys,rootsByNode);
  for(let i=previousConnectionCount;i<s.connections.length;i++){const c=s.connections[i];if(c.type==='surface'){const a=byId.get(c.a),b=byId.get(c.b);a?.history?.push({time:s.time,event:'Formed surface fusion with node #'+c.b});b?.history?.push({time:s.time,event:'Formed surface fusion with node #'+c.a})}else{const ra=rootById.get(c.a),rb=rootById.get(c.b),a=ra&&byId.get(ra.nodeId),b=rb&&byId.get(rb.nodeId);a?.history?.push({time:s.time,event:'Established subsurface root graft'});if(b&&b!==a)b.history?.push({time:s.time,event:'Established subsurface root graft'})}}
