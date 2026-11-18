@@ -5,7 +5,13 @@ test('primordial world starts with independently distributed subatomic particles
  assert.equal(w.bodies.length,120);assert.ok(w.bodies.every(b=>['proton','neutron','electron'].includes(b.kind)));
  assert.equal(cosmos.summary(w).atoms,0);
 });
-test('primordial particles move continuously before the first transition',()=>{\n const w=cosmos.createWorld({seed:8,particleCount:120});\n const before=w.bodies.map(b=>[b.x,b.y]);\n for(let i=0;i<8;i++)cosmos.step(w,1/60,{timeScale:4});\n assert.ok(w.bodies.some((b,i)=>Math.hypot(b.x-before[i][0],b.y-before[i][1])>.01),'particles should visibly move during the opening era');\n});\ntest('nucleosynthesis and recombination produce nuclei and atoms from subatomic constituents',()=>{
+test('primordial particles move continuously before the first transition',()=>{
+ const w=cosmos.createWorld({seed:8,particleCount:120});
+ const before=w.bodies.map(b=>[b.x,b.y]);
+ for(let i=0;i<8;i++)cosmos.step(w,1/60,{timeScale:4});
+ assert.ok(w.bodies.some((b,i)=>Math.hypot(b.x-before[i][0],b.y-before[i][1])>.01),'particles should visibly move during the opening era');
+});
+test('nucleosynthesis and recombination produce nuclei and atoms from subatomic constituents',()=>{
  const w=cosmos.createWorld({seed:11,particleCount:240});
  for(let i=0;i<22;i++)cosmos.step(w,.05,{timeScale:200});
  assert.ok(w.bodies.some(b=>b.kind==='nucleus'||b.kind==='atom'));
