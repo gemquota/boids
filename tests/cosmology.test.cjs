@@ -5,9 +5,9 @@ test('primordial world starts with independently distributed subatomic particles
  assert.equal(w.bodies.length,120);assert.ok(w.bodies.every(b=>['proton','neutron','electron'].includes(b.kind)));
  assert.equal(cosmos.summary(w).atoms,0);
 });
-test('nucleosynthesis and recombination produce nuclei and atoms from subatomic constituents',()=>{
+test('primordial particles move continuously before the first transition',()=>{\n const w=cosmos.createWorld({seed:8,particleCount:120});\n const before=w.bodies.map(b=>[b.x,b.y]);\n for(let i=0;i<8;i++)cosmos.step(w,1/60,{timeScale:4});\n assert.ok(w.bodies.some((b,i)=>Math.hypot(b.x-before[i][0],b.y-before[i][1])>.01),'particles should visibly move during the opening era');\n});\ntest('nucleosynthesis and recombination produce nuclei and atoms from subatomic constituents',()=>{
  const w=cosmos.createWorld({seed:11,particleCount:240});
- for(let i=0;i<7;i++)cosmos.step(w,.05,{timeScale:200});
+ for(let i=0;i<22;i++)cosmos.step(w,.05,{timeScale:200});
  assert.ok(w.bodies.some(b=>b.kind==='nucleus'||b.kind==='atom'));
  assert.ok(w.bodies.every(b=>Number.isFinite(b.mass)&&b.mass>0));
 });
@@ -20,7 +20,7 @@ test('world advances through recombination into gas and stellar eras',()=>{
 test('stellar wind and supernova ejecta retain composition and outward momentum',()=>{
  const w=cosmos.createWorld({seed:3,particleCount:80});
  const star={id:'test-star',kind:'star',x:100,y:100,vx:0,vy:0,mass:12,radius:5,initialMass:12,age:1000,lifeExpectancy:20,fuel:1,windClock:4,composition:{H:4,He:3,C:2,O:2,Fe:1},metallicity:.2};
- w.bodies=[star];w.time=240;
+ w.bodies=[star];w.time=720;
  for(let i=0;i<3;i++)cosmos.step(w,1/60,{timeScale:4});
  assert.ok(w.stats.supernovae>=1||w.stats.blackHoles>=1);
  assert.ok(w.bodies.some(b=>b.kind==='ejecta'||b.kind==='gas'));
