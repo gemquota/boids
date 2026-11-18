@@ -58,7 +58,7 @@ function step(s,plants,dt,env,cfg){
  const byId=new Map(),rootsByNode=new Map(),rootById=new Map(),rootCounts=new Map(),rootConnectionCounts=new Map(),surfaceSupport=new Map(),keys=new Set();
  for(const p of plants)byId.set(p.id,p);
  for(const r of s.roots){rootById.set(r.id,r);rootsByNode.set(r.nodeId,(rootsByNode.get(r.nodeId)||0)+1)}
- for(const c of s.connections){keys.add(pairKey(c.type,c.a,c.b));if(c.type==='root'){rootConnectionCounts.set(c.a,(rootConnectionCounts.get(c.a)||0)+1);rootConnectionCounts.set(c.b,(rootConnectionCounts.get(c.b)||0)+1)}else{surfaceSupport.set(c.a,(surfaceSupport.get(c.a)||0)+c.strength);surfaceSupport.set(c.b,(surfaceSupport.get(c.b)||0)+c.strength)}}
+ for(const c of s.connections){keys.add(pairKey(c.type,c.a,c.b));if(c.type==='root'){const a=rootById.get(c.a),b=rootById.get(c.b);if(a)rootConnectionCounts.set(a.nodeId,(rootConnectionCounts.get(a.nodeId)||0)+1);if(b)rootConnectionCounts.set(b.nodeId,(rootConnectionCounts.get(b.nodeId)||0)+1)}else{surfaceSupport.set(c.a,(surfaceSupport.get(c.a)||0)+c.strength);surfaceSupport.set(c.b,(surfaceSupport.get(c.b)||0)+c.strength)}}
  for(const p of plants){if(p.senescent){for(const r of s.roots)if(r.nodeId===p.id)r.health=Math.max(0,r.health-dt*.004)}else if(!p.rootSystem&&p.age>=1.5&&p.biomass>.24){p.rootSystem=true;const spread=.24+((p.id%5)*.09);addRoot(s,p,null,p.x,p.y,Math.PI/2-spread,0);addRoot(s,p,null,p.x,p.y,Math.PI/2+spread,0);rootsByNode.set(p.id,2);}}
  const rootsAtStart=s.roots.length;
  for(let i=0;i<rootsAtStart;i++){const r=s.roots[i],p=byId.get(r.nodeId);if(p)makeTip(s,p,r,env,cfg,dt)}
