@@ -145,17 +145,47 @@
     }
   }
   function dtSafe(m){return Math.max(.1,Math.min(10,m))}
+  function particleDynamics(world,dt,random){
+    const bodies=world.bodies,ax=new Float64Array(bodies.length),ay=new Float64Array(bodies.length);
+    // Short-range interactions make the primordial cloud visibly alive before
+    // the later gravity solver takes over. Opposite charges attract; like
+    // charges repel; neutral components drift with a weak cohesive influence.
+    for(let i=0;i<bodies.length;i++){
+      const a=bodies[i];if(a.kind==='star'||a.kind==='remnant')continue;
+      for(let j=i+1;j<bodies.length;j++){
+        const b=bodies[j];if(b.kind==='star'||b.kind==='remnant')continue;
+        const dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;
+        if(d2<1||d2>4900)continue;
+        const d=Math.sqrt(d2),qa=finite(a.charge),qb=finite(b.charge);
+        const polarity=qa*qb>0?-.9:qa*qb<0?1.25:.16;
+        const strength=polarity*(1-d/70)*dt*.7/d;
+        const fx=dx*strength,fy=dy*strength;
+        ax[i]+=fx;ay[i]+=fy;ax[j]-=fx;ay[j]-=fy;
+      }
+    }
+    for(let i=0;i<bodies.length;i++){
+      const b=bodies[i];if(b.kind==='star'||b.kind==='remnant')continue;
+      b.vx=(finite(b.vx)+ax[i])*Math.pow(.997,dt*60);
+      b.vy=(finite(b.vy)+ay[i])*Math.pow(.997,dt*60);
+      // Tiny deterministic perturbations prevent perfectly symmetric clumps.
+      b.vx+=(random()-.5)*dt*.12;b.vy+=(random()-.5)*dt*.12;
+      b.x+=b.vx*dt;b.y+=b.vy*dt;
+      if(b.x<3||b.x>world.width-3)b.vx*=-.82;
+      if(b.y<3||b.y>world.height-3)b.vy*=-.82;
+      b.x=clamp(b.x,3,world.width-3);b.y=clamp(b.y,3,world.height-3);
+    }
+  }
   function step(world,dt=1/60,options={}){
     if(!world)throw new TypeError('Cosmology world required');
     const random=rng(world.seed+Math.floor(world.time*100000)+1),scale=clamp(finite(options.timeScale,4),1,200),elapsed=clamp(dt,0,.05)*scale;
     world.time+=elapsed;
-    // Give each primordial epoch real screen time at the default 4× playback rate.
-    // The later stellar clock is deliberately unchanged.
-    if(world.time<60){world.phase='primordial-plasma'}
-    else if(world.time<120){
+    // Each conceptual era gets 180 model-seconds: about 45 seconds on screen
+    // at the default 4× playback rate. The player can still change tempo.
+    if(world.time<180){world.phase='primordial-plasma'}
+    else if(world.time<360){
       world.phase='primordial-nucleosynthesis';
       mergeNucleons(world,random);combineNuclei(world,random);
-    }else if(world.time<180){
+    }else if(world.time<540){
       world.phase='recombination';
       world.recombinationProgress=finite(world.recombinationProgress)+elapsed;
       while(world.recombinationProgress>=.25){
@@ -163,14 +193,15 @@
         world.recombinationProgress-=.25;
         if(!converted)break;
       }
-    }else if(world.time<240){
+    }else if(world.time<720){
       world.phase='primordial-gas';
-      if(world.time>210)formClouds(world,random);
+      if(world.time>630)formClouds(world,random);
     }else{
       world.phase='stellar-era';
       if(world.time%1.4<elapsed)formStars(world,random);
       gravityStep(world,dt,options);nucleosynthesis(world,random);stellarEvolution(world,elapsed,random);
     }
+    if(world.time<720)particleDynamics(world,elapsed,random);
     world.bodies=world.bodies.filter(b=>b.mass>.00001&&Number.isFinite(b.x)&&Number.isFinite(b.y));
     if(world.bodies.length>900)world.bodies=world.bodies.slice(-900);
     return summary(world);
