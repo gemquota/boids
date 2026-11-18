@@ -38,11 +38,12 @@ test('Plant Lab uses a floating emoji launcher and three title-labelled bubble m
 });
 
 
-test('Plants render on a dedicated canvas and visible starter seedlings exist immediately', () => {
-  assert.match(source, /<canvas id="plantLayer"/);
-  assert.match(source, /plantCanvas\.width=Math\.round\(W\*dpr\)/);
+test('Plants render persistently on the world canvas with a minimum visible silhouette', () => {
+  assert.doesNotMatch(source, /plantLayer|plantCanvas|plantCtx/);
   assert.match(source, /originKind:'starter-seedling'/);
-  assert.match(source, /ctx=plantCtx;ctx\.setTransform/);
+  assert.match(source, /r=Math\.max\(2\.4,/);
+  assert.match(source, /ctx\.globalAlpha=1;ctx\.strokeStyle='rgba\(218,255,231,1\)'/);
+  assert.match(source, /drawPlantNode\(p\)/);
 });
 
 test('Plant Lab uses pinch gestures instead of zoom buttons', () => {
