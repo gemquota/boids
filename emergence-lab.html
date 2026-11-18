@@ -78,11 +78,11 @@ canvas{display:block;width:100%;height:min(66vh,690px);min-height:350px}
 <section class="lab">
   <div class="lab-head">
     <div class="phase-label"><i class="phase-dot"></i><strong id="phase">Primordial plasma</strong></div>
-    <div class="controls"><button class="primary" id="toggle">Pause</button><button id="step">Step</button><button id="reset">Restart</button><label style="font-size:9px;color:var(--muted)">Tempo <select id="speed" aria-label="Simulation speed"><option value="2">Slow</option><option value="4" selected>Steady</option><option value="8">Fast</option><option value="16">Very fast</option><option value="32">Wild</option></select></label><button id="inspectToggle" aria-expanded="false">Investigate</button></div>
+    <div class="controls"><button class="primary" id="toggle">Pause</button><button id="step">Step</button><button id="reset">Restart</button><label style="font-size:9px;color:var(--muted)">Tempo <select id="speed" aria-label="Simulation speed"><option value="1">Very slow</option><option value="2">Slow</option><option value="4" selected>Steady</option><option value="8">Fast</option><option value="16">Very fast</option><option value="32">Wild</option></select></label><button id="inspectToggle" aria-expanded="false">Investigate</button></div>
   </div>
   <div class="scene"><canvas id="world" width="960" height="620" aria-label="Animated abstract universe showing particles, matter, gas clouds and stars"></canvas><div class="scene-count" id="sceneCount">INITIALISING</div><div class="scene-caption"><span id="captionKicker">The beginning</span><p id="caption">A scattering of simple ingredients. Nothing here knows what it will become.</p></div></div>
   <section class="story"><div><div class="kicker" id="storyKicker">Before structure</div><h2 id="storyTitle">A universe of ingredients</h2><p id="storyText">The first visible world is not a collection of finished objects. It is a crowd of simple components, moving and meeting. The interesting question is what their interactions can build.</p></div><aside class="discovery"><b id="discoveryTitle">Look for</b><span id="discoveryText">Notice how many different outcomes can begin with only a few kinds of ingredients.</span></aside></section>
-  <div class="lab-foot"><span id="timeReadout">Simulation time · 0.0</span><span>Illustrative rules · deliberately compressed time and scale</span></div>
+  <div class="lab-foot"><span id="timeReadout">Simulation time · 0.0</span><span>Each era gets time to unfold · deliberately compressed scale</span></div>
 </section>
 <section class="inspect" id="inspectPanel" aria-live="polite"><h3>Inside the model</h3><div class="metrics">
   <div class="metric"><b id="protons">0</b><span>Protons</span></div><div class="metric"><b id="neutrons">0</b><span>Neutrons</span></div><div class="metric"><b id="electrons">0</b><span>Electrons</span></div><div class="metric"><b id="nuclei">0</b><span>Nuclei</span></div><div class="metric"><b id="atoms">0</b><span>Atoms</span></div><div class="metric"><b id="clouds">0</b><span>Gas and ejecta</span></div><div class="metric"><b id="stars">0</b><span>Living stars</span></div><div class="metric"><b id="remnants">0</b><span>Stellar remnants</span></div><div class="metric"><b id="supernovae">0</b><span>Supernovae</span></div><div class="metric"><b id="metals">0%</b><span>Heavy elements</span></div></div><p class="model-note">This is a conceptual, accelerated 2D model. Particle encounters, nuclear assembly, gravity and stellar evolution are simplified to make transformations visible. The quantities are model state, not precision measurements of the real universe. The current lab demonstrates the cosmological opening of a much longer emergence journey; molecular and cellular stages are separate integration work, not secretly happening offscreen.</p></section>
@@ -90,7 +90,7 @@ canvas{display:block;width:100%;height:min(66vh,690px);min-height:350px}
 </main>
 <script>
 'use strict';
-const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),worker=new Worker('cosmology-worker.js?v=20261118-observe-layer');
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),worker=new Worker('cosmology-worker.js?v=20261118-living-eras');
 const $=id=>document.getElementById(id);
 let world=null,summary=null,paused=false,busy=false,stepOnce=false,frame=0,activePhase=null;
 const palette={proton:'#76e5e8',neutron:'#c2a9ff',electron:'#ffe6a6',nucleus:'#9fe3cf',atom:'#91c9ff',gas:'#77aee0',ejecta:'#ff9caa',star:'#ffd38b',remnant:'#c3cbdc',wind:'#d7a5f3'};
