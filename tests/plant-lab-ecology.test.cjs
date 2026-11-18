@@ -20,7 +20,16 @@ test('spore landings and germinations are separately observable', () => {
   assert.match(source, /' · landed '\+plantCounters\.sporesLanded\+' · germinated '\+plantCounters\.sporesGerminated/);
 });
 
-test('Plant Lab surface network has one trunk and three tributaries, without feeder branches', () => {
-  assert.match(source, /specs=\[\[\.18,-1,-1,\.03,\.18\],\[\.5,1,1,\.03,\.2\],\[\.82,-1,-1,\.025,\.17\]\],tributaries=\[\],feeders=\[\]/);
+test('Plant Lab surface network has one trunk and one tributary, without feeder branches', () => {
+  assert.match(source, /specs=\[\[\.24,-1,-1,\.03,\.18\]\],tributaries=\[\],feeders=\[\]/);
   assert.match(source, /main=buildRiverNetwork\(\)\.main,sourceT=\[\.18,\.5,\.82\]/);
+});
+
+test('Plant Lab uses a floating emoji launcher and three title-labelled bubble menus', () => {
+  assert.match(source, /className='floatingControls'/);
+  assert.match(source, /group\('Simulation','🌱'/);
+  assert.match(source, /group\('View','👁️'/);
+  assert.match(source, /group\('Tools','🧰'/);
+  assert.match(source, /className='actionMenuTitle';heading\.textContent=name/);
+  assert.doesNotMatch(source, /className='actionBar'/);
 });
