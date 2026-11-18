@@ -79,7 +79,7 @@
       }
     }
     for(let i=0;i<bodies.length;i++){const b=bodies[i];if(b.kind==='electron'||b.kind==='proton'||b.kind==='neutron')continue;
-      b.vx=(b.vx+ax[i]*dt)*.999;b.vy=(b.vy+ay[i]*dt)*.999;b.x+=b.vx*dt;b.y+=b.vy*dt;
+      b.vx=(b.vx+ax[i]*dt)*.999;b.vy=(b.vy+ay[i]*dt)*.999;b.x+=b.vx*dt*2.5;b.y+=b.vy*dt*2.5;
       if(b.x<4||b.x>world.width-4)b.vx*=-.8;if(b.y<4||b.y>world.height-4)b.vy*=-.8;
       b.x=clamp(b.x,4,world.width-4);b.y=clamp(b.y,4,world.height-4);
     }
