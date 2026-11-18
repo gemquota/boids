@@ -92,7 +92,7 @@ canvas{display:block;width:100%;height:min(66vh,690px);min-height:350px}
 'use strict';
 const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'),worker=new Worker('cosmology-worker.js?v=20261118-observe-layer');
 const $=id=>document.getElementById(id);
-let world=null,summary=null,paused=false,busy=false,stepOnce=false,frame=0,lastSummaryFrame=0;
+let world=null,summary=null,paused=false,busy=false,stepOnce=false,frame=0,activePhase=null;
 const palette={proton:'#76e5e8',neutron:'#c2a9ff',electron:'#ffe6a6',nucleus:'#9fe3cf',atom:'#91c9ff',gas:'#77aee0',ejecta:'#ff9caa',star:'#ffd38b',remnant:'#c3cbdc',wind:'#d7a5f3'};
 const phases=[
  {key:'primordial-plasma',index:0,kicker:'The beginning',title:'A universe of ingredients',text:'The first visible world is not a collection of finished objects. It is a crowd of simple components, moving and meeting. The interesting question is what their interactions can build.',look:'Notice how many different outcomes can begin with only a few kinds of ingredients.',caption:'A scattering of simple ingredients. Nothing here knows what it will become.'},
@@ -102,7 +102,7 @@ const phases=[
  {key:'stellar-era',index:4,kicker:'Transformation and return',title:'The universe starts recycling its ingredients',text:'Dense clouds form stars. Inside them, simpler elements are transformed into heavier ones. Winds and stellar deaths return enriched material to the surrounding world, making later generations possible.',look:'Watch stars brighten, shed material and leave different kinds of remnants.',caption:'Stars transform matter, then return some of it to the universe.'}
 ];
 function phaseFor(key){return phases.find(p=>p.key===key)||phases[0]}
-function updateStory(s){const p=phaseFor(s.phase);$('phase').textContent=p.kicker;$('captionKicker').textContent=p.kicker;$('caption').textContent=p.caption;$('storyKicker').textContent=p.kicker;$('storyTitle').textContent=p.title;$('storyText').textContent=p.text;$('discoveryText').textContent=p.look;document.querySelectorAll('.stage').forEach((el,i)=>{el.classList.toggle('active',i===p.index);el.classList.toggle('past',i<p.index)});$('timeReadout').textContent='Simulation time · '+s.time.toFixed(1)}
+function updateStory(s){const p=phaseFor(s.phase);if(activePhase!==p.key){activePhase=p.key;$('phase').textContent=p.kicker;$('captionKicker').textContent=p.kicker;$('caption').textContent=p.caption;$('storyKicker').textContent=p.kicker;$('storyTitle').textContent=p.title;$('storyText').textContent=p.text;$('discoveryText').textContent=p.look;document.querySelectorAll('.stage').forEach((el,i)=>{el.classList.toggle('active',i===p.index);el.classList.toggle('past',i<p.index)})}$('timeReadout').textContent='Simulation time · '+s.time.toFixed(1)}
 function resize(){const dpr=Math.min(2,window.devicePixelRatio||1),r=canvas.getBoundingClientRect(),w=Math.max(1,Math.round(r.width*dpr)),h=Math.max(1,Math.round(r.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}}
 function draw(){resize();ctx.setTransform(canvas.width/960,0,0,canvas.height/620,0,0);ctx.clearRect(0,0,960,620);
  const bg=ctx.createRadialGradient(480,300,20,480,310,520);bg.addColorStop(0,'#172b45');bg.addColorStop(.62,'#0a1728');bg.addColorStop(1,'#050a14');ctx.fillStyle=bg;ctx.fillRect(0,0,960,620);
