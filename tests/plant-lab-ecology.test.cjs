@@ -22,5 +22,5 @@ test('spore landings and germinations are separately observable', () => {
 
 test('Plant Lab surface network has one trunk and three tributaries, without feeder branches', () => {
   assert.match(source, /specs=\[\[\.18,-1,-1,\.03,\.18\],\[\.5,1,1,\.03,\.2\],\[\.82,-1,-1,\.025,\.17\]\],tributaries=\[\],feeders=\[\]/);
-  assert.match(source, /const main=buildRiverNetwork\(\)\.main,sourceT=\[\.18,\.5,\.82\]/);
+  assert.match(source, /main=buildRiverNetwork\(\)\.main,sourceT=\[\.18,\.5,\.82\]/);
 });
