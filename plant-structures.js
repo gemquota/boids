@@ -64,7 +64,7 @@ function step(s,plants,dt,env,cfg){
  for(let i=0;i<rootsAtStart;i++){const r=s.roots[i],p=byId.get(r.nodeId);if(p)makeTip(s,p,r,env,cfg,dt)}
  // Rebuild per-node root lists once; they also keep surface fusion's root anchors aligned.
  rootsByNode.clear();for(const r of s.roots){let list=rootsByNode.get(r.nodeId);if(!list)rootsByNode.set(r.nodeId,list=[]);list.push(r);rootById.set(r.id,r)}
- for(const p of plants){const count=rootsByNode.get(p.id)||0;p.rootMaintenance=count*cfg.rootMaintenance*dt;p.biomass=Math.max(0,p.biomass-p.rootMaintenance);p.rootConnectionCount=rootConnectionCounts.get(p.id)||0}
+ for(const p of plants){const count=(rootsByNode.get(p.id)||[]).reduce((n,r)=>n+(r.health>.2?1:0),0);p.rootMaintenance=count*cfg.rootMaintenance*dt;p.biomass=Math.max(0,p.biomass-p.rootMaintenance);p.rootConnectionCount=rootConnectionCounts.get(p.id)||0}
  const previousConnectionCount=s.connections.length;
  rootFusion(s,cfg,keys);surfaceFusion(s,plants,cfg,dt,keys,rootsByNode);
  for(let i=previousConnectionCount;i<s.connections.length;i++){const c=s.connections[i];if(c.type==='surface'){const a=byId.get(c.a),b=byId.get(c.b);a?.history?.push({time:s.time,event:'Formed surface fusion with node #'+c.b});b?.history?.push({time:s.time,event:'Formed surface fusion with node #'+c.a})}else{const ra=rootById.get(c.a),rb=rootById.get(c.b),a=ra&&byId.get(ra.nodeId),b=rb&&byId.get(rb.nodeId);a?.history?.push({time:s.time,event:'Established subsurface root graft'});if(b&&b!==a)b.history?.push({time:s.time,event:'Established subsurface root graft'})}}
