@@ -20,10 +20,12 @@ test('spore landings and germinations are separately observable', () => {
   assert.match(source, /' · landed '\+plantCounters\.sporesLanded\+' · germinated '\+plantCounters\.sporesGerminated/);
 });
 
-test('Plant Lab displays only the main river and coastal edges, not minor tributaries or streams', () => {
-  assert.match(source, /specs=\[\],tributaries=\[\],feeders=\[\]/);
-  assert.match(source, /const paths=\[\{points:network\.main/);
-  assert.doesNotMatch(source, /BoidsHydrology\.streamSegments\(hydrologyFields\)/);
+test('Plant Lab uses a restrained hierarchy of one river, four tributaries and three fine streaks', () => {
+  assert.match(source, /specs=\[\[\.2,-1,-1,\.035,\.14\],\[\.42,1,-1,\.045,\.17\],\[\.66,-1,-1,\.035,\.16\],\[\.82,1,-1,\.025,\.12\]\]/);
+  assert.match(source, /streakSpecs=\[\[\.31,1,-1,\.018,\.075\],\[\.55,-1,-1,\.022,\.085\],\[\.74,1,-1,\.016,\.065\]\]/);
+  assert.match(source, /network\.tributaries\.map/);
+  assert.match(source, /network\.feeders\.map/);
+  assert.match(source, /width:Math\.max\(1\.2,H\*\.0022\),alpha:\.48/);
 });
 
 test('Plant Lab uses a floating emoji launcher and three title-labelled bubble menus', () => {
