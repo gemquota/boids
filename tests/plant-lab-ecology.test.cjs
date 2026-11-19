@@ -95,5 +95,6 @@ test('Plant Lab exposes a bounded diagnostic log with tap-to-copy controls', () 
 test('Plant lifecycle removals and stage changes are recorded with plant identity', () => {
   assert.match(source, /plant-lifecycle-removal/);
   assert.match(source, /plant-stage-change/);
-  assert.match(source, /plant-invalid-position/);\n  assert.match(source, /plant-invalid-growth-state/);
+  assert.match(source, /plant-invalid-position/);
+  assert.match(source, /plant-invalid-growth-state/);
 });
