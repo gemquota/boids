@@ -70,3 +70,30 @@ test('Plant render isolates every organism and skips invalid coordinates without
   assert.match(layer, /catch\(error\)\{console\.error\('Plant node render failed'/);
   assert.match(layer, /finally\{ctx\.restore\(\)\}/);
 });
+
+test('Plant render failures retain a visible fallback and are logged once per plant', () => {
+  const start = source.indexOf('function drawPlantLayer(){');
+  const end = source.indexOf('function draw(){', start);
+  const layer = source.slice(start, end);
+  assert.match(layer, /plantDebugEvent\('plant-render-fallback'/);
+  assert.match(layer, /drawPlantFallback\(p\)/);
+  assert.match(source, /function drawPlantFallback\(p\)/);
+  assert.match(source, /failedPlantRenderIds\.has\(p\.id\)/);
+  assert.match(source, /plant-render-recovered/);
+});
+
+test('Plant Lab exposes a bounded diagnostic log with tap-to-copy controls', () => {
+  assert.match(source, /plantDebugLimit=180/);
+  assert.match(source, /plantDebugEntries\.splice\(0,plantDebugEntries\.length-plantDebugLimit\)/);
+  assert.match(source, /id="plantDebugPanel"/);
+  assert.match(source, /id="copyPlantDebug"/);
+  assert.match(source, /navigator\.clipboard\.writeText\(value\)/);
+  assert.match(source, /execCommand\('copy'\)/);
+  assert.match(source, /Open plant debug log/);
+});
+
+test('Plant lifecycle removals and stage changes are recorded with plant identity', () => {
+  assert.match(source, /plant-lifecycle-removal/);
+  assert.match(source, /plant-stage-change/);
+  assert.match(source, /plant-invalid-position/);
+});
