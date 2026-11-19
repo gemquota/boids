@@ -52,3 +52,49 @@ test('Plant Lab uses pinch gestures instead of zoom buttons', () => {
   assert.doesNotMatch(source, /document\.querySelector\('#zoom(In|Out)'\)\.onclick/);
   assert.doesNotMatch(source, /label\(zoom(Out|In),/);
 });
+
+
+test('Plant Lab draws plants and spores inside the same world transform as terrain and roots', () => {
+  const draw = source.slice(source.indexOf('function draw(){'), source.indexOf('function frame(now)'));
+  assert.equal((draw.match(/ctx\.translate\(W\*\.5\+camera\.x/g) || []).length, 1);
+  assert.match(draw, /BoidsPlantStructures\.draw\(ctx,structureState,plants,simTime,cfg\);drawPlantLayer\(\)/);
+  assert.doesNotMatch(draw, /ctx\.restore\(\);ctx\.save\(\);ctx\.translate\(W\*\.5\+camera\.x/);
+});
+
+test('Plant render isolates every organism and skips invalid coordinates without aborting the frame', () => {
+  const start = source.indexOf('function drawPlantLayer(){');
+  const end = source.indexOf('function draw(){', start);
+  const layer = source.slice(start, end);
+  assert.match(layer, /for\(const p of plants\)\{if\(!p\)continue;if\(!Number\.isFinite\(p\.x\)\|\|!Number\.isFinite\(p\.y\)\)/);
+  assert.match(layer, /ctx\.save\(\);try\{ctx\.globalAlpha=1/);
+  assert.match(layer, /catch\(error\)\{if\(!failedPlantRenderIds\.has\(p\.id\)\)/);
+  assert.match(layer, /finally\{ctx\.restore\(\)\}/);
+});
+
+test('Plant render failures retain a visible fallback and are logged once per plant', () => {
+  const start = source.indexOf('function drawPlantLayer(){');
+  const end = source.indexOf('function draw(){', start);
+  const layer = source.slice(start, end);
+  assert.match(layer, /plantDebugEvent\('plant-render-fallback'/);
+  assert.match(layer, /drawPlantFallback\(p\)/);
+  assert.match(source, /function drawPlantFallback\(p\)/);
+  assert.match(source, /failedPlantRenderIds\.has\(p\.id\)/);
+  assert.match(source, /plant-render-recovered/);
+});
+
+test('Plant Lab exposes a bounded diagnostic log with tap-to-copy controls', () => {
+  assert.match(source, /plantDebugLimit=180/);
+  assert.match(source, /plantDebugEntries\.splice\(0,plantDebugEntries\.length-plantDebugLimit\)/);
+  assert.match(source, /id="plantDebugPanel"/);
+  assert.match(source, /id="copyPlantDebug"/);
+  assert.match(source, /navigator\.clipboard\.writeText\(value\)/);
+  assert.match(source, /execCommand\('copy'\)/);
+  assert.match(source, /Open plant debug log/);
+});
+
+test('Plant lifecycle removals and stage changes are recorded with plant identity', () => {
+  assert.match(source, /plant-lifecycle-removal/);
+  assert.match(source, /plant-stage-change/);
+  assert.match(source, /plant-invalid-position/);
+  assert.match(source, /plant-invalid-growth-state/);
+});
