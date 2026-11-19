@@ -52,3 +52,21 @@ test('Plant Lab uses pinch gestures instead of zoom buttons', () => {
   assert.doesNotMatch(source, /document\.querySelector\('#zoom(In|Out)'\)\.onclick/);
   assert.doesNotMatch(source, /label\(zoom(Out|In),/);
 });
+
+
+test('Plant Lab draws plants and spores inside the same world transform as terrain and roots', () => {
+  const draw = source.slice(source.indexOf('function draw(){'), source.indexOf('function frame(now)'));
+  assert.equal((draw.match(/ctx\.translate\(W\*\.5\+camera\.x/g) || []).length, 1);
+  assert.match(draw, /BoidsPlantStructures\.draw\(ctx,structureState,plants,simTime,cfg\);drawPlantLayer\(\)/);
+  assert.doesNotMatch(draw, /ctx\.restore\(\);ctx\.save\(\);ctx\.translate\(W\*\.5\+camera\.x/);
+});
+
+test('Plant render isolates every organism and skips invalid coordinates without aborting the frame', () => {
+  const start = source.indexOf('function drawPlantLayer(){');
+  const end = source.indexOf('function draw(){', start);
+  const layer = source.slice(start, end);
+  assert.match(layer, /for\(const p of plants\)\{if\(!p\|\|!Number\.isFinite\(p\.x\)\|\|!Number\.isFinite\(p\.y\)\)continue/);
+  assert.match(layer, /ctx\.save\(\);try\{ctx\.globalAlpha=1/);
+  assert.match(layer, /catch\(error\)\{console\.error\('Plant node render failed'/);
+  assert.match(layer, /finally\{ctx\.restore\(\)\}/);
+});
