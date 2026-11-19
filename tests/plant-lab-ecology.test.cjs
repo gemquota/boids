@@ -65,9 +65,9 @@ test('Plant render isolates every organism and skips invalid coordinates without
   const start = source.indexOf('function drawPlantLayer(){');
   const end = source.indexOf('function draw(){', start);
   const layer = source.slice(start, end);
-  assert.match(layer, /for\(const p of plants\)\{if\(!p\|\|!Number\.isFinite\(p\.x\)\|\|!Number\.isFinite\(p\.y\)\)continue/);
+  assert.match(layer, /for\(const p of plants\)\{if\(!p\)continue;if\(!Number\.isFinite\(p\.x\)\|\|!Number\.isFinite\(p\.y\)\)/);
   assert.match(layer, /ctx\.save\(\);try\{ctx\.globalAlpha=1/);
-  assert.match(layer, /catch\(error\)\{console\.error\('Plant node render failed'/);
+  assert.match(layer, /catch\(error\)\{if\(!failedPlantRenderIds\.has\(p\.id\)\)/);
   assert.match(layer, /finally\{ctx\.restore\(\)\}/);
 });
 
