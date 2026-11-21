@@ -12,3 +12,6 @@ test("core extension callbacks receive immutable snapshots rather than live agen
 
 
 test("neural material exposed to behaviour adapters is deeply immutable",()=>{const w=createWorld(200,160,4,4);w.agents[0].neural={nodes:[{id:1,kind:"input"}],connections:[{source:1,destination:1,weight:.5}]};stepWorld(w,1,{reproduction:false,behaviour:view=>{if(view.id===0){assert.ok(Object.isFrozen(view.neural));assert.ok(Object.isFrozen(view.neural.nodes));assert.ok(Object.isFrozen(view.neural.nodes[0]));assert.ok(Object.isFrozen(view.neural.connections[0]))}return null}})});
+
+
+test("optional extension exceptions degrade to baseline simulation behaviour",()=>{const w=createWorld(500,400,24,11);for(const a of w.agents)a.energy=1;stepWorld(w,1,{birthInterval:1,birthsPerCycle:1,maxPopulation:100,behaviour:()=>{throw new Error("extension failure")},selectParents:()=>{throw new Error("selection failure")},inheritTraits:()=>{throw new Error("inheritance failure")},inheritOrganism:()=>{throw new Error("adapter failure")}});assert.equal(w.tick,1);assert.equal(w.births,1);assert.ok(w.extensionErrors>=4);assert.ok(w.agents.length>24)});
