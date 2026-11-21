@@ -18,7 +18,12 @@ Open [index.html](index.html) in a modern browser. No build step, package manage
 
 - 500-agent seeded starting field, adjustable population and live flocking parameters
 - separation, alignment, cohesion, toroidal movement, energy use, ageing, and bounded population growth
-- optional two-parent trait inheritance with mutation
+- two-parent trait inheritance with mutation and selection-weighted parent choice
+- default evolved neural networks influencing steering and movement
+- species clustering with persistent representatives
+- hexadecimal typed chromosome encoding and neural innovation tracking
+- configurable natural, environmental and neutral selection models
+- read-only population, trait-variance and lineage analysis
 - seeded temperature/moisture/nutrient habitat fields and renewable plant biomass
 - grazing energy transfer and habitat stress
 - live Field, DNA, and Observatory panels
