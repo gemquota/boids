@@ -12,7 +12,7 @@ export function castVision(agent, population, {rays= nine, range=150, fieldOfVie
    if(lateral<=radius){best=along;hit=other}
   }
   const old=prior[i];
-  if(hit){const n=(noise?((Math.sin(agent.id*17+i*31+agent.age)*.5+.5)-.5)*noise:0);next.push({visible:true,targetId:hit.id,distance:Math.max(0,best+n),bearing:angle-heading, x:hit.x,y:hit.y,vx:hit.vx,vy:hit.vy,confidence:1,age:0,kind:hit.kind||"boid"})}
+  if(hit){const n=(noise?((Math.sin(agent.id*17+i*31+agent.age)*.5+.5)-.5)*noise:0);next.push({visible:true,targetId:hit.id,distance:Math.max(0,best+n),bearing:angle-heading, x:hit.x,y:hit.y,vx:hit.vx,vy:hit.vy,size:radius,confidence:1,age:0,kind:hit.kind||"boid"})}
   else if(old?.confidence>.025){const confidence=old.confidence*Math.pow(memoryDecay,dt),px=old.x+old.vx*dt,py=old.y+old.vy*dt,rx=px-agent.x,ry=py-agent.y;next.push({...old,visible:false,x:px,y:py,distance:Math.hypot(rx,ry),bearing:Math.atan2(ry,rx)-heading,confidence,age:old.age+dt})}
   else next.push({visible:false,targetId:null,distance:range,bearing:angle-heading,x:0,y:0,vx:0,vy:0,confidence:0,age:0,kind:null});
  }
@@ -22,8 +22,8 @@ export function castVision(agent, population, {rays= nine, range=150, fieldOfVie
 const nine=9;
 export function neuralSenseVector(agent, rays=9) {
  const senses=agent.senses||[],out=[];
- for(let i=0;i<rays;i++){const s=senses[i]||{};out.push(s.confidence||0,s.visible?1:0,s.confidence?Math.max(-1,Math.min(1,(s.distance||0)/150)):0,s.confidence?Math.max(-1,Math.min(1,(s.bearing||0)/Math.PI)):0,s.confidence?Math.max(-1,Math.min(1,(s.vx||0)/3)):0,s.confidence?Math.max(-1,Math.min(1,(s.vy||0)/3)):0)}
+ for(let i=0;i<rays;i++){const s=senses[i]||{};out.push(s.confidence||0,s.visible?1:0,s.confidence?Math.max(-1,Math.min(1,(s.distance||0)/150)):0,s.confidence?Math.max(-1,Math.min(1,(s.bearing||0)/Math.PI)):0,s.confidence?Math.max(-1,Math.min(1,(s.vx||0)/3)):0,s.confidence?Math.max(-1,Math.min(1,(s.vy||0)/3)):0,s.confidence?Math.max(0,Math.min(1,(s.size||3)/12)):0)}
  const energy=agent.energy??0,health=agent.health??1,injury=agent.injury??0;
- return [...out.slice(0,24),energy,health,injury,Math.min(1,Math.hypot(agent.vx,agent.vy)/4)].slice(0,28);
+ return [...out.slice(0,28),energy,health,injury,Math.min(1,Math.hypot(agent.vx,agent.vy)/4)].slice(0,32);
 }
 export function rememberedTargets(agent){return(agent.senses||[]).filter(s=>s.confidence>.05).map(s=>({...s,estimated:true}));}
