@@ -32,3 +32,11 @@ export function growPlant(plant,environment,dt=1,random=Math.random){
  let spores=0;if(plant.energy>.7&&plant.sporeCooldown<=0&&random()<t.sporeRate*regulate(5)*.08*dt){spores=1;plant.energy-=.12;plant.sporeCooldown=100+random()*180}
  return{spores,stress,biomass:plant.nodes.reduce((n,node)=>n+node.length*.015,0)};
 }
+
+export function classifyPlantStage(plant){
+ const age=plant.age||0,life=(plant.traits?.longevity||1)*26000;
+ if(age<100)return"seedling";
+ if(age<650)return"juvenile";
+ if(age>life*.76)return"senescent";
+ return"mature";
+}
