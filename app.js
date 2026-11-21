@@ -8,7 +8,7 @@ import{createNetworkGenome,evaluateNetwork,createInnovationLedger}from"./organis
 import{assignSpecies,organismCompatibilityDistance,speciesAdjustedFitness}from"./organisms/speciation.js";
 import{encodeChromosome}from"./organisms/genome.js";
 import{createTraits,phenotype}from"./organisms/genetics.js";
-import{castVision,neuralSenseVector}from"./organisms/senses.js";
+import{createVisionField,castVision,neuralSenseVector}from"./organisms/senses.js";
 import{updateCombat,combatSummary}from"./organisms/predation.js";
 import{createPlantGenome,germinatePlant,growPlant,inheritPlantGenome}from"./organisms/plant_genetics.js";
 import{createEnvironment,sampleEnvironment,advanceEnvironment,environmentSummary}from"./organisms/environment.js";
@@ -67,7 +67,7 @@ canvas.addEventListener("pointerup",e=>{const was=gesture?.moved;pointers.delete
 let pinchDistance=0;canvas.addEventListener("pointermove",()=>{if(pointers.size===2){const pts=[...pointers.values()],d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);if(pinchDistance)zoomAt((pts[0].x+pts[1].x)/2,(pts[0].y+pts[1].y)/2,d/pinchDistance);pinchDistance=d}else pinchDistance=0});
 addEventListener("resize",fit);fit();reset();
 function loop(t){const dt=Math.min((t-last)/16.67||1,2);last=t;if(running){for(let i=0;i<settings.speed;i++){
- for(const a of world.agents)if(!a.dead)castVision(a,world.agents,{rays:4,range:settings.perception*(a.traits.visionRange||1),fieldOfView:Math.PI*.82*(a.traits.visionArc||1),memoryDecay:Math.min(.998,.965+(a.traits.tracking||1)*.018),dt});
+ const visionField=createVisionField(world.agents,w,h,110);for(const a of world.agents)if(!a.dead)castVision(a,world.agents,{field:visionField,rays:4,range:settings.perception*(a.traits.visionRange||1),fieldOfView:Math.PI*.82*(a.traits.visionArc||1),memoryDecay:Math.min(.998,.965+(a.traits.tracking||1)*.018),dt});
  stepWorld(world,dt,{perception:0,separation:0,alignment:0,cohesion:0,separationForce:0,maxSpeed:settings.maxSpeed,inheritTraits:(a,b)=>inheritTraits(a,b,()=>randomWorld(world)),selectParents:population=>evolution.selectParents(population),inheritOrganism:(a,b)=>evolution.inherit(a,b),behaviour:(a)=>{if(!a.neural)return null;const out=evaluateNetwork(a.neural,neuralSenseVector(a,4)),target=(a.senses||[]).filter(s=>s.confidence>.08).sort((x,y)=>x.distance-y.distance)[0],threat=!!(target&&target.size>(a.radius||3)*1.25),drive=target?(threat?-out[3]:out[2]*(a.traits.aggression||.5)):0,bearing=target?target.bearing:0;return{turn:(out[0]-.5)*.16*(a.traits.maneuverability||1)+bearing*drive*.13,thrust:.55+out[1]*1.05+(target?.12:0)}}});
  for(const a of world.agents){const key=JSON.stringify(a.traits);if(a.phenotypeKey!==key){a.phenotype=phenotype(a.traits);a.radius=a.phenotype.radius;a.baseMass=a.phenotype.mass;a.mass=a.baseMass;a.massScale=1;a.phenotypeKey=key;if(a.age===0){a.health=1;a.injury=0;a.dead=false}}}
  updateCombat(world,dt,{random:()=>randomWorld(world)});
