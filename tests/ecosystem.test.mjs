@@ -65,3 +65,10 @@ test("spatial vision field exposes plants only when a ray intersects them",()=>{
  assert.ok(s.some(x=>x.visible&&x.kind==="plant"&&x.targetId===-1));
  assert.equal(neuralSenseVector(a,3)[15],1);
 });
+
+test("biome presets produce distinct moisture and watershed structures",()=>{
+ const arid=createEnvironment(600,400,4,{preset:"arid"}),wetland=createEnvironment(600,400,4,{preset:"wetland"});
+ const moisture=e=>e.fields.reduce((n,f)=>n+f.moisture,0)/e.fields.length;
+ assert.ok(moisture(wetland)>moisture(arid));assert.ok(wetland.tributaries.length>arid.tributaries.length);
+ assert.notEqual(arid.coastWidth,wetland.coastWidth);
+});
