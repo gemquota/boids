@@ -3,16 +3,16 @@ import{createHabitat,updateEcology}from"./organisms/ecology.js";
 import{inheritTraits}from"./organisms/genetics.js";
 import{summarize}from"./labs/observatory.js";
 import{createEvolutionAdapter}from"./organisms/evolution.js";
-import{createNetworkGenome,evaluateNetwork}from"./organisms/neural.js";
+import{createNetworkGenome,evaluateNetwork,createInnovationLedger}from"./organisms/neural.js";
 import{assignSpecies}from"./organisms/speciation.js";
 import{encodeChromosome}from"./organisms/genome.js";
 const canvas=document.querySelector("#world"),ctx=canvas.getContext("2d"),stats=document.querySelector("#stats"),panel=document.querySelector("#panel");
 let w=innerWidth,h=innerHeight,dpr=1,world,habitat,running=true,last=0,tab="FIELD",showPlants=true,showHabitat=false,showVectors=false,showTrails=false;
-let camera={x:0,y:0,zoom:1},settings={perception:68,separation:24,maxSpeed:1.65,alignment:.035,cohesion:.0018,separationForce:.035,population:500,plantDensity:1,speed:1};
+let camera={x:0,y:0,zoom:1},settings={selectionModel:"natural",perception:68,separation:24,maxSpeed:1.65,alignment:.035,cohesion:.0018,separationForce:.035,population:500,plantDensity:1,speed:1};
 let pointers=new Map(),gesture=null,selected=null,evolution=null,speciesState={species:[],nextSpeciesId:1,extinctions:[]};
 const $=s=>document.querySelector(s);
 function fit(){const nw=innerWidth,nh=innerHeight;dpr=Math.min(devicePixelRatio||1,2);canvas.width=nw*dpr;canvas.height=nh*dpr;canvas.style.width=nw+"px";canvas.style.height=nh+"px";ctx.setTransform(dpr,0,0,dpr,0,0);if(world)resizeWorld(world,nw,nh);w=nw;h=nh;camera.x=0;camera.y=0}
-function reset(){world=createWorld(w,h,settings.population,Math.floor(Math.random()*999999));habitat=createHabitat(w,h,world.seed);habitat.plants=habitat.plants.slice(0,Math.floor(habitat.plants.length*settings.plantDensity));evolution=createEvolutionAdapter({selection:{models:["natural"]},random:()=>randomWorld(world)});for(const a of world.agents){a.neural=createNetworkGenome({inputs:4,outputs:3,random:()=>randomWorld(world)});a.genome=encodeChromosome(Object.entries(a.traits).map(([name,value],locus)=>({type:"trait",locus,name,value})))}speciesState={species:[],nextSpeciesId:1,extinctions:[]};camera={x:0,y:0,zoom:1};selected=null;drawPanel()}
+function reset(){world=createWorld(w,h,settings.population,Math.floor(Math.random()*999999));habitat=createHabitat(w,h,world.seed);habitat.plants=habitat.plants.slice(0,Math.floor(habitat.plants.length*settings.plantDensity));for(const a of world.agents){a.neural=createNetworkGenome({inputs:4,outputs:3,random:()=>randomWorld(world)});a.genome=encodeChromosome(Object.entries(a.traits).map(([name,value],locus)=>({type:"trait",locus,name,value})))}evolution=createEvolutionAdapter({selection:{models:[settings.selectionModel||"natural"],context:{optima:{speed:1,perception:1,metabolism:1,fertility:1}}},random:()=>randomWorld(world),innovationLedger:createInnovationLedger({nextNodeId:7,nextInnovation:12})});speciesState={species:[],nextSpeciesId:1,extinctions:[]};camera={x:0,y:0,zoom:1};selected=null;drawPanel()}
 function screenToWorld(x,y){return{x:(x-w/2)/camera.zoom+camera.x+w/2,y:(y-h/2)/camera.zoom+camera.y+h/2}}
 function draw(){
  ctx.fillStyle="#06121b";ctx.fillRect(0,0,w,h);ctx.save();ctx.translate(w/2-camera.x*camera.zoom,h/2-camera.y*camera.zoom);ctx.scale(camera.zoom,camera.zoom);
