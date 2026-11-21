@@ -25,12 +25,12 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
    if(rel<0){const impulse=-(1+collisionRestitution)*rel/(1/ma+1/mb);a.vx-=impulse*nx/ma;a.vy-=impulse*ny/ma;b.vx+=impulse*nx/mb;b.vy+=impulse*ny/mb}
    const ta=a.traits||{},tb=b.traits||{},aTarget=(a.senses||[]).some(s=>s.visible&&s.targetId===b.id),bTarget=(b.senses||[]).some(s=>s.visible&&s.targetId===a.id);
    const aAgg=ta.aggression||0,bAgg=tb.aggression||0;
-   if(aTarget&&a.attackCooldown<=0&&!b.dead){strike(a,b,random);a.attackCooldown=1/Math.max(.2,ta.attackSpeed||1);hits++}
-   if(bTarget&&b.attackCooldown<=0&&!a.dead){strike(b,a,random);b.attackCooldown=1/Math.max(.2,tb.attackSpeed||1);hits++}
+   if(aTarget&&a.attackCooldown<=0&&!b.dead){strike(a,b,random,1,world.tick);a.attackCooldown=1/Math.max(.2,ta.attackSpeed||1);hits++}
+   if(bTarget&&b.attackCooldown<=0&&!a.dead){strike(b,a,random,1,world.tick);b.attackCooldown=1/Math.max(.2,tb.attackSpeed||1);hits++}
    // Head-on defensive clashes: both commit to the contact; the better attack/defence balance wins probabilistically.
    if(aAgg>.55&&bAgg>.55&&((a.vx*nx+a.vy*ny)/(Math.hypot(a.vx,a.vy)||1)>.5)&&((b.vx*-nx+b.vy*-ny)/(Math.hypot(b.vx,b.vy)||1)>.5)&&randOf(random)<.22){
     const sa=(ta.attack||1)*(0.5+randOf(random))-(tb.defense||1)*.35,sb=(tb.attack||1)*(0.5+randOf(random))-(ta.defense||1)*.35;
-    if(sa>sb)strike(a,b,random,.65);else if(sb>sa)strike(b,a,random,.65);else{strike(a,b,random,.3);strike(b,a,random,.3)}hits++;
+    if(sa>sb)strike(a,b,random,.65,world.tick);else if(sb>sa)strike(b,a,random,.65,world.tick);else{strike(a,b,random,.3,world.tick);strike(b,a,random,.3,world.tick)}hits++;
    }
   }
  }
@@ -39,11 +39,11 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
  if(events.length>500)events.splice(0,events.length-500);
  return world.combat;
 }
-function strike(attacker,prey,random,multiplier=1){
+function strike(attacker,prey,random,multiplier=1,tick=0){
  const at=attacker.traits||{},pt=prey.traits||{},damage=Math.max(.015,(at.damage||.4)*(at.attack||1)*multiplier/(1+(pt.defense||1)*.45));
  prey.health=Math.max(0,(prey.health??1)-damage);prey.injury=Math.min(1,(prey.injury||0)+damage*.8);
  const flee=Math.max(0,(pt.flee||1)*(pt.speed||1)-at.tracking*.2);
  if(random()<clamp(.18+flee*.13,0,.78)){prey.fleeing=true;prey.vx+=(prey.x-attacker.x)*.012;prey.vy+=(prey.y-attacker.y)*.012}
- attacker.energy=Math.max(0,attacker.energy-.001*(at.attackCost||1));attacker.lastAttack=prey.id;
+ attacker.energy=Math.max(0,attacker.energy-.001*(at.attackCost||1));attacker.lastAttack=prey.id;attacker.lastAttackTick=tick;
 }
 export function combatSummary(agents){const living=agents.filter(a=>!a.dead),dead=agents.filter(a=>a.dead),mean=k=>living.length?living.reduce((n,a)=>n+(a.traits?.[k]||0),0)/living.length:0;return{living:living.length,dead:dead.length,injured:living.filter(a=>a.injury>.05).length,meanHealth:living.length?living.reduce((n,a)=>n+(a.health??1),0)/living.length:0,meanAttack:mean("attack"),meanDefense:mean("defense"),meanAggression:mean("aggression")}}
