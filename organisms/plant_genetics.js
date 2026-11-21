@@ -21,7 +21,7 @@ export function germinatePlant(x,y,genome,random=Math.random){
 }
 export function growPlant(plant,environment,dt=1,random=Math.random){
  const t=plant.traits||defaults,reg=(plant.genome?.regulators||[]),regulate=i=>Math.max(.2,1+(reg.find(g=>g.target===i)?.value||0)),light=environment.light??.5,water=environment.moisture??.5,temp=environment.temperature??.5,nutrients=environment.nutrients??.5;
- const waterFit=Math.max(.05,1-Math.abs(water-t.waterAffinity)*.9),lightFit=Math.max(.05,1-Math.abs(light-t.lightAffinity)*.9),stress=Math.max(0,.22-water*t.droughtTolerance*.5);
+ const waterFit=Math.max(.05,1-Math.abs(water-t.waterAffinity)*.9+t.rooting*(1-water)*.18),lightFit=Math.max(.05,1-Math.abs(light-t.lightAffinity)*.9+(1-light)*t.shadeTolerance*.35),stress=Math.max(0,.22-water*t.droughtTolerance*.5);
  const gain=Math.max(0,t.growth*regulate(0)*.0009*waterFit*lightFit*(.35+nutrients)*Math.max(.1,1-Math.abs(temp-.55)))*dt;
  plant.energy=Math.max(0,Math.min(1.5,(plant.energy||0)+gain-stress*.0006*dt));plant.age+=dt;plant.sporeCooldown-=dt;
  const cap=Math.min(90,3+Math.floor(plant.energy*25*t.branching*regulate(1)));
