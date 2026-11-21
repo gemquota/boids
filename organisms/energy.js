@@ -7,7 +7,8 @@ export function calculateEnergyCost(agent,dt=1,tick=0){
  const brain=(nodes*.000001+connections*.0000005)*dt;
  const vision=(agent.senses?.length||0)*.00001*(t.visionRange??1)*dt;
  const movement=.00004*speed*speed*mass*dt;
- const aggression=.00001*(t.aggression??0)*dt;\n const attack=agent.lastAttackTick===tick?.00004*(t.attackCost??1):0;
+ const aggression=.00001*(t.aggression??0)*dt;
+ const attack=agent.lastAttackTick===tick?.00004*(t.attackCost??1):0;
  const reproduction=.00002*(t.sexDrive??1)*dt;
  const maintenance=.00005*mass*dt;
  const total=basal+tissue+brain+vision+movement+aggression+attack+reproduction+maintenance;
