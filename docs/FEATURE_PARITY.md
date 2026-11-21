@@ -36,4 +36,6 @@ Scoring: **0 absent**, **0.5 partial**, **1 implemented and verified**. Implemen
 | L04 | Experiment comparison and research exports | Labs | 0.5 | Read-only population, lineage and snapshot comparison APIs; no experiment runner yet |
 | L05 | Trait history and lineage exploration | Labs | 0 | Not implemented |
 
+**Current weighted snapshot:** 21 partial rows at 0.5 credit, 8 absent rows, 29 total: `(21 × 0.5) / 29 = 36.2%`. This is implementation-credit arithmetic, not a claim that 36.2% of the old application has been visually reproduced. No row currently receives full 1.0 credit; manual UI verification and several deeper behaviours remain outstanding.
+
 **Scoring policy:** report the sum of row scores divided by the fixed row count, alongside implementation/verification caveats. Do not translate source-code volume, planned work, or unverified UI claims into parity.
