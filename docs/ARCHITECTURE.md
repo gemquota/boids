@@ -21,7 +21,7 @@
 - Core depends only on platform primitives and its own code.
 - Organism packages may define adapters for Core, but Core never imports them.
 - Labs may use Core and Organism packages through public contracts.
-- Core passes frozen, detached organism views to extension callbacks; adapters return plain inherited data. No extension receives a mutable live agent reference.
+- Core passes frozen, detached organism views to extension callbacks, including position, velocity, energy, age, traits, genome and neural state. Adapters return plain inherited data. No extension receives a mutable live agent reference.
 - Persistent definitions, snapshots and analysis exports are serialisable and versioned.
 
 ## Failure containment
