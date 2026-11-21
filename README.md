@@ -25,7 +25,7 @@ Open [index.html](index.html) in a modern browser. No build step, package manage
 - vegetation, habitat, and movement-vector overlays
 - drag pan, pinch/wheel zoom, organism inspection, pause/reset, and JSON world export
 
-The reboot is being rebuilt in visible, independently testable increments. The legacy archive remains untouched.
+The reboot is being rebuilt in visible, independently testable increments. The legacy archive remains untouched. The current preview exposes live field controls, camera gestures, overlays, individual organism inspection, and portable world snapshots.
 
 ## Architecture rules
 
