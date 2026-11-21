@@ -2,6 +2,7 @@
 import{selectParents}from"./selection.js";
 import{mutateNetworkGenome,crossoverNetworkGenomes,createInnovationLedger}from"./neural.js";
 import{decodeChromosome,encodeChromosome,recombineChromosomes,mutateChromosome}from"./genome.js";
+const freezeNetwork=n=>{if(!n)return n;for(const x of n.nodes)Object.freeze(x);for(const x of n.connections)Object.freeze(x);Object.freeze(n.nodes);Object.freeze(n.connections);return Object.freeze(n)};
 const neuralGenes=n=>[...(n?.nodes||[]).map(x=>({type:"node",locus:x.id,id:x.id,kind:x.kind,bias:x.bias})),...(n?.connections||[]).map(x=>({type:"connection",locus:x.innovation,source:x.source,destination:x.destination,weight:x.weight,enabled:x.enabled,innovation:x.innovation}))];
 export function createEvolutionAdapter({selection={models:["natural"]},random=Math.random,mutationRate=.015,innovationLedger=null}={}){
  let activeSelection=selection,ledger=innovationLedger;
@@ -16,7 +17,7 @@ export function createEvolutionAdapter({selection={models:["natural"]},random=Ma
    if(a.neural&&b.neural){if(!ledger)ledger=createInnovationLedger({nextNodeId:a.neural.nextNodeId,nextInnovation:a.neural.nextInnovation});neural=crossoverNetworkGenomes(a.neural,b.neural,{random,fitnessA:a.fitness??a.energy??1,fitnessB:b.fitness??b.energy??1});neural=mutateNetworkGenome(neural,{random,innovationLedger:ledger})}
    else if(a.neural||b.neural){const source=a.neural||b.neural;if(!ledger)ledger=createInnovationLedger({nextNodeId:source.nextNodeId,nextInnovation:source.nextInnovation});neural=mutateNetworkGenome(structuredClone(source),{random,innovationLedger:ledger})}
    const chromosome=base?encodeChromosome([...decodeChromosome(base),...neuralGenes(neural)]):neural?encodeChromosome(neuralGenes(neural)):"";
-   return{genome:chromosome,neural}
+   return{genome:chromosome,neural:freezeNetwork(neural)}
   }
  }
 }
