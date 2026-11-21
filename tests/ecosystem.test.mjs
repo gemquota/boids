@@ -16,7 +16,7 @@ test("raycast vision detects only targets in a ray and retains predicted unseen 
  const second=castVision(a,[a],{rays:3,range:60,fieldOfView:1,dt:2});
  const memory=second.find(s=>s.targetId===2);
  assert.ok(memory&&!memory.visible);assert.ok(memory.confidence<before);assert.ok(memory.x>120);assert.ok(memory.distance>20);
- assert.equal(neuralSenseVector(a,3).length,22);
+ assert.equal(neuralSenseVector(a,3).length,25);
 });
 
 test("boid genomes express diverse combat traits and physical trade-offs",()=>{
