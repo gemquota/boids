@@ -63,5 +63,5 @@ test("spatial vision field exposes plants only when a ray intersects them",()=>{
  const a={id:10,x:40,y:40,vx:1,vy:0,energy:.5,health:1},plant={id:-1,x:55,y:40,vx:0,vy:0,radius:3,kind:"plant"};
  const field=createVisionField([a,plant],200,100,50),s=castVision(a,[a,plant],{field,rays:3,range:50,fieldOfView:1});
  assert.ok(s.some(x=>x.visible&&x.kind==="plant"&&x.targetId===-1));
- assert.equal(neuralSenseVector(a,3).at(-1),0);
+ assert.equal(neuralSenseVector(a,3)[15],1);
 });
