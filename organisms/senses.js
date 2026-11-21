@@ -22,8 +22,8 @@ export function castVision(agent, population, {rays= nine, range=150, fieldOfVie
 const nine=9;
 export function neuralSenseVector(agent, rays=9) {
  const senses=agent.senses||[],out=[];
- for(let i=0;i<rays;i++){const s=senses[i]||{};out.push(s.confidence||0,s.visible?1:0,s.confidence?Math.max(-1,Math.min(1,(s.distance||0)/150)):0)}
+ for(let i=0;i<rays;i++){const s=senses[i]||{};out.push(s.confidence||0,s.visible?1:0,s.confidence?Math.max(-1,Math.min(1,(s.distance||0)/150)):0,s.confidence?Math.max(-1,Math.min(1,(s.bearing||0)/Math.PI)):0,s.confidence?Math.max(-1,Math.min(1,(s.vx||0)/3)):0,s.confidence?Math.max(-1,Math.min(1,(s.vy||0)/3)):0)}
  const energy=agent.energy??0,health=agent.health??1,injury=agent.injury??0;
- return [...out.slice(0,12),energy,health,injury,Math.min(1,Math.hypot(agent.vx,agent.vy)/4)].slice(0,16);
+ return [...out.slice(0,24),energy,health,injury,Math.min(1,Math.hypot(agent.vx,agent.vy)/4)].slice(0,28);
 }
 export function rememberedTargets(agent){return(agent.senses||[]).filter(s=>s.confidence>.05).map(s=>({...s,estimated:true}));}
