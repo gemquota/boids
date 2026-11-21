@@ -9,7 +9,8 @@ export function createInnovationLedger({nextNodeId=0,nextInnovation=0}={}){
   get nextNodeId(){return nextNodeId},get nextInnovation(){return nextInnovation}
  }
 }
-\nexport function createNetworkGenome({inputs=4,outputs=3,random=Math.random}={}){
+
+export function createNetworkGenome({inputs=4,outputs=3,random=Math.random}={}){
  const nodes=[];for(let i=0;i<inputs;i++)nodes.push({id:i,kind:"input",bias:0});for(let i=0;i<outputs;i++)nodes.push({id:inputs+i,kind:"output",bias:0});
  const connections=[];let innovation=0;for(let i=0;i<inputs;i++)for(let j=0;j<outputs;j++)connections.push({source:i,destination:inputs+j,weight:(random()-.5)*2,enabled:true,innovation:innovation++});
  return{version:1,nextNodeId:inputs+outputs,nextInnovation:innovation,nodes,connections};
