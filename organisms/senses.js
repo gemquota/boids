@@ -13,7 +13,7 @@ export function castVision(agent, population, {rays= nine, range=150, fieldOfVie
   }
   const old=prior[i];
   if(hit){const n=(noise?((Math.sin(agent.id*17+i*31+agent.age)*.5+.5)-.5)*noise:0);next.push({visible:true,targetId:hit.id,distance:Math.max(0,best+n),bearing:angle-heading, x:hit.x,y:hit.y,vx:hit.vx,vy:hit.vy,confidence:1,age:0,kind:hit.kind||"boid"})}
-  else if(old?.confidence>.025){const confidence=old.confidence*Math.pow(memoryDecay,dt);next.push({...old,visible:false,x:old.x+old.vx*dt,y:old.y+old.vy*dt,confidence,age:old.age+dt})}
+  else if(old?.confidence>.025){const confidence=old.confidence*Math.pow(memoryDecay,dt),px=old.x+old.vx*dt,py=old.y+old.vy*dt,rx=px-agent.x,ry=py-agent.y;next.push({...old,visible:false,x:px,y:py,distance:Math.hypot(rx,ry),bearing:Math.atan2(ry,rx)-heading,confidence,age:old.age+dt})}
   else next.push({visible:false,targetId:null,distance:range,bearing:angle-heading,x:0,y:0,vx:0,vy:0,confidence:0,age:0,kind:null});
  }
  agent.senses=next;
