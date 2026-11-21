@@ -1,18 +1,20 @@
 # Organism Systems
 
-Optional domain modules for richer simulated life. This directory is not imported by Boids Core.
+Independent, versioned modules. The normal field runtime enables hereditary genetics, neural evolution and speciation by default; individual modules can be disabled or replaced through adapters.
 
-## Planned modules
+## Modules
 
-- **Genome / chromosome**: versioned sequence representation, mutation and recombination.
-- **Phenotype**: explicit mapping from inherited data to expressed traits.
-- **Neural systems**: bounded network structures and integer-indexed connections.
-- **Lineage**: ancestry, descent, population histories and provenance.
-- **Plant morphology**: growth stages, branching, modular structures and developmental rules.
-- **Ecology**: resource exchange, competition, predation, reproduction and environmental response.
+- **Genome**: typed genes encoded in hexadecimal chromosome sequences; mutation and recombination preserve record boundaries.
+- **Neural evolution**: variable-topology networks, integer node/innovation identifiers, weighted connections, structural mutation, crossover and recurrent-capable evaluation.
+- **Speciation**: compatibility-distance clustering with persistent representatives and extinction reporting.
+- **Selection**: composable natural, environmental, sexual, frequency-dependent, kin, group, artificial and neutral model primitives.
+- **Evolution adapter**: connects parent selection, chromosome inheritance and neural evolution to Core callbacks.
+- **Genetics**: expressed organism traits and bounded trait inheritance.
+- **Ecology**: habitat gradients, renewable resources, grazing and environmental stress.
+- **Future extensions**: regulation, epigenetics, developmental morphology, advanced kinship and inbreeding models.
 
-## Contract
+## Contracts
 
-Organism packages exchange serialisable, versioned definitions and snapshots. They do not retain references to live core agents. Core can ignore an unknown extension and continue with baseline agent behaviour.
+Organism packages exchange serialisable definitions and snapshots. They do not retain live Core objects. Core accepts narrow callbacks for parent choice, inherited organism data and behavioural control; it does not import these modules or know their algorithms.
 
-Each subsystem needs its own tests, schema version, migration policy and a small adapter surface before integration.
+Missing modules fall back to baseline movement, local mate selection and trait inheritance. Extension errors must not prevent the world from running.
