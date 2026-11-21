@@ -38,7 +38,7 @@ test("physical combat injures prey, kills it and transfers carcass mass to its a
 });
 
 test("plant chromosomes carry inherited traits and plants branch and release spores",()=>{
- const random=()=>0.1,g=createPlantGenome(random),decoded=decodeChromosome(g.chromosome);
+ const random=()=>0,g=createPlantGenome(random),decoded=decodeChromosome(g.chromosome);
  assert.ok(decoded.filter(x=>x.type==="trait").length>=10);
  const child=inheritPlantGenome(g,g,random);assert.ok(child.chromosome.length>0);
  const plant=germinatePlant(10,10,g,random);let spores=0;
