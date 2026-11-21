@@ -9,3 +9,6 @@ test("observatory reports simulation state",()=>{const w=createWorld(300,200,12,
 
 
 test("core extension callbacks receive immutable snapshots rather than live agents",()=>{const w=createWorld(500,400,24,11);for(const a of w.agents)a.energy=1;let view,expected;stepWorld(w,1,{birthInterval:1,birthsPerCycle:1,maxPopulation:100,selectParents:population=>{view=population[0];expected=population[0].energy;assert.ok(Object.isFrozen(view));assert.ok(Object.isFrozen(view.traits));return{first:population[0],second:population[1]}},inheritOrganism:(a,b)=>{assert.ok(Object.isFrozen(a));assert.ok(Object.isFrozen(a.traits));assert.notEqual(a,w.agents[0]);return{extensionMarker:true}}});assert.equal(view.energy,expected);assert.equal(w.agents[0].extensionMarker,undefined);assert.ok(w.agents.some(a=>a.extensionMarker))});
+
+
+test("neural material exposed to behaviour adapters is deeply immutable",()=>{const w=createWorld(200,160,4,4);w.agents[0].neural={nodes:[{id:1,kind:"input"}],connections:[{source:1,destination:1,weight:.5}]};stepWorld(w,1,{reproduction:false,behaviour:view=>{if(view.id===0){assert.ok(Object.isFrozen(view.neural));assert.ok(Object.isFrozen(view.neural.nodes));assert.ok(Object.isFrozen(view.neural.nodes[0]));assert.ok(Object.isFrozen(view.neural.connections[0]))}return null}})});
