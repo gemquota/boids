@@ -1,88 +1,39 @@
-# Architecture and runtime data flow
+# Reboot Architecture
 
-## Runtime boundaries
+## Three independent foci
 
-BOIDS is a static browser application. `index.html` owns presentation, browser storage, user interaction, and worker messaging. `boids-worker.js` owns the live simulation and is the authority for population state. The worker imports the shared model modules; it does not ask the DOM to run simulation logic.
+`core/`, `organisms/` and `labs/` are peers. Only data contracts connect them.
 
-| Module | Contract |
-|---|---|
-| `index.html` | Drawers, controls, charts, browser lifecycle, IndexedDB persistence, export downloads |
-| `boids-worker.js` | Fixed-step orchestration, movement, spatial queries, plant/freshwater ecology, reproduction, selection, live telemetry, snapshot migration |
-| `abiogenesis-worker.js` | Isolated fixed-step particle physics, bond kinetics and deterministic particle-world snapshots |
-| `abiogenesis.js` | Particle physics, dynamic bonding, molecular chemistry and capability-graph engine, exposed through the worker's opt-in abiogenesis channel |
-| `evolution.js` | Pure genome validation/mutation/crossover/compilation, speciation, regulation/statistics, experiment-analysis primitives |
-| `organism-economics.js` | Pure construction and per-step energy-cost accounting, bond normalization/capacity/cleanup helpers |
-| `genetics.js` | Ten quantitative loci, expression curves, environmental modulation, inheritance helpers |
-| `chromosome.js` | Versioned typed hexadecimal quantitative, structural, neural, regulatory and modifier gene-record encoding/decoding |
-| `config-schema.js` | Authoritative control schema, field-guide content and dependency rules |
-| `config-registry.js` | DOM range-control registry and value normalization |
+```text
+              versioned definitions / snapshots
+     +--------------------+ <--------------------+
+     |                    |                      |
++----v-----+        +-----+----------+      +----+-----+
+| Boids    |        | Organism       |      | Labs     |
+| Core     |        | Systems        |      |          |
++----------+        +----------------+      +----------+
+     |                    ^                      |
+     +---- baseline ------+---- validated -------+
+```
 
-## Simulation step
+## Dependency direction
 
-1. The worker advances a fixed simulation clock with bounded catch-up.
-2. It snapshots the movement state used by neighbourhood queries.
-3. A seeded RNG and shuffled update order remove fixed array-index priority.
-4. The spatial index supplies local neighbours and environmental queries.
-5. Each agent evaluates its expressed traits and inherited neural controller.
-6. Movement, feeding, attack proposals, hydration and energetic costs are evaluated through one shared organism-economics model. Costs are separated into basal/tissue, brain, vision, limb, bonding, aggression, reproduction and locomotion components.
-7. Persistent boid-to-boid and boid-to-plant bonds update attraction, energy transfers and symbiotic plant growth; bonded plants are excluded from grazing. Bond capacity and specialized appendage roles are inherited and can mutate.
-8. Resource claims and attacks are resolved consistently after proposal collection.
-9. Reproduction and inheritance update population state; construction costs for body tissue, limbs, neural topology, sensory investment and bonding sites are charged to the parent.
-10. Sampled telemetry is posted to the UI; history is throttled rather than rebuilt every render frame.
+- Core depends only on platform primitives and its own code.
+- Organism packages may define adapters for Core, but Core never imports them.
+- Labs may use Core and Organism packages through public contracts.
+- No shared mutable objects cross boundaries. Use serialisable snapshots and versioned definitions.
 
-## Genome and phenotype layers
+## Failure containment
 
-Keep these layers distinct:
+Unknown schema version: reject the payload, preserve the running world.
+Missing organism extension: use baseline agent.
+Lab exception: terminate the experiment, not the simulator.
+Renderer exception: report diagnostics and retain a recoverable simulation state.
 
-- **Inherited genotype:** ten quantitative trait loci, regulatory modifiers, and variable-length neural node/connection genes.
-- **Expressed phenotype:** bounded trait values derived from genotype, expression settings and environmental signals.
-- **Lifetime learning:** per-agent learned-weight overlays and recurrent activation state. Learning must not silently rewrite inherited connection genes.
-- **Environment:** plant biomass, water/moisture proximity, season, shelter, currents, and world geometry.
+## Reboot sequence
 
-The current worker uses variable-length genomes as the neural source of truth while retaining compatibility/projection arrays for legacy runtime consumers. Those projections are transitional and must not become a second independently mutable genome. The genotype-to-phenotype path also evaluates validated additive and epistatic multi-locus equations over normalized inherited loci before applying bounded environmental and regulatory modifiers.
-
-## Neural storage bounds and legacy projections
-
-The variable-length `agentGenomes`, compiled networks, per-agent recurrent state, learned-weight overlays and per-gene `agentEligibility` traces are authoritative. The fixed-size typed arrays (`genome`, `connectionSource`, `connectionDestination`, `innovation`, `brainState` and legacy `eligibility`) remain bounded compatibility projections/fallbacks for older execution paths; they must not be treated as the evolved genome's maximum topology. Schema 19 persists variable-length eligibility traces and migrates available legacy traces into matching leading connection positions.
-
-Current bounds are aligned:
-- UI/configuration legacy connection slots: 4–64.
-- Legacy hidden-neuron count: 2–24; the legacy scratch buffer has 40 entries for the 8 inputs, up to 24 hidden neurons and 8 outputs.
-- Live NEAT mutation limits: 128 nodes and 512 connections.
-- Compiled neural workspace: 128 values/state slots, matching the live node ceiling.
-- The live per-agent genome, innovation map and recurrent state are variable-length structures.
-
-Configuration schema tests enforce the legacy control bounds; evolution tests cover variable-length genes, graph validation, recurrent execution and structural mutation. Any increase to the node ceiling must update the compiled workspace and its tests in the same change.
-
-## NEAT execution
-
-Node genes have stable IDs, type, activation and bias. Connection genes have historical innovation IDs, source/destination IDs, weights, enabled state and recurrent metadata. The worker compiles sparse networks and retains recurrent state per agent. Mutation and crossover are delegated to `evolution.js`.
-
-Speciation uses compatibility distance and representatives. The live selection layer tracks species age, best fitness, stagnation, shared fitness, integer offspring quotas and reproductive pressure. Mating prefers compatible members of the same species, with a fallback when no eligible mate is available.
-
-## Ecology
-
-There is one boid population. Predation is conspecific. Plants are the basal renewable resource; there are no active food-patch or separate predator populations. Plant spores, clonal growth, freshwater proximity, thirst, seasonality, reefs and shelter are worker-owned state.
-
-## Persistence
-
-The worker's world snapshot schema is **22**. It includes configuration, agent and ecological state, variable-length neural and regulatory genomes, learned-weight overlays, recurrent state, derived regulatory expression arrays and bounded regulatory mutation history, pedigree, innovation/species state, delayed-entry all-cause and birth-cohort survival history, persisted birth-cohort IDs/lineage records, stable-ID entry ages, lifetime reproductive-success and parent-sex identity state, per-gene eligibility traces, structural-innovation protection ages, RNG and sampled histories where supported. The browser stores the worker snapshot with a separate `storageSchemaVersion: 2` field. The worker's `schemaVersion: 22` is never overwritten by the IndexedDB envelope version. Legacy records whose worker version was previously overwritten to 2 remain readable through worker migration defaults.
-
-When adding persistent state:
-1. add it to snapshot export;
-2. restore it with safe defaults;
-3. migrate older schemas without fabricating historical information;
-4. add round-trip and deterministic-continuation tests;
-5. document whether the state is inherited, transient, derived, or environmental.
-
-## Performance constraints
-
-The hot path must avoid per-agent/per-tick object allocation where practical. Use typed arrays, sparse compiled edges, reusable activation workspaces, throttled telemetry and spatial indexing. Benchmark changes at several population sizes. A passing syntax test says nothing about runtime cost.
-
-
-See [snapshot schemas and migration behaviour](SNAPSHOT-MIGRATION.md) for the field-presence migration contract and the independent worker, IndexedDB and chromosome version domains.
-
-See [Observatory telemetry and analysis exports](TELEMETRY-EXPORTS.md) for sampled metrics, retention limits and bundle contents.
-
-
-See [Abiogenesis and hierarchical biological organisation](Abiogenesis.md) for the foundational chemical/biological model, capability graph and integration invariants.
+1. Establish Core behaviour and smoke tests.
+2. Freeze the snapshot/definition contract.
+3. Port organism systems one at a time behind adapters.
+4. Rebuild labs as clients of those contracts.
+5. Add integration only after standalone behaviour is proven.
