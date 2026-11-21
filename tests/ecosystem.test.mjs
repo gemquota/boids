@@ -1,9 +1,9 @@
 import test from"node:test";
 import assert from"node:assert/strict";
 import{createVisionField,castVision,neuralSenseVector}from"../organisms/senses.js";
-import{updateCombat}from"../organisms/predation.js";
+import{updateCombat}from"../organisms/predation.js";\nimport{calculateEnergyCost}from"../organisms/energy.js";
 import{createTraits,inheritTraits,phenotype}from"../organisms/genetics.js";
-import{createPlantGenome,germinatePlant,growPlant,inheritPlantGenome}from"../organisms/plant_genetics.js";
+import{createPlantGenome,germinatePlant,growPlant,inheritPlantGenome,classifyPlantStage}from"../organisms/plant_genetics.js";
 import{decodeChromosome}from"../organisms/genome.js";
 import{createEnvironment,sampleEnvironment,advanceEnvironment}from"../organisms/environment.js";
 import{createHistory,recordHistory,averageHistory}from"../labs/history.js";
@@ -71,4 +71,17 @@ test("biome presets produce distinct moisture and watershed structures",()=>{
  const moisture=e=>e.fields.reduce((n,f)=>n+f.moisture,0)/e.fields.length;
  assert.ok(moisture(wetland)>moisture(arid));assert.ok(wetland.tributaries.length>arid.tributaries.length);
  assert.notEqual(arid.coastWidth,wetland.coastWidth);
+});
+
+test("energy economics account for tissue, brain, vision, attacks and upkeep",()=>{
+ const agent={traits:{metabolism:1.2,visionRange:1.1,aggression:.8,attackCost:1.3,sexDrive:1},mass:1.4,vx:1,vy:1,lastAttackTick:5,senses:[{confidence:1}],neural:{nodes:Array(10).fill({}),connections:Array(20).fill({enabled:true})}};
+ const costs=calculateEnergyCost(agent,2,5),sum=Object.entries(costs).filter(([k])=>k!=="total").reduce((n,[,v])=>n+v,0);
+ assert.ok(costs.brain>0&&costs.vision>0&&costs.attack>0);assert.ok(Math.abs(sum-costs.total)<1e-12);
+});
+
+test("plant life stages progress from seedling through senescence",()=>{
+ const plant={age:0,traits:{longevity:1}};assert.equal(classifyPlantStage(plant),"seedling");
+ plant.age=200;assert.equal(classifyPlantStage(plant),"juvenile");
+ plant.age=1000;assert.equal(classifyPlantStage(plant),"mature");
+ plant.age=21000;assert.equal(classifyPlantStage(plant),"senescent");
 });
