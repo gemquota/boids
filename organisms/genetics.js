@@ -21,7 +21,7 @@ export function inheritTraits(a,b,random=Math.random){
  return out;
 }
 export function phenotype(traits={}){
- const t={...TRAIT_DEFAULTS,...traits},size=t.size;
+ const t={...TRAIT_DEFAULTS,...traits},size=t.size*Math.max(.72,Math.min(1.12,1.18-.2*t.speed));
  return{radius:2.8*size,mass:Math.max(.25,t.mass*size*size),length:2.2*size*(.8+t.attack*.24),width:1.6*size*(.75+t.defense*.3),metabolicCost:t.metabolism*(.72+.28/Math.max(.4,size))*(.85+.15*t.speed),attackPower:t.attack*t.damage,turnRate:t.maneuverability/(.65+size*.35)};
 }
 export function describeGenome(traits={}){return TRAIT_KEYS.map(key=>({key,value:Number(traits[key]??TRAIT_DEFAULTS[key])}))}
