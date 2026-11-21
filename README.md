@@ -14,6 +14,19 @@ The repository is organised around three separate foci. They are deliberately no
 
 Open [index.html](index.html) in a modern browser. No build step, package manager, network request, or external dependency is required.
 
+## Current reboot feature set
+
+- 500-agent seeded starting field, adjustable population and live flocking parameters
+- separation, alignment, cohesion, toroidal movement, energy use, ageing, and bounded population growth
+- optional two-parent trait inheritance with mutation
+- seeded temperature/moisture/nutrient habitat fields and renewable plant biomass
+- grazing energy transfer and habitat stress
+- live Field, DNA, and Observatory panels
+- vegetation, habitat, and movement-vector overlays
+- drag pan, pinch/wheel zoom, organism inspection, pause/reset, and JSON world export
+
+The reboot is being rebuilt in visible, independently testable increments. The legacy archive remains untouched.
+
 ## Architecture rules
 
 1. Core has no imports from `organisms/` or `labs/`.
