@@ -1,7 +1,5 @@
 name: Reboot regression
 on:
-  push:
-    branches: [main, "reboot/**"]
   pull_request:
     branches: [main]
 jobs:
