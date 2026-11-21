@@ -7,7 +7,7 @@ export function createEnvironment(width,height,seed=31,{cols=48,rows=30}={}){
   const ridge=.5+.13*Math.sin(nx*7.4)+.07*Math.sin(nx*17.1+ny*4),tributary=.5+.18*Math.sin(nx*12+1.4)+.035*Math.sin(nx*31+ny*9);
   const coastDist=Math.max(0,(coast/width-nx)*width),riverDist=Math.min(Math.abs(ny-ridge),Math.abs(ny-tributary));
   const elevation=Math.max(0,Math.min(1,.25+latitude*.22+Math.abs(ny-ridge)*.55+(random()-.5)*.13));
-  const tributaryWet=Math.min(Math.abs(ny-(.18+.42*nx)),Math.abs(ny-(.82-.31*nx)),Math.abs(ny-(.28+.16*Math.sin(nx*8))));const water=nx<coast/width||riverDist<.018||(nx>.55&&Math.abs(ny-(.25+.08*Math.sin(nx*9)))<.012)||(nx>.16&&tributaryWet<.009);
+  const tributaryWet=Math.min(Math.abs(ny-(.18+.42*nx+.035*Math.sin(nx*13))),Math.abs(ny-(.82-.31*nx+.03*Math.sin(nx*11+1.4))),Math.abs(ny-(.28+.16*Math.sin(nx*8))));const water=nx<coast/width||riverDist<.018||(nx>.55&&Math.abs(ny-(.25+.08*Math.sin(nx*9)))<.012)||(nx>.16&&tributaryWet<.009);
   fields.push({elevation,latitude,water,temperature:Math.max(0,1-latitude*.62+(random()-.5)*.06),moisture:Math.min(1,.16+(water?.68:Math.max(0,.48-riverDist*5))+(random()-.5)*.08),nutrients:.2+random()*.45,light:.5});
  }
  for(let i=0;i<cols;i++){const x=i/(cols-1)*width,y=(.5+.13*Math.sin(i/(cols-1)*7.4)+.07*Math.sin(i/(cols-1)*17.1))*height;river.push({x,y})}
