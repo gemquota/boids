@@ -11,16 +11,16 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
   a.injury=Math.max(0,a.injury-injuryRecovery*dt);a.health=Math.min(1,a.health+injuryRecovery*.15*dt);if(a.attachedPrey!=null){const corpse=byId.get(a.attachedPrey);if(corpse?.dead){a.x=corpse.x;a.y=corpse.y;a.vx=0;a.vy=0}else a.attachedPrey=null}
  }
  // Spatial hash prevents an all-pairs cost as the ecosystem grows.
- const cell=28,grid=new Map();for(const a of agents){if(a.dead)continue;const key=Math.floor(a.x/cell)+":"+Math.floor(a.y/cell);if(!grid.has(key))grid.set(key,[]);grid.get(key).push(a)}
+ const cell=28,cols=Math.max(1,Math.ceil(world.width/cell)),rows=Math.max(1,Math.ceil(world.height/cell)),grid=new Map();for(const a of agents){if(a.dead)continue;const key=Math.floor(a.x/cell)+":"+Math.floor(a.y/cell);if(!grid.has(key))grid.set(key,[]);grid.get(key).push(a)}
  const seen=new Set();
  for(const a of agents){if(a.dead)continue;const gx=Math.floor(a.x/cell),gy=Math.floor(a.y/cell);
-  for(let y=gy-1;y<=gy+1;y++)for(let x=gx-1;x<=gx+1;x++)for(const b of grid.get(x+":"+y)||[]){
+  for(let y=gy-1;y<=gy+1;y++)for(let x=gx-1;x<=gx+1;x++)for(const b of grid.get((((x%cols)+cols)%cols)+":"+(((y%rows)+rows)%rows))||[]){
    if(a.id>=b.id)continue;const key=a.id+":"+b.id;if(seen.has(key))continue;seen.add(key);
-   let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.001,min=radius(a)+radius(b);if(d>=min)continue;
+   let dx=b.x-a.x,dy=b.y-a.y;if(dx>world.width/2)dx-=world.width;if(dx< -world.width/2)dx+=world.width;if(dy>world.height/2)dy-=world.height;if(dy< -world.height/2)dy+=world.height;let d=Math.hypot(dx,dy)||.001,min=radius(a)+radius(b);if(d>=min)continue;
    const nx=dx/d,ny=dy/d,overlap=min-d;
    // Mass-weighted positional correction and damped elastic response.
    const ma=Math.max(.2,a.mass||1),mb=Math.max(.2,b.mass||1),sum=ma+mb;
-   a.x-=nx*overlap*(mb/sum);a.y-=ny*overlap*(mb/sum);b.x+=nx*overlap*(ma/sum);b.y+=ny*overlap*(ma/sum);
+   a.x-=nx*overlap*(mb/sum);a.y-=ny*overlap*(mb/sum);b.x+=nx*overlap*(ma/sum);b.y+=ny*overlap*(ma/sum);a.x=(a.x+world.width)%world.width;a.y=(a.y+world.height)%world.height;b.x=(b.x+world.width)%world.width;b.y=(b.y+world.height)%world.height;
    const rel=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
    if(rel<0){const impulse=-(1+collisionRestitution)*rel/(1/ma+1/mb);a.vx-=impulse*nx/ma;a.vy-=impulse*ny/ma;b.vx+=impulse*nx/mb;b.vy+=impulse*ny/mb}
    const ta=a.traits||{},tb=b.traits||{},aTarget=(a.senses||[]).some(s=>s.visible&&s.targetId===b.id),bTarget=(b.senses||[]).some(s=>s.visible&&s.targetId===a.id);
@@ -35,7 +35,7 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
   }
  }
  for(const a of agents){if(a.health<=0&&!a.dead){a.dead=true;a.vx=0;a.vy=0;a.deathTick=world.tick;a.mass??=1;a.initialMass??=a.mass;world.deaths=(world.deaths||0)+1;kills++;const killer=agents.find(k=>(k.senses||[]).some(s=>s.visible&&s.targetId===a.id)&&!k.dead);if(killer){a.consumedBy=killer.id;killer.attachedPrey=a.id;killer.energy=Math.min(2,killer.energy+.12)}}}
- world.combat={hits,kills,consumed,population:agents.filter(a=>!a.dead).length,injured:agents.filter(a=>!a.dead&&a.injury>.05).length,biomass:agents.filter(a=>a.dead).reduce((n,a)=>n+(a.mass||0),0)};
+ world.totalPredation=(world.totalPredation||0)+hits;world.totalKills=(world.totalKills||0)+kills;world.totalConsumed=(world.totalConsumed||0)+consumed;world.combat={hits,kills,consumed,totalPredation:world.totalPredation,totalKills:world.totalKills,population:agents.filter(a=>!a.dead).length,injured:agents.filter(a=>!a.dead&&a.injury>.05).length,biomass:agents.filter(a=>a.dead).reduce((n,a)=>n+(a.mass||0),0)};
  if(events.length>500)events.splice(0,events.length-500);
  return world.combat;
 }
