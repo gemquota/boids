@@ -7,8 +7,8 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
  let hits=0,kills=0,consumed=0;
  for(const a of agents){
   a.health??=1;a.injury??=0;a.dead??=false;a.attackCooldown=Math.max(0,(a.attackCooldown||0)-dt);
-  if(a.dead){a.vx=0;a.vy=0;a.energy=0;if(a.consumedBy!=null){const killer=byId.get(a.consumedBy);if(killer){const bite=Math.min(a.mass||1,consumeRate*dt*(killer.traits?.attackSpeed||1));a.mass=Math.max(0,(a.mass||1)-bite);killer.mass=(killer.mass||1)+bite*.82;killer.energy=Math.min(2,(killer.energy||0)+bite*.12);consumed+=bite;if(a.mass<=.015){killer.consumedMass=(killer.consumedMass||0)+(a.initialMass||1);a.consumedBy=-1}}}continue}
-  a.injury=Math.max(0,a.injury-injuryRecovery*dt);a.health=Math.min(1,a.health+injuryRecovery*.15*dt);
+  if(a.dead){a.vx=0;a.vy=0;a.energy=0;if(a.consumedBy!=null){const killer=byId.get(a.consumedBy);if(killer){const bite=Math.min(a.mass||1,consumeRate*dt*(killer.traits?.attackSpeed||1));a.mass=Math.max(0,(a.mass||1)-bite);killer.mass=(killer.mass||1)+bite*.82;killer.massScale=Math.cbrt(killer.mass/Math.max(.01,killer.baseMass||1));killer.energy=Math.min(2,(killer.energy||0)+bite*.12);consumed+=bite;if(a.mass<=.015){killer.consumedMass=(killer.consumedMass||0)+(a.initialMass||1);killer.attachedPrey=null;a.consumedBy=-1}}}continue}
+  a.injury=Math.max(0,a.injury-injuryRecovery*dt);a.health=Math.min(1,a.health+injuryRecovery*.15*dt);if(a.attachedPrey!=null){const corpse=byId.get(a.attachedPrey);if(corpse?.dead){a.x=corpse.x;a.y=corpse.y;a.vx=0;a.vy=0}else a.attachedPrey=null}
  }
  // Spatial hash prevents an all-pairs cost as the ecosystem grows.
  const cell=28,grid=new Map();for(const a of agents){if(a.dead)continue;const key=Math.floor(a.x/cell)+":"+Math.floor(a.y/cell);if(!grid.has(key))grid.set(key,[]);grid.get(key).push(a)}
@@ -28,13 +28,13 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
    if(aTarget&&a.attackCooldown<=0&&!b.dead){strike(a,b,random);a.attackCooldown=1/Math.max(.2,ta.attackSpeed||1);hits++}
    if(bTarget&&b.attackCooldown<=0&&!a.dead){strike(b,a,random);b.attackCooldown=1/Math.max(.2,tb.attackSpeed||1);hits++}
    // Head-on defensive clashes: both commit to the contact; the better attack/defence balance wins probabilistically.
-   if(aAgg>.55&&bAgg>.55&&Math.abs((a.vx*b.vx+a.vy*b.vy)/(Math.hypot(a.vx,a.vy)*Math.hypot(b.vx,b.vy)||1))>.72&&randOf(random)<.22){
+   if(aAgg>.55&&bAgg>.55&&((a.vx*nx+a.vy*ny)/(Math.hypot(a.vx,a.vy)||1)>.5)&&((b.vx*-nx+b.vy*-ny)/(Math.hypot(b.vx,b.vy)||1)>.5)&&randOf(random)<.22){
     const sa=(ta.attack||1)*(0.5+randOf(random))-(tb.defense||1)*.35,sb=(tb.attack||1)*(0.5+randOf(random))-(ta.defense||1)*.35;
     if(sa>sb)strike(a,b,random,.65);else if(sb>sa)strike(b,a,random,.65);else{strike(a,b,random,.3);strike(b,a,random,.3)}hits++;
    }
   }
  }
- for(const a of agents){if(a.health<=0&&!a.dead){a.dead=true;a.vx=0;a.vy=0;a.deathTick=world.tick;a.mass??=1;world.deaths=(world.deaths||0)+1;kills++;const killer=agents.find(k=>(k.senses||[]).some(s=>s.visible&&s.targetId===a.id)&&!k.dead);if(killer){a.consumedBy=killer.id;killer.attachedPrey=a.id;killer.energy=Math.min(2,killer.energy+.12)}}}
+ for(const a of agents){if(a.health<=0&&!a.dead){a.dead=true;a.vx=0;a.vy=0;a.deathTick=world.tick;a.mass??=1;a.initialMass??=a.mass;world.deaths=(world.deaths||0)+1;kills++;const killer=agents.find(k=>(k.senses||[]).some(s=>s.visible&&s.targetId===a.id)&&!k.dead);if(killer){a.consumedBy=killer.id;killer.attachedPrey=a.id;killer.energy=Math.min(2,killer.energy+.12)}}}
  world.combat={hits,kills,consumed,population:agents.filter(a=>!a.dead).length,injured:agents.filter(a=>!a.dead&&a.injury>.05).length,biomass:agents.filter(a=>a.dead).reduce((n,a)=>n+(a.mass||0),0)};
  if(events.length>500)events.splice(0,events.length-500);
  return world.combat;
