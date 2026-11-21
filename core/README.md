@@ -4,22 +4,20 @@ The core is the product, not a host for every experiment.
 
 ## Responsibilities
 
-- Agent position, velocity, and bounded local perception.
-- Separation, alignment, cohesion, and world-boundary behaviour.
-- A deterministic simulation lifecycle where practical.
-- Basic agent creation and removal.
-- Rendering and user controls that remain responsive under load.
+- Agent position, velocity, local perception and flocking.
+- Deterministic simulation lifecycle, resource-independent energy and ageing.
+- Agent creation, movement, mortality and bounded reproduction.
+- Narrow optional callbacks for behavioural steering, parent selection and inherited data.
+- Serialisable snapshots and a stable standalone browser entry point.
 
 ## Non-responsibilities
 
-No genome interpretation, neural-network construction, lineage graph, plant growth, hydrology, trophic ecology, laboratory UI, or experimental parameter registry belongs in the core runtime.
+Core does not import or interpret genomes, neural networks, species, selection models, lineage graphs, plant growth, hydrology or laboratory analysis. It only accepts plain callback results at explicit boundaries.
 
 ## Stability contract
 
-- Runs standalone with no optional modules present.
+- Runs without any organism module or laboratory.
 - A baseline agent always exists and can move.
-- Optional systems are accessed only through explicit adapters.
-- Extension errors are contained and reported; they cannot stop the simulation loop.
-- Keep the public core API small and versioned.
-
-The root `index.html` is the current minimal browser implementation. It intentionally has no build chain or external dependencies.
+- Extension callbacks are optional; absent callbacks retain baseline behaviour.
+- Extension failures must be contained by the host adapter and cannot become Core imports.
+- Keep the public API small, deterministic where practical and versioned.
