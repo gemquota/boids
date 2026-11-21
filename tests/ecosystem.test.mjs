@@ -1,6 +1,6 @@
 import test from"node:test";
 import assert from"node:assert/strict";
-import{castVision,neuralSenseVector}from"../organisms/senses.js";
+import{createVisionField,castVision,neuralSenseVector}from"../organisms/senses.js";
 import{updateCombat}from"../organisms/predation.js";
 import{createTraits,inheritTraits,phenotype}from"../organisms/genetics.js";
 import{createPlantGenome,germinatePlant,growPlant,inheritPlantGenome}from"../organisms/plant_genetics.js";
@@ -57,4 +57,11 @@ test("observatory history retains trend samples and periodic averages",()=>{
  const history=createHistory({capacity:5,interval:1}),world={tick:1,agents:[{id:1,energy:.5,health:.8,traits:{attack:1,defense:1}}],births:1,deaths:0},env={day:1,year:0,season:0,daylight:.5};
  recordHistory(history,world,env,[]);world.tick=2;world.agents[0].energy=.9;recordHistory(history,world,env,[]);
  const mean=averageHistory(history,"meanEnergy",2);assert.equal(mean.count,2);assert.ok(Math.abs(mean.mean-.7)<1e-9);assert.ok(mean.delta>.3);
+});
+
+test("spatial vision field exposes plants only when a ray intersects them",()=>{
+ const a={id:10,x:40,y:40,vx:1,vy:0,energy:.5,health:1},plant={id:-1,x:55,y:40,vx:0,vy:0,radius:3,kind:"plant"};
+ const field=createVisionField([a,plant],200,100,50),s=castVision(a,[a,plant],{field,rays:3,range:50,fieldOfView:1});
+ assert.ok(s.some(x=>x.visible&&x.kind==="plant"&&x.targetId===-1));
+ assert.equal(neuralSenseVector(a,3).at(-1),0);
 });
