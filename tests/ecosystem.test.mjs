@@ -1,7 +1,8 @@
 import test from"node:test";
 import assert from"node:assert/strict";
 import{createVisionField,castVision,neuralSenseVector}from"../organisms/senses.js";
-import{updateCombat}from"../organisms/predation.js";\nimport{calculateEnergyCost}from"../organisms/energy.js";
+import{updateCombat}from"../organisms/predation.js";
+import{calculateEnergyCost}from"../organisms/energy.js";
 import{createTraits,inheritTraits,phenotype}from"../organisms/genetics.js";
 import{createPlantGenome,germinatePlant,growPlant,inheritPlantGenome,classifyPlantStage}from"../organisms/plant_genetics.js";
 import{decodeChromosome}from"../organisms/genome.js";
