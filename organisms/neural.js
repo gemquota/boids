@@ -1,6 +1,15 @@
 // Optional-by-contract, enabled-by-default neural evolution module.
 // Node identifiers and innovation identifiers are integers; only weights/biases are floats.
-export function createNetworkGenome({inputs=4,outputs=3,random=Math.random}={}){
+// Shared innovation ledger keeps matching structural mutations homologous across a population.
+export function createInnovationLedger({nextNodeId=0,nextInnovation=0}={}){
+ const connections=new Map(),splits=new Map();
+ return{
+  connection(source,destination){const key=source+":"+destination;if(!connections.has(key))connections.set(key,nextInnovation++);return connections.get(key)},
+  split(connection){if(!splits.has(connection.innovation)){const nodeId=nextNodeId++,incoming=this.connection(connection.source,nodeId),outgoing=this.connection(nodeId,connection.destination);splits.set(connection.innovation,{nodeId,incoming,outgoing})}return splits.get(connection.innovation)},
+  get nextNodeId(){return nextNodeId},get nextInnovation(){return nextInnovation}
+ }
+}
+\nexport function createNetworkGenome({inputs=4,outputs=3,random=Math.random}={}){
  const nodes=[];for(let i=0;i<inputs;i++)nodes.push({id:i,kind:"input",bias:0});for(let i=0;i<outputs;i++)nodes.push({id:inputs+i,kind:"output",bias:0});
  const connections=[];let innovation=0;for(let i=0;i<inputs;i++)for(let j=0;j<outputs;j++)connections.push({source:i,destination:inputs+j,weight:(random()-.5)*2,enabled:true,innovation:innovation++});
  return{version:1,nextNodeId:inputs+outputs,nextInnovation:innovation,nodes,connections};
@@ -11,10 +20,10 @@ export function validateNetworkGenome(g){
  for(const c of g.connections)if(!Number.isInteger(c.source)||!Number.isInteger(c.destination)||!Number.isFinite(c.weight)||!Number.isInteger(c.innovation)||!ids.has(c.source)||!ids.has(c.destination))throw new TypeError("Invalid neural connection");
  return true
 }
-export function mutateNetworkGenome(genome,{random=Math.random,weightRate=.8,addConnectionRate=.08,addNodeRate=.03,weightScale=.25}={}){
+export function mutateNetworkGenome(genome,{random=Math.random,weightRate=.8,addConnectionRate=.08,addNodeRate=.03,weightScale=.25,innovationLedger=null}={}){
  const g=structuredClone(genome);for(const c of g.connections)if(random()<weightRate)c.weight+=(random()-.5)*2*weightScale;
- if(random()<addConnectionRate){const sources=g.nodes.filter(n=>n.kind!=="output"),targets=g.nodes.filter(n=>n.kind!=="input"),pairs=[];for(const s of sources)for(const t of targets)if(s.id!==t.id&&!g.connections.some(c=>c.source===s.id&&c.destination===t.id))pairs.push([s,t]);if(pairs.length){const [s,t]=pairs[Math.floor(random()*pairs.length)];g.connections.push({source:s.id,destination:t.id,weight:(random()-.5)*2,enabled:true,innovation:g.nextInnovation++})}}
- if(random()<addNodeRate){const candidates=g.connections.filter(c=>c.enabled);if(candidates.length){const c=candidates[Math.floor(random()*candidates.length)];c.enabled=false;const id=g.nextNodeId++;g.nodes.push({id,kind:"hidden",bias:0});g.connections.push({source:c.source,destination:id,weight:1,enabled:true,innovation:g.nextInnovation++},{source:id,destination:c.destination,weight:c.weight,enabled:true,innovation:g.nextInnovation++})}}
+ if(random()<addConnectionRate){const sources=g.nodes.filter(n=>n.kind!=="output"),targets=g.nodes.filter(n=>n.kind!=="input"),pairs=[];for(const s of sources)for(const t of targets)if(s.id!==t.id&&!g.connections.some(c=>c.source===s.id&&c.destination===t.id))pairs.push([s,t]);if(pairs.length){const [s,t]=pairs[Math.floor(random()*pairs.length)];g.connections.push({source:s.id,destination:t.id,weight:(random()-.5)*2,enabled:true,innovation:innovationLedger?innovationLedger.connection(s.id,t.id):g.nextInnovation++})}}
+ if(random()<addNodeRate){const candidates=g.connections.filter(c=>c.enabled);if(candidates.length){const c=candidates[Math.floor(random()*candidates.length)];c.enabled=false;const split=innovationLedger?innovationLedger.split(c):{nodeId:g.nextNodeId++,incoming:g.nextInnovation++,outgoing:g.nextInnovation++},id=split.nodeId;g.nodes.push({id,kind:"hidden",bias:0});g.connections.push({source:c.source,destination:id,weight:1,enabled:true,innovation:split.incoming},{source:id,destination:c.destination,weight:c.weight,enabled:true,innovation:split.outgoing})}}
  validateNetworkGenome(g);return g
 }
 export function crossoverNetworkGenomes(a,b,{random=Math.random,fitnessA=1,fitnessB=1}={}){
