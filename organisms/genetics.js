@@ -22,6 +22,6 @@ export function inheritTraits(a,b,random=Math.random){
 }
 export function phenotype(traits={}){
  const t={...TRAIT_DEFAULTS,...traits},size=t.size*Math.max(.72,Math.min(1.12,1.18-.2*t.speed));
- return{radius:2.8*size,mass:Math.max(.25,t.mass*size*size),length:2.2*size*(.72+t.attack*.34),width:1.6*size*(.62+t.defense*.48),height:1.3*size*(.72+t.size*.28),tail:1.1*size*(.65+t.speed*.3),fin:.5*size*(.5+t.maneuverability*.5),metabolicCost:t.metabolism*(.72+.28/Math.max(.4,size))*(.85+.15*t.speed),attackPower:t.attack*t.damage,turnRate:t.maneuverability/(.65+size*.35)};
+ return{radius:1.4*size,mass:Math.max(.0625,t.mass*size*size*.25),length:1.1*size*(.72+t.attack*.34),width:.8*size*(.62+t.defense*.48),height:.65*size*(.72+t.size*.28),tail:.55*size*(.65+t.speed*.3),fin:.25*size*(.5+t.maneuverability*.5),metabolicCost:t.metabolism*(.72+.28/Math.max(.4,size))*(.85+.15*t.speed),attackPower:t.attack*t.damage,turnRate:t.maneuverability/(.65+size*.35)};
 }
 export function describeGenome(traits={}){return TRAIT_KEYS.map(key=>({key,value:Number(traits[key]??TRAIT_DEFAULTS[key])}))}
