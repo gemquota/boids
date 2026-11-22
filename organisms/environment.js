@@ -28,18 +28,18 @@ export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="
  for(let i=0;i<cols;i++){const x=i/(cols-1);river.push({x:x*width,y:mainY(x)*height})}
  const starts=[.16,.86,.32,.72],merges=[.48,.69,.84,.58],curves=[.08,-.09,.055,-.045];
  for(let index=0;index<profile.tributaries;index++){const path=[],start=starts[index],merge=merges[index],curve=curves[index];for(let i=0;i<=24;i++){const t=i/24,x=.12+(merge-.12)*t,y=start+(mainY(merge)-start)*t+Math.sin(t*Math.PI)*curve+.025*Math.sin(t*8*Math.PI+start*12)*(1-t);path.push({x:x*width,y:y*height})}tributaries.push(path)}
- return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:1200,seasonLength:12000,season:0,day:0,year:0,coastWidth};
+ return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:600,seasonLength:12000,season:0,day:0,year:0,coastWidth};
 }
 export function sampleEnvironment(env,x,y){
  const gx=clamp(Math.floor(x/env.width*env.cols),0,env.cols-1),gy=clamp(Math.floor(y/env.height*env.rows),0,env.rows-1),f=env.fields[gy*env.cols+gx];
  const seasonIndex=Math.floor(env.season)%4,dayPhase=(env.clock%env.dayLength)/env.dayLength,solar=Math.max(0,Math.sin(dayPhase*Math.PI*2));
- const seasonal=Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude),temperature=clamp(f.baseTemperature+seasonal,0,1);
+ const seasonal=Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude),temperature=clamp(f.baseTemperature+seasonal-(1-solar)*.72,0,1);
  return{...f,temperature,light:solar*(1-f.latitude*.25),daylight:solar,season:env.season,day:env.day,year:env.year};
 }
 export function advanceEnvironment(env,dt=1){
  env.clock+=dt;env.day=Math.floor(env.clock/env.dayLength);env.year=Math.floor(env.clock/(env.seasonLength*4));env.season=(env.clock%(env.seasonLength*4))/env.seasonLength;
  const seasonIndex=Math.floor(env.season)%4,phase=(env.clock%env.seasonLength)/env.seasonLength,dayPhase=(env.clock%env.dayLength)/env.dayLength,solar=Math.max(0,Math.sin(dayPhase*Math.PI*2));
- env.daylight=solar;for(const f of env.fields){const seasonalRain=Math.sin(seasonIndex*Math.PI/2)*.035;f.light=solar*(1-f.latitude*.25);f.moisture=clamp(f.baseMoisture+seasonalRain+(f.water?.08:0),.02,1);f.temperature=clamp(f.baseTemperature+Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude),0,1)}
+ env.daylight=solar;for(const f of env.fields){const seasonalRain=Math.sin(seasonIndex*Math.PI/2)*.035;f.light=solar*(1-f.latitude*.25);f.moisture=clamp(f.baseMoisture+seasonalRain+(f.water?.08:0),.02,1);f.temperature=clamp(f.baseTemperature+Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude)-(1-solar)*.72,0,1)}
  return{day:env.day,year:env.year,season:seasonIndex,daylight:solar,seasonProgress:phase};
 }
 export function environmentSummary(env){
