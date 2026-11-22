@@ -29,7 +29,7 @@ test("boid genomes express diverse combat traits and physical trade-offs",()=>{
 });
 
 test("physical combat injures prey, kills it and transfers carcass mass to its attacker",()=>{
- const attacker={id:1,x:50,y:50,vx:1,vy:0,energy:1,health:1,injury:0,mass:1,baseMass:1,massScale:1,radius:5,traits:{attack:2,damage:2,defense:1,aggression:.8,attackSpeed:1,attackCost:1,tracking:1},senses:[{visible:true,targetId:2}]};
+ const attacker={id:1,x:50,y:50,vx:1,vy:0,energy:1,health:1,injury:0,mass:1,baseMass:1,massScale:1,radius:5,traits:{attack:2,damage:2,defense:1,aggression:.8,attackSpeed:1,attackCost:1,tracking:1,carnivory:1},senses:[{visible:true,targetId:2}]};
  const prey={id:2,x:55,y:50,vx:-1,vy:0,energy:1,health:.05,injury:0,mass:1,baseMass:1,radius:5,traits:{attack:.5,damage:.5,defense:.25,aggression:.1,flee:.5},senses:[]};
  const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};
  const first=updateCombat(world,1,{random:()=>.99,consumeRate:.1});
@@ -86,3 +86,6 @@ test("plant life stages progress from seedling through senescence",()=>{
  plant.age=1000;assert.equal(classifyPlantStage(plant),"mature");
  plant.age=21000;assert.equal(classifyPlantStage(plant),"senescent");
 });
+
+
+test("ancestral boids are herbivores and carnivory is a rare inherited mutation",()=>{let seed=1;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};const a=createTraits(random);assert.equal(a.carnivory,0);const b=inheritTraits(a,a,()=>.99);assert.equal(b.carnivory,0)});
