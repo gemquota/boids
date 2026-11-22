@@ -19,7 +19,7 @@ let w=innerWidth,h=innerHeight,dpr=1,world,habitat,history,running=true,last=0,t
 let camera={x:0,y:0,zoom:1},settings={selectionModel:"natural",perception:68,separation:24,maxSpeed:1.65,alignment:.035,cohesion:.0018,separationForce:.035,population:250,plantDensity:1,speed:1,environment:"temperate",birthInterval:48,broodSize:7,foodAbundance:1.7};
 let fps=0,fpsFrames=0,fpsStamp=0;let pointers=new Map(),gesture=null,selected=null,evolution=null,speciesState={species:[],nextSpeciesId:1,extinctions:[]};
 const $=s=>document.querySelector(s);
-function fit(){const nw=innerWidth,nh=innerHeight;dpr=Math.min(devicePixelRatio||1,2);canvas.width=nw*dpr;canvas.height=nh*dpr;canvas.style.width=nw+"px";canvas.style.height=nh+"px";ctx.setTransform(dpr,0,0,dpr,0,0);if(world)resizeWorld(world,nw,nh);w=nw;h=nh;camera.zoom=1;camera.x=0;camera.y=0;clampCamera()}
+function fit(){const nw=innerWidth,nh=innerHeight;dpr=Math.min(devicePixelRatio||1,2);canvas.width=nw*dpr;canvas.height=nh*dpr;canvas.style.width=nw+"px";canvas.style.height=nh+"px";ctx.setTransform(dpr,0,0,dpr,0,0);if(world)resizeWorld(world,nw,nh);w=nw;h=nh;camera.zoom=1;camera.x=w/2;camera.y=h/2;clampCamera()}
 function freezeNetwork(g){if(!g)return g;for(const n of g.nodes)Object.freeze(n);for(const c of g.connections)Object.freeze(c);Object.freeze(g.nodes);Object.freeze(g.connections);return Object.freeze(g)}
 function reset(){
  world=createWorld(w,h,settings.population,Math.floor(Math.random()*999999));
@@ -27,9 +27,9 @@ function reset(){
  for(let i=0;i<Math.floor(w*h/24000*settings.plantDensity);i++){const g=createPlantGenome(()=>randomWorld(world)),p=germinatePlant(randomWorld(world)*w,randomWorld(world)*h,g,()=>randomWorld(world));habitat.plants.push(p)}
  for(const a of world.agents){a.traits=createTraits(()=>randomWorld(world));a.phenotype=phenotype(a.traits);a.radius=a.phenotype.radius;a.mass=a.phenotype.mass;a.baseMass=a.mass;a.massScale=1;a.health=1;a.injury=0;a.energy=1.05+randomWorld(world)*.35;a.kind="boid";a.neural=freezeNetwork(createNetworkGenome({inputs:36,outputs:5,random:()=>randomWorld(world)}));a.genome=encodeChromosome([...Object.entries(a.traits).map(([name,value],locus)=>({type:"trait",locus,name,value})),...a.neural.nodes.map(n=>({type:"node",locus:n.id,id:n.id,kind:n.kind,bias:n.bias})),...a.neural.connections.map(c=>({type:"connection",locus:c.innovation,source:c.source,destination:c.destination,weight:c.weight,enabled:c.enabled,innovation:c.innovation}))])}
  evolution=createEvolutionAdapter({selection:{models:[settings.selectionModel||"natural"],context:{optima:{speed:1,perception:1,metabolism:1,fertility:1}}},random:()=>randomWorld(world),innovationLedger:createInnovationLedger({nextNodeId:41,nextInnovation:180})});
- speciesState={species:[],nextSpeciesId:1,extinctions:[]};camera={x:0,y:0,zoom:1};clampCamera();selected=null;drawPanel()
+ speciesState={species:[],nextSpeciesId:1,extinctions:[]};camera={x:w/2,y:h/2,zoom:1};clampCamera();selected=null;drawPanel()
 }
-function clampCamera(){const z=Math.max(1,camera.zoom||1),halfW=w/(2*z),halfH=h/(2*z);camera.zoom=z;camera.x=Math.max(-w/2+halfW,Math.min(w/2-halfW,camera.x||0));camera.y=Math.max(-h/2+halfH,Math.min(h/2-halfH,camera.y||0))}function screenToWorld(x,y){return{x:(x-w/2)/camera.zoom+camera.x+w/2,y:(y-h/2)/camera.zoom+camera.y+h/2}}
+function clampCamera(){const z=Math.max(1,camera.zoom||1),halfW=w/(2*z),halfH=h/(2*z);camera.zoom=z;camera.x=Math.max(halfW,Math.min(w-halfW,camera.x??w/2));camera.y=Math.max(halfH,Math.min(h-halfH,camera.y??h/2))}function screenToWorld(x,y){return{x:(x-w/2)/camera.zoom+camera.x,y:(y-h/2)/camera.zoom+camera.y}}
 function draw(){
  ctx.fillStyle="#06121b";ctx.fillRect(0,0,w,h);ctx.save();ctx.translate(w/2-camera.x*camera.zoom,h/2-camera.y*camera.zoom);ctx.scale(camera.zoom,camera.zoom);
  if(showHabitat){for(let y=0;y<habitat.rows;y++)for(let x=0;x<habitat.cols;x++){const f=habitat.fields[y*habitat.cols+x];ctx.fillStyle="rgba(53,164,151,"+(f.moisture*.19)+")";ctx.fillRect(x*w/habitat.cols,y*h/habitat.rows,w/habitat.cols+1,h/habitat.rows+1)}}
