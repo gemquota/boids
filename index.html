@@ -21,10 +21,10 @@ button:active{background:#285064}label{display:flex;gap:6px;align-items:center;c
 <script type="module">
 const canvas=document.querySelector('#world'),ctx=canvas.getContext('2d');
 const countInput=document.querySelector('#count'),stats=document.querySelector('#stats'),toggle=document.querySelector('#toggle');
-let w=0,h=0,dpr=1,agents=[],running=true,last=0,frame=0;
+let w=0,h=0,dpr=1,agents=[],running=true,last=0,lastDraw=0,frame=0;
+let oldX=new Float64Array(0),oldY=new Float64Array(0),oldVX=new Float64Array(0),oldVY=new Float64Array(0);
 const cfg={count:100,speed:2.0,perception:58,separation:22,align:0.85,cohesion:0.55,separate:1.35};
 const rand=(a,b)=>a+Math.random()*(b-a);
-const norm=(x,y)=>{const m=Math.hypot(x,y)||1;return [x/m,y/m]};
 const spriteRoot='art/transparent_37_circles/';
 const spriteFiles=[];
 const rows=[4,5,6,7,6,5,4];
@@ -58,43 +58,46 @@ function makeAgent(){
  return {
   x:rand(0,w),y:rand(0,h),vx:rand(-1,1),vy:rand(-1,1),hue:rand(165,205),
   genes,seedIndex,path:developmentPaths[seedIndex],age:0,mass:1,
-  segments:[{age:0,seedIndex,path:developmentPaths[seedIndex]}],history:[]
+  segments:[{age:0,seedIndex,path:developmentPaths[seedIndex]}],history:new Float64Array(128),historyHead:0,historyCount:0
  };
 }
 function seed(){agents=Array.from({length:cfg.count},makeAgent)}
 function step(dt){
- const p=agents,next=new Array(p.length),lim=cfg.perception,lim2=lim*lim,sep2=cfg.separation*cfg.separation;
+ const p=agents,lim=cfg.perception,lim2=lim*lim,sep2=cfg.separation*cfg.separation;
+ if(oldX.length!==p.length){oldX=new Float64Array(p.length);oldY=new Float64Array(p.length);oldVX=new Float64Array(p.length);oldVY=new Float64Array(p.length)}
+ for(let i=0;i<p.length;i++){const a=p[i];oldX[i]=a.x;oldY[i]=a.y;oldVX[i]=a.vx;oldVY[i]=a.vy}
  for(let i=0;i<p.length;i++){
-  const a=p[i];let ax=0,ay=0,cx=0,cy=0,sx=0,sy=0,n=0,sn=0;
-  for(let j=0;j<p.length;j++){if(i===j)continue;const b=p[j],dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>lim2||d2<.001)continue;
-   ax+=b.vx;ay+=b.vy;cx+=b.x;cy+=b.y;n++;
+  const a=p[i],x0=oldX[i],y0=oldY[i];let ax=0,ay=0,cx=0,cy=0,sx=0,sy=0,n=0,sn=0;
+  for(let j=0;j<p.length;j++){
+   if(i===j)continue;
+   const dx=oldX[j]-x0,dy=oldY[j]-y0,d2=dx*dx+dy*dy;
+   if(d2>lim2||d2<.001)continue;
+   ax+=oldVX[j];ay+=oldVY[j];cx+=oldX[j];cy+=oldY[j];n++;
    if(d2<sep2){sx-=dx/d2;sy-=dy/d2;sn++}
   }
-  let vx=a.vx,vy=a.vy;
-  if(n){const av=norm(ax/n,ay/n),co=norm(cx/n-a.x,cy/n-a.y);vx+=av[0]*cfg.align+co[0]*cfg.cohesion;vy+=av[1]*cfg.align+co[1]*cfg.cohesion}
-  if(sn){const sp=norm(sx,sy);vx+=sp[0]*cfg.separate;vy+=sp[1]*cfg.separate}
-  const v=norm(vx,vy),massSpeed=1/Math.sqrt(a.mass);vx=v[0]*cfg.speed*massSpeed;vy=v[1]*cfg.speed*massSpeed;
-  let x=a.x+vx*dt,y=a.y+vy*dt;
-  const margin=18;if(x<margin)x=w-margin;if(x>w-margin)x=margin;if(y<margin)y=h-margin;if(y>h-margin)y=margin;
-  const history=a.history;history.unshift({x:a.x,y:a.y});if(history.length>64)history.pop();
-  const age=a.age+dt,mass=Math.min(9,a.mass+a.genes.growth*.0013*dt);
-  const desiredSegments=Math.min(9,1+Math.floor((mass-1)/a.genes.segmentMass));
-  const segments=a.segments.map(s=>({...s,age:s.age+dt}));
-  while(segments.length<desiredSegments){const seed=(a.seedIndex+a.genes.segmentVariation*segments.length)%7;segments.push({age:0,seedIndex:seed,path:developmentPaths[seed]})}
-  next[i]={...a,x,y,vx,vy,age,mass,segments,history};
+  let vx=oldVX[i],vy=oldVY[i];
+  if(n){let nx=ax/n,ny=ay/n,m=Math.hypot(nx,ny)||1;vx+=nx/m*cfg.align;vy+=ny/m*cfg.align;nx=cx/n-x0;ny=cy/n-y0;m=Math.hypot(nx,ny)||1;vx+=nx/m*cfg.cohesion;vy+=ny/m*cfg.cohesion}
+  if(sn){const m=Math.hypot(sx,sy)||1;vx+=sx/m*cfg.separate;vy+=sy/m*cfg.separate}
+  const v=Math.hypot(vx,vy)||1,massSpeed=1/Math.sqrt(a.mass);vx=vx/v*cfg.speed*massSpeed;vy=vy/v*cfg.speed*massSpeed;
+  let x=x0+vx*dt,y=y0+vy*dt;const margin=18;
+  if(x<margin)x=w-margin;if(x>w-margin)x=margin;if(y<margin)y=h-margin;if(y>h-margin)y=margin;
+  a.historyHead=(a.historyHead+63)&63;const hi=a.historyHead*2;a.history[hi]=x0;a.history[hi+1]=y0;a.historyCount=Math.min(64,a.historyCount+1);
+  a.age+=dt;a.mass=Math.min(9,a.mass+a.genes.growth*.0013*dt);
+  const desiredSegments=Math.min(9,1+Math.floor((a.mass-1)/a.genes.segmentMass));
+  for(let k=0;k<a.segments.length;k++)a.segments[k].age+=dt;
+  while(a.segments.length<desiredSegments){const seed=(a.seedIndex+a.genes.segmentVariation*a.segments.length)%7;a.segments.push({age:0,seedIndex:seed,path:developmentPaths[seed]})}
+  a.x=x;a.y=y;a.vx=vx;a.vy=vy;
  }
- agents=next;
 }
 function drawOrganism(a){
  const count=a.segments.length,size=15.5+Math.min(2.5,a.mass*.18);
  for(let i=count-1;i>=0;i--){
-  const point=i===0?{x:a.x,y:a.y}:a.history[Math.min(i*4,a.history.length-1)]||{x:a.x,y:a.y};
+  let x=a.x,y=a.y;
+  if(i>0&&a.historyCount){const index=Math.min(i*4,a.historyCount-1),offset=((a.historyHead+index)&63)*2;x=a.history[offset];y=a.history[offset+1]}
   const segment=a.segments[i],stage=Math.min(36,Math.floor(segment.age*a.genes.development/24));
   const spriteIndex=segment.path[stage]??segment.seedIndex,image=spriteImages[spriteIndex];
-  if(image?.complete&&image.naturalWidth){ctx.drawImage(image,point.x-size/2,point.y-size/2,size,size)}
-  else{
-   ctx.fillStyle='hsl('+a.hue+' 68% 68%)';ctx.beginPath();ctx.arc(point.x,point.y,size*.43,0,Math.PI*2);ctx.fill();
-  }
+  if(image?.complete&&image.naturalWidth)ctx.drawImage(image,x-size/2,y-size/2,size,size);
+  else{ctx.fillStyle='hsl('+a.hue+' 68% 68%)';ctx.beginPath();ctx.arc(x,y,size*.43,0,Math.PI*2);ctx.fill()}
  }
 }
 function draw(){
@@ -104,7 +107,7 @@ function draw(){
 function loop(t){
  const dt=Math.min((t-last)/16.67||1,2);last=t;
  if(running)step(dt);
- draw();
+ if(!lastDraw||t-lastDraw>=1000/30){draw();lastDraw=t}
  if(++frame%12===0){
   const meanSegments=agents.reduce((sum,a)=>sum+a.segments.length,0)/(agents.length||1);
   stats.textContent=agents.length+' agents · '+meanSegments.toFixed(1)+' mean segments';
