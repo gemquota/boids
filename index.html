@@ -24,12 +24,46 @@ const countInput=document.querySelector('#count'),stats=document.querySelector('
 let w=0,h=0,dpr=1,agents=[],running=true,last=0,frame=0;
 const cfg={count:100,speed:2.0,perception:58,separation:22,align:0.85,cohesion:0.55,separate:1.35};
 const rand=(a,b)=>a+Math.random()*(b-a);
+const norm=(x,y)=>{const m=Math.hypot(x,y)||1;return [x/m,y/m]};
+const spriteRoot='art/transparent_37_circles/';
+const spriteFiles=[];
+const rows=[4,5,6,7,6,5,4];
+for(let r=1;r<=7;r++){
+  for(let c=1;c<=rows[r-1];c++){
+    const suffix=(r===4&&c===4)?'_BASE':'';
+    spriteFiles.push({r,c,q:Math.max(-3,-(r-4)-3)+(c-1),axialR:r-4,file:spriteRoot+'hex_r'+r+'_c'+c+suffix+'.png'});
+  }
+}
+const spriteImages=spriteFiles.map(s=>{const image=new Image();image.src=s.file;return image});
+const innerKeys=['4:4','3:3','3:4','4:3','4:5','5:3','5:4'];
+const innerSeeds=innerKeys.map(key=>spriteFiles.findIndex(s=>s.r+':'+s.c===key));
+function hexDistance(a,b){const dq=a.q-b.q,dr=a.axialR-b.axialR;return Math.max(Math.abs(dq),Math.abs(dr),Math.abs(dq+dr))}
+function developmentPath(seedIndex){
+  const origin=spriteFiles[seedIndex];
+  return spriteFiles.map((sprite,index)=>({index,d:hexDistance(origin,sprite),angle:Math.atan2((sprite.axialR-origin.axialR)*Math.sqrt(3)/2,(sprite.q-origin.q)+(sprite.axialR-origin.axialR)/2)}))
+    .sort((a,b)=>a.d-b.d||a.angle-b.angle).map(x=>x.index);
+}
+const developmentPaths=innerSeeds.map((_,i)=>developmentPath(innerSeeds[i]));
 function resize(){dpr=Math.min(devicePixelRatio||1,2);w=innerWidth;h=innerHeight;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
 addEventListener('resize',resize);resize();
-function seed(){agents=Array.from({length:cfg.count},()=>({x:rand(0,w),y:rand(0,h),vx:rand(-1,1),vy:rand(-1,1),hue:rand(165,205)}))}
-function norm(x,y){const m=Math.hypot(x,y)||1;return [x/m,y/m]}
+function makeAgent(){
+ const genes={
+  morphology:rand(0,1),
+  segmentVariation:Math.floor(rand(0,7)),
+  growth:rand(.75,1.3),
+  development:rand(.75,1.3),
+  segmentMass:rand(.78,1.12)
+ };
+ const seedIndex=Math.min(6,Math.floor(genes.morphology*7));
+ return {
+  x:rand(0,w),y:rand(0,h),vx:rand(-1,1),vy:rand(-1,1),hue:rand(165,205),
+  genes,seedIndex,path:developmentPaths[seedIndex],age:0,mass:1,
+  segments:[{age:0,seedIndex,path:developmentPaths[seedIndex]}],history:[]
+ };
+}
+function seed(){agents=Array.from({length:cfg.count},makeAgent)}
 function step(dt){
- const p=agents, next=new Array(p.length), lim=cfg.perception, lim2=lim*lim, sep2=cfg.separation*cfg.separation;
+ const p=agents,next=new Array(p.length),lim=cfg.perception,lim2=lim*lim,sep2=cfg.separation*cfg.separation;
  for(let i=0;i<p.length;i++){
   const a=p[i];let ax=0,ay=0,cx=0,cy=0,sx=0,sy=0,n=0,sn=0;
   for(let j=0;j<p.length;j++){if(i===j)continue;const b=p[j],dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>lim2||d2<.001)continue;
@@ -39,18 +73,44 @@ function step(dt){
   let vx=a.vx,vy=a.vy;
   if(n){const av=norm(ax/n,ay/n),co=norm(cx/n-a.x,cy/n-a.y);vx+=av[0]*cfg.align+co[0]*cfg.cohesion;vy+=av[1]*cfg.align+co[1]*cfg.cohesion}
   if(sn){const sp=norm(sx,sy);vx+=sp[0]*cfg.separate;vy+=sp[1]*cfg.separate}
-  const v=norm(vx,vy);vx=v[0]*cfg.speed;vy=v[1]*cfg.speed;
+  const v=norm(vx,vy),massSpeed=1/Math.sqrt(a.mass);vx=v[0]*cfg.speed*massSpeed;vy=v[1]*cfg.speed*massSpeed;
   let x=a.x+vx*dt,y=a.y+vy*dt;
   const margin=18;if(x<margin)x=w-margin;if(x>w-margin)x=margin;if(y<margin)y=h-margin;if(y>h-margin)y=margin;
-  next[i]={...a,x,y,vx,vy};
+  const history=a.history;history.unshift({x:a.x,y:a.y});if(history.length>64)history.pop();
+  const age=a.age+dt,mass=Math.min(9,a.mass+a.genes.growth*.0013*dt);
+  const desiredSegments=Math.min(9,1+Math.floor((mass-1)/a.genes.segmentMass));
+  const segments=a.segments.map(s=>({...s,age:s.age+dt}));
+  while(segments.length<desiredSegments){const seed=(a.seedIndex+a.genes.segmentVariation*segments.length)%7;segments.push({age:0,seedIndex:seed,path:developmentPaths[seed]})}
+  next[i]={...a,x,y,vx,vy,age,mass,segments,history};
  }
  agents=next;
 }
+function drawOrganism(a){
+ const count=a.segments.length,size=15.5+Math.min(2.5,a.mass*.18);
+ for(let i=count-1;i>=0;i--){
+  const point=i===0?{x:a.x,y:a.y}:a.history[Math.min(i*4,a.history.length-1)]||{x:a.x,y:a.y};
+  const segment=a.segments[i],stage=Math.min(36,Math.floor(segment.age*a.genes.development/24));
+  const spriteIndex=segment.path[stage]??segment.seedIndex,image=spriteImages[spriteIndex];
+  if(image?.complete&&image.naturalWidth){ctx.drawImage(image,point.x-size/2,point.y-size/2,size,size)}
+  else{
+   ctx.fillStyle='hsl('+a.hue+' 68% 68%)';ctx.beginPath();ctx.arc(point.x,point.y,size*.43,0,Math.PI*2);ctx.fill();
+  }
+ }
+}
 function draw(){
  ctx.fillStyle='#07131b';ctx.fillRect(0,0,w,h);
- for(const a of agents){const angle=Math.atan2(a.vy,a.vx);ctx.save();ctx.translate(a.x,a.y);ctx.rotate(angle);ctx.fillStyle='hsl('+a.hue+' 68% 68%)';ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(-5,-3.5);ctx.lineTo(-3,0);ctx.lineTo(-5,3.5);ctx.closePath();ctx.fill();ctx.restore()}
+ for(const a of agents)drawOrganism(a);
 }
-function loop(t){const dt=Math.min((t-last)/16.67||1,2);last=t;if(running)step(dt);draw();if(++frame%12===0)stats.textContent=agents.length+' agents';requestAnimationFrame(loop)}
+function loop(t){
+ const dt=Math.min((t-last)/16.67||1,2);last=t;
+ if(running)step(dt);
+ draw();
+ if(++frame%12===0){
+  const meanSegments=agents.reduce((sum,a)=>sum+a.segments.length,0)/(agents.length||1);
+  stats.textContent=agents.length+' agents · '+meanSegments.toFixed(1)+' mean segments';
+ }
+ requestAnimationFrame(loop)
+}
 toggle.onclick=()=>{running=!running;toggle.textContent=running?'Pause':'Resume'};
 document.querySelector('#reset').onclick=seed;
 countInput.oninput=()=>{cfg.count=+countInput.value;seed()};
