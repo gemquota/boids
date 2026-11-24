@@ -25,8 +25,8 @@ export function updateReproduction(world,dt=1,{maxPopulation=800,random=Math.ran
    world.agents.push(child);births++;litter++;
   }
   mother.energy=Math.max(0,mother.energy-.12);
-  mother.pregnancy=null;mother.reproductiveState="parent";mother.reproductiveCooldown=2200;
-  if(father){father.reproductiveState="parent";father.reproductiveCooldown=2200}
+  mother.pregnancy=null;mother.reproductiveState="parent";const recoveryRate=Math.max(.35,Number(mother.traits?.fertility??1));mother.reproductiveCooldown=2200/recoveryRate;
+  if(father){father.reproductiveState="parent";father.reproductiveCooldown=2200/Math.max(.35,Number(father.traits?.fertility??1))}
   world.births=(world.births||0)+litter;
  }
  const current=world.agents.filter(living),currentById=new Map(current.map(a=>[a.id,a]));
@@ -48,7 +48,7 @@ export function updateReproduction(world,dt=1,{maxPopulation=800,random=Math.ran
   let best=null,bestScore=-Infinity;
   for(const b of current){
    if(b===a||b.matePartner!=null||b.pregnancy||b.sex===a.sex||!adult(b)||b.reproductiveCooldown>0)continue;
-   if(a.parents?.includes(b.id)||b.parents?.includes(a.id))continue;
+   if(a.parents?.includes(b.id)||b.parents?.includes(a.id)||(a.parents||[]).some(id=>(b.parents||[]).includes(id)))continue;
    const d=distance(a,b);if(d>260)continue;
    const climateA=environmentAt?.(a),climateB=environmentAt?.(b);if((a.traits?.seasonality??0)>.5&&(climateA?.temperature??1)<.38)continue;if((b.traits?.seasonality??0)>.5&&(climateB?.temperature??1)<.38)continue;const attraction=(a.traits?.sexDrive??1)*(b.traits?.sexDrive??1)*(b.traits?.fertility??1);
    const score=attraction/(1+d/70)+(random()-.5)*.04;
