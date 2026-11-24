@@ -31,10 +31,19 @@ export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="
  return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:600,seasonLength:12000,season:0,day:0,year:0,coastWidth};
 }
 export function sampleEnvironment(env,x,y){
- const gx=clamp(Math.floor(x/env.width*env.cols),0,env.cols-1),gy=clamp(Math.floor(y/env.height*env.rows),0,env.rows-1),f=env.fields[gy*env.cols+gx];
- const seasonIndex=Math.floor(env.season)%4,dayPhase=(env.clock%env.dayLength)/env.dayLength,solar=Math.max(0,Math.sin(dayPhase*Math.PI*2));
- const seasonal=Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude),temperature=clamp(f.baseTemperature+seasonal-(1-solar)*.72,0,1);
- return{...f,temperature,light:solar*(1-f.latitude*.25),daylight:solar,season:env.season,day:env.day,year:env.year};
+ // Agent coordinates can briefly become non-finite during recovery from an invalid
+ // movement state. Keep a bad sample from taking down the entire animation loop.
+ if(!env||!Array.isArray(env.fields)||!env.fields.length)return{elevation:.5,latitude:0,water:false,baseTemperature:.5,baseMoisture:.4,temperature:.5,moisture:.4,nutrients:.3,light:.5,daylight:.5,season:0,day:0,year:0};
+ const width=Number.isFinite(env.width)&&env.width>0?env.width:1,height=Number.isFinite(env.height)&&env.height>0?env.height:1;
+ const cols=Math.max(1,Number.isFinite(env.cols)?Math.floor(env.cols):1),rows=Math.max(1,Number.isFinite(env.rows)?Math.floor(env.rows):1);
+ const px=Number.isFinite(x)?clamp(x,0,width):width*.5,py=Number.isFinite(y)?clamp(y,0,height):height*.5;
+ const gx=clamp(Math.floor(px/width*cols),0,cols-1),gy=clamp(Math.floor(py/height*rows),0,rows-1);
+ const f=env.fields[gy*cols+gx]||env.fields.find(Boolean)||{elevation:.5,latitude:0,water:false,baseTemperature:.5,baseMoisture:.4,temperature:.5,moisture:.4,nutrients:.3,light:.5};
+ const latitude=Number.isFinite(f.latitude)?f.latitude:0,baseTemperature=Number.isFinite(f.baseTemperature)?f.baseTemperature:.5;
+ const season=Number.isFinite(env.season)?env.season:0,clock=Number.isFinite(env.clock)?env.clock:0,dayLength=Number.isFinite(env.dayLength)&&env.dayLength>0?env.dayLength:600;
+ const seasonIndex=Math.floor(season)%4,dayPhase=(clock%dayLength)/dayLength,solar=Math.max(0,Math.sin(dayPhase*Math.PI*2));
+ const seasonal=Math.sin(seasonIndex*Math.PI/2)*(.08+.16*latitude),temperature=clamp(baseTemperature+seasonal-(1-solar)*.72,0,1);
+ return{...f,latitude,temperature,light:solar*(1-latitude*.25),daylight:solar,season,day:Number.isFinite(env.day)?env.day:0,year:Number.isFinite(env.year)?env.year:0};
 }
 export function advanceEnvironment(env,dt=1){
  env.clock+=dt;env.day=Math.floor(env.clock/env.dayLength);env.year=Math.floor(env.clock/(env.seasonLength*4));env.season=(env.clock%(env.seasonLength*4))/env.seasonLength;
