@@ -18,16 +18,16 @@ export function updateReproduction(world,dt=1,{maxPopulation=800,random=Math.ran
   const father=byId.get(pregnancy.fatherId);
   if(pregnancy.remaining>0)continue;
   if(mother.energy<.3){mother.pregnancy=null;mother.reproductiveState=null;mother.reproductiveCooldown=900;continue}
-  const count=Math.max(1,Math.min(4,pregnancy.clutchSize||1));
-  for(let i=0;i<count&&agents.length+births<maxPopulation;i++){
+  const count=Math.max(1,Math.min(4,pregnancy.clutchSize||1));let litter=0;
+  for(let i=0;i<count&&world.agents.filter(living).length<maxPopulation;i++){
    const angle=random()*Math.PI*2,r=5+random()*8,traits=inheritTraits(mother.traits||{},father?.traits||mother.traits||{}),inherited=inheritOrganism(mother,father||mother)||{};
    const child={...mother,...inherited,id:world.nextId++,x:clamp(mother.x+Math.cos(angle)*r,0,world.width),y:clamp(mother.y+Math.sin(angle)*r,0,world.height),vx:mother.vx*.35+Math.cos(angle)*.12,vy:mother.vy*.35+Math.sin(angle)*.12,energy:.62,age:0,traits,parents:[mother.id,father?.id??mother.id],motherId:mother.id,fatherId:father?.id??mother.id,sex:random()<.5?"female":"male",pregnancy:null,matePartner:null,courtshipProgress:0,reproductiveTarget:null,reproductiveState:"juvenile",reproductiveCooldown:0,careUntil:1100,bornInitialized:false,activity:null,activityTarget:null,activityNodeTarget:null};
-   world.agents.push(child);births++;
+   world.agents.push(child);births++;litter++;
   }
   mother.energy=Math.max(0,mother.energy-.12);
   mother.pregnancy=null;mother.reproductiveState="parent";mother.reproductiveCooldown=2200;
   if(father){father.reproductiveState="parent";father.reproductiveCooldown=2200}
-  world.births=(world.births||0)+births;
+  world.births=(world.births||0)+litter;
  }
  const current=world.agents.filter(living),currentById=new Map(current.map(a=>[a.id,a]));
  // Young organisms receive a small, explicit energy subsidy from nearby parents.
@@ -68,7 +68,7 @@ export function updateReproduction(world,dt=1,{maxPopulation=800,random=Math.ran
   if(progress<180)continue;
   const mother=a.sex==="female"?a:b,father=mother===a?b:a;
   if(mother.pregnancy||father.pregnancy||mother.energy<.5||father.energy<.5){clearPair(a,b);continue}
-  const fertility=(mother.traits?.fertility??1+father.traits?.fertility??1)*.5;
+  const fertility=(Number(mother.traits?.fertility??1)+Number(father.traits?.fertility??1))*.5;
   const gestationScale=clamp(mother.traits?.gestation??1,.5,2);
   const clutchSize=Math.round(clamp(mother.traits?.clutchSize??1.35,1,4));
   mother.energy-=.13;father.energy-=.09;
