@@ -4,7 +4,7 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const living=(a)=>a&&!a.dead;
 const adult=(a)=>living(a)&&a.age>=(a.traits?.maturity??1)*900&&a.age<18000&&a.energy>1.02&&(a.health??1)>.4;
 const clearPair=(a,b)=>{if(a){a.matePartner=null;a.courtshipProgress=0;a.reproductiveTarget=null;a.reproductiveState=null}if(b?.matePartner===a?.id){b.matePartner=null;b.courtshipProgress=0;b.reproductiveTarget=null;b.reproductiveState=null}};
-export function updateReproduction(world,dt=1,{maxPopulation=800,random=Math.random,inheritTraits=(a)=>({...a}),inheritOrganism=()=>({}),selectParents=null,environmentAt=null,findBirthSite=null,enabled=true}={}){
+export function updateReproduction(world,dt=1,{maxPopulation=800,random=Math.random,inheritTraits=(a)=>({...a}),inheritOrganism=()=>({}),environmentAt=null,findBirthSite=null,enabled=true}={}){
  if(!enabled)return{births:0,pregnancies:0,courting:0};
  const agents=world.agents.filter(living),byId=new Map(agents.map(a=>[a.id,a]));
  let births=0;
