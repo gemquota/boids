@@ -1,7 +1,7 @@
 name: Reboot regression
 on:
   push:
-    branches: [reboot/parity-25]
+    branches: [reboot/parity-25, reboot/ecosystem-evolution]
   pull_request:
     branches: [main]
 jobs:
