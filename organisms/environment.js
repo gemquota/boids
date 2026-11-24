@@ -28,7 +28,7 @@ export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="
  for(let i=0;i<cols;i++){const x=i/(cols-1);river.push({x:x*width,y:mainY(x)*height})}
  const starts=[.16,.86,.32,.72],merges=[.48,.69,.84,.58],curves=[.08,-.09,.055,-.045];
  for(let index=0;index<profile.tributaries;index++){const path=[],start=starts[index],merge=merges[index],curve=curves[index];for(let i=0;i<=24;i++){const t=i/24,x=.12+(merge-.12)*t,y=start+(mainY(merge)-start)*t+Math.sin(t*Math.PI)*curve+.025*Math.sin(t*8*Math.PI+start*12)*(1-t);path.push({x:x*width,y:y*height})}tributaries.push(path)}
- return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:600,seasonLength:12000,season:0,day:0,year:0,coastWidth};
+ return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:2400,seasonLength:12000,season:0,day:0,year:0,coastWidth};
 }
 export function sampleEnvironment(env,x,y){
  // Agent coordinates can briefly become non-finite during recovery from an invalid
