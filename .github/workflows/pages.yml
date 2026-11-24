@@ -1,7 +1,7 @@
 name: Deploy Boids site
 on:
   push:
-    branches: [main]
+    branches: [main, reboot/parity-25]
   workflow_dispatch:
 permissions:
   contents: read
