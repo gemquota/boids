@@ -1,0 +1,56 @@
+name: Deploy Boids site
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current site
+        uses: actions/checkout@v4
+        with:
+          path: current
+          ref: main
+          fetch-depth: 0
+      - name: Check out reboot
+        uses: actions/checkout@v4
+        with:
+          path: reboot-src
+          ref: reboot/parity-25
+          fetch-depth: 0
+      - name: Test reboot
+        working-directory: reboot-src
+        run: |
+          node --check app.js
+          npm test
+      - name: Assemble both versions
+        run: |
+          mkdir -p _site/v2
+          git -C current archive HEAD | tar -xf - -C _site
+          git -C reboot-src archive HEAD | tar -xf - -C _site/v2
+          rm -rf _site/.old _site/.github _site/v2/.old _site/v2/.github
+          touch _site/.nojekyll
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
