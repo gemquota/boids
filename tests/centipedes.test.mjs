@@ -1,49 +1,118 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CENTIPEDE_SPRITES,INNER_CENTIPEDE_SPRITES,centipedeProgression,createCentipedeMorphology,centipedeSpriteIndex,centipedeSegmentCount,growCentipedeMass,initializeCentipede,advanceCentipede,sampleCentipedeTrail} from '../organisms/centipedes.js';
+import {
+  CENTIPEDE_SPRITES, MORPHOLOGY_BRANCHES, centipedeProgression,
+  createCentipedeMorphology, inheritCentipedeMorphology,
+  centipedeSpriteIndex, centipedeSegmentCount, growCentipedeMass,
+  initializeCentipede, advanceCentipede, sampleCentipedeTrail
+} from '../organisms/centipedes.js';
 
-test('the 37 circle sprites form a connected hexagonal field',()=>{
- assert.equal(CENTIPEDE_SPRITES.length,37);
- for(const sprite of CENTIPEDE_SPRITES)assert.equal(centipedeProgression(sprite.index).length,37);
-});
-test('the seven inner sprites are possible genetic starting morphologies',()=>{
- assert.equal(INNER_CENTIPEDE_SPRITES.length,7);
- for(let i=0;i<=1;i++)assert.ok(INNER_CENTIPEDE_SPRITES.includes(createCentipedeMorphology({hue:155+i*85,speed:.8+i*.4,perception:.8+i*.4,metabolism:.8+i*.4,fertility:.8+i*.4}).origin));
-});
-test('a new centipede starts as exactly one art segment',()=>{
- const agent=initializeCentipede({id:1,x:12,y:24,age:0,energy:.9,traits:{hue:180,speed:1,perception:1,metabolism:1,fertility:1}});
- assert.equal(agent.segments.length,1);
- assert.deepEqual(agent.trail,[{x:12,y:24}]);
-});
-test('each segment evolves from the same inherited starting sprite at its own age',()=>{
- const morphology={origin:INNER_CENTIPEDE_SPRITES[0]};
- assert.equal(centipedeSpriteIndex(morphology,0),morphology.origin);
- assert.notEqual(centipedeSpriteIndex(morphology,36000),morphology.origin);
- assert.equal(centipedeProgression(morphology.origin).length,37);
-});
-test('new segments are added behind the original as mass increases',()=>{
- const agent=initializeCentipede({id:1,x:0,y:0,age:0,energy:1,traits:{hue:180,speed:1,perception:1,metabolism:1,fertility:1}});
- agent.mass=1.3;agent.age=1000;agent.x=5;advanceCentipede(agent,1);
- assert.equal(agent.segments.length,3);
- assert.equal(agent.segments[0].bornAt,0);
- assert.equal(agent.segments[1].bornAt,1000);
- assert.equal(agent.segments[2].bornAt,1000);
- assert.equal(agent.trail.length,2);
-});
-test('segment count begins at one and increases with mass',()=>{
- assert.equal(centipedeSegmentCount(.7),1);
- assert.ok(centipedeSegmentCount(3)>centipedeSegmentCount(.7));
- assert.ok(growCentipedeMass(.7,1,100)>.7);
- assert.equal(growCentipedeMass(.7,.1,100),.7);
-});
-test('body segments sample the actual movement trail behind the head',()=>{
- const point=sampleCentipedeTrail([{x:20,y:0},{x:10,y:0},{x:0,y:0}],15);
- assert.deepEqual(point,{x:5,y:0,angle:Math.PI});
+const agent = (overrides = {}) => ({
+  id: 1, x: 12, y: 24, age: 0, energy: 0.9,
+  traits: { hue: 180, speed: 1, perception: 1, metabolism: 1, fertility: 1, segmentGrowth: 1 },
+  ...overrides
 });
 
-test('movement history follows the short path across wrapped world edges',()=>{
- const agent=initializeCentipede({id:2,x:98,y:40,age:0,energy:1,traits:{hue:180,speed:1,perception:1,metabolism:1,fertility:1}});
- agent.x=2;advanceCentipede(agent,1,100,80);
- assert.equal(agent.trail.length,2);
- assert.equal(agent.trail[0].x,102);
+test('the artwork tree exposes one base, 36 first-level forms and 216 deeper forms', () => {
+  assert.equal(MORPHOLOGY_BRANCHES.length, 6);
+  assert.equal(CENTIPEDE_SPRITES.length, 253);
+  assert.equal(CENTIPEDE_SPRITES.filter(sprite => sprite.stage === 0).length, 1);
+  assert.equal(CENTIPEDE_SPRITES.filter(sprite => sprite.stage === 1).length, 36);
+  assert.equal(CENTIPEDE_SPRITES.filter(sprite => sprite.stage === 2).length, 216);
+  assert.ok(CENTIPEDE_SPRITES.every(sprite => sprite.src.startsWith('./art/segments/')));
+});
+
+test('each inherited morphology resolves to a three-stage art path', () => {
+  const morphology = { branch: 2, form: 4, variant: 1 };
+  const path = centipedeProgression(morphology);
+  assert.equal(path.length, 3);
+  assert.equal(path[0], 0);
+  assert.equal(CENTIPEDE_SPRITES[path[1]].stage, 1);
+  assert.equal(CENTIPEDE_SPRITES[path[1]].branch, 2);
+  assert.equal(CENTIPEDE_SPRITES[path[1]].form, 4);
+  assert.equal(CENTIPEDE_SPRITES[path[2]].stage, 2);
+  assert.equal(CENTIPEDE_SPRITES[path[2]].branch, 2);
+  assert.equal(CENTIPEDE_SPRITES[path[2]].form, 4);
+  assert.equal(CENTIPEDE_SPRITES[path[2]].variant, 1);
+  assert.deepEqual([
+    centipedeSpriteIndex(morphology, 0),
+    centipedeSpriteIndex(morphology, 1200),
+    centipedeSpriteIndex(morphology, 5000)
+  ], path);
+});
+
+test('initial morphology is trait-weighted and uses the seeded random source', () => {
+  const random = () => 0.5;
+  const morphology = createCentipedeMorphology({ speed: 1.2, perception: 1.4, metabolism: 0.8, hue: 155 }, random);
+  assert.ok(morphology.branch >= 0 && morphology.branch < 6);
+  assert.equal(morphology.form, 3);
+  assert.equal(morphology.variant, 3);
+});
+
+test('offspring morphology recombines parental branch forms with bounded mutation', () => {
+  const child = inheritCentipedeMorphology(
+    { branch: 1, form: 2, variant: 4 },
+    { branch: 4, form: 5, variant: 1 },
+    () => 0.4
+  );
+  assert.ok(child.branch >= 0 && child.branch < 6);
+  assert.ok(child.form >= 0 && child.form < 6);
+  assert.ok(child.variant >= 0 && child.variant < 6);
+});
+
+test('a new centipede starts with one base-art segment and retains inherited morphology', () => {
+  const morphology = { branch: 3, form: 2, variant: 5 };
+  const a = initializeCentipede(agent({ morphology }), () => 0.1);
+  assert.equal(a.segments.length, 1);
+  assert.deepEqual(a.morphology, morphology);
+  assert.deepEqual(a.trail, [{ x: 12, y: 24 }]);
+});
+
+test('segment growth responds to food, inherited efficiency, condition and age', () => {
+  const hungry = growCentipedeMass(0.7, 0.25, 1000);
+  const fed = growCentipedeMass(0.7, 0.95, 1000);
+  const efficient = growCentipedeMass(0.7, 0.95, 1000, { segmentGrowth: 1.4 });
+  const inefficient = growCentipedeMass(0.7, 0.95, 1000, { segmentGrowth: 0.7 });
+  const healthy = growCentipedeMass(0.7, 0.95, 1000, { segmentGrowth: 1 }, 0, 1);
+  const unhealthy = growCentipedeMass(0.7, 0.95, 1000, { segmentGrowth: 1 }, 0, 0.3);
+  const young = growCentipedeMass(0.7, 0.95, 1000, { segmentGrowth: 1 }, 0);
+  const old = growCentipedeMass(0.7, 0.95, 1000, { segmentGrowth: 1 }, 20000);
+  assert.equal(hungry, 0.7);
+  assert.ok(fed > hungry);
+  assert.ok(efficient > inefficient);
+  assert.ok(healthy > unhealthy);
+  assert.ok(young > old);
+});
+
+test('segment count scales to 64 without exceeding the new cap', () => {
+  assert.equal(centipedeSegmentCount(0.7), 1);
+  assert.ok(centipedeSegmentCount(3) > 1);
+  assert.equal(centipedeSegmentCount(10), 64);
+  assert.equal(centipedeSegmentCount(100), 64);
+});
+
+test('new segments are added behind the original as mass increases', () => {
+  const a = initializeCentipede(agent());
+  a.mass = 1;
+  a.age = 1000;
+  a.x = 17;
+  advanceCentipede(a, 1);
+  assert.equal(a.segments.length, 3);
+  assert.equal(a.segments[0].bornAt, 0);
+  assert.equal(a.segments[1].bornAt, 1000);
+  assert.equal(a.segments[2].bornAt, 1000);
+  assert.equal(a.trail.length, 2);
+});
+
+test('body segments sample the actual movement trail behind the head', () => {
+  const point = sampleCentipedeTrail([{ x: 20, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 0 }], 15);
+  assert.deepEqual(point, { x: 5, y: 0, angle: Math.PI });
+});
+
+test('movement history follows the short path across wrapped world edges', () => {
+  const a = initializeCentipede(agent({ x: 98, y: 40 }));
+  a.x = 2;
+  advanceCentipede(a, 1, 100, 80);
+  assert.equal(a.trail.length, 2);
+  assert.equal(a.trail[0].x, 102);
 });

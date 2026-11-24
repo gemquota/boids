@@ -1,64 +1,176 @@
-// Each circle is one articulated body segment. A lineage starts from one of
-// the seven inner sprites and advances through the connected 37-sprite field.
-const rowLengths=[4,5,6,7,6,5,4];
-export const CENTIPEDE_SPRITES=[];
-const byCoord=new Map();
-for(let row=1;row<=7;row++){
- const r=row-4,qMin=Math.max(-3,-r-3);
- for(let col=1;col<=rowLengths[row-1];col++){
-  const q=qMin+col-1,file=row===4&&col===4?'hex_r4_c4_BASE.png':`hex_r${row}_c${col}.png`;
-  const item={index:CENTIPEDE_SPRITES.length,row,col,q,r,src:`./art/parchment_37_circles/${file}`};
-  CENTIPEDE_SPRITES.push(item);byCoord.set(`${q},${r}`,item);
- }
+// Segment art follows a heritable three-stage morphology tree:
+// common base -> one of six branch forms -> one of six deeper variants.
+export const MORPHOLOGY_BRANCHES = Object.freeze([
+  { id: 0, name: "Interlocking carapace", description: "Armour and overlapping plates" },
+  { id: 1, name: "Swept paddle fins and legs", description: "Propulsion and locomotion structures" },
+  { id: 2, name: "Pleural spine array", description: "Spines, barbs and defensive structures" },
+  { id: 3, name: "Photosynthetic frond disc", description: "Fronds, sacs and plant-like structures" },
+  { id: 4, name: "Focusing ocellus lens", description: "Optical and sensory structures" },
+  { id: 5, name: "Faceted mineral lattice", description: "Mineralised plates and crystalline structures" }
+]);
+
+const FORM_COUNT = 6;
+const STAGE_ONE_OFFSET = 1;
+const STAGE_TWO_OFFSET = STAGE_ONE_OFFSET + MORPHOLOGY_BRANCHES.length * FORM_COUNT;
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const randomIndex = (random, length) => Math.min(length - 1, Math.floor(random() * length));
+
+export const CENTIPEDE_SPRITES = [
+  { index: 0, stage: 0, name: "Base segment", src: "./art/segments/base.webp" }
+];
+
+for (let branch = 0; branch < MORPHOLOGY_BRANCHES.length; branch++) {
+  for (let form = 0; form < FORM_COUNT; form++) {
+    const index = CENTIPEDE_SPRITES.length;
+    CENTIPEDE_SPRITES.push({
+      index, stage: 1, branch, form,
+      name: MORPHOLOGY_BRANCHES[branch].name,
+      src: `./art/segments/level1/b${branch + 1}/f${form}.webp`
+    });
+  }
 }
-const hexDistance=(a,b)=>(Math.abs(a.q-b.q)+Math.abs(a.r-b.r)+Math.abs(a.q+a.r-b.q-b.r))/2;
-export const INNER_CENTIPEDE_SPRITES=CENTIPEDE_SPRITES.filter(s=>hexDistance(s,{q:0,r:0})<=1).map(s=>s.index);
-const directions=[[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]];
-const progressions=new Map();
-export function centipedeProgression(origin){
- if(progressions.has(origin))return progressions.get(origin);
- const start=CENTIPEDE_SPRITES[origin];if(!start)return [...CENTIPEDE_SPRITES.keys()];
- const queue=[start],seen=new Set([origin]),path=[];
- while(queue.length){const current=queue.shift();path.push(current.index);for(const[dx,dy]of directions){const next=byCoord.get(`${current.q+dx},${current.r+dy}`);if(next&&!seen.has(next.index)){seen.add(next.index);queue.push(next)}}}
- progressions.set(origin,path);return path;
+for (let branch = 0; branch < MORPHOLOGY_BRANCHES.length; branch++) {
+  for (let form = 0; form < FORM_COUNT; form++) {
+    for (let variant = 0; variant < FORM_COUNT; variant++) {
+      const index = CENTIPEDE_SPRITES.length;
+      CENTIPEDE_SPRITES.push({
+        index, stage: 2, branch, form, variant,
+        name: MORPHOLOGY_BRANCHES[branch].name,
+        src: `./art/segments/level2/b${branch + 1}/f${form}/v${variant}.webp`
+      });
+    }
+  }
 }
-export function createCentipedeMorphology(traits={}){
- const normalized=[(traits.hue-155)/85,(traits.speed-.8)/.4,(traits.perception-.8)/.4,(traits.metabolism-.8)/.4,(traits.fertility-.8)/.4].map(v=>Math.max(0,Math.min(1,Number.isFinite(v)?v:.5)));
- const score=normalized.reduce((sum,v)=>sum+v,0)/normalized.length;
- return{origin:INNER_CENTIPEDE_SPRITES[Math.min(6,Math.floor(score*7))]};
+
+function morphologyIndex(morphology = {}) {
+  const branch = clamp(Math.floor(morphology.branch ?? 0), 0, 5);
+  const form = clamp(Math.floor(morphology.form ?? 0), 0, 5);
+  const variant = clamp(Math.floor(morphology.variant ?? 0), 0, 5);
+  return { branch, form, variant };
 }
-export function centipedeSpriteIndex(morphology,segmentAge=0){
- const path=centipedeProgression(morphology?.origin??INNER_CENTIPEDE_SPRITES[3]);
- return path[Math.max(0,Math.min(36,Math.floor(Math.max(0,segmentAge)/600)))];
+
+export function centipedeProgression(morphology) {
+  const { branch, form, variant } = morphologyIndex(morphology);
+  const branchForm = branch * FORM_COUNT + form;
+  return [0, STAGE_ONE_OFFSET + branchForm, STAGE_TWO_OFFSET + branchForm * FORM_COUNT + variant];
 }
-export function centipedeSegmentCount(mass=0.7){return Math.max(1,Math.min(14,1+Math.floor(Math.max(0,mass-.7)*4)))}
-export function growCentipedeMass(mass=0.7,energy=.7,dt=1){return Math.max(.7,Math.min(4,(mass||.7)+(energy>.55?(energy-.55)*.00022:-.000015)*dt))}
-export function initializeCentipede(agent){
- agent.morphology=createCentipedeMorphology(agent.traits);
- agent.mass=.7;
- agent.segments=[{bornAt:0}];
- agent.trail=[{x:agent.x,y:agent.y}];
- return agent;
+
+export function centipedeSpriteIndex(morphology, segmentAge = 0) {
+  const path = centipedeProgression(morphology);
+  if (segmentAge < 900) return path[0];
+  if (segmentAge < 4200) return path[1];
+  return path[2];
 }
-export function advanceCentipede(agent,dt=1,width=Infinity,height=Infinity){
- if(!agent.segments?.length)initializeCentipede(agent);
- agent.mass=growCentipedeMass(agent.mass,agent.energy,dt);
- const desired=centipedeSegmentCount(agent.mass);
- while(agent.segments.length<desired)agent.segments.push({bornAt:agent.age});
- const trail=agent.trail||(agent.trail=[{x:agent.x,y:agent.y}]);
- const last=trail[0],headX=Number.isFinite(width)?((last.x%width)+width)%width:last.x,headY=Number.isFinite(height)?((last.y%height)+height)%height:last.y;let dx=agent.x-headX,dy=agent.y-headY;if(Number.isFinite(width)&&dx>width/2)dx-=width;if(Number.isFinite(width)&&dx< -width/2)dx+=width;if(Number.isFinite(height)&&dy>height/2)dy-=height;if(Number.isFinite(height)&&dy< -height/2)dy+=height;
- if(dx*dx+dy*dy>=4)trail.unshift({x:last.x+dx,y:last.y+dy});
- const maxPoints=Math.max(24,desired*8+8);if(trail.length>maxPoints)trail.length=maxPoints;
+
+export function createCentipedeMorphology(traits = {}, random = Math.random) {
+  const speed = clamp(Number(traits.speed ?? 1), 0.25, 2);
+  const perception = clamp(Number(traits.perception ?? 1), 0.25, 2);
+  const metabolism = clamp(Number(traits.metabolism ?? 1), 0.25, 2);
+  const fertility = clamp(Number(traits.fertility ?? 1), 0.25, 2);
+  const hue = Number(traits.hue ?? 190);
+  const greenAffinity = clamp(1 - Math.abs(hue - 155) / 85, 0, 1);
+  const weights = [
+    1.1 + (1.4 - speed) * 0.3,
+    0.6 + speed * 0.9,
+    0.85 + fertility * 0.15,
+    0.65 + greenAffinity * 0.65 + (1.2 - metabolism) * 0.2,
+    0.65 + perception * 0.9,
+    0.65 + metabolism * 0.7
+  ];
+  let choice = random() * weights.reduce((sum, weight) => sum + weight, 0);
+  let branch = weights.length - 1;
+  for (let i = 0; i < weights.length; i++) {
+    choice -= weights[i];
+    if (choice <= 0) { branch = i; break; }
+  }
+  return {
+    branch,
+    form: randomIndex(random, FORM_COUNT),
+    variant: randomIndex(random, FORM_COUNT)
+  };
 }
+
+export function inheritCentipedeMorphology(first = {}, second = {}, random = Math.random) {
+  const a = morphologyIndex(first);
+  const b = morphologyIndex(second);
+  let branch = random() < 0.5 ? a.branch : b.branch;
+  const matching = [a, b].filter(parent => parent.branch === branch);
+  let form = matching.length
+    ? matching[randomIndex(random, matching.length)].form
+    : randomIndex(random, FORM_COUNT);
+  let variant = matching.length
+    ? matching[randomIndex(random, matching.length)].variant
+    : randomIndex(random, FORM_COUNT);
+
+  if (random() < 0.035) {
+    branch = randomIndex(random, MORPHOLOGY_BRANCHES.length);
+    form = randomIndex(random, FORM_COUNT);
+    variant = randomIndex(random, FORM_COUNT);
+  } else {
+    if (random() < 0.12) form = randomIndex(random, FORM_COUNT);
+    if (random() < 0.18) variant = randomIndex(random, FORM_COUNT);
+  }
+  return { branch, form, variant };
+}
+
+export function centipedeSegmentCount(mass = 0.7) {
+  return Math.max(1, Math.min(64, 1 + Math.floor((Math.max(0.7, mass) - 0.7) * 6.8)));
+}
+
+// Growth combines food availability, physical condition, age and inherited
+// growth efficiency. High metabolism diverts more resources away from growth.
+export function growCentipedeMass(mass = 0.7, energy = 0.7, dt = 1, traits = {}, age = 0, health = 1) {
+  const current = clamp(Number(mass) || 0.7, 0.7, 10);
+  const nutrition = clamp((Number(energy) - 0.3) / 0.7, 0, 1);
+  const condition = clamp(Number.isFinite(health) ? health : 1, 0.2, 1);
+  const inheritedGrowth = clamp(Number(traits.segmentGrowth ?? 1), 0.65, 1.45);
+  const metabolicCost = clamp(1.15 - ((Number(traits.metabolism ?? 1) - 1) * 0.3), 0.7, 1.3);
+  const developmentalWindow = clamp(1 - Math.max(0, age) / 26000, 0.08, 1);
+  const increment = 0.00072 * nutrition * condition * inheritedGrowth * metabolicCost * developmentalWindow * Math.max(0, dt);
+  return Math.min(10, current + increment);
+}
+
+export function initializeCentipede(agent, random = Math.random) {
+  if (!agent.morphology) agent.morphology = createCentipedeMorphology(agent.traits, random);
+  agent.mass = 0.7;
+  agent.segments = [{ bornAt: 0 }];
+  agent.trail = [{ x: agent.x, y: agent.y }];
+  return agent;
+}
+
+export function advanceCentipede(agent, dt = 1, width = Infinity, height = Infinity) {
+  if (!agent.segments?.length) initializeCentipede(agent);
+  agent.mass = growCentipedeMass(agent.mass, agent.energy, dt, agent.traits, agent.age, agent.health);
+  const desired = centipedeSegmentCount(agent.mass);
+  while (agent.segments.length < desired) agent.segments.push({ bornAt: agent.age });
+
+  const trail = agent.trail || (agent.trail = [{ x: agent.x, y: agent.y }]);
+  const last = trail[0];
+  const headX = Number.isFinite(width) ? ((last.x % width) + width) % width : last.x;
+  const headY = Number.isFinite(height) ? ((last.y % height) + height) % height : last.y;
+  let dx = agent.x - headX, dy = agent.y - headY;
+  if (Number.isFinite(width) && dx > width / 2) dx -= width;
+  if (Number.isFinite(width) && dx < -width / 2) dx += width;
+  if (Number.isFinite(height) && dy > height / 2) dy -= height;
+  if (Number.isFinite(height) && dy < -height / 2) dy += height;
+  if (dx * dx + dy * dy >= 4) trail.unshift({ x: last.x + dx, y: last.y + dy });
+  const maxPoints = Math.max(24, desired * 8 + 8);
+  if (trail.length > maxPoints) trail.length = maxPoints;
+}
+
 // Return the point and local heading at a distance behind the head.
-export function sampleCentipedeTrail(trail,distance,spacing=10){
- if(!trail?.length)return{x:0,y:0,angle:0};
- let remaining=distance;
- for(let i=0;i<trail.length-1;i++){
-  const a=trail[i],b=trail[i+1],dx=b.x-a.x,dy=b.y-a.y,length=Math.hypot(dx,dy);
-  if(length>=remaining&&length>0){const t=remaining/length;return{x:a.x+dx*t,y:a.y+dy*t,angle:Math.atan2(dy,dx)}}
-  remaining-=length;
- }
- const a=trail[trail.length-1],b=trail[Math.max(0,trail.length-2)];
- return{x:a.x,y:a.y,angle:Math.atan2(a.y-b.y,a.x-b.x)};
+export function sampleCentipedeTrail(trail, distance, spacing = 10) {
+  if (!trail?.length) return { x: 0, y: 0, angle: 0 };
+  let remaining = distance;
+  for (let i = 0; i < trail.length - 1; i++) {
+    const a = trail[i], b = trail[i + 1];
+    const dx = b.x - a.x, dy = b.y - a.y, length = Math.hypot(dx, dy);
+    if (length >= remaining && length > 0) {
+      const t = remaining / length;
+      return { x: a.x + dx * t, y: a.y + dy * t, angle: Math.atan2(dy, dx) };
+    }
+    remaining -= length;
+  }
+  const a = trail[trail.length - 1], b = trail[Math.max(0, trail.length - 2)];
+  return { x: a.x, y: a.y, angle: Math.atan2(a.y - b.y, a.x - b.x) };
 }

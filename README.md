@@ -17,6 +17,8 @@ Open [index.html](index.html) in a modern browser. No build step, package manage
 ## Current reboot feature set
 
 - 500-agent seeded starting field, adjustable population and live flocking parameters
+- 64-segment centipede growth governed by nutrition, physical condition, inherited growth efficiency, metabolism and developmental age
+- Three-stage inherited morphology trees with 216 evolved branch/form combinations and lazy-loaded segment artwork
 - separation, alignment, cohesion, toroidal movement, energy use, ageing, and bounded population growth
 - two-parent trait inheritance with mutation and selection-weighted parent choice
 - default evolved neural networks influencing steering and movement
