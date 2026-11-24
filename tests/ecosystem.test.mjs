@@ -49,8 +49,8 @@ test("plant chromosomes carry inherited traits and plants branch and release spo
 
 test("environment cycles through day and seasons and supplies watershed geography",()=>{
  const env=createEnvironment(800,600,7);assert.equal(env.tributaries.length,3);
- assert.equal(env.dayLength,2400);advanceEnvironment(env,600);assert.ok(sampleEnvironment(env,400,300).daylight>.99);
- advanceEnvironment(env,11400);assert.equal(env.day,5);assert.equal(Math.floor(env.season),1);
+ assert.equal(env.dayLength,28800);assert.equal(env.seasonLength,144000);advanceEnvironment(env,7200);assert.ok(sampleEnvironment(env,400,300).daylight>.99);
+ advanceEnvironment(env,136800);assert.equal(env.day,5);assert.equal(Math.floor(env.season),1);
  assert.ok(env.fields.some(f=>f.water));assert.ok(env.fields.some(f=>!f.water));
 });
 
