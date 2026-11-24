@@ -2,10 +2,10 @@
 export const TRAIT_DEFAULTS=Object.freeze({
  speed:1,perception:1,metabolism:1,fertility:1,hue:195,size:1,mass:1,
  aggression:.16,attack:.55,damage:.35,defense:1,attackSpeed:.7,tracking:.7,carnivory:0,
- sexDrive:1,flee:1,visionRange:1,visionArc:1,maneuverability:1,attackCost:1
+ sexDrive:1,maturity:1,gestation:1,clutchSize:1.35,parentalCare:.8,courtship:1,seasonality:.15,flee:1,visionRange:1,visionArc:1,maneuverability:1,attackCost:1
 });
 export const TRAIT_KEYS=Object.freeze(Object.keys(TRAIT_DEFAULTS));
-const LIMITS={hue:[0,360],speed:[.35,2.4],perception:[.35,2.2],metabolism:[.3,2.4],fertility:[.2,2],size:[.45,1.8],mass:[.35,2.4],aggression:[0,2],attack:[.15,2.5],damage:[.1,2.5],defense:[.25,2.5],attackSpeed:[.2,2.5],tracking:[.1,2],carnivory:[0,1],sexDrive:[0,2],flee:[0,2],visionRange:[.3,2.2],visionArc:[.35,1.5],maneuverability:[.25,2.2],attackCost:[.25,2.5]};
+const LIMITS={hue:[0,360],speed:[.35,2.4],perception:[.35,2.2],metabolism:[.3,2.4],fertility:[.2,2],size:[.45,1.8],mass:[.35,2.4],aggression:[0,2],attack:[.15,2.5],damage:[.1,2.5],defense:[.25,2.5],attackSpeed:[.2,2.5],tracking:[.1,2],carnivory:[0,1],sexDrive:[0,2],maturity:[.5,1.8],gestation:[.5,2],clutchSize:[1,4],parentalCare:[0,2],courtship:[.3,2],seasonality:[0,1],flee:[0,2],visionRange:[.3,2.2],visionArc:[.35,1.5],maneuverability:[.25,2.2],attackCost:[.25,2.5]};
 export function createTraits(random=Math.random){
  const out={};for(const key of TRAIT_KEYS){const [lo,hi]=LIMITS[key];const base=TRAIT_DEFAULTS[key];out[key]=key==="hue"?Math.max(0,Math.min(360,base+(random()-.5)*90)):key==="carnivory"?0:Math.max(lo,Math.min(hi,base*(.72+random()*.56)))}return out;
 }
