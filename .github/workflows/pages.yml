@@ -10,6 +10,7 @@ on:
       - 'core/**'
       - 'organisms/**'
       - 'labs/**'
+      - 'art/**'
       - 'v2/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
@@ -24,22 +25,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out legacy site
+        uses: actions/checkout@v4
+        with:
+          path: current
+          ref: main
+          fetch-depth: 0
+      - name: Check out current v2
+        uses: actions/checkout@v4
+        with:
+          path: reboot-src
+          ref: reboot/ecosystem-evolution
+          fetch-depth: 0
+      - name: Test v2
+        working-directory: reboot-src
+        run: |
+          node --check app.js
+          npm test
+      - name: Assemble legacy root and v2
+        run: |
+          mkdir -p _site/v2
+          git -C current archive HEAD | tar -xf - -C _site
+          git -C reboot-src archive HEAD | tar -xf - -C _site/v2
+          rm -rf _site/.old _site/.github _site/v2/.old _site/v2/.github
+          touch _site/.nojekyll
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
   deploy:
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - name: Wait for artifact metadata
-        run: sleep 8
-      - name: Deploy
+      - name: Deploy Pages artifact
         id: deployment
         uses: actions/deploy-pages@v4
