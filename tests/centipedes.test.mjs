@@ -13,19 +13,20 @@ const agent = (overrides = {}) => ({
   ...overrides
 });
 
-test('the artwork tree exposes one base, 36 first-level forms and 216 deeper forms', () => {
+test('the artwork tree exposes four stages with 1, 36, 216 and 1296 sprites', () => {
   assert.equal(MORPHOLOGY_BRANCHES.length, 6);
-  assert.equal(CENTIPEDE_SPRITES.length, 253);
+  assert.equal(CENTIPEDE_SPRITES.length, 1549);
   assert.equal(CENTIPEDE_SPRITES.filter(sprite => sprite.stage === 0).length, 1);
   assert.equal(CENTIPEDE_SPRITES.filter(sprite => sprite.stage === 1).length, 36);
   assert.equal(CENTIPEDE_SPRITES.filter(sprite => sprite.stage === 2).length, 216);
+  assert.equal(CENTIPEDE_SPRITES.filter(sprite => sprite.stage === 3).length, 1296);
   assert.ok(CENTIPEDE_SPRITES.every(sprite => sprite.src.startsWith('./art/segments/')));
 });
 
-test('each inherited morphology resolves to a three-stage art path', () => {
-  const morphology = { branch: 2, form: 4, variant: 1 };
+test('each inherited morphology resolves to a four-stage art path', () => {
+  const morphology = { branch: 2, form: 4, variant: 1, apex: 5 };
   const path = centipedeProgression(morphology);
-  assert.equal(path.length, 3);
+  assert.equal(path.length, 4);
   assert.equal(path[0], 0);
   assert.equal(CENTIPEDE_SPRITES[path[1]].stage, 1);
   assert.equal(CENTIPEDE_SPRITES[path[1]].branch, 2);
@@ -34,10 +35,16 @@ test('each inherited morphology resolves to a three-stage art path', () => {
   assert.equal(CENTIPEDE_SPRITES[path[2]].branch, 2);
   assert.equal(CENTIPEDE_SPRITES[path[2]].form, 4);
   assert.equal(CENTIPEDE_SPRITES[path[2]].variant, 1);
+  assert.equal(CENTIPEDE_SPRITES[path[3]].stage, 3);
+  assert.equal(CENTIPEDE_SPRITES[path[3]].branch, 2);
+  assert.equal(CENTIPEDE_SPRITES[path[3]].form, 4);
+  assert.equal(CENTIPEDE_SPRITES[path[3]].variant, 1);
+  assert.equal(CENTIPEDE_SPRITES[path[3]].apex, 5);
   assert.deepEqual([
     centipedeSpriteIndex(morphology, 0),
     centipedeSpriteIndex(morphology, 1200),
-    centipedeSpriteIndex(morphology, 5000)
+    centipedeSpriteIndex(morphology, 5000),
+    centipedeSpriteIndex(morphology, 12000)
   ], path);
 });
 
@@ -47,21 +54,23 @@ test('initial morphology is trait-weighted and uses the seeded random source', (
   assert.ok(morphology.branch >= 0 && morphology.branch < 6);
   assert.equal(morphology.form, 3);
   assert.equal(morphology.variant, 3);
+  assert.equal(morphology.apex, 3);
 });
 
 test('offspring morphology recombines parental branch forms with bounded mutation', () => {
   const child = inheritCentipedeMorphology(
-    { branch: 1, form: 2, variant: 4 },
-    { branch: 4, form: 5, variant: 1 },
+    { branch: 1, form: 2, variant: 4, apex: 3 },
+    { branch: 4, form: 5, variant: 1, apex: 2 },
     () => 0.4
   );
   assert.ok(child.branch >= 0 && child.branch < 6);
   assert.ok(child.form >= 0 && child.form < 6);
   assert.ok(child.variant >= 0 && child.variant < 6);
+  assert.ok(child.apex >= 0 && child.apex < 6);
 });
 
 test('a new centipede starts with one base-art segment and retains inherited morphology', () => {
-  const morphology = { branch: 3, form: 2, variant: 5 };
+  const morphology = { branch: 3, form: 2, variant: 5, apex: 4 };
   const a = initializeCentipede(agent({ morphology }), () => 0.1);
   assert.equal(a.segments.length, 1);
   assert.deepEqual(a.morphology, morphology);

@@ -12,6 +12,7 @@ export const MORPHOLOGY_BRANCHES = Object.freeze([
 const FORM_COUNT = 6;
 const STAGE_ONE_OFFSET = 1;
 const STAGE_TWO_OFFSET = STAGE_ONE_OFFSET + MORPHOLOGY_BRANCHES.length * FORM_COUNT;
+const STAGE_THREE_OFFSET = STAGE_TWO_OFFSET + MORPHOLOGY_BRANCHES.length * FORM_COUNT * FORM_COUNT;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const randomIndex = (random, length) => Math.min(length - 1, Math.floor(random() * length));
 
@@ -42,24 +43,47 @@ for (let branch = 0; branch < MORPHOLOGY_BRANCHES.length; branch++) {
   }
 }
 
+for (let branch = 0; branch < MORPHOLOGY_BRANCHES.length; branch++) {
+  for (let form = 0; form < FORM_COUNT; form++) {
+    for (let variant = 0; variant < FORM_COUNT; variant++) {
+      for (let apex = 0; apex < FORM_COUNT; apex++) {
+        const index = CENTIPEDE_SPRITES.length;
+        CENTIPEDE_SPRITES.push({
+          index, stage: 3, branch, form, variant, apex,
+          name: MORPHOLOGY_BRANCHES[branch].name,
+          src: `./art/segments/level3/b${branch + 1}/f${form}/v${variant}/a${apex}.webp`
+        });
+      }
+    }
+  }
+}
+
 function morphologyIndex(morphology = {}) {
   const branch = clamp(Math.floor(morphology.branch ?? 0), 0, 5);
   const form = clamp(Math.floor(morphology.form ?? 0), 0, 5);
   const variant = clamp(Math.floor(morphology.variant ?? 0), 0, 5);
-  return { branch, form, variant };
+  const apex = clamp(Math.floor(morphology.apex ?? 0), 0, 5);
+  return { branch, form, variant, apex };
 }
 
 export function centipedeProgression(morphology) {
-  const { branch, form, variant } = morphologyIndex(morphology);
+  const { branch, form, variant, apex } = morphologyIndex(morphology);
   const branchForm = branch * FORM_COUNT + form;
-  return [0, STAGE_ONE_OFFSET + branchForm, STAGE_TWO_OFFSET + branchForm * FORM_COUNT + variant];
+  const branchFormVariant = branchForm * FORM_COUNT + variant;
+  return [
+    0,
+    STAGE_ONE_OFFSET + branchForm,
+    STAGE_TWO_OFFSET + branchFormVariant,
+    STAGE_THREE_OFFSET + branchFormVariant * FORM_COUNT + apex
+  ];
 }
 
 export function centipedeSpriteIndex(morphology, segmentAge = 0) {
   const path = centipedeProgression(morphology);
   if (segmentAge < 900) return path[0];
   if (segmentAge < 4200) return path[1];
-  return path[2];
+  if (segmentAge < 11000) return path[2];
+  return path[3];
 }
 
 export function createCentipedeMorphology(traits = {}, random = Math.random) {
@@ -86,7 +110,8 @@ export function createCentipedeMorphology(traits = {}, random = Math.random) {
   return {
     branch,
     form: randomIndex(random, FORM_COUNT),
-    variant: randomIndex(random, FORM_COUNT)
+    variant: randomIndex(random, FORM_COUNT),
+    apex: randomIndex(random, FORM_COUNT)
   };
 }
 
@@ -101,16 +126,21 @@ export function inheritCentipedeMorphology(first = {}, second = {}, random = Mat
   let variant = matching.length
     ? matching[randomIndex(random, matching.length)].variant
     : randomIndex(random, FORM_COUNT);
+  let apex = matching.length
+    ? matching[randomIndex(random, matching.length)].apex
+    : randomIndex(random, FORM_COUNT);
 
   if (random() < 0.035) {
     branch = randomIndex(random, MORPHOLOGY_BRANCHES.length);
     form = randomIndex(random, FORM_COUNT);
     variant = randomIndex(random, FORM_COUNT);
+    apex = randomIndex(random, FORM_COUNT);
   } else {
     if (random() < 0.12) form = randomIndex(random, FORM_COUNT);
     if (random() < 0.18) variant = randomIndex(random, FORM_COUNT);
+    if (random() < 0.22) apex = randomIndex(random, FORM_COUNT);
   }
-  return { branch, form, variant };
+  return { branch, form, variant, apex };
 }
 
 export function centipedeSegmentCount(mass = 0.7) {
