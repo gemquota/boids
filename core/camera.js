@@ -1,0 +1,3 @@
+// Camera x/y are the world-space coordinates at the viewport centre.
+export function centerCameraState(viewWidth,viewHeight,worldWidth,worldHeight){return{x:worldWidth/2,y:worldHeight/2,zoom:Math.max(viewWidth/worldWidth,viewHeight/worldHeight)}}
+export function clampCameraState(camera,viewWidth,viewHeight,worldWidth,worldHeight,maxZoom=4){const minZoom=Math.max(viewWidth/worldWidth,viewHeight/worldHeight);camera.zoom=Math.max(minZoom,Math.min(maxZoom,camera.zoom));const halfWidth=viewWidth/(2*camera.zoom),halfHeight=viewHeight/(2*camera.zoom);camera.x=Math.max(halfWidth,Math.min(worldWidth-halfWidth,camera.x));camera.y=Math.max(halfHeight,Math.min(worldHeight-halfHeight,camera.y));return camera}

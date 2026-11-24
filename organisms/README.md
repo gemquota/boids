@@ -9,7 +9,8 @@ Independent, versioned modules. The normal field runtime enables hereditary gene
 - **Speciation**: compatibility-distance clustering with persistent representatives and extinction reporting.
 - **Selection**: composable natural, environmental, sexual, frequency-dependent, kin, group, artificial and neutral model primitives.
 - **Evolution adapter**: connects parent selection, chromosome inheritance and neural evolution to Core callbacks.
-- **Genetics**: expressed organism traits and bounded trait inheritance.
+- **Genetics**: expressed organism traits and bounded trait inheritance, including inherited segment-growth efficiency.
+- **Centipede morphology**: a three-stage art tree (base → six branch families → 216 deeper forms) with parental recombination, mutation and per-segment development.
 - **Ecology**: habitat gradients, renewable resources, grazing and environmental stress.
 - **Future extensions**: regulation, epigenetics, developmental morphology, advanced kinship and inbreeding models.
 
