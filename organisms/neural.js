@@ -34,12 +34,21 @@ export function crossoverNetworkGenomes(a,b,{random=Math.random,fitnessA=1,fitne
  const nodeMap=new Map([...fitter.nodes,...other.nodes].map(n=>[n.id,n]));const nodes=[...nodeMap.values()].filter(n=>n.kind==="input"||n.kind==="output"||connections.some(c=>c.source===n.id||c.destination===n.id));
  const child={version:1,nextNodeId:Math.max(a.nextNodeId,b.nextNodeId),nextInnovation:Math.max(a.nextInnovation,b.nextInnovation),nodes,connections};validateNetworkGenome(child);return child
 }
+// Frozen genomes are immutable, so their evaluation topology can be compiled once.
+const compiledNetworks=new WeakMap();
+function compileNetwork(genome){
+ const ordered=[...genome.nodes].sort((a,b)=>a.id-b.id),maxId=ordered.reduce((m,n)=>Math.max(m,n.id),0),incoming=Array.from({length:maxId+1},()=>[]);
+ for(const c of genome.connections)if(c.enabled)incoming[c.destination].push(c);
+ return{ordered,incoming,inputs:ordered.filter(n=>n.kind==="input"),outputs:ordered.filter(n=>n.kind==="output"),size:maxId+1};
+}
 export function evaluateNetwork(genome,inputs,{activations=1}={}){
- validateNetworkGenome(genome);const values=new Map();const ordered=[...genome.nodes].sort((a,b)=>a.id-b.id);const incoming=new Map();for(const c of genome.connections)if(c.enabled){if(!incoming.has(c.destination))incoming.set(c.destination,[]);incoming.get(c.destination).push(c)}
- let inputIndex=0;for(const n of ordered)if(n.kind==="input")values.set(n.id,Number(inputs[inputIndex++]??0));
+ let compiled=Object.isFrozen(genome)&&Object.isFrozen(genome.nodes)&&Object.isFrozen(genome.connections)?compiledNetworks.get(genome):null;
+ if(!compiled){validateNetworkGenome(genome);compiled=compileNetwork(genome);if(Object.isFrozen(genome)&&Object.isFrozen(genome.nodes)&&Object.isFrozen(genome.connections))compiledNetworks.set(genome,compiled)}
+ const values=new Float64Array(compiled.size);
+ for(let i=0;i<compiled.inputs.length;i++)values[compiled.inputs[i].id]=Number(inputs[i]??0);
  const sigmoid=x=>1/(1+Math.exp(-Math.max(-30,Math.min(30,x))));
- for(let pass=0;pass<activations;pass++)for(const n of ordered)if(n.kind!=="input"){const sum=(incoming.get(n.id)||[]).reduce((s,c)=>s+(values.get(c.source)??0)*c.weight,n.bias);values.set(n.id,sigmoid(sum))}
- return ordered.filter(n=>n.kind==="output").map(n=>values.get(n.id)??0)
+ for(let pass=0;pass<activations;pass++)for(const n of compiled.ordered){if(n.kind==="input")continue;let sum=n.bias;for(const c of compiled.incoming[n.id])sum+=values[c.source]*c.weight;values[n.id]=sigmoid(sum)}
+ return compiled.outputs.map(n=>values[n.id]??0)
 }
 export function compatibilityDistance(a,b,{excess=1,disjoint=1,weight=.4}={}){
  const A=new Map(a.connections.map(c=>[c.innovation,c])),B=new Map(b.connections.map(c=>[c.innovation,c])),maxA=Math.max(0,...A.keys()),maxB=Math.max(0,...B.keys()),max=Math.max(maxA,maxB);let e=0,d=0,w=0,m=0;
