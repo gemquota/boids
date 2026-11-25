@@ -13,6 +13,7 @@ import{updateCombat,combatSummary}from"./organisms/predation.js";
 import{calculateEnergyCost,energySummary}from"./organisms/energy.js";
 import{createPlantGenome,germinatePlant,growPlant,inheritPlantGenome,classifyPlantStage}from"./organisms/plant_genetics.js";
 import{createEnvironment,sampleEnvironment,advanceEnvironment,environmentSummary,dawnClock}from"./organisms/environment.js";
+import{applyThermalStress}from"./organisms/thermal.js";
 import{PARAMETER_GROUPS,resolveSettings}from"./organisms/parameters.js";
 import{createHistory,recordHistory,averageHistory,historySeries}from"./labs/history.js";
 import{updateReproduction}from"./organisms/reproduction.js";
