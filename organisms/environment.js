@@ -9,7 +9,8 @@ export const ENVIRONMENT_PRESETS=Object.freeze({
 });
 const mainY=x=>.5+.13*Math.sin(x*7.4)+.07*Math.sin(x*17.1);
 const tributaryY=(index,x)=>index===0?.16+.42*x+.035*Math.sin(x*13):index===1?.86-.31*x+.03*Math.sin(x*11+1.4):index===2?.28+.16*Math.sin(x*8):.72-.2*x+.025*Math.sin(x*15+2);
-export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="temperate"}={}){
+export function dawnClock(dayLength=28800){return Math.max(0,Number(dayLength)||28800)*.25}
+export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="temperate",nightCooling=.42}={}){
  const profile=ENVIRONMENT_PRESETS[preset]||ENVIRONMENT_PRESETS.temperate;
  let state=seed>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
  const coastWidth=width*profile.coast,fields=[],river=[],tributaries=[],lakes=[];
@@ -28,7 +29,7 @@ export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="
  for(let i=0;i<cols;i++){const x=i/(cols-1);river.push({x:x*width,y:mainY(x)*height})}
  const starts=[.16,.86,.32,.72],merges=[.48,.69,.84,.58],curves=[.08,-.09,.055,-.045];
  for(let index=0;index<profile.tributaries;index++){const path=[],start=starts[index],merge=merges[index],curve=curves[index];for(let i=0;i<=24;i++){const t=i/24,x=.12+(merge-.12)*t,y=start+(mainY(merge)-start)*t+Math.sin(t*Math.PI)*curve+.025*Math.sin(t*8*Math.PI+start*12)*(1-t);path.push({x:x*width,y:y*height})}tributaries.push(path)}
- return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:28800,seasonLength:144000,season:0,day:0,year:0,coastWidth};
+ return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:28800,nightCooling,seasonLength:144000,season:0,day:0,year:0,coastWidth};
 }
 export function sampleEnvironment(env,x,y){
  // Agent coordinates can briefly become non-finite during recovery from an invalid
@@ -42,13 +43,13 @@ export function sampleEnvironment(env,x,y){
  const latitude=Number.isFinite(f.latitude)?f.latitude:0,baseTemperature=Number.isFinite(f.baseTemperature)?f.baseTemperature:.5;
  const season=Number.isFinite(env.season)?env.season:0,clock=Number.isFinite(env.clock)?env.clock:0,dayLength=Number.isFinite(env.dayLength)&&env.dayLength>0?env.dayLength:28800;
  const seasonIndex=Math.floor(season)%4,dayPhase=(clock%dayLength)/dayLength,solar=Math.max(0,Math.sin((dayPhase-.25)*Math.PI*2));
- const seasonal=Math.sin(seasonIndex*Math.PI/2)*(.08+.16*latitude),temperature=clamp(baseTemperature+seasonal-(1-solar)*.72,0,1);
+ const seasonal=Math.sin(seasonIndex*Math.PI/2)*(.08+.16*latitude),temperature=clamp(baseTemperature+seasonal-(1-solar)*(Number.isFinite(env.nightCooling)?env.nightCooling:.42),0,1);
  return{...f,latitude,temperature,light:solar*(1-latitude*.25),daylight:solar,season,day:Number.isFinite(env.day)?env.day:0,year:Number.isFinite(env.year)?env.year:0};
 }
 export function advanceEnvironment(env,dt=1){
  env.clock+=dt;env.day=Math.floor(env.clock/env.dayLength);env.year=Math.floor(env.clock/(env.seasonLength*4));env.season=(env.clock%(env.seasonLength*4))/env.seasonLength;
  const seasonIndex=Math.floor(env.season)%4,phase=(env.clock%env.seasonLength)/env.seasonLength,dayPhase=(env.clock%env.dayLength)/env.dayLength,solar=Math.max(0,Math.sin((dayPhase-.25)*Math.PI*2));
- env.daylight=solar;for(const f of env.fields){const seasonalRain=Math.sin(seasonIndex*Math.PI/2)*.035;f.light=solar*(1-f.latitude*.25);f.moisture=clamp(f.baseMoisture+seasonalRain+(f.water?.08:0),.02,1);f.temperature=clamp(f.baseTemperature+Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude)-(1-solar)*.72,0,1)}
+ env.daylight=solar;for(const f of env.fields){const seasonalRain=Math.sin(seasonIndex*Math.PI/2)*.035;f.light=solar*(1-f.latitude*.25);f.moisture=clamp(f.baseMoisture+seasonalRain+(f.water?.08:0),.02,1);f.temperature=clamp(f.baseTemperature+Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude)-(1-solar)*(Number.isFinite(env.nightCooling)?env.nightCooling:.42),0,1)}
  return{day:env.day,year:env.year,season:seasonIndex,daylight:solar,seasonProgress:phase};
 }
 export function environmentSummary(env){
