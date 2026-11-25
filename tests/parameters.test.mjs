@@ -68,7 +68,7 @@ test("dawn cold stress is buffered and huddling reduces thermal energy loss",asy
 
 
 test("default ecosystem starts with a balanced population, forage reserve and movement ceiling",()=>{
- const settings=resolveSettings();assert.equal(settings.population,48);assert.equal(settings.plantDensity,2.5);assert.equal(settings.foodAbundance,1.9);assert.equal(settings.maxSpeed,10);
+ const settings=resolveSettings();assert.equal(settings.population,48);assert.equal(settings.plantDensity,2.5);assert.equal(settings.foodAbundance,2.2);assert.equal(settings.coldDamage,.0001);assert.equal(settings.thirstRate,.00016);assert.equal(settings.maxSpeed,10);
 });
 
 

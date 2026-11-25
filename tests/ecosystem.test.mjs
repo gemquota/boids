@@ -45,7 +45,7 @@ test("damaging a centipede removes body segments and transfers their tissue mass
  const prey={id:2,x:55,y:50,vx:-1,vy:0,energy:1,health:1,injury:0,mass:2,baseMass:2,massScale:1,radius:5,segments:12,kind:"centipede",traits:{attack:.2,damage:.2,defense:1,aggression:.1,flee:.5},senses:[]};
  const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};
  updateCombat(world,1,{random:()=>.99});
- assert.ok(prey.segments<12);assert.ok(prey.lostSegments>0);assert.ok(attacker.acquiredMass>0);assert.ok(prey.mass<2);assert.ok(world.combatEvents.length>0);assert.ok(world.combatEvents.some(event=>event.severed));
+ assert.ok(prey.segments<12);assert.ok(prey.lostSegments>0);assert.ok(world.meatChunks.length>0);assert.ok(prey.mass<2);assert.ok(world.combatEvents.length>0);assert.ok(world.combatEvents.some(event=>event.severed));
 });
 
 test("plant chromosomes carry inherited traits and plants branch and release spores",()=>{
@@ -119,7 +119,7 @@ test("environment creates a roughly rectangular landmass with coastline on all f
 test("centipede body contact can attack and sever segments without head-to-head contact",()=>{
  const attacker={id:1,x:50,y:50,vx:1,vy:0,energy:1,health:1,mass:1,baseMass:1,radius:5,kind:"centipede",traits:{attack:.5,damage:.5,defense:1,attackSpeed:1,attackCost:1,tracking:1,carnivory:1},senses:[]};
  const prey={id:2,x:100,y:50,vx:-1,vy:0,energy:1,health:1,mass:2,baseMass:2,radius:5,kind:"centipede",segments:10,bodySegments:[{x:100,y:50},{x:55,y:50}],traits:{attack:.2,damage:.2,defense:1},senses:[]};
- const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};updateCombat(world,1,{random:()=>.99});assert.ok(prey.segments<10);assert.ok(attacker.acquiredMass>0);assert.ok(world.combatEvents.some(event=>event.targetId===prey.id));
+ const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};updateCombat(world,1,{random:()=>.99});assert.ok(prey.segments<10);assert.ok(world.meatChunks.length>0);assert.ok(world.combatEvents.some(event=>event.targetId===prey.id));
 });
 
 
@@ -143,4 +143,18 @@ test("neural vision samples the full ray fan instead of only the leftmost rays",
  const agent={id:1,energy:1,health:1,injury:0,vx:0,vy:0,senses:Array.from({length:31},(_,i)=>({confidence:i===30?1:0,visible:i===30,distance:10,bearing:.8,vx:0,vy:0,size:5,kind:i===30?"plant":null}))};
  const vector=neuralSenseVector(agent,4,200,10);
  assert.equal(vector.length,36);assert.equal(vector[24],1);assert.equal(vector[25],1);assert.equal(vector[31],1);
+});
+
+
+test("starving centipedes shed and consume their own tail before death",()=>{
+ const a={id:7,x:50,y:50,vx:1,vy:0,energy:.01,health:1,mass:2,baseMass:2,radius:3,kind:"centipede",segments:5,segmentTrail:Array.from({length:30},(_,i)=>({x:50-i*3,y:50})),bodySegments:Array.from({length:5},(_,i)=>({x:50-i*3,y:50})),traits:{attack:.2,defense:1}};
+ const world={width:200,height:200,agents:[a],tick:1,deaths:0};
+ updateCombat(world,40,{random:()=>.99});
+ assert.equal(a.segments,4);assert.ok(a.selfCannibalisedMass>0);assert.ok(a.energy>0);assert.equal(a.dead,false);assert.equal(world.meatChunks.length,0);
+});
+
+test("detached meat is consumed on physical contact",()=>{
+ const a={id:8,x:20,y:20,vx:0,vy:0,energy:.2,health:1,mass:1,baseMass:1,radius:3,traits:{attackSpeed:1}};
+ const world={width:100,height:100,agents:[a],tick:1,meatChunks:[{x:20,y:20,vx:0,vy:0,mass:.1,radius:2,age:0}]};
+ updateCombat(world,1,{random:()=>.99});assert.ok(a.energy>.2);assert.ok(a.acquiredMass>0);assert.ok(world.meatChunks[0].mass<.1);
 });

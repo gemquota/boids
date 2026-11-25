@@ -2,9 +2,9 @@ export const DEFAULT_SETTINGS=Object.freeze({
  selectionModel:"natural",environment:"temperate",separation:24,alignment:.035,cohesion:.0018,separationForce:.035,
  population:48,perception:76,maxSpeed:10,speed:1,
  visionRays:31,visionFov:150,visionPrecision:1.35,visionMemory:.992,visionUpdate:1,visionNoise:.15,
- plantDensity:2.5,foodAbundance:1.9,
+ plantDensity:2.5,foodAbundance:2.2,
  birthInterval:48,broodSize:7,
- nightCooling:.42,coldThreshold:.3,coldDamage:.00015,coldHeatLoss:.00045,huddleWarmth:.24,dayHeatGain:.00035,thirstRate:.00022
+ nightCooling:.42,coldThreshold:.3,coldDamage:.0001,coldHeatLoss:.00035,huddleWarmth:.30,dayHeatGain:.00045,thirstRate:.00016
 });
 export const PARAMETER_GROUPS=Object.freeze([
  {name:"Population & movement",items:[

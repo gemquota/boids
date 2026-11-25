@@ -213,7 +213,7 @@ export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, w
     if (agent.dead) continue;
     const count = Math.max(1, Math.min(128, Number(agent.segments) || 1));
     const radius = Math.max(1.5, (agent.phenotype?.radius || agent.radius || 2) * (agent.massScale || 1));
-    const spacing = radius * 1.12;
+    const spacing = radius * .56;
     const trail = agent.segmentTrail?.length ? agent.segmentTrail : [{ x: agent.x, y: agent.y }];
     const points = [{ x: agent.x, y: agent.y, angle: Math.atan2(agent.vy || 0, agent.vx || 1) }];
     for (let index = 1; index < count; index++) {
@@ -228,7 +228,7 @@ export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, w
   for (const body of bodies) for (let index = 0; index < body.points.length; index++) {
     const point = body.points[index];
     const taper=.94-.20*(index/Math.max(1,body.points.length-1));
-    parts.push({ ...body, point, index, radius: body.radius * taper * (index ? .48 : .9) });
+    parts.push({ ...body, point, index, radius: body.radius * taper * (index ? .24 : .9) });
   }
   const cell = Math.max(12, cellSize), grid = new Map();
   const key = (x, y) => `${Math.floor(x / cell)}:${Math.floor(y / cell)}`;
