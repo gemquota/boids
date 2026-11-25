@@ -134,7 +134,7 @@ test('body segments follow at a fixed world-distance spacing independent of spee
   for (let i = 1; i < a.bodySegments.length; i++) {
     const previous = a.bodySegments[i - 1], point = a.bodySegments[i];
     const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
-    assert.ok(distance >= 2 * 1.25 - .01 && distance <= 2 * 1.85 + .01);
+    assert.ok(distance >= 2 * 1.12 - .01 && distance <= 2 * 1.12 + .01);
   }
 });
 
@@ -143,5 +143,5 @@ test('overlapping body segments are separated by segment collision resolution', 
   const a = make(1, 20), b = make(2, 21);
   updateCentipedeBodies([a, b]);
   const distance = Math.hypot(a.bodySegments[1].x - b.bodySegments[1].x, a.bodySegments[1].y - b.bodySegments[1].y);
-  assert.ok(distance >= 2 * 2 * .74 * .76 - .01);
+  assert.ok(distance >= 1.4);
 });

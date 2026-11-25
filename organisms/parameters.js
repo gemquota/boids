@@ -1,7 +1,7 @@
 export const DEFAULT_SETTINGS=Object.freeze({
  selectionModel:"natural",environment:"temperate",separation:24,alignment:.035,cohesion:.0018,separationForce:.035,
- population:32,perception:68,maxSpeed:.825,speed:1,
- plantDensity:2.2,foodAbundance:1.7,
+ population:48,perception:76,maxSpeed:.78,speed:1,
+ plantDensity:2.5,foodAbundance:1.9,
  birthInterval:48,broodSize:7,
  nightCooling:.42,coldThreshold:.3,coldDamage:.00015,coldHeatLoss:.00045,huddleWarmth:.24,dayHeatGain:.00035,thirstRate:.00022
 });
