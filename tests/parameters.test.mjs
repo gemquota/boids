@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {DEFAULT_SETTINGS,PARAMETER_GROUPS,resolveSettings} from "../organisms/parameters.js";
 import {createEnvironment,dawnClock,sampleEnvironment} from "../organisms/environment.js";
+import {localHuddleTarget} from "../organisms/thermal.js";
 
 test("fundamental parameters are grouped, bounded and recover defaults",()=>{
  const keys=PARAMETER_GROUPS.flatMap(group=>group.items.map(item=>item.key));
@@ -81,4 +82,12 @@ test("legacy saved defaults migrate the movement ceiling and expanded vision ran
 test("vision defaults provide broad, persistent, high-resolution useful perception",()=>{
  const settings=resolveSettings();assert.equal(settings.visionRays,31);assert.equal(settings.visionFov,150);assert.equal(settings.visionPrecision,1.35);assert.equal(settings.visionMemory,.992);assert.equal(settings.visionUpdate,1);assert.equal(settings.visionNoise,.15);
  const migrated=resolveSettings({visionRays:21,visionFov:120,visionPrecision:1,visionMemory:.985,visionNoise:0});assert.equal(migrated.visionRays,31);assert.equal(migrated.visionFov,150);assert.equal(migrated.visionPrecision,1.35);assert.equal(migrated.visionMemory,.992);assert.equal(migrated.visionNoise,.15);
+});
+
+
+test("huddling uses a capped local pocket instead of a population-wide centroid",()=>{
+ const centre={id:1,x:100,y:100},near=[2,3,4,5,6,7].map((id,i)=>({id,x:104+i*3,y:98+i*2})),distant=Array.from({length:12},(_,i)=>({id:20+i,x:800+i*20,y:800}));
+ const target=localHuddleTarget(centre,[centre,...near,...distant],125,5,26);
+ assert.ok(target);assert.equal(target.count,5);assert.ok(Math.abs(Math.hypot(target.x-target.cx,target.y-target.cy)-26)<1e-8);
+ assert.equal(localHuddleTarget(centre,[centre,near[0]],125,5,26),null,"a lone neighbour should not form a huddle pocket");
 });

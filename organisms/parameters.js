@@ -4,7 +4,7 @@ export const DEFAULT_SETTINGS=Object.freeze({
  visionRays:31,visionFov:150,visionPrecision:1.35,visionMemory:.992,visionUpdate:1,visionNoise:.15,
  plantDensity:2.5,foodAbundance:2.2,
  birthInterval:48,broodSize:7,
- nightCooling:.42,coldThreshold:.3,coldDamage:.0001,coldHeatLoss:.00035,huddleWarmth:.30,dayHeatGain:.00045,thirstRate:.00016
+ nightCooling:.42,coldThreshold:.3,coldDamage:.0001,coldHeatLoss:.00035,huddleWarmth:.30,huddleRadius:125,huddleSpacing:26,dayHeatGain:.00045,thirstRate:.00016
 });
 export const PARAMETER_GROUPS=Object.freeze([
  {name:"Population & movement",items:[
@@ -29,6 +29,8 @@ export const PARAMETER_GROUPS=Object.freeze([
   {key:"coldDamage",label:"Cold energy damage",min:0,max:.001,step:.00001},
   {key:"coldHeatLoss",label:"Body heat loss",min:0,max:.003,step:.00005},
   {key:"huddleWarmth",label:"Warmth per nearby organism",min:0,max:.5,step:.01},
+  {key:"huddleRadius",label:"Local huddle radius",min:45,max:260,step:5,unit:"world units"},
+  {key:"huddleSpacing",label:"Huddle spacing",min:12,max:65,step:1,unit:"world units"},
   {key:"dayHeatGain",label:"Daylight body-heat recovery",min:0,max:.002,step:.00005},
   {key:"thirstRate",label:"Thirst accumulation",min:0,max:.001,step:.00001}
  ]},
