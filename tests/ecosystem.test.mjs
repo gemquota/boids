@@ -137,3 +137,10 @@ test("attacks transfer momentum with recoil and target mass affects acceleration
  updateCombat(world,1,{random:()=>.99});
  assert.ok(prey.vx>-1);assert.ok(attacker.vx<2);assert.ok(Number.isFinite(prey.spin));
 });
+
+
+test("neural vision samples the full ray fan instead of only the leftmost rays",()=>{
+ const agent={id:1,energy:1,health:1,injury:0,vx:0,vy:0,senses:Array.from({length:31},(_,i)=>({confidence:i===30?1:0,visible:i===30,distance:10,bearing:.8,vx:0,vy:0,size:5,kind:i===30?"plant":null}))};
+ const vector=neuralSenseVector(agent,4,200,10);
+ assert.equal(vector.length,36);assert.equal(vector[24],1);assert.equal(vector[25],1);assert.equal(vector[31],1);
+});
