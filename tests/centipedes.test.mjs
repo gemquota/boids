@@ -145,3 +145,14 @@ test('overlapping body segments are separated by segment collision resolution', 
   const distance = Math.hypot(a.bodySegments[1].x - b.bodySegments[1].x, a.bodySegments[1].y - b.bodySegments[1].y);
   assert.ok(distance >= 1.4);
 });
+
+
+test('segment impacts transfer mass-aware momentum and produce rotational response', () => {
+  const make = (id, y, vx) => agent({ id, x: 30, y, vx, vy: 0, radius: 3, mass: id === 1 ? 2 : 1, segments: 3, massScale: 1, phenotype: { radius: 3 }, segmentTrail: [{ x: 30, y }, { x: 25, y }, { x: 20, y }] });
+  const a = make(1, 20, 2), b = make(2, 21, -2);
+  updateCentipedeBodies([a, b]);
+  assert.notEqual(a.vx, 2);
+  assert.notEqual(b.vx, -2);
+  assert.ok(Math.abs(a.vx - 2) < Math.abs(b.vx + 2), 'the heavier organism receives the smaller velocity change');
+  assert.ok(Number.isFinite(a.spin) && Number.isFinite(b.spin));
+});

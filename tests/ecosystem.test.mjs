@@ -121,3 +121,19 @@ test("centipede body contact can attack and sever segments without head-to-head 
  const prey={id:2,x:100,y:50,vx:-1,vy:0,energy:1,health:1,mass:2,baseMass:2,radius:5,kind:"centipede",segments:10,bodySegments:[{x:100,y:50},{x:55,y:50}],traits:{attack:.2,damage:.2,defense:1},senses:[]};
  const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};updateCombat(world,1,{random:()=>.99});assert.ok(prey.segments<10);assert.ok(attacker.acquiredMass>0);assert.ok(world.combatEvents.some(event=>event.targetId===prey.id));
 });
+
+
+test("vision rays expose exact endpoints and precision affects target detection",()=>{
+ const a={id:1,x:20,y:50,vx:1,vy:0,age:0},small={id:2,x:40,y:54,vx:0,vy:0,radius:2,kind:"plant"};
+ const narrow=castVision(a,[a,small],{rays:3,range:50,fieldOfView:0,precision:.5});
+ assert.ok(narrow.every(ray=>Number.isFinite(ray.endX)&&Number.isFinite(ray.endY)));
+ const precise=castVision(a,[a,small],{rays:3,range:50,fieldOfView:0,precision:2});
+ assert.ok(precise.some(ray=>ray.visible&&ray.targetId===2));
+});
+
+test("attacks transfer momentum with recoil and target mass affects acceleration",()=>{
+ const attacker={id:1,x:20,y:20,vx:2,vy:0,energy:1,health:1,mass:2,baseMass:2,traits:{attack:1,damage:1,defense:1,tracking:1,attackCost:1,carnivory:1},senses:[{visible:true,targetId:2}]},prey={id:2,x:24,y:20,vx:-1,vy:0,energy:1,health:1,mass:1,baseMass:1,traits:{defense:.2,flee:.2},bodySegments:[{x:24,y:20},{x:20,y:23}],segments:2};
+ const world={width:100,height:100,agents:[attacker,prey],combatEvents:[]};
+ updateCombat(world,1,{random:()=>.99});
+ assert.ok(prey.vx>-1);assert.ok(attacker.vx<2);assert.ok(Number.isFinite(prey.spin));
+});

@@ -207,7 +207,7 @@ export function sampleCentipedeTrail(trail, distance, spacing = 10) {
 
 // Build a distance-spaced articulated body and resolve segment/body contacts.
 // Sprite overlap is intentional: smaller body plates sit close together behind the larger head.
-export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, width = Infinity, height = Infinity } = {}) {
+export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, width = Infinity, height = Infinity, tick = 0 } = {}) {
   const bodies = [];
   for (const agent of agents) {
     if (agent.dead) continue;
@@ -259,11 +259,30 @@ export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, w
         a.point.y -= ny * overlap * (aWeight / total);
         b.point.x += nx * overlap * (bWeight / total);
         b.point.y += ny * overlap * (bWeight / total);
-        const relative = (b.agent.vx - a.agent.vx) * nx + (b.agent.vy - a.agent.vy) * ny;
-        if (relative < 0) {
-          const impulse = -relative * .12;
-          if (a.index === 0) { a.agent.vx -= nx * impulse; a.agent.vy -= ny * impulse; }
-          if (b.index === 0) { b.agent.vx += nx * impulse; b.agent.vy += ny * impulse; }
+        // Contact-point velocity includes each body's angular motion. Resolve normal
+        // impulse with mass, then Coulomb-like tangential friction and torque.
+        const armA={x:a.point.x-a.agent.x,y:a.point.y-a.agent.y},armB={x:b.point.x-b.agent.x,y:b.point.y-b.agent.y};
+        const spinA=a.agent.spin||0,spinB=b.agent.spin||0;
+        const avx=a.agent.vx-spinA*armA.y,avy=a.agent.vy+spinA*armA.x;
+        const bvx=b.agent.vx-spinB*armB.y,bvy=b.agent.vy+spinB*armB.x;
+        const rvx=bvx-avx,rvy=bvy-avy,normalVelocity=rvx*nx+rvy*ny;
+        const massA=Math.max(.05,(a.agent.mass||1)/Math.max(1,a.points.length)),massB=Math.max(.05,(b.agent.mass||1)/Math.max(1,b.points.length));
+        const invA=1/massA,invB=1/massB,leverA=armA.x*ny-armA.y*nx,leverB=armB.x*ny-armB.y*nx;
+        const inertiaA=Math.max(.02,(a.agent.mass||1)*Math.max(4,a.points.length*a.radius*a.radius)/12),inertiaB=Math.max(.02,(b.agent.mass||1)*Math.max(4,b.points.length*b.radius*b.radius)/12);
+        const effective=invA+invB+leverA*leverA/inertiaA+leverB*leverB/inertiaB;
+        if(normalVelocity<0){
+          const restitution=.28,j=-(1+restitution)*normalVelocity/Math.max(.0001,effective),ix=j*nx,iy=j*ny;
+          a.agent.vx-=ix*invA;a.agent.vy-=iy*invA;b.agent.vx+=ix*invB;b.agent.vy+=iy*invB;
+          a.agent.spin=(a.agent.spin||0)-(armA.x*iy-armA.y*ix)/inertiaA;
+          b.agent.spin=(b.agent.spin||0)+(armB.x*iy-armB.y*ix)/inertiaB;
+          const tx=-ny,ty=nx,tangentVelocity=rvx*tx+rvy*ty;
+          const friction=Math.max(-j*.32,Math.min(j*.32,-tangentVelocity/Math.max(.0001,invA+invB)));
+          const fx=friction*tx,fy=friction*ty;
+          a.agent.vx-=fx*invA;a.agent.vy-=fy*invA;b.agent.vx+=fx*invB;b.agent.vy+=fy*invB;
+          a.agent.spin=(a.agent.spin||0)-(armA.x*fy-armA.y*fx)/inertiaA;
+          b.agent.spin=(b.agent.spin||0)+(armB.x*fy-armB.y*fx)/inertiaB;
+          a.agent.lastImpact={x:a.point.x,y:a.point.y,impulse:j};b.agent.lastImpact={x:b.point.x,y:b.point.y,impulse:j};
+          if(j>.08){a.agent.impactFlash={x:a.point.x,y:a.point.y,impulse:j,tick};b.agent.impactFlash={x:b.point.x,y:b.point.y,impulse:j,tick}}
         }
       }
     }
