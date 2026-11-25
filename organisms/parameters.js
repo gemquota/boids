@@ -31,8 +31,15 @@ export const PARAMETER_GROUPS=Object.freeze([
  ]}
 ]);
 export function resolveSettings(saved={}){
- const result={...DEFAULT_SETTINGS};
- for(const group of PARAMETER_GROUPS)for(const p of group.items){const value=Number(saved[p.key]);if(Number.isFinite(value))result[p.key]=Math.max(p.min,Math.min(p.max,value))}
+ const result={...DEFAULT_SETTINGS},bounds={};
+ for(const group of PARAMETER_GROUPS)for(const p of group.items){
+  const candidate=saved.bounds?.[p.key]||{},min=Number(candidate.min),max=Number(candidate.max);
+  const valid=Number.isFinite(min)&&Number.isFinite(max)&&min<max;
+  bounds[p.key]=valid?{min,max}:{min:p.min,max:p.max};
+  const value=Number(saved[p.key]);
+  if(Number.isFinite(value))result[p.key]=Math.max(bounds[p.key].min,Math.min(bounds[p.key].max,value));
+ }
+ result.bounds=bounds;
  if(["natural","environmental","neutral"].includes(saved.selectionModel))result.selectionModel=saved.selectionModel;
  if(["temperate","tropical","arid","alpine","wetland"].includes(saved.environment))result.environment=saved.environment;
  return result;

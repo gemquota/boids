@@ -10,7 +10,9 @@ test("fundamental parameters are grouped, bounded and recover defaults",()=>{
   assert.ok(item.min<item.max,`${item.key} has ordered bounds`);
   assert.ok(DEFAULT_SETTINGS[item.key]>=item.min&&DEFAULT_SETTINGS[item.key]<=item.max,`${item.key} default is in bounds`);
  }
- assert.deepEqual(resolveSettings(),{...DEFAULT_SETTINGS});
+ const defaults=resolveSettings();
+ assert.deepEqual({...defaults,bounds:undefined},{...DEFAULT_SETTINGS,bounds:undefined});
+ for(const group of PARAMETER_GROUPS)for(const item of group.items)assert.deepEqual(defaults.bounds[item.key],{min:item.min,max:item.max});
 });
 
 test("saved parameter overrides are clamped and invalid values ignored",()=>{
@@ -20,6 +22,14 @@ test("saved parameter overrides are clamped and invalid values ignored",()=>{
  assert.equal(settings.nightCooling,.31);
  assert.equal(settings.thirstRate,DEFAULT_SETTINGS.thirstRate);
  assert.equal(settings.environment,DEFAULT_SETTINGS.environment);
+});
+
+test("custom slider bounds persist and clamp their parameter values",()=>{
+ const settings=resolveSettings({population:1500,bounds:{population:{min:50,max:2000},coldDamage:{min:-1,max:.002},nightCooling:{min:1,max:0}}});
+ assert.equal(settings.population,1500);
+ assert.deepEqual(settings.bounds.population,{min:50,max:2000});
+ assert.deepEqual(settings.bounds.coldDamage,{min:-1,max:.002});
+ assert.deepEqual(settings.bounds.nightCooling,{min:.1,max:.8});
 });
 
 test("simulation starts at 06:00 dawn and uses a gentler configurable night cooling curve",()=>{
