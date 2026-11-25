@@ -75,7 +75,7 @@ function dropTailSegments(world,prey,count=1,selfConsume=false){
  const before=Math.max(1,prey.segments||1),loss=Math.min(before-1,Math.max(1,count));if(!loss)return 0;
  const points=prey.bodySegments||[],tail=points.slice(Math.max(1,before-loss)),point=tail[0]||points[points.length-1]||{x:prey.x,y:prey.y};
  const scale=Math.max(.35,prey.juvenileScale||1),mass=Math.max(.012,(prey.baseMass||prey.mass||1)*loss*.055*scale**3);
- world.meatChunks??=[];world.meatChunks.push({id:world.nextMeatId=(world.nextMeatId||0)+1,x:point.x,y:point.y,vx:(prey.vx||0)*.35,vy:(prey.vy||0)*.35,mass,initialMass:mass,radius:Math.max(2,(prey.radius||3)*.38),age:0,sourceId:prey.id});
+ if(!selfConsume){world.meatChunks??=[];world.meatChunks.push({id:world.nextMeatId=(world.nextMeatId||0)+1,x:point.x,y:point.y,vx:(prey.vx||0)*.35,vy:(prey.vy||0)*.35,mass,initialMass:mass,radius:Math.max(2,(prey.radius||3)*.38),age:0,sourceId:prey.id})}
  prey.segments=before-loss;prey.lostSegments=(prey.lostSegments||0)+loss;prey.mass=Math.max(.02,(prey.mass||prey.baseMass||1)-mass);prey.acquiredMass=Math.max(0,(prey.acquiredMass||0)-mass);const keep=Math.max(1,prey.segments);prey.segmentTrail=prey.segmentTrail?.slice(0,Math.max(2,Math.floor(prey.segmentTrail.length*keep/before)));prey.bodySegments=points.slice(0,keep);
  if(selfConsume){prey.energy=Math.min(.24,(prey.energy||0)+mass*.8);prey.selfCannibalisedMass=(prey.selfCannibalisedMass||0)+mass}return loss;
 }

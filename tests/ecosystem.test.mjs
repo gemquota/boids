@@ -150,7 +150,7 @@ test("starving centipedes shed and consume their own tail before death",()=>{
  const a={id:7,x:50,y:50,vx:1,vy:0,energy:.01,health:1,mass:2,baseMass:2,radius:3,kind:"centipede",segments:5,segmentTrail:Array.from({length:30},(_,i)=>({x:50-i*3,y:50})),bodySegments:Array.from({length:5},(_,i)=>({x:50-i*3,y:50})),traits:{attack:.2,defense:1}};
  const world={width:200,height:200,agents:[a],tick:1,deaths:0};
  updateCombat(world,40,{random:()=>.99});
- assert.equal(a.segments,4);assert.ok(a.selfCannibalisedMass>0);assert.ok(a.energy>0);assert.equal(a.dead,false);assert.equal(world.meatChunks.length,1);
+ assert.equal(a.segments,4);assert.ok(a.selfCannibalisedMass>0);assert.ok(a.energy>0);assert.equal(a.dead,false);assert.equal(world.meatChunks.length,0);
 });
 
 test("detached meat is consumed on physical contact",()=>{
