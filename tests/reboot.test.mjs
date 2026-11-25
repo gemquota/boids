@@ -29,3 +29,6 @@ test("flock steering preserves movement when a group reaches a symmetric dead st
 test("a clustered population continues dispersing instead of remaining stationary",()=>{const w=createWorld(1400,900,120,29),start=w.agents.map(a=>[a.x,a.y]);for(let i=0;i<360;i++){for(const a of w.agents)a.energy=1;stepWorld(w,1,{reproduction:false})}assert.ok(w.agents.filter((a,i)=>Math.hypot(a.x-start[i][0],a.y-start[i][1])>30).length>w.agents.length*.9)});
 
 test("organism centres stay far enough inside the boundary to keep their head sprites visible",()=>{const w=createWorld(200,160,1,4),a=w.agents[0];a.x=8;a.y=8;a.radius=5;a.massScale=1;a.vx=-2;a.vy=-2;stepWorld(w,1,{reproduction:false});assert.ok(a.x>=7.5&&a.y>=7.5);assert.ok(a.x<=192.5&&a.y<=152.5)});
+
+
+test("energy starvation leaves a consumable carcass instead of silently removing the organism",()=>{const w=createWorld(200,160,1,4),a=w.agents[0];a.energy=.00001;a.mass=1.4;stepWorld(w,1,{reproduction:false,energyCost:()=>({total:.1})});assert.equal(w.agents.length,1);assert.equal(w.agents[0].dead,true);assert.equal(w.agents[0].energy,0);assert.equal(w.deaths,1);assert.equal(w.agents[0].initialMass,1.4)});

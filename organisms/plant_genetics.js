@@ -27,7 +27,7 @@ export function growPlant(plant,environment,dt=1,random=Math.random){
  const cap=Math.min(72,5+Math.floor(plant.energy*24*t.branching*regulate(1)));
  if(plant.energy>.52&&plant.nodes.length<cap&&random()<Math.min(.9,gain*55+(.0004*t.branching*regulate(1)))*dt){
   const parent=plant.nodes[Math.floor(random()*plant.nodes.length)]||plant.nodes[0],side=random()<.5?-1:1,angle=parent.angle+side*(.25+random()*.8);
-  plant.nodes.push({id:plant.nextNodeId++,parent:parent.id,x:parent.x+Math.cos(angle)*parent.length,y:parent.y+Math.sin(angle)*parent.length,length:2.8+t.growth*5,angle,age:0,order:parent.order+1});plant.energy-=.012;
+  plant.nodes.push({id:plant.nextNodeId++,parent:parent.id,x:parent.x+Math.cos(angle)*parent.length,y:parent.y+Math.sin(angle)*parent.length,length:2.8+t.growth*5,angle,age:0,order:parent.order+1,fruit:random()<.035?{food:.22,energy:3.8}:null});plant.energy-=.012;
  }
  let spores=0;if(plant.energy>.7&&plant.sporeCooldown<=0&&random()<t.sporeRate*regulate(5)*.08*dt){spores=1;plant.energy-=.12;plant.sporeCooldown=100+random()*180}
  return{spores,stress,biomass:plant.nodes.reduce((n,node)=>n+node.length*.015,0)};

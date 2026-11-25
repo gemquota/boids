@@ -30,12 +30,22 @@ test("boid genomes express diverse combat traits and physical trade-offs",()=>{
 
 test("physical combat injures prey, kills it and transfers carcass mass to its attacker",()=>{
  const attacker={id:1,x:50,y:50,vx:1,vy:0,energy:1,health:1,injury:0,mass:1,baseMass:1,massScale:1,radius:5,traits:{attack:2,damage:2,defense:1,aggression:.8,attackSpeed:1,attackCost:1,tracking:1,carnivory:1},senses:[{visible:true,targetId:2}]};
- const prey={id:2,x:55,y:50,vx:-1,vy:0,energy:1,health:.05,injury:0,mass:1,baseMass:1,radius:5,traits:{attack:.5,damage:.5,defense:.25,aggression:.1,flee:.5},senses:[]};
+ const prey={id:2,x:55,y:50,vx:-1,vy:0,energy:1,health:.05,injury:0,mass:1,baseMass:1,radius:5,traits:{attack:.5,damage:.5,defense:.25,aggression:.1,flee:.5},kind:"centipede",segments:1,senses:[]};
  const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};
  const first=updateCombat(world,1,{random:()=>.99,consumeRate:.1});
  assert.equal(prey.dead,true);assert.equal(prey.consumedBy,1);assert.equal(attacker.attachedPrey,2);assert.equal(first.kills,1);
  const mass=attacker.mass;updateCombat(world,2,{random:()=>.99,consumeRate:.1});
  assert.ok(attacker.mass>mass);assert.ok(attacker.massScale>1);assert.equal(attacker.x,prey.x);
+ for(let i=0;i<30;i++)updateCombat(world,10,{random:()=>.99,consumeRate:.1});
+ assert.equal(attacker.headMeals,1);assert.ok(attacker.headMealBuff>0);assert.ok(attacker.health>0);
+});
+
+test("damaging a centipede removes body segments and transfers their tissue mass",()=>{
+ const attacker={id:1,x:50,y:50,vx:1,vy:0,energy:1,health:1,injury:0,mass:1,baseMass:1,massScale:1,radius:5,traits:{attack:.5,damage:.5,defense:1,aggression:.8,attackSpeed:1,attackCost:1,tracking:1,carnivory:1},senses:[{visible:true,targetId:2}]};
+ const prey={id:2,x:55,y:50,vx:-1,vy:0,energy:1,health:1,injury:0,mass:2,baseMass:2,massScale:1,radius:5,segments:12,kind:"centipede",traits:{attack:.2,damage:.2,defense:1,aggression:.1,flee:.5},senses:[]};
+ const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};
+ updateCombat(world,1,{random:()=>.99});
+ assert.ok(prey.segments<12);assert.ok(prey.lostSegments>0);assert.ok(attacker.acquiredMass>0);assert.ok(prey.mass<2);
 });
 
 test("plant chromosomes carry inherited traits and plants branch and release spores",()=>{
@@ -44,7 +54,7 @@ test("plant chromosomes carry inherited traits and plants branch and release spo
  const child=inheritPlantGenome(g,g,random);assert.ok(child.chromosome.length>0);
  const plant=germinatePlant(10,10,g,random);plant.energy=1;plant.sporeCooldown=0;let spores=0;
  for(let i=0;i<260;i++)spores+=growPlant(plant,{light:.9,moisture:.9,temperature:.55,nutrients:.9},1,random).spores;
- assert.ok(plant.nodes.length>1);assert.ok(spores>0);
+ assert.ok(plant.nodes.length>1);assert.ok(spores>0);assert.ok(plant.nodes.some(node=>node.fruit?.food>0));
 });
 
 test("environment cycles through day and seasons and supplies watershed geography",()=>{
@@ -82,6 +92,8 @@ test("energy economics account for tissue, brain, vision, attacks and upkeep",()
  const agent={traits:{metabolism:1.2,visionRange:1.1,aggression:.8,attackCost:1.3,sexDrive:1},mass:1.4,vx:1,vy:1,lastAttackTick:5,senses:[{confidence:1}],neural:{nodes:Array(10).fill({}),connections:Array(20).fill({enabled:true})}};
  const costs=calculateEnergyCost(agent,2,5),sum=Object.entries(costs).filter(([k])=>k!=="total").reduce((n,[,v])=>n+v,0);
  assert.ok(costs.brain>0&&costs.vision>0&&costs.attack>0);assert.ok(Math.abs(sum-costs.total)<1e-12);
+ const hungry=calculateEnergyCost({...agent,energy:.12},2,5),fed=calculateEnergyCost({...agent,energy:1.2},2,5);assert.ok(hungry.total>fed.total*1.5);
+
 });
 
 test("plant life stages progress from seedling through senescence",()=>{
@@ -101,4 +113,11 @@ test("environment creates a roughly rectangular landmass with coastline on all f
  for(const [x,y] of [[.02,.5],[.98,.5],[.5,.02],[.5,.98]])assert.equal(at(x,y).water,true);
  for(const [x,y] of [[.5,.5],[.2,.2],[.8,.8]])assert.equal(at(x,y).water,false);
  assert.ok(env.shoreline.length>=30);
+});
+
+
+test("centipede body contact can attack and sever segments without head-to-head contact",()=>{
+ const attacker={id:1,x:50,y:50,vx:1,vy:0,energy:1,health:1,mass:1,baseMass:1,radius:5,kind:"centipede",traits:{attack:.5,damage:.5,defense:1,attackSpeed:1,attackCost:1,tracking:1,carnivory:1},senses:[]};
+ const prey={id:2,x:100,y:50,vx:-1,vy:0,energy:1,health:1,mass:2,baseMass:2,radius:5,kind:"centipede",segments:10,bodySegments:[{x:100,y:50},{x:55,y:50}],traits:{attack:.2,damage:.2,defense:1},senses:[]};
+ const world={width:200,height:200,agents:[attacker,prey],tick:1,deaths:0};updateCombat(world,1,{random:()=>.99});assert.ok(prey.segments<10);assert.ok(attacker.acquiredMass>0);
 });
