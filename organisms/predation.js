@@ -41,7 +41,17 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
 }
 function strike(attacker,prey,random,multiplier=1,tick=0,world=null){
  const at=attacker.traits||{},pt=prey.traits||{},damage=Math.max(.015,(at.damage||.4)*(at.attack||1)*multiplier/(1+(pt.defense||1)*.45));
- prey.health=Math.max(0,(prey.health??1)-damage);prey.injury=Math.min(1,(prey.injury||0)+damage*.8);prey.lastDamage=damage;prey.lastAttacker=attacker.id;if(world)recordImpact(world,attacker,prey,damage,tick);
+ prey.health=Math.max(0,(prey.health??1)-damage);prey.injury=Math.min(1,(prey.injury||0)+damage*.8);prey.lastDamage=damage;prey.lastAttacker=attacker.id;
+ // A strike is a real momentum exchange: the target is knocked away, the attacker
+ // recoils, and an off-centre body hit adds angular velocity instead of a canned shove.
+ const dx=prey.x-attacker.x,dy=prey.y-attacker.y,distance=Math.hypot(dx,dy)||1,nx=dx/distance,ny=dy/distance;
+ const attackerMass=Math.max(.1,attacker.mass||1),preyMass=Math.max(.1,prey.mass||1),closing=Math.max(0,-((prey.vx||0)-(attacker.vx||0))*nx-((prey.vy||0)-(attacker.vy||0))*ny);
+ const impulse=damage*(.32+Math.min(5,closing)*.16)*Math.min(attackerMass,preyMass);
+ prey.vx=(prey.vx||0)+nx*impulse/preyMass;prey.vy=(prey.vy||0)+ny*impulse/preyMass;
+ attacker.vx=(attacker.vx||0)-nx*impulse/attackerMass;attacker.vy=(attacker.vy||0)-ny*impulse/attackerMass;
+ const contact=(prey.bodySegments||[]).slice(1).reduce((best,part)=>{const d=Math.hypot(part.x-attacker.x,part.y-attacker.y);return !best||d<best.d?{part,d}:best},null)?.part;
+ if(contact){const armX=contact.x-prey.x,armY=contact.y-prey.y,inertia=Math.max(.05,preyMass*Math.max(4,(prey.segments||1)*Math.pow(prey.radius||3,2))/12);prey.spin=(prey.spin||0)+(armX*(ny*impulse)-armY*(nx*impulse))/inertia}
+ if(world)recordImpact(world,attacker,prey,damage,tick);
  const flee=Math.max(0,(pt.flee||1)*(pt.speed||1)-at.tracking*.2);
  if(random()<clamp(.18+flee*.13,0,.78)){prey.fleeing=true;prey.vx+=(prey.x-attacker.x)*.012;prey.vy+=(prey.y-attacker.y)*.012}
  attacker.energy=Math.max(0,attacker.energy-.00035*(at.attackCost||1));attacker.lastAttack=prey.id;attacker.lastAttackTick=tick;

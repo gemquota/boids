@@ -32,3 +32,5 @@ test("organism centres stay far enough inside the boundary to keep their head sp
 
 
 test("energy starvation leaves a consumable carcass instead of silently removing the organism",()=>{const w=createWorld(200,160,1,4),a=w.agents[0];a.energy=.00001;a.mass=1.4;stepWorld(w,1,{reproduction:false,energyCost:()=>({total:.1})});assert.equal(w.agents.length,1);assert.equal(w.agents[0].dead,true);assert.equal(w.agents[0].energy,0);assert.equal(w.deaths,1);assert.equal(w.agents[0].initialMass,1.4)});
+
+test("configured movement ceiling is a hard speed cap even with maximum thrust",()=>{const w=createWorld(1000,1000,1,4),a=w.agents[0];a.x=500;a.y=500;a.vx=1;a.vy=0;a.traits.speed=2;stepWorld(w,1,{maxSpeed:10,reproduction:false,behaviour:()=>({turn:0,thrust:1.75})});assert.ok(Math.hypot(w.agents[0].vx,w.agents[0].vy)<=10+1e-9)});
