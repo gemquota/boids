@@ -27,3 +27,5 @@ test("reproduction never self-pairs or mates same-sex organisms",async()=>{const
 test("flock steering preserves movement when a group reaches a symmetric dead stop",()=>{const w=createWorld(500,400,40,23);for(const a of w.agents){a.x=250;a.y=200;a.vx=0;a.vy=0;a.energy=1}stepWorld(w,1,{reproduction:false});assert.ok(w.agents.every(a=>Math.hypot(a.vx,a.vy)>.1));assert.ok(new Set(w.agents.map(a=>a.vx.toFixed(5)+","+a.vy.toFixed(5))).size>1)});
 
 test("a clustered population continues dispersing instead of remaining stationary",()=>{const w=createWorld(1400,900,120,29),start=w.agents.map(a=>[a.x,a.y]);for(let i=0;i<360;i++){for(const a of w.agents)a.energy=1;stepWorld(w,1,{reproduction:false})}assert.ok(w.agents.filter((a,i)=>Math.hypot(a.x-start[i][0],a.y-start[i][1])>30).length>w.agents.length*.9)});
+
+test("organism centres stay far enough inside the boundary to keep their head sprites visible",()=>{const w=createWorld(200,160,1,4),a=w.agents[0];a.x=8;a.y=8;a.radius=5;a.massScale=1;a.vx=-2;a.vy=-2;stepWorld(w,1,{reproduction:false});assert.ok(a.x>=7.5&&a.y>=7.5);assert.ok(a.x<=192.5&&a.y<=152.5)});
