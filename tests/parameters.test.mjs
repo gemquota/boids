@@ -65,3 +65,8 @@ test("dawn cold stress is buffered and huddling reduces thermal energy loss",asy
  assert.ok(exposed.bodyHeat>.5,"body heat should not collapse before daylight");
  assert.ok(huddled.energy>exposed.energy,"huddling should reduce cold damage");
 });
+
+
+test("default ecosystem starts with a balanced population, forage reserve and movement ceiling",()=>{
+ const settings=resolveSettings();assert.equal(settings.population,48);assert.equal(settings.plantDensity,2.5);assert.equal(settings.foodAbundance,1.9);assert.equal(settings.maxSpeed,.78);
+});
