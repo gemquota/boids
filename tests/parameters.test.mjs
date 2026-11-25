@@ -76,3 +76,9 @@ test("legacy saved defaults migrate the movement ceiling and expanded vision ran
  const settings=resolveSettings({maxSpeed:.78,perception:76,bounds:{maxSpeed:{min:.4,max:3},perception:{min:20,max:150}}});
  assert.equal(settings.maxSpeed,10);assert.deepEqual(settings.bounds.maxSpeed,{min:1,max:10});assert.deepEqual(settings.bounds.perception,{min:20,max:300});assert.equal(settings.perception,76);
 });
+
+
+test("vision defaults provide broad, persistent, high-resolution useful perception",()=>{
+ const settings=resolveSettings();assert.equal(settings.visionRays,31);assert.equal(settings.visionFov,150);assert.equal(settings.visionPrecision,1.35);assert.equal(settings.visionMemory,.992);assert.equal(settings.visionUpdate,1);assert.equal(settings.visionNoise,.15);
+ const migrated=resolveSettings({visionRays:21,visionFov:120,visionPrecision:1,visionMemory:.985,visionNoise:0});assert.equal(migrated.visionRays,31);assert.equal(migrated.visionFov,150);assert.equal(migrated.visionPrecision,1.35);assert.equal(migrated.visionMemory,.992);assert.equal(migrated.visionNoise,.15);
+});

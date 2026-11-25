@@ -1,7 +1,7 @@
 export const DEFAULT_SETTINGS=Object.freeze({
  selectionModel:"natural",environment:"temperate",separation:24,alignment:.035,cohesion:.0018,separationForce:.035,
  population:48,perception:76,maxSpeed:10,speed:1,
- visionRays:21,visionFov:120,visionPrecision:1,visionMemory:.985,visionUpdate:1,visionNoise:0,
+ visionRays:31,visionFov:150,visionPrecision:1.35,visionMemory:.992,visionUpdate:1,visionNoise:.15,
  plantDensity:2.5,foodAbundance:1.9,
  birthInterval:48,broodSize:7,
  nightCooling:.42,coldThreshold:.3,coldDamage:.00015,coldHeatLoss:.00045,huddleWarmth:.24,dayHeatGain:.00035,thirstRate:.00022
@@ -49,6 +49,12 @@ export function resolveSettings(saved={}){
  }
  // Migrate the old default speed ceiling instead of silently preserving its obsolete .78 value.
  if(saved.maxSpeed===.78)result.maxSpeed=10;
+ // Upgrade the previous default sensory profile, while preserving deliberate user tuning.
+ if(saved.visionRays===21)result.visionRays=31;
+ if(saved.visionFov===120)result.visionFov=150;
+ if(saved.visionPrecision===1)result.visionPrecision=1.35;
+ if(saved.visionMemory===.985)result.visionMemory=.992;
+ if(saved.visionNoise===0)result.visionNoise=.15;
  result.bounds=bounds;
  if(["natural","environmental","neutral"].includes(saved.selectionModel))result.selectionModel=saved.selectionModel;
  if(["temperate","tropical","arid","alpine","wetland"].includes(saved.environment))result.environment=saved.environment;

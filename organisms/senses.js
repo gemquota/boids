@@ -24,7 +24,7 @@ export function castVision(agent,population,{rays=9,range=150,fieldOfView=Math.P
 }
 export function neuralSenseVector(agent,rays=4,range=300,maxSpeed=10){
  const senses=agent.senses||[],out=[];
- for(let i=0;i<rays;i++){const s=senses[i]||{};out.push(s.confidence||0,s.visible?1:0,s.confidence?Math.max(-1,Math.min(1,(s.distance||0)/range)):0,s.confidence?Math.max(-1,Math.min(1,(s.bearing||0)/Math.PI)):0,s.confidence?Math.max(-1,Math.min(1,(s.vx||0)/maxSpeed)):0,s.confidence?Math.max(-1,Math.min(1,(s.vy||0)/maxSpeed)):0,s.confidence?Math.max(0,Math.min(1,(s.size||3)/12)):0,s.kind==="plant"?1:0)}
+ for(let i=0;i<rays;i++){const sourceIndex=rays<=1?Math.floor((senses.length-1)/2):Math.round(i*(senses.length-1)/(rays-1)),s=senses[sourceIndex]||{};out.push(s.confidence||0,s.visible?1:0,s.confidence?Math.max(-1,Math.min(1,(s.distance||0)/range)):0,s.confidence?Math.max(-1,Math.min(1,(s.bearing||0)/Math.PI)):0,s.confidence?Math.max(-1,Math.min(1,(s.vx||0)/maxSpeed)):0,s.confidence?Math.max(-1,Math.min(1,(s.vy||0)/maxSpeed)):0,s.confidence?Math.max(0,Math.min(1,(s.size||3)/12)):0,s.kind==="plant"?1:0)}
  return[...out.slice(0,32),agent.energy??0,agent.health??1,agent.injury??0,Math.min(1,Math.hypot(agent.vx,agent.vy)/maxSpeed)].slice(0,36);
 }
 export function rememberedTargets(agent){return(agent.senses||[]).filter(s=>s.confidence>.05).map(s=>({...s,estimated:true}))}
