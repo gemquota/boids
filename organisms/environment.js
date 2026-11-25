@@ -13,14 +13,17 @@ export function dawnClock(dayLength=28800){return Math.max(0,Number(dayLength)||
 export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="temperate",nightCooling=.42}={}){
  const profile=ENVIRONMENT_PRESETS[preset]||ENVIRONMENT_PRESETS.temperate;
  let state=seed>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
- const coastWidth=width*profile.coast,fields=[],river=[],tributaries=[],lakes=[];
+ const coastWidth=width*profile.coast,coastDepth=Math.min(width,height)*.075,fields=[],river=[],tributaries=[],lakes=[];
+ const shoreline=Array.from({length:33},(_,i)=>{const t=i/32;return{top:{x:(.075+.012*Math.sin(t*9)+.006*Math.sin(t*21))*width,y:t*height},bottom:{x:(.925+.012*Math.sin(t*8+1)+.006*Math.sin(t*19))*width,y:t*height},left:{x:t*width,y:(.075+.012*Math.sin(t*10+2)+.005*Math.sin(t*23))*height},right:{x:t*width,y:(.925+.012*Math.sin(t*8+3)+.005*Math.sin(t*17))*height}}});
  const lakeSpecs=[[.34,.035,.025],[.73,.022,.018]];
  for(const [x,rx,ry] of lakeSpecs)lakes.push({x:x*width,y:mainY(x)*height+.025*height,rx:rx*width,ry:ry*height});
  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
   const nx=x/(cols-1),ny=y/(rows-1),latitude=Math.abs(ny-.5)*2;
   const mainDistance=Math.abs(ny-mainY(nx)),tributaryDistance=Math.min(...Array.from({length:profile.tributaries},(_,i)=>Math.abs(ny-tributaryY(i,nx))));
   const inLake=lakes.some(l=>Math.pow((nx*width-l.x)/l.rx,2)+Math.pow((ny*height-l.y)/l.ry,2)<1);
-  const water=nx<coastWidth/width||mainDistance<.018||(nx>.14&&tributaryDistance<.009)||inLake;
+  const edgeNoise=.012*Math.sin(nx*18+1.2)+.008*Math.sin(ny*23+2.1);
+  const land=nx>.075+edgeNoise&&nx<.925+edgeNoise&&ny>.075-.009*Math.sin(nx*16)&&ny<.925+.009*Math.sin(nx*14+1);
+  const water=!land||mainDistance<.018||(nx>.14&&tributaryDistance<.009)||inLake;
   const elevation=clamp(.28+latitude*.2+mainDistance*.62+(random()-.5)*.12,0,1);
   const baseTemperature=clamp(1-latitude*.62+profile.temperature+(random()-.5)*.06,0,1);
   const baseMoisture=clamp(.16+(water?.68:Math.max(0,.48-Math.min(mainDistance,tributaryDistance)*5))+profile.moisture+(random()-.5)*.08,0,1);
@@ -29,7 +32,7 @@ export function createEnvironment(width,height,seed=31,{cols=48,rows=30,preset="
  for(let i=0;i<cols;i++){const x=i/(cols-1);river.push({x:x*width,y:mainY(x)*height})}
  const starts=[.16,.86,.32,.72],merges=[.48,.69,.84,.58],curves=[.08,-.09,.055,-.045];
  for(let index=0;index<profile.tributaries;index++){const path=[],start=starts[index],merge=merges[index],curve=curves[index];for(let i=0;i<=24;i++){const t=i/24,x=.12+(merge-.12)*t,y=start+(mainY(merge)-start)*t+Math.sin(t*Math.PI)*curve+.025*Math.sin(t*8*Math.PI+start*12)*(1-t);path.push({x:x*width,y:y*height})}tributaries.push(path)}
- return{version:1,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:28800,nightCooling,seasonLength:144000,season:0,day:0,year:0,coastWidth};
+ return{version:2,preset,width,height,cols,rows,fields,river,tributaries,lakes,seed,state,clock:0,dayLength:28800,nightCooling,seasonLength:144000,season:0,day:0,year:0,coastWidth,coastDepth,shoreline};
 }
 export function sampleEnvironment(env,x,y){
  // Agent coordinates can briefly become non-finite during recovery from an invalid

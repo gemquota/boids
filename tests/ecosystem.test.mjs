@@ -93,3 +93,12 @@ test("plant life stages progress from seedling through senescence",()=>{
 
 
 test("ancestral boids are herbivores and carnivory is a rare inherited mutation",()=>{let seed=1;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};const a=createTraits(random);assert.equal(a.carnivory,0);const b=inheritTraits(a,a,()=>.99);assert.equal(b.carnivory,0)});
+
+
+test("environment creates a roughly rectangular landmass with coastline on all four edges",()=>{
+ const env=createEnvironment(1000,700,22),at=(x,y)=>env.fields[Math.min(env.rows-1,Math.floor(y*env.rows))*env.cols+Math.min(env.cols-1,Math.floor(x*env.cols))];
+ assert.equal(env.version,2);
+ for(const [x,y] of [[.02,.5],[.98,.5],[.5,.02],[.5,.98]])assert.equal(at(x,y).water,true);
+ for(const [x,y] of [[.5,.5],[.2,.2],[.8,.8]])assert.equal(at(x,y).water,false);
+ assert.ok(env.shoreline.length>=30);
+});
