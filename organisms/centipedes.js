@@ -207,7 +207,7 @@ export function sampleCentipedeTrail(trail, distance, spacing = 10) {
 
 // Build a distance-spaced articulated body and resolve segment/body contacts.
 // Sprite overlap is intentional: centres remain between 1.25r and 1.85r apart.
-export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3 } = {}) {
+export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, width = Infinity, height = Infinity } = {}) {
   const bodies = [];
   for (const agent of agents) {
     if (agent.dead) continue;
@@ -278,6 +278,11 @@ export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3 } 
       const target = distance < minimum ? minimum : maximum, correction = (distance - target) / distance;
       point.x -= dx * correction;
       point.y -= dy * correction;
+    }
+    for (let i = 1; i < body.points.length; i++) {
+      const margin = body.radius * 1.2, point = body.points[i];
+      point.x = Number.isFinite(width) ? clamp(point.x, margin, Math.max(margin, width - margin)) : point.x;
+      point.y = Number.isFinite(height) ? clamp(point.y, margin, Math.max(margin, height - margin)) : point.y;
     }
   }
   return bodies.length;
