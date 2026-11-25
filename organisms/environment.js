@@ -41,13 +41,13 @@ export function sampleEnvironment(env,x,y){
  const f=env.fields[gy*cols+gx]||env.fields.find(Boolean)||{elevation:.5,latitude:0,water:false,baseTemperature:.5,baseMoisture:.4,temperature:.5,moisture:.4,nutrients:.3,light:.5};
  const latitude=Number.isFinite(f.latitude)?f.latitude:0,baseTemperature=Number.isFinite(f.baseTemperature)?f.baseTemperature:.5;
  const season=Number.isFinite(env.season)?env.season:0,clock=Number.isFinite(env.clock)?env.clock:0,dayLength=Number.isFinite(env.dayLength)&&env.dayLength>0?env.dayLength:28800;
- const seasonIndex=Math.floor(season)%4,dayPhase=(clock%dayLength)/dayLength,solar=Math.max(0,Math.sin(dayPhase*Math.PI*2));
+ const seasonIndex=Math.floor(season)%4,dayPhase=(clock%dayLength)/dayLength,solar=Math.max(0,Math.sin((dayPhase-.25)*Math.PI*2));
  const seasonal=Math.sin(seasonIndex*Math.PI/2)*(.08+.16*latitude),temperature=clamp(baseTemperature+seasonal-(1-solar)*.72,0,1);
  return{...f,latitude,temperature,light:solar*(1-latitude*.25),daylight:solar,season,day:Number.isFinite(env.day)?env.day:0,year:Number.isFinite(env.year)?env.year:0};
 }
 export function advanceEnvironment(env,dt=1){
  env.clock+=dt;env.day=Math.floor(env.clock/env.dayLength);env.year=Math.floor(env.clock/(env.seasonLength*4));env.season=(env.clock%(env.seasonLength*4))/env.seasonLength;
- const seasonIndex=Math.floor(env.season)%4,phase=(env.clock%env.seasonLength)/env.seasonLength,dayPhase=(env.clock%env.dayLength)/env.dayLength,solar=Math.max(0,Math.sin(dayPhase*Math.PI*2));
+ const seasonIndex=Math.floor(env.season)%4,phase=(env.clock%env.seasonLength)/env.seasonLength,dayPhase=(env.clock%env.dayLength)/env.dayLength,solar=Math.max(0,Math.sin((dayPhase-.25)*Math.PI*2));
  env.daylight=solar;for(const f of env.fields){const seasonalRain=Math.sin(seasonIndex*Math.PI/2)*.035;f.light=solar*(1-f.latitude*.25);f.moisture=clamp(f.baseMoisture+seasonalRain+(f.water?.08:0),.02,1);f.temperature=clamp(f.baseTemperature+Math.sin(seasonIndex*Math.PI/2)*(.08+.16*f.latitude)-(1-solar)*.72,0,1)}
  return{day:env.day,year:env.year,season:seasonIndex,daylight:solar,seasonProgress:phase};
 }
