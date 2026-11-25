@@ -8,6 +8,7 @@ import{createPlantGenome,germinatePlant,growPlant,inheritPlantGenome,classifyPla
 import{decodeChromosome}from"../organisms/genome.js";
 import{createEnvironment,sampleEnvironment,advanceEnvironment}from"../organisms/environment.js";
 import{createHistory,recordHistory,averageHistory}from"../labs/history.js";
+import{applyThermalStress,coldMovementMultiplier}from"../organisms/thermal.js";
 
 test("raycast vision detects only targets in a ray and retains predicted unseen positions",()=>{
  const a={id:1,x:100,y:100,vx:1,vy:0,energy:.8,health:1},b={id:2,x:120,y:100,vx:1,vy:.2};
@@ -52,7 +53,7 @@ test("plant chromosomes carry inherited traits and plants branch and release spo
  const random=()=>0,g=createPlantGenome(random),decoded=decodeChromosome(g.chromosome);
  assert.ok(decoded.filter(x=>x.type==="trait").length>=10);assert.ok(decoded.filter(x=>x.type==="regulator").length>=4);
  const child=inheritPlantGenome(g,g,random);assert.ok(child.chromosome.length>0);
- const plant=germinatePlant(10,10,g,random);plant.energy=1;plant.sporeCooldown=0;let spores=0;
+ const plant=germinatePlant(10,10,g,random);assert.equal(plant.nodes[0].parent,null,"germination starts with a drawable root node");plant.energy=1;plant.sporeCooldown=0;let spores=0;
  for(let i=0;i<260;i++)spores+=growPlant(plant,{light:.9,moisture:.9,temperature:.55,nutrients:.9},1,random).spores;
  assert.ok(plant.nodes.length>1);assert.ok(spores>0);assert.ok(plant.nodes.some(node=>node.fruit?.food>0));
 });
@@ -157,4 +158,38 @@ test("detached meat is consumed on physical contact",()=>{
  const a={id:8,x:20,y:20,vx:0,vy:0,energy:.2,health:1,mass:1,baseMass:1,radius:3,traits:{attackSpeed:1}};
  const world={width:100,height:100,agents:[a],tick:1,meatChunks:[{x:20,y:20,vx:0,vy:0,mass:.1,radius:2,age:0}]};
  updateCombat(world,1,{random:()=>.99});assert.ok(a.energy>.2);assert.ok(a.acquiredMass>0);assert.ok(world.meatChunks[0].mass<.1);
+});
+
+test("cold damage is emitted as discrete visual events without changing average damage",()=>{
+ const a={age:0,energy:1,bodyHeat:.7};
+ const env={temperature:0,daylight:0};
+ const settings={huddleWarmth:0,coldThreshold:.3,coldHeatLoss:0,dayHeatGain:0,coldDamage:.001};
+ for(let i=0;i<7;i++){a.age++;applyThermalStress(a,env,0,1,settings)}
+ assert.equal(a.coldDamageEvent||0,0);
+ a.age++;applyThermalStress(a,env,0,1,settings);
+ assert.equal(a.coldDamageEvent,1);assert.ok(a.energy<1);assert.equal(a.coldVisualAge,8);
+});
+
+
+test("energy parameters independently control metabolism, hunger and movement costs",async()=>{
+ const {calculateEnergyCost}=await import("../organisms/energy.js");
+ const agent={energy:.2,mass:2,vx:2,vy:0,traits:{metabolism:1},neural:{nodes:[],connections:[]},senses:[]};
+ const baseline=calculateEnergyCost(agent,1,0,{}),metabolic=calculateEnergyCost(agent,1,0,{basalMetabolism:.0002}),movement=calculateEnergyCost(agent,1,0,{movementEnergyCost:.0002}),calm=calculateEnergyCost({...agent,energy:2},1,0,{hungerSensitivity:8});
+ assert.ok(metabolic.basal>baseline.basal);assert.ok(movement.movement>baseline.movement);assert.ok(calm.basal<baseline.basal);
+});
+
+test("tier progression thresholds are configurable",async()=>{
+ const {centipedeSpriteIndex}=await import("../organisms/centipedes.js");const morphology={branch:0,form:0,variant:0,apex:0};
+ assert.equal(centipedeSpriteIndex(morphology,50,{tier1Age:100}),0);
+ assert.notEqual(centipedeSpriteIndex(morphology,150,{tier1Age:100}),0);
+});
+
+test("cold slows locomotion by half overnight and by three quarters from midnight to dawn",()=>{
+ assert.equal(coldMovementMultiplier(18,.1,.3),.5);
+ assert.equal(coldMovementMultiplier(23.99,.1,.3),.5);
+ assert.equal(coldMovementMultiplier(0,.1,.3),.25);
+ assert.equal(coldMovementMultiplier(5.99,.1,.3),.25);
+ assert.equal(coldMovementMultiplier(6,.1,.3),1);
+ assert.equal(coldMovementMultiplier(12,.1,.3),1);
+ assert.equal(coldMovementMultiplier(2,.5,.3),1,"warm nights do not trigger cold slowdown");
 });

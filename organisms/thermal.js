@@ -1,8 +1,25 @@
+export function coldMovementMultiplier(hour,temperature,threshold){
+ if(temperature>=threshold)return 1;
+ const h=((hour%24)+24)%24;
+ if(h<6)return .25;
+ if(h>=18)return .5;
+ return 1;
+}
+
 export function applyThermalStress(agent,environment,nearby=0,dt=1,parameters={}){
- const warmth=Math.min(.96,Math.max(0,nearby)*parameters.huddleWarmth),cold=Math.max(0,parameters.coldThreshold-environment.temperature),heatLoss=cold*(1-warmth)*parameters.coldHeatLoss*dt;
+ const warmth=Math.min(.96,Math.max(0,nearby)*parameters.huddleWarmth),cold=Math.max(0,parameters.coldThreshold-environment.temperature),heatLoss=cold*(1-warmth)*parameters.coldHeatLoss*dt/Math.max(.1,parameters.bodyHeatCapacity||1);
  agent.bodyHeat=Math.max(0,Math.min(1,(agent.bodyHeat??.7)-heatLoss+(environment.daylight>.35?parameters.dayHeatGain*dt:0)+warmth*.0012*dt));
- agent.coldStress=Math.max(0,cold-warmth*.85);
- if(agent.coldStress>.08)agent.energy=Math.max(0,agent.energy-agent.coldStress*parameters.coldDamage*dt);
+ agent.coldStress=Math.max(0,cold/Math.max(.1,parameters.coldResistance||1)-warmth*.85);
+ if(agent.coldStress>.08){
+  // Apply cold damage in discrete events so each event has a readable visual response.
+  agent.coldDamageClock=(agent.coldDamageClock||0)+dt;
+  if(agent.coldDamageClock>=8){
+   const damage=agent.coldStress*parameters.coldDamage*agent.coldDamageClock;
+   agent.energy=Math.max(0,agent.energy-damage);
+   agent.coldDamageClock=0;
+   if(damage>0){agent.coldDamageEvent=(agent.coldDamageEvent||0)+1;agent.coldVisualAge=agent.age||0;}
+  }
+ }else agent.coldDamageClock=0;
  return agent.coldStress;
 }
 

@@ -5,15 +5,16 @@ import {createEnvironment,dawnClock,sampleEnvironment} from "../organisms/enviro
 import {localHuddleTarget} from "../organisms/thermal.js";
 
 test("fundamental parameters are grouped, bounded and recover defaults",()=>{
- const keys=PARAMETER_GROUPS.flatMap(group=>group.items.map(item=>item.key));
+ const subgroups=PARAMETER_GROUPS.flatMap(group=>group.subgroups);
+ const keys=subgroups.flatMap(group=>group.items.map(item=>item.key));
  assert.equal(new Set(keys).size,keys.length);
- for(const group of PARAMETER_GROUPS)for(const item of group.items){
+ for(const group of subgroups)for(const item of group.items){
   assert.ok(item.min<item.max,`${item.key} has ordered bounds`);
   assert.ok(DEFAULT_SETTINGS[item.key]>=item.min&&DEFAULT_SETTINGS[item.key]<=item.max,`${item.key} default is in bounds`);
  }
  const defaults=resolveSettings();
  assert.deepEqual({...defaults,bounds:undefined},{...DEFAULT_SETTINGS,bounds:undefined});
- for(const group of PARAMETER_GROUPS)for(const item of group.items)assert.deepEqual(defaults.bounds[item.key],{min:item.min,max:item.max});
+ for(const group of subgroups)for(const item of group.items)assert.deepEqual(defaults.bounds[item.key],{min:item.min,max:item.max});
 });
 
 test("saved parameter overrides are clamped and invalid values ignored",()=>{
@@ -90,4 +91,18 @@ test("huddling uses a capped local pocket instead of a population-wide centroid"
  const target=localHuddleTarget(centre,[centre,...near,...distant],125,5,26);
  assert.ok(target);assert.equal(target.count,5);assert.ok(Math.abs(Math.hypot(target.x-target.cx,target.y-target.cy)-26)<1e-8);
  assert.equal(localHuddleTarget(centre,[centre,near[0]],125,5,26),null,"a lone neighbour should not form a huddle pocket");
+});
+
+
+test("parameter hierarchy contains unique physiology, growth and locomotion controls",()=>{
+ const subgroups=PARAMETER_GROUPS.flatMap(group=>group.subgroups);
+ const keys=subgroups.flatMap(group=>group.items.map(item=>item.key));
+ assert.equal(new Set(keys).size,keys.length);
+ for(const key of ["basalMetabolism","hungerSensitivity","feedingRate","foodEfficiency","movementEnergyCost","initialEnergy","juvenileStartScale","juvenileMaturationRate","bodyMassGrowthRate","segmentGrowthCost","maxSegments","turnSpeed","acceleration","braking","undulationFrequency","undulationAmplitude","tier1Age","tier2Age","tier3Age"])assert.ok(keys.includes(key),`${key} is configurable`);
+ assert.ok(PARAMETER_GROUPS.every(group=>group.subgroups.length>0));
+});
+
+test("settings expose a deep accordion hierarchy with more than eighty distinct controls",()=>{
+ const groups=PARAMETER_GROUPS,subgroups=groups.flatMap(group=>group.subgroups),items=subgroups.flatMap(group=>group.items);
+ assert.equal(groups.length,8);assert.equal(subgroups.length,17);assert.equal(items.length,81);assert.equal(new Set(items.map(item=>item.key)).size,81);
 });

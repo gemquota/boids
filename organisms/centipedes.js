@@ -78,11 +78,11 @@ export function centipedeProgression(morphology) {
   ];
 }
 
-export function centipedeSpriteIndex(morphology, segmentAge = 0) {
+export function centipedeSpriteIndex(morphology, segmentAge = 0, parameters = {}) {
   const path = centipedeProgression(morphology);
-  if (segmentAge < 900) return path[0];
-  if (segmentAge < 4200) return path[1];
-  if (segmentAge < 11000) return path[2];
+  if (segmentAge < (parameters.tier1Age ?? 900)) return path[0];
+  if (segmentAge < (parameters.tier2Age ?? 4200)) return path[1];
+  if (segmentAge < (parameters.tier3Age ?? 11000)) return path[2];
   return path[3];
 }
 
@@ -207,18 +207,19 @@ export function sampleCentipedeTrail(trail, distance, spacing = 10) {
 
 // Build a distance-spaced articulated body and resolve segment/body contacts.
 // Sprite overlap is intentional: smaller body plates sit close together behind the larger head.
-export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, width = Infinity, height = Infinity, tick = 0 } = {}) {
+export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, width = Infinity, height = Infinity, tick = 0, segmentSpacing = .56, undulationFrequency = .12, undulationAmplitude = .09 } = {}) {
   const bodies = [];
   for (const agent of agents) {
     if (agent.dead) continue;
     const count = Math.max(1, Math.min(128, Number(agent.segments) || 1));
     const radius = Math.max(1.5, (agent.phenotype?.radius || agent.radius || 2) * (agent.massScale || 1));
-    const spacing = radius * .56;
+    const spacing = radius * segmentSpacing;
     const trail = agent.segmentTrail?.length ? agent.segmentTrail : [{ x: agent.x, y: agent.y }];
     const points = [{ x: agent.x, y: agent.y, angle: Math.atan2(agent.vy || 0, agent.vx || 1) }];
     for (let index = 1; index < count; index++) {
       const point = sampleCentipedeTrail(trail, index * spacing);
-      points.push({ x: point.x, y: point.y, angle: point.angle });
+      const wave = Math.sin(tick * undulationFrequency - index * .72) * undulationAmplitude * radius * (index / Math.max(1,count-1));
+      points.push({ x: point.x - Math.sin(point.angle) * wave, y: point.y + Math.cos(point.angle) * wave, angle: point.angle });
     }
     agent.bodySegments = points;
     bodies.push({ agent, points, radius, spacing });

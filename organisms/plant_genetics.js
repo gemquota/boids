@@ -17,15 +17,15 @@ export function inheritPlantGenome(a,b,random=Math.random){
  return{version:1,traits,chromosome,regulators:expressed.filter(g=>g.type==="regulator"),nodes:[],spores:0};
 }
 export function germinatePlant(x,y,genome,random=Math.random){
- return{id:Math.floor(random()*0x7fffffff),x,y,age:0,energy:.45,health:1,genome,traits:genome.traits,nodes:[{id:0,parent:null,x:0,y:0,length:2,angle:-Math.PI/2,age:0,order:0}],nextNodeId:1,sporeCooldown:120,kind:"plant"};
+ return{id:Math.floor(random()*0x7fffffff),x,y,age:0,energy:.56,health:1,genome,traits:genome.traits,nodes:[{id:0,parent:null,x:0,y:0,length:2,angle:-Math.PI/2,age:0,order:0}],nextNodeId:1,sporeCooldown:120,kind:"plant"};
 }
 export function growPlant(plant,environment,dt=1,random=Math.random){
  const t=plant.traits||defaults,reg=(plant.genome?.regulators||[]),regulate=i=>Math.max(.2,1+(reg.find(g=>g.target===i)?.value||0)),light=environment.light??.5,water=environment.moisture??.5,temp=environment.temperature??.5,nutrients=environment.nutrients??.5;
  const waterFit=Math.max(.05,1-Math.abs(water-t.waterAffinity)*.9+t.rooting*(1-water)*.18),lightFit=Math.max(.05,1-Math.abs(light-t.lightAffinity)*.9+(1-light)*t.shadeTolerance*.35),stress=Math.max(0,.22-water*t.droughtTolerance*.5);
- const gain=Math.max(0,t.growth*regulate(0)*.00135*waterFit*lightFit*(.35+nutrients)*Math.max(.1,1-Math.abs(temp-.55)))*dt;
+ const gain=Math.max(0,t.growth*regulate(0)*.0024*waterFit*lightFit*(.35+nutrients)*Math.max(.1,1-Math.abs(temp-.55)))*dt;
  plant.energy=Math.max(0,Math.min(1.5,(plant.energy||0)+gain-stress*.0006*dt));plant.age+=dt;plant.sporeCooldown-=dt;
  const cap=Math.min(72,5+Math.floor(plant.energy*24*t.branching*regulate(1)));
- if(plant.energy>.52&&plant.nodes.length<cap&&random()<Math.min(.9,gain*55+(.0004*t.branching*regulate(1)))*dt){
+ if(plant.energy>.48&&plant.nodes.length<cap&&random()<Math.min(.9,gain*75+(.025*t.branching*regulate(1)))*dt){
   const parent=plant.nodes[Math.floor(random()*plant.nodes.length)]||plant.nodes[0],side=random()<.5?-1:1,angle=parent.angle+side*(.25+random()*.8);
   plant.nodes.push({id:plant.nextNodeId++,parent:parent.id,x:parent.x+Math.cos(angle)*parent.length,y:parent.y+Math.sin(angle)*parent.length,length:2.8+t.growth*5,angle,age:0,order:parent.order+1,fruit:random()<.035?{food:.22,energy:3.8}:null});plant.energy-=.012;
  }
