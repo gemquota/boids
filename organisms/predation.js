@@ -2,13 +2,13 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const radius=a=>Math.max(2,(a.radius||a.traits?.size||3)*(a.massScale||1));
 const randOf=(rng)=>rng();
-export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution=.42,injuryRecovery=.0008,consumeRate=.012}={}){
+export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution=.42,injuryRecovery=.0016,consumeRate=.012}={}){
  const agents=world.agents,byId=new Map(agents.map(a=>[a.id,a])),events=world.combatEvents||(world.combatEvents=[]);
  let hits=0,kills=0,consumed=0;world.detritus??=0;world.sicknessEvents??=0;const cell=28,cols=Math.max(1,Math.ceil(world.width/cell)),rows=Math.max(1,Math.ceil(world.height/cell)),grid=new Map();for(const a of agents){if(a.dead)continue;const add=(x,y)=>{const key=Math.floor(x/cell)+":"+Math.floor(y/cell);if(!grid.has(key))grid.set(key,[]);grid.get(key).push(a)};add(a.x,a.y);for(const part of a.bodySegments||[])add(part.x,part.y)}const nearby=(x,y,r)=>{const out=[];for(let gy=Math.floor((y-r)/cell);gy<=Math.floor((y+r)/cell);gy++)for(let gx=Math.floor((x-r)/cell);gx<=Math.floor((x+r)/cell);gx++)for(const a of grid.get((((gx%cols)+cols)%cols)+":"+(((gy%rows)+rows)%rows))||[])out.push(a);return out};
  for(const a of agents){
   a.health??=1;a.injury??=0;a.dead??=false;a.attackCooldown=Math.max(0,(a.attackCooldown||0)-dt);
   if(a.dead){a.vx=0;a.vy=0;a.energy=0;a.rot??=0;a.sickness??=0;if(a.consumedBy!=null&&a.consumedBy!==-1){const killer=byId.get(a.consumedBy);if(killer){a.headMass??=(a.initialMass||a.mass||1)*.12;const bite=Math.min(a.mass||1,consumeRate*dt*(killer.traits?.attackSpeed||1)),headBite=Math.min(a.headMass,bite);a.headMass=Math.max(0,a.headMass-headBite);a.mass=Math.max(0,(a.mass||1)-bite);killer.acquiredMass=(killer.acquiredMass||0)+bite*.82;killer.mass=(killer.mass||1)+bite*.82;killer.massScale=Math.cbrt(killer.mass/Math.max(.01,killer.baseMass||1));killer.energy=Math.min(3,(killer.energy||0)+bite*.72);killer.health=Math.min(1,(killer.health||1)+bite*.08);consumed+=bite;if(a.kind==="centipede"&&!a.headConsumed&&a.headMass<=.0001){a.headConsumed=true;assimilateHead(killer,a);killer.headMeals=(killer.headMeals||0)+1;world.headMeals=(world.headMeals||0)+1}if(a.mass<=.015){killer.consumedMass=(killer.consumedMass||0)+(a.initialMass||1);killer.attachedPrey=null;a.consumedBy=-1}}}if(a.consumedBy==null&&a.mass>.015&&world.tick-(a.deathTick||world.tick)<900){const scavenger=nearby(a.x,a.y,radius(a)+12).find(k=>!k.dead&&k.id!==a.id&&Math.hypot(k.x-a.x,k.y-a.y)<radius(k)+radius(a)+5);if(scavenger){const bite=Math.min(a.mass,.006*dt*(scavenger.traits?.tracking||1));a.mass-=bite;scavenger.energy=Math.min(3,(scavenger.energy||0)+bite*.62);scavenger.mass=(scavenger.mass||1)+bite*.3;scavenger.massScale=Math.cbrt(scavenger.mass/Math.max(.01,scavenger.baseMass||1));consumed+=bite}}const age=Math.max(0,world.tick-(a.deathTick||world.tick));a.rot=Math.min(1,Math.max(0,(age-900)/5200));if(a.rot>0){const decay=Math.min(a.mass||0,(a.initialMass||1)*(.000025+.00011*a.rot)*dt);a.mass=Math.max(0,(a.mass||0)-decay);world.detritus+=decay;if(a.mass<=.01){a.consumedBy=-1;a.decomposed=true}}if(a.rot>.12&&random()<(.000015+a.rot*.00012)*dt){a.sickness=Math.min(1,(a.sickness||0)+.12);world.sicknessEvents++}continue}
-  a.injury=Math.max(0,a.injury-injuryRecovery*dt);a.health=Math.min(1,a.health+injuryRecovery*.15*dt);a.headSenseBoost=Math.max(0,(a.headSenseBoost||0)-dt);if(a.attachedPrey!=null){const corpse=byId.get(a.attachedPrey);if(corpse?.dead){a.x=corpse.x;a.y=corpse.y;a.vx=0;a.vy=0}else a.attachedPrey=null}
+  a.injury=Math.max(0,a.injury-injuryRecovery*dt);a.health=Math.min(1,a.health+injuryRecovery*.30*dt);a.headSenseBoost=Math.max(0,(a.headSenseBoost||0)-dt);if(a.attachedPrey!=null){const corpse=byId.get(a.attachedPrey);if(corpse?.dead){a.x=corpse.x;a.y=corpse.y;a.vx=0;a.vy=0}else a.attachedPrey=null}
  }
  // Spatial hash prevents an all-pairs cost as the ecosystem grows.
  const seen=new Set();
@@ -40,7 +40,7 @@ export function updateCombat(world,dt=1,{random=Math.random,collisionRestitution
  return world.combat;
 }
 function strike(attacker,prey,random,multiplier=1,tick=0,world=null){
- const at=attacker.traits||{},pt=prey.traits||{},damage=Math.max(.015,(at.damage||.4)*(at.attack||1)*multiplier/(1+(pt.defense||1)*.45));
+ const at=attacker.traits||{},pt=prey.traits||{},damage=Math.max(.012,(at.damage||.4)*(at.attack||1)*multiplier*.82/(1+(pt.defense||1)*.55));
  prey.health=Math.max(0,(prey.health??1)-damage);prey.injury=Math.min(1,(prey.injury||0)+damage*.8);prey.lastDamage=damage;prey.lastAttacker=attacker.id;
  // A strike is a real momentum exchange: the target is knocked away, the attacker
  // recoils, and an off-centre body hit adds angular velocity instead of a canned shove.
@@ -68,10 +68,10 @@ function assimilateHead(killer,prey){
  killer.headSenseBoost=Math.max(killer.headSenseBoost||0,2400);
 }
 function damageBody(prey,attacker,damage){
- if(prey.kind!=="centipede"||(prey.segments||1)<=1||damage<.08)return 0;
- const before=prey.segments,loss=Math.min(before-1,Math.max(1,Math.floor(damage*before*1.5)));
+ if(prey.kind!=="centipede"||(prey.segments||1)<=1||damage<.10)return 0;
+ const before=prey.segments,loss=Math.min(before-1,Math.max(1,Math.floor(damage*before*1.1)));
  if(!loss)return 0;
- const fraction=Math.min(.35,loss*.055*(prey.juvenileScale||1)**3),tissue=Math.max(0,(prey.baseMass||prey.mass||1)*fraction);
+ const fraction=Math.min(.35,loss*.04*(prey.juvenileScale||1)**3),tissue=Math.max(0,(prey.baseMass||prey.mass||1)*fraction);
  prey.segments=before-loss;prey.lostSegments=(prey.lostSegments||0)+loss;prey.mass=Math.max(.02,(prey.mass||prey.baseMass||1)-tissue);prey.acquiredMass=Math.max(0,(prey.acquiredMass||0)-tissue);
  attacker.acquiredMass=(attacker.acquiredMass||0)+tissue*.82;attacker.mass=(attacker.mass||attacker.baseMass||1)+tissue*.82;
  attacker.massScale=Math.cbrt(Math.max(.01,attacker.mass)/Math.max(.01,attacker.baseMass||1));

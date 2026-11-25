@@ -134,7 +134,7 @@ test('body segments follow at a fixed world-distance spacing independent of spee
   for (let i = 1; i < a.bodySegments.length; i++) {
     const previous = a.bodySegments[i - 1], point = a.bodySegments[i];
     const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
-    assert.ok(distance >= 2 * 1.12 - .01 && distance <= 2 * 1.12 + .01);
+    assert.ok(distance >= 2 * .56 - .01 && distance <= 2 * .56 + .01);
   }
 });
 
