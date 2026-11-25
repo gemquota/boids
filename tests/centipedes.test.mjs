@@ -93,11 +93,11 @@ test('segment growth responds to food, inherited efficiency, condition and age',
   assert.ok(young > old);
 });
 
-test('segment count scales to 64 without exceeding the new cap', () => {
+test('segment count scales beyond 64 without exceeding the expanded cap', () => {
   assert.equal(centipedeSegmentCount(0.7), 1);
   assert.ok(centipedeSegmentCount(3) > 1);
-  assert.equal(centipedeSegmentCount(10), 64);
-  assert.equal(centipedeSegmentCount(100), 64);
+  assert.equal(centipedeSegmentCount(10), 80);
+  assert.equal(centipedeSegmentCount(100), 128);
 });
 
 test('new segments are added behind the original as mass increases', () => {
@@ -143,5 +143,5 @@ test('overlapping body segments are separated by segment collision resolution', 
   const a = make(1, 20), b = make(2, 21);
   updateCentipedeBodies([a, b]);
   const distance = Math.hypot(a.bodySegments[1].x - b.bodySegments[1].x, a.bodySegments[1].y - b.bodySegments[1].y);
-  assert.ok(distance >= 2 * 2 * .72 - .01);
+  assert.ok(distance >= 2 * 2 * .74 * .76 - .01);
 });

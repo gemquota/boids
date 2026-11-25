@@ -144,7 +144,7 @@ export function inheritCentipedeMorphology(first = {}, second = {}, random = Mat
 }
 
 export function centipedeSegmentCount(mass = 0.7) {
-  return Math.max(1, Math.min(64, 1 + Math.floor((Math.max(0.7, mass) - 0.7) * 6.8)));
+  return Math.max(1, Math.min(128, 1 + Math.floor((Math.max(0.7, mass) - 0.7) * 8.5)));
 }
 
 // Growth combines food availability, physical condition, age and inherited
@@ -211,7 +211,7 @@ export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, w
   const bodies = [];
   for (const agent of agents) {
     if (agent.dead) continue;
-    const count = Math.max(1, Math.min(64, Number(agent.segments) || 1));
+    const count = Math.max(1, Math.min(128, Number(agent.segments) || 1));
     const radius = Math.max(1.5, (agent.phenotype?.radius || agent.radius || 2) * (agent.massScale || 1));
     const spacing = radius * 1.65;
     const trail = agent.segmentTrail?.length ? agent.segmentTrail : [{ x: agent.x, y: agent.y }];
@@ -227,7 +227,8 @@ export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3, w
   const parts = [];
   for (const body of bodies) for (let index = 0; index < body.points.length; index++) {
     const point = body.points[index];
-    parts.push({ ...body, point, index, radius: body.radius * (index ? .72 : .82) });
+    const taper=.94-.20*(index/Math.max(1,body.points.length-1));
+    parts.push({ ...body, point, index, radius: body.radius * taper * (index ? .76 : .9) });
   }
   const cell = Math.max(12, cellSize), grid = new Map();
   const key = (x, y) => `${Math.floor(x / cell)}:${Math.floor(y / cell)}`;
