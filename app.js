@@ -41,7 +41,11 @@ function drawClock(phase,climate){
  ctx.fillStyle="rgba(3,12,20,.88)";ctx.strokeStyle="rgba(117,157,169,.55)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,48,0,Math.PI*2);ctx.fill();ctx.stroke();
  // The outer thermal trace follows the current sampled ambient temperature.
  ctx.beginPath();ctx.arc(0,0,r+8,0,Math.PI*2);ctx.strokeStyle="rgba(45,69,83,.9)";ctx.lineWidth=5;ctx.stroke();ctx.beginPath();ctx.arc(0,0,r+8,-Math.PI/2,Math.PI*1.5);ctx.strokeStyle=tempColor;ctx.lineWidth=5;ctx.shadowColor=tempColor;ctx.shadowBlur=7;ctx.stroke();ctx.shadowBlur=0;
- ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.strokeStyle="rgba(132,164,174,.34)";ctx.lineWidth=1.4;ctx.stroke();
+ // Inner dial is split into daylight (06:00–18:00) and night (18:00–06:00).
+ ctx.save();ctx.beginPath();ctx.arc(0,0,r-1,0,Math.PI*2);ctx.clip();
+ ctx.fillStyle="rgba(125,207,239,.82)";ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r-1,0,Math.PI);ctx.closePath();ctx.fill();
+ ctx.fillStyle="rgba(54,39,103,.9)";ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r-1,Math.PI,Math.PI*2);ctx.closePath();ctx.fill();ctx.restore();
+ ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.strokeStyle="rgba(204,231,239,.7)";ctx.lineWidth=1.4;ctx.stroke();
  // 24 hour marks; midnight is fixed at the top, dawn at right, dusk at left.
  for(let i=0;i<24;i++){const a=-Math.PI/2+i*Math.PI/12,major=i%6===0,inner=major?r-6:r-3,outer=r-1;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);ctx.strokeStyle=major?"#d8e9e8":"rgba(153,185,190,.55)";ctx.lineWidth=major?2:1;ctx.stroke()}
  ctx.font="bold 8px ui-monospace,monospace";ctx.textAlign="center";ctx.textBaseline="middle";for(const [label,a] of [["00",-Math.PI/2],["06",0],["12",Math.PI/2],["18",Math.PI]]){ctx.fillStyle="#e2eeee";ctx.fillText(label,Math.cos(a)*(r+1),Math.sin(a)*(r+1))}
