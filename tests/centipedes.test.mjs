@@ -4,7 +4,7 @@ import {
   CENTIPEDE_SPRITES, MORPHOLOGY_BRANCHES, centipedeProgression,
   createCentipedeMorphology, inheritCentipedeMorphology,
   centipedeSpriteIndex, centipedeSegmentCount, growCentipedeMass,
-  initializeCentipede, advanceCentipede, sampleCentipedeTrail
+  initializeCentipede, advanceCentipede, sampleCentipedeTrail, updateCentipedeBodies
 } from '../organisms/centipedes.js';
 
 const agent = (overrides = {}) => ({
@@ -124,4 +124,24 @@ test('movement history follows the short path across wrapped world edges', () =>
   advanceCentipede(a, 1, 100, 80);
   assert.equal(a.trail.length, 2);
   assert.equal(a.trail[0].x, 102);
+});
+
+
+test('body segments follow at a fixed world-distance spacing independent of speed', () => {
+  const a = agent({ x: 30, y: 20, vx: 4, vy: 0, radius: 2, segments: 4, massScale: 1, phenotype: { radius: 2 }, segmentTrail: Array.from({ length: 30 }, (_, i) => ({ x: 30 - i * 2, y: 20 })) });
+  updateCentipedeBodies([a]);
+  assert.equal(a.bodySegments.length, 4);
+  for (let i = 1; i < a.bodySegments.length; i++) {
+    const previous = a.bodySegments[i - 1], point = a.bodySegments[i];
+    const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
+    assert.ok(distance >= 2 * 1.25 - .01 && distance <= 2 * 1.85 + .01);
+  }
+});
+
+test('overlapping body segments are separated by segment collision resolution', () => {
+  const make = (id, y) => agent({ id, x: 30, y, vx: 0, vy: 0, radius: 2, segments: 2, massScale: 1, phenotype: { radius: 2 }, segmentTrail: [{ x: 30, y }, { x: 25, y }] });
+  const a = make(1, 20), b = make(2, 21);
+  updateCentipedeBodies([a, b]);
+  const distance = Math.hypot(a.bodySegments[1].x - b.bodySegments[1].x, a.bodySegments[1].y - b.bodySegments[1].y);
+  assert.ok(distance >= 2 * 2 * .72 - .01);
 });

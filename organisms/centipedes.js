@@ -204,3 +204,81 @@ export function sampleCentipedeTrail(trail, distance, spacing = 10) {
   const a = trail[trail.length - 1], b = trail[Math.max(0, trail.length - 2)];
   return { x: a.x, y: a.y, angle: Math.atan2(a.y - b.y, a.x - b.x) };
 }
+
+// Build a distance-spaced articulated body and resolve segment/body contacts.
+// Sprite overlap is intentional: centres remain between 1.25r and 1.85r apart.
+export function updateCentipedeBodies(agents, { cellSize = 24, iterations = 3 } = {}) {
+  const bodies = [];
+  for (const agent of agents) {
+    if (agent.dead) continue;
+    const count = Math.max(1, Math.min(64, Number(agent.segments) || 1));
+    const radius = Math.max(1.5, (agent.phenotype?.radius || agent.radius || 2) * (agent.massScale || 1));
+    const spacing = radius * 1.65;
+    const trail = agent.segmentTrail?.length ? agent.segmentTrail : [{ x: agent.x, y: agent.y }];
+    const points = [{ x: agent.x, y: agent.y, angle: Math.atan2(agent.vy || 0, agent.vx || 1) }];
+    for (let index = 1; index < count; index++) {
+      const point = sampleCentipedeTrail(trail, index * spacing);
+      points.push({ x: point.x, y: point.y, angle: point.angle });
+    }
+    agent.bodySegments = points;
+    bodies.push({ agent, points, radius, spacing });
+  }
+
+  const parts = [];
+  for (const body of bodies) for (let index = 0; index < body.points.length; index++) {
+    const point = body.points[index];
+    parts.push({ ...body, point, index, radius: body.radius * (index ? .72 : .82) });
+  }
+  const cell = Math.max(12, cellSize), grid = new Map();
+  const key = (x, y) => `${Math.floor(x / cell)}:${Math.floor(y / cell)}`;
+  for (const part of parts) {
+    const k = key(part.point.x, part.point.y);
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(part);
+  }
+  const pairs = new Set();
+  for (const a of parts) {
+    const gx = Math.floor(a.point.x / cell), gy = Math.floor(a.point.y / cell);
+    for (let y = gy - 1; y <= gy + 1; y++) for (let x = gx - 1; x <= gx + 1; x++) {
+      for (const b of grid.get(`${x}:${y}`) || []) {
+        if (a === b || (a.agent === b.agent && Math.abs(a.index - b.index) <= 1)) continue;
+        const aid = `${a.agent.id}:${a.index}`, bid = `${b.agent.id}:${b.index}`;
+        const pair = aid < bid ? `${aid}|${bid}` : `${bid}|${aid}`;
+        if (pairs.has(pair)) continue;
+        pairs.add(pair);
+        let dx = b.point.x - a.point.x, dy = b.point.y - a.point.y;
+        let distance = Math.hypot(dx, dy);
+        const minimum = a.radius + b.radius;
+        if (distance >= minimum) continue;
+        if (distance < 1e-5) { dx = .001; dy = 0; distance = .001; }
+        const nx = dx / distance, ny = dy / distance, overlap = minimum - distance;
+        const aWeight = a.index ? .5 : 0, bWeight = b.index ? .5 : 0;
+        const total = aWeight + bWeight || 1;
+        a.point.x -= nx * overlap * (aWeight / total);
+        a.point.y -= ny * overlap * (aWeight / total);
+        b.point.x += nx * overlap * (bWeight / total);
+        b.point.y += ny * overlap * (bWeight / total);
+        const relative = (b.agent.vx - a.agent.vx) * nx + (b.agent.vy - a.agent.vy) * ny;
+        if (relative < 0) {
+          const impulse = -relative * .12;
+          if (a.index === 0) { a.agent.vx -= nx * impulse; a.agent.vy -= ny * impulse; }
+          if (b.index === 0) { b.agent.vx += nx * impulse; b.agent.vy += ny * impulse; }
+        }
+      }
+    }
+  }
+
+  // Keep the articulated chain within its overlap band after contact resolution.
+  for (let pass = 0; pass < iterations; pass++) for (const body of bodies) {
+    for (let i = 1; i < body.points.length; i++) {
+      const previous = body.points[i - 1], point = body.points[i];
+      let dx = point.x - previous.x, dy = point.y - previous.y, distance = Math.hypot(dx, dy) || .001;
+      const minimum = body.spacing * (1.25 / 1.65), maximum = body.spacing * (1.85 / 1.65);
+      if (distance >= minimum && distance <= maximum) continue;
+      const target = distance < minimum ? minimum : maximum, correction = (distance - target) / distance;
+      point.x -= dx * correction;
+      point.y -= dy * correction;
+    }
+  }
+  return bodies.length;
+}
