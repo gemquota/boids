@@ -118,8 +118,11 @@ export function packSegments(agents, cameraScale = 1, target = null) {
   const storage = target && target.length >= required ? target : new Float32Array(required);
   let count = 0;
   for (const a of agents) {
-    if (a.dead) continue;
-    const color = bodyColor(a.traits);
+    // Dead agents are drawn grey at .42 alpha in app.js; include them so
+    // corpses do not vanish on the GPU path. #69777b = (105,119,123)/255.
+    const dead = !!a.dead;
+    const color = dead ? [105 / 255, 119 / 255, 123 / 255] : bodyColor(a.traits);
+    const alpha = dead ? 0.42 : 1;
     const r = Math.max(1.5, a.radius || 3);
     const angle = Math.atan2(a.vy || 0, a.vx || 0);
     // Head.
@@ -131,7 +134,7 @@ export function packSegments(agents, cameraScale = 1, target = null) {
     storage[offset + 4] = color[0];
     storage[offset + 5] = color[1];
     storage[offset + 6] = color[2];
-    storage[offset + 7] = 1;
+    storage[offset + 7] = alpha;
     // Body segments, tail-first like app.js (draw order is cosmetic here;
     // the GPU draws in instance order, so head-first is also fine).
     const segments = a.bodySegments || [];
@@ -148,7 +151,7 @@ export function packSegments(agents, cameraScale = 1, target = null) {
       storage[offset + 4] = color[0];
       storage[offset + 5] = color[1];
       storage[offset + 6] = color[2];
-      storage[offset + 7] = 0.9;
+      storage[offset + 7] = dead ? 0.42 : 0.9;
     }
   }
   return { data: storage.subarray(0, count * FLOATS_PER_SEGMENT), storage, count };
@@ -266,7 +269,7 @@ export async function createBoidsGpuRenderer(canvas, options = {}) {
     const pass = encoder.beginRenderPass({
       colorAttachments: [{
         view: context.getCurrentTexture().createView(),
-        clearValue: { r: 0.023, g: 0.07, b: 0.106, a: 1 }, // app.js #06121b
+        clearValue: { r: 0, g: 0, b: 0, a: 0 }, // transparent: this canvas stacks above #world, whose #06121b background must show through
         loadOp: 'clear',
         storeOp: 'store',
       }],
