@@ -59,6 +59,7 @@ for (let branch = 0; branch < MORPHOLOGY_BRANCHES.length; branch++) {
 }
 
 function morphologyIndex(morphology = {}) {
+  morphology = morphology.morphology || morphology;
   const branch = clamp(Math.floor(morphology.branch ?? 0), 0, 5);
   const form = clamp(Math.floor(morphology.form ?? 0), 0, 5);
   const variant = clamp(Math.floor(morphology.variant ?? 0), 0, 5);
@@ -86,6 +87,39 @@ export function centipedeSpriteIndex(morphology, segmentAge = 0, parameters = {}
   return path[3];
 }
 
+// Hybrid segments blend the two parental family sprites at the same
+// developmental tier. The six original art families remain the endpoints.
+export function centipedeSpriteLayers(morphology, segmentAge = 0, parameters = {}) {
+  const primary = centipedeSpriteIndex(morphology, segmentAge, parameters);
+  const secondaryBranch = morphology?.secondaryBranch;
+  if (!Number.isInteger(secondaryBranch) || secondaryBranch < 0 || secondaryBranch > 5 || secondaryBranch === morphology?.branch) {
+    return [{ index: primary, alpha: 1 }];
+  }
+  const secondary = centipedeSpriteIndex({ ...morphology, branch: secondaryBranch, secondaryBranch: undefined }, segmentAge, parameters);
+  const blend = clamp(Number(morphology.hybridWeight ?? 0.5), 0.08, 0.92);
+  return [{ index: primary, alpha: 1 - blend }, { index: secondary, alpha: blend }];
+}
+
+const circularDistance = (a, b) => {
+  const delta = Math.abs((((a - b) % 6) + 6) % 6);
+  return Math.min(delta, 6 - delta);
+};
+
+export function centipedeSpeciesPosition(agentOrMorphology = {}) {
+  const morphology = agentOrMorphology.morphology || agentOrMorphology;
+  const position = Number(agentOrMorphology.speciesPosition ?? morphology.speciesPosition ?? morphology.branch ?? 0);
+  return ((position % 6) + 6) % 6;
+}
+
+export function centipedeSpeciesCompatible(first, second) {
+  return circularDistance(centipedeSpeciesPosition(first), centipedeSpeciesPosition(second)) <= 1 + 1e-9;
+}
+
+function midpointOnHexagon(a, b) {
+  let delta = ((b - a + 9) % 6) - 3;
+  return ((a + delta * 0.5) % 6 + 6) % 6;
+}
+
 export function createCentipedeMorphology(traits = {}, random = Math.random) {
   const speed = clamp(Number(traits.speed ?? 1), 0.25, 2);
   const perception = clamp(Number(traits.perception ?? 1), 0.25, 2);
@@ -108,7 +142,7 @@ export function createCentipedeMorphology(traits = {}, random = Math.random) {
     if (choice <= 0) { branch = i; break; }
   }
   return {
-    branch,
+    branch, speciesPosition: branch,
     form: randomIndex(random, FORM_COUNT),
     variant: randomIndex(random, FORM_COUNT),
     apex: randomIndex(random, FORM_COUNT)
@@ -116,22 +150,29 @@ export function createCentipedeMorphology(traits = {}, random = Math.random) {
 }
 
 export function inheritCentipedeMorphology(first = {}, second = {}, random = Math.random) {
-  const a = morphologyIndex(first);
-  const b = morphologyIndex(second);
+  const firstMorphology = first.morphology || first;
+  const secondMorphology = second.morphology || second;
+  const a = morphologyIndex(firstMorphology);
+  const b = morphologyIndex(secondMorphology);
+  const firstPosition = centipedeSpeciesPosition(first);
+  const secondPosition = centipedeSpeciesPosition(second);
+  const speciesPosition = midpointOnHexagon(firstPosition, secondPosition);
   let branch = random() < 0.5 ? a.branch : b.branch;
+  let secondaryBranch = null;
+  if (a.branch !== b.branch && circularDistance(a.branch, b.branch) <= 1) {
+    secondaryBranch = branch === a.branch ? b.branch : a.branch;
+  } else {
+    const inheritedHybrid = random() < 0.5 ? firstMorphology : secondMorphology;
+    if (Number.isInteger(inheritedHybrid.secondaryBranch) && inheritedHybrid.secondaryBranch !== branch) secondaryBranch = inheritedHybrid.secondaryBranch;
+  }
   const matching = [a, b].filter(parent => parent.branch === branch);
-  let form = matching.length
-    ? matching[randomIndex(random, matching.length)].form
-    : randomIndex(random, FORM_COUNT);
-  let variant = matching.length
-    ? matching[randomIndex(random, matching.length)].variant
-    : randomIndex(random, FORM_COUNT);
-  let apex = matching.length
-    ? matching[randomIndex(random, matching.length)].apex
-    : randomIndex(random, FORM_COUNT);
+  let form = matching.length ? matching[randomIndex(random, matching.length)].form : randomIndex(random, FORM_COUNT);
+  let variant = matching.length ? matching[randomIndex(random, matching.length)].variant : randomIndex(random, FORM_COUNT);
+  let apex = matching.length ? matching[randomIndex(random, matching.length)].apex : randomIndex(random, FORM_COUNT);
 
   if (random() < 0.035) {
     branch = randomIndex(random, MORPHOLOGY_BRANCHES.length);
+    secondaryBranch = null;
     form = randomIndex(random, FORM_COUNT);
     variant = randomIndex(random, FORM_COUNT);
     apex = randomIndex(random, FORM_COUNT);
@@ -140,7 +181,12 @@ export function inheritCentipedeMorphology(first = {}, second = {}, random = Mat
     if (random() < 0.18) variant = randomIndex(random, FORM_COUNT);
     if (random() < 0.22) apex = randomIndex(random, FORM_COUNT);
   }
-  return { branch, form, variant, apex };
+  const result = { branch, speciesPosition, form, variant, apex };
+  if (secondaryBranch != null && secondaryBranch !== branch) {
+    result.secondaryBranch = secondaryBranch;
+    result.hybridWeight = 0.35 + random() * 0.3;
+  }
+  return result;
 }
 
 export function centipedeSegmentCount(mass = 0.7) {
@@ -162,6 +208,8 @@ export function growCentipedeMass(mass = 0.7, energy = 0.7, dt = 1, traits = {},
 
 export function initializeCentipede(agent, random = Math.random) {
   if (!agent.morphology) agent.morphology = createCentipedeMorphology(agent.traits, random);
+  if (!Number.isFinite(agent.speciesPosition)) agent.speciesPosition = centipedeSpeciesPosition(agent.morphology);
+  if (!Number.isFinite(agent.morphology.speciesPosition)) agent.morphology.speciesPosition = agent.speciesPosition;
   agent.mass = 0.7;
   agent.segments = [{ bornAt: 0 }];
   agent.trail = [{ x: agent.x, y: agent.y }];

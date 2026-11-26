@@ -10,7 +10,7 @@ Independent, versioned modules. The normal field runtime enables hereditary gene
 - **Selection**: composable natural, environmental, sexual, frequency-dependent, kin, group, artificial and neutral model primitives.
 - **Evolution adapter**: connects parent selection, chromosome inheritance and neural evolution to Core callbacks.
 - **Genetics**: expressed organism traits and bounded trait inheritance, including inherited segment-growth efficiency.
-- **Centipede morphology**: a three-stage art tree (base → six branch families → 216 deeper forms) with parental recombination, mutation and per-segment development.
+- **Centipede morphology**: six foundational segment families arranged as a cyclic hexagonal species ring. Organisms can breed within their own lineage or with either adjacent lineage; distant lineages are reproductively isolated. Adjacent crosses produce fractional intermediary species positions and visually blended parental segment families, with backcrossing and inherited morphology variation. The four-stage art tree retains the original family assets and develops each segment according to age.
 - **Ecology**: habitat gradients, renewable resources, grazing and environmental stress.
 - **Future extensions**: regulation, epigenetics, developmental morphology, advanced kinship and inbreeding models.
 

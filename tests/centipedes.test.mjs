@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   CENTIPEDE_SPRITES, MORPHOLOGY_BRANCHES, centipedeProgression,
   createCentipedeMorphology, inheritCentipedeMorphology,
-  centipedeSpriteIndex, centipedeSegmentCount, growCentipedeMass,
+  centipedeSpriteIndex, centipedeSpriteLayers, centipedeSpeciesCompatible, centipedeSpeciesPosition, centipedeSegmentCount, growCentipedeMass,
   initializeCentipede, advanceCentipede, sampleCentipedeTrail, updateCentipedeBodies
 } from '../organisms/centipedes.js';
 
@@ -67,6 +67,40 @@ test('offspring morphology recombines parental branch forms with bounded mutatio
   assert.ok(child.form >= 0 && child.form < 6);
   assert.ok(child.variant >= 0 && child.variant < 6);
   assert.ok(child.apex >= 0 && child.apex < 6);
+});
+
+
+test('species compatibility follows the cyclic six-family hexagon', () => {
+  const species = branch => ({ morphology: { branch, speciesPosition: branch } });
+  assert.equal(centipedeSpeciesCompatible(species(0), species(0)), true);
+  assert.equal(centipedeSpeciesCompatible(species(0), species(1)), true);
+  assert.equal(centipedeSpeciesCompatible(species(0), species(5)), true);
+  assert.equal(centipedeSpeciesCompatible(species(0), species(2)), false);
+  assert.equal(centipedeSpeciesCompatible(species(1), species(4)), false);
+});
+
+test('adjacent-family offspring occupy the intermediary species position and blend both art families', () => {
+  const child = inheritCentipedeMorphology(
+    { morphology: { branch: 0, speciesPosition: 0, form: 1, variant: 2, apex: 3 } },
+    { morphology: { branch: 1, speciesPosition: 1, form: 4, variant: 5, apex: 0 } },
+    () => 0.4
+  );
+  assert.equal(centipedeSpeciesPosition(child), 0.5);
+  assert.equal(child.speciesPosition, 0.5);
+  assert.ok([0, 1].includes(child.branch));
+  assert.ok([0, 1].includes(child.secondaryBranch));
+  const layers = centipedeSpriteLayers(child, 5000);
+  assert.equal(layers.length, 2);
+  assert.ok(Math.abs(layers[0].alpha + layers[1].alpha - 1) < 1e-9);
+  assert.notEqual(layers[0].index, layers[1].index);
+});
+
+test('hybrid lineages can backcross with either parent family but not distant families', () => {
+  const hybrid = { speciesPosition: 0.5, morphology: { branch: 0, secondaryBranch: 1 } };
+  assert.equal(centipedeSpeciesCompatible(hybrid, { speciesPosition: 0 }), true);
+  assert.equal(centipedeSpeciesCompatible(hybrid, { speciesPosition: 1 }), true);
+  assert.equal(centipedeSpeciesCompatible(hybrid, { speciesPosition: 2 }), false);
+  assert.equal(centipedeSpeciesCompatible({ speciesPosition: 5.5 }, { speciesPosition: 0.5 }), true);
 });
 
 test('a new centipede starts with one base-art segment and retains inherited morphology', () => {

@@ -4,7 +4,7 @@ const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const living=(a)=>a&&!a.dead;
 const adult=(a,maturationAge=900,reproductiveAge=18000)=>living(a)&&a.age>=(a.traits?.maturity??1)*maturationAge&&a.age<reproductiveAge&&a.energy>1.02&&(a.health??1)>.4;
 const clearPair=(a,b)=>{if(a){a.matePartner=null;a.courtshipProgress=0;a.reproductiveTarget=null;a.reproductiveState=null}if(b?.matePartner===a?.id){b.matePartner=null;b.courtshipProgress=0;b.reproductiveTarget=null;b.reproductiveState=null}};
-export function updateReproduction(world,dt=1,{maxPopulation=800,birthInterval=48,broodSize=1,random=Math.random,inheritTraits=(a)=>({...a}),inheritOrganism=()=>({}),environmentAt=null,findBirthSite=null,enabled=true,adultMaturationAge=900,maxReproductiveAge=18000,courtshipDuration=180,gestationDuration=900,gestationEnergyCost=.00018,gestationEnergyReserveCost=.12,parentalCareRadius=105}={}){
+export function updateReproduction(world,dt=1,{maxPopulation=800,birthInterval=48,broodSize=1,random=Math.random,inheritTraits=(a)=>({...a}),inheritOrganism=()=>({}),environmentAt=null,findBirthSite=null,enabled=true,adultMaturationAge=900,maxReproductiveAge=18000,courtshipDuration=180,gestationDuration=900,gestationEnergyCost=.00018,gestationEnergyReserveCost=.12,parentalCareRadius=105,canMate=()=>true}={}){
  if(!enabled)return{births:0,pregnancies:0,courting:0};
  const agents=world.agents.filter(living),byId=new Map(agents.map(a=>[a.id,a]));
  let births=0;
@@ -43,11 +43,11 @@ export function updateReproduction(world,dt=1,{maxPopulation=800,birthInterval=4
   if(a.pregnancy)continue;
   if(!adult(a,adultMaturationAge,maxReproductiveAge)||a.reproductiveCooldown>0){if(a.matePartner!=null)clearPair(a,currentById.get(a.matePartner));continue}
   const partner=currentById.get(a.matePartner);
-  if(partner&&(!adult(partner,adultMaturationAge,maxReproductiveAge)||partner.sex===a.sex||partner.pregnancy||partner.matePartner!==a.id)){clearPair(a,partner)}
+  if(partner&&(!adult(partner,adultMaturationAge,maxReproductiveAge)||partner.sex===a.sex||partner.pregnancy||partner.matePartner!==a.id||!canMate(a,partner))){clearPair(a,partner)}
   if(a.matePartner!=null)continue;
   let best=null,bestScore=-Infinity;
   for(const b of current){
-   if(b===a||b.matePartner!=null||b.pregnancy||b.sex===a.sex||!adult(b,adultMaturationAge,maxReproductiveAge)||b.reproductiveCooldown>0)continue;
+   if(b===a||b.matePartner!=null||b.pregnancy||b.sex===a.sex||!adult(b,adultMaturationAge,maxReproductiveAge)||b.reproductiveCooldown>0||!canMate(a,b))continue;
    if(a.parents?.includes(b.id)||b.parents?.includes(a.id)||(a.parents||[]).some(id=>(b.parents||[]).includes(id)))continue;
    const d=distance(a,b);if(d>260)continue;
    const climateA=environmentAt?.(a),climateB=environmentAt?.(b);if((a.traits?.seasonality??0)>.5&&(climateA?.temperature??1)<.38)continue;if((b.traits?.seasonality??0)>.5&&(climateB?.temperature??1)<.38)continue;const attraction=(a.traits?.sexDrive??1)*(b.traits?.sexDrive??1)*(b.traits?.fertility??1);
