@@ -19,10 +19,10 @@ export function inheritPlantGenome(a,b,random=Math.random){
 export function germinatePlant(x,y,genome,random=Math.random){
  return{id:Math.floor(random()*0x7fffffff),x,y,age:0,energy:.56,health:1,genome,traits:genome.traits,nodes:[{id:0,parent:null,x:0,y:0,length:2,angle:-Math.PI/2,age:0,order:0}],nextNodeId:1,sporeCooldown:120,kind:"plant"};
 }
-export function growPlant(plant,environment,dt=1,random=Math.random){
+export function growPlant(plant,environment,dt=1,random=Math.random,parameters={}){
  const t=plant.traits||defaults,reg=(plant.genome?.regulators||[]),regulate=i=>Math.max(.2,1+(reg.find(g=>g.target===i)?.value||0)),light=environment.light??.5,water=environment.moisture??.5,temp=environment.temperature??.5,nutrients=environment.nutrients??.5;
  const waterFit=Math.max(.05,1-Math.abs(water-t.waterAffinity)*.9+t.rooting*(1-water)*.18),lightFit=Math.max(.05,1-Math.abs(light-t.lightAffinity)*.9+(1-light)*t.shadeTolerance*.35),stress=Math.max(0,.22-water*t.droughtTolerance*.5);
- const gain=Math.max(0,t.growth*regulate(0)*.0024*waterFit*lightFit*(.35+nutrients)*Math.max(.1,1-Math.abs(temp-.55)))*dt;
+ const gain=Math.max(0,t.growth*regulate(0)*(parameters.plantResourceRegeneration??.0024)*waterFit*lightFit*(.35+nutrients)*Math.max(.1,1-Math.abs(temp-.55)))*dt;
  plant.energy=Math.max(0,Math.min(1.5,(plant.energy||0)+gain-stress*.0006*dt));plant.age+=dt;plant.sporeCooldown-=dt;
  const cap=Math.min(72,5+Math.floor(plant.energy*24*t.branching*regulate(1)));
  if(plant.energy>.48&&plant.nodes.length<cap&&random()<Math.min(.9,gain*75+(.025*t.branching*regulate(1)))*dt){

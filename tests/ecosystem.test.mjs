@@ -193,3 +193,35 @@ test("cold slows locomotion by half overnight and by three quarters from midnigh
  assert.equal(coldMovementMultiplier(12,.1,.3),1);
  assert.equal(coldMovementMultiplier(2,.5,.3),1,"warm nights do not trigger cold slowdown");
 });
+
+
+test("cold movement multipliers are independently configurable",()=>{
+ assert.equal(coldMovementMultiplier(20,0,.3,{eveningMovementMultiplier:.7,nightMovementMultiplier:.2}),.7);
+ assert.equal(coldMovementMultiplier(3,0,.3,{eveningMovementMultiplier:.7,nightMovementMultiplier:.2}),.2);
+ assert.equal(coldMovementMultiplier(20,.8,.3,{eveningMovementMultiplier:.7}),1);
+});
+
+test("plant resource regeneration coefficient changes plant energy gain",()=>{
+ const genome=createPlantGenome(()=>.5),base=germinatePlant(0,0,genome,()=>.5),fast={...base,energy:.1,nodes:base.nodes.map(n=>({...n}))},slow={...base,energy:.1,nodes:base.nodes.map(n=>({...n}))};
+ const env={light:.8,moisture:.8,temperature:.55,nutrients:.8};
+ growPlant(fast,env,1,()=>1,{plantResourceRegeneration:.006});
+ growPlant(slow,env,1,()=>1,{plantResourceRegeneration:.001});
+ assert.ok(fast.energy>slow.energy);
+});
+
+
+test("reproductive age, courtship and gestation settings alter eligibility and pregnancy timing",async()=>{
+ const {createWorld}=await import("../core/simulation.js");
+ const {updateReproduction}=await import("../organisms/reproduction.js");
+ const world=createWorld(300,200,2,73),[mother,father]=world.agents;
+ for(const organism of [mother,father]){organism.age=1200;organism.energy=2;organism.sex=organism===mother?"female":"male"}
+ mother.x=100;mother.y=100;father.x=104;father.y=100;
+ updateReproduction(world,1,{maxReproductiveAge:1000,random:()=>.25});
+ assert.equal(mother.matePartner??null,null,"organisms past the reproductive age limit are ineligible");
+ updateReproduction(world,1,{maxReproductiveAge:18000,adultMaturationAge:2000,random:()=>.25});
+ assert.equal(mother.matePartner??null,null,"organisms below the configured maturation age are ineligible");
+ for(let i=0;i<3;i++)updateReproduction(world,1,{maxReproductiveAge:18000,adultMaturationAge:900,courtshipDuration:1,gestationDuration:600,gestationEnergyCost:.001,random:()=>.25});
+ const pregnant=mother.pregnancy?mother:father.pregnancy?father:null;
+ assert.ok(pregnant?.pregnancy,"short courtship permits conception");
+ assert.ok(pregnant.pregnancy.remaining<=600&&pregnant.pregnancy.remaining>590,"gestation duration reaches the pregnancy timer");
+});

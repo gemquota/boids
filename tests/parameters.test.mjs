@@ -70,13 +70,14 @@ test("dawn cold stress is buffered and huddling reduces thermal energy loss",asy
 
 
 test("default ecosystem starts with a balanced population, forage reserve and movement ceiling",()=>{
- const settings=resolveSettings();assert.equal(settings.population,48);assert.equal(settings.plantDensity,2.5);assert.equal(settings.foodAbundance,2.2);assert.equal(settings.coldDamage,.0001);assert.equal(settings.thirstRate,.00016);assert.equal(settings.maxSpeed,10);
+ const settings=resolveSettings();assert.equal(settings.population,48);assert.equal(settings.plantDensity,2.5);assert.equal(settings.foodAbundance,2.2);assert.equal(settings.coldDamage,.0001);assert.equal(settings.thirstRate,.00016);assert.equal(settings.maxSpeed,10);assert.equal(settings.maxPopulation,1200);assert.equal(settings.plantDensity,2.5);
 });
 
 
 test("legacy saved defaults migrate the movement ceiling and expanded vision range",()=>{
  const settings=resolveSettings({maxSpeed:.78,perception:76,bounds:{maxSpeed:{min:.4,max:3},perception:{min:20,max:150}}});
- assert.equal(settings.maxSpeed,10);assert.deepEqual(settings.bounds.maxSpeed,{min:1,max:10});assert.deepEqual(settings.bounds.perception,{min:20,max:300});assert.equal(settings.perception,76);
+ assert.equal(settings.maxSpeed,10);assert.equal(settings.maxPopulation,1200);assert.equal(settings.plantDensity,2.5);assert.deepEqual(settings.bounds.maxSpeed,{min:1,max:10});assert.deepEqual(settings.bounds.perception,{min:20,max:300});assert.equal(settings.perception,76);
+ const oldPlantRange=resolveSettings({bounds:{plantDensity:{min:.25,max:2.5}}});assert.deepEqual(oldPlantRange.bounds.plantDensity,{min:.25,max:5});
 });
 
 
@@ -104,5 +105,5 @@ test("parameter hierarchy contains unique physiology, growth and locomotion cont
 
 test("settings expose a deep accordion hierarchy with more than eighty distinct controls",()=>{
  const groups=PARAMETER_GROUPS,subgroups=groups.flatMap(group=>group.subgroups),items=subgroups.flatMap(group=>group.items);
- assert.equal(groups.length,8);assert.equal(subgroups.length,17);assert.equal(items.length,81);assert.equal(new Set(items.map(item=>item.key)).size,81);
+ assert.equal(groups.length,8);assert.equal(subgroups.length,17);assert.equal(items.length,97);assert.equal(new Set(items.map(item=>item.key)).size,97);
 });

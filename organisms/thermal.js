@@ -1,8 +1,8 @@
-export function coldMovementMultiplier(hour,temperature,threshold){
+export function coldMovementMultiplier(hour,temperature,threshold,parameters={}){
  if(temperature>=threshold)return 1;
  const h=((hour%24)+24)%24;
- if(h<6)return .25;
- if(h>=18)return .5;
+ if(h<6)return parameters.nightMovementMultiplier??.25;
+ if(h>=18)return parameters.eveningMovementMultiplier??.5;
  return 1;
 }
 
@@ -13,7 +13,7 @@ export function applyThermalStress(agent,environment,nearby=0,dt=1,parameters={}
  if(agent.coldStress>.08){
   // Apply cold damage in discrete events so each event has a readable visual response.
   agent.coldDamageClock=(agent.coldDamageClock||0)+dt;
-  if(agent.coldDamageClock>=8){
+  if(agent.coldDamageClock>=(parameters.coldDamageInterval??8)){
    const damage=agent.coldStress*parameters.coldDamage*agent.coldDamageClock;
    agent.energy=Math.max(0,agent.energy-damage);
    agent.coldDamageClock=0;
