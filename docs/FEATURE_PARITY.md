@@ -38,4 +38,30 @@ Scoring: **0 absent**, **0.5 partial**, **1 implemented and verified**. Implemen
 
 **Current weighted snapshot:** 21 partial rows at 0.5 credit, 8 absent rows, 29 total: `(21 × 0.5) / 29 = 36.2%`. This is implementation-credit arithmetic, not a claim that 36.2% of the old application has been visually reproduced. No row currently receives full 1.0 credit; manual UI verification and several deeper behaviours remain outstanding.
 
+## Verification ledger
+
+The status column is implementation credit, not a verification badge.
+
+- A **partial** row earns 0.5 only for the meaningful subset described in its evidence cell.
+- A **full** row earns 1.0 only after the complete capability is demonstrated and its evidence is recorded here.
+- Automated test evidence must identify the test or command and the commit on which it passed.
+- UI/rendering evidence must identify the browser/device and the inspected behaviour. A successful build or deployment is not visual verification.
+- Deployment evidence must identify the exact deployed commit and URL.
+- If evidence becomes invalid after a regression, downgrade the row until repaired.
+
+No full-credit row is currently recorded. Do not infer that every partial row has passed an end-to-end test. The PR's reported regression-suite result is separate from manual UI verification.
+
+## Inventory provenance and scope
+
+The 29 capabilities are grouped comparisons against the archived application's actual systems, not a count of source files. The archive contains, among other components:
+
+- Simulation and physical behaviour: `.old/boids-worker.js`, `.old/physics.js`, `.old/abiogenesis-worker.js`.
+- Genetics and evolution: `.old/genetics.js`, `.old/chromosome.js`, `.old/evolution.js`, `.old/development.js`.
+- Ecology and world systems: `.old/ecology.js`, `.old/hydrology.js`, `.old/cosmology.js`, `.old/organism-economics.js`.
+- Plants: `.old/plant-structures.js`, `.old/plant-lab.html`, `.old/PLANT-LAB-ROADMAP.md`.
+- User interface and experiments: `.old/index.html`, `.old/vision-lab.html`, `.old/vision-minimal.html`, `.old/emergence-lab.html`, `.old/emergence.js`, `.old/emergence-pipeline.js`, `.old/abiogenesis.js`.
+- Configuration and regression coverage: `.old/config-schema.js`, `.old/config-registry.js`, `.old/tests/`.
+
+The denominator is deliberately a set of broad capability groups rather than every individual control or parameter. The roadmap tracks finer-grained future work. Do not split a parity row mid-milestone to manufacture progress; a future versioned inventory can do so after the 50% milestone.
+
 **Scoring policy:** report the sum of row scores divided by the fixed row count, alongside implementation/verification caveats. Do not translate source-code volume, planned work, or unverified UI claims into parity.
